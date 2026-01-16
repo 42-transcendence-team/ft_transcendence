@@ -15,6 +15,7 @@
 ├── .env.example               # Variables de entorno de ejemplo (sin secretos)
 ├── .gitignore                 # Ignorar .env, binarios, builds, node_modules, etc.
 └── README.md                  # Cómo levantar el proyecto y visión general
+```
 
 ### Estructura del backend
 
@@ -43,6 +44,7 @@ backend/
 │
 ├── go.mod
 └── go.sum
+```
 
 ### Estructura de devops
 
@@ -63,7 +65,10 @@ devops/
 ├── vault/                       # Configuración de HashiCorp Vault
 │
 └── README.md                    # Documentación general de DevOps
-
+```
 
 ### Estructura del frontend
+
+```txt
 /* TODO: */
+```
