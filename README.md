@@ -5,70 +5,103 @@
 ## Raíz del repositorio
 
 ```txt
+
 .
-├── frontend/                  # App web
-├── backend/                   # API REST (Gin) + WebSockets + lógica de negocio
-├── devops/                    # Infra: nginx, WAF/ModSecurity, Prometheus, Grafana, Vault, etc.
-├── docs/                      # Documentación: arquitectura, ADRs, guías de dev, decisiones técnicas
-├── docker-compose.yml         # Orquestación local
-├── Makefile                   # Atajos: up/down/logs/migrate/test
-├── .env.example               # Variables de entorno de ejemplo (sin secretos)
-├── .gitignore                 # Ignorar .env, binarios, builds, node_modules, etc.
-└── README.md                  # Cómo levantar el proyecto y visión general
+├── frontend/                    # App web (cliente)
+├── backend/                     # API REST (Gin) + WebSockets + lógica de negocio
+├── nginx/                       # Reverse proxy y punto de entrada (incluye WAF)
+├── vault/                       # Gestión de secretos (HashiCorp Vault)
+├── prometheus/                  # Monitorización (Prometheus)
+├── grafana/                     # Visualización de métricas (Grafana)
+│
+├── docs/                        # Documentación del proyecto
+├── docker-compose.yml           # Orquestación local de servicios
+├── Makefile                     # Atajos para desarrollo y operaciones
+├── .env.example                 # Variables de entorno de ejemplo (sin secretos)
+├── .gitignore                   # Archivos y carpetas ignoradas por Git
+└── README.md                    # Guía principal del proyecto
+
+```
+### Estructura del frontend
+
+```txt
+
 ```
 
 ### Estructura del backend
 
 ```txt
+
 backend/
-├── main.go                    # Punto de entrada del backend (arranque del servidor)
+├── Dockerfile                   # Construcción de la imagen del backend
 │
-├── config/                    # Carga y validación de variables de entorno
+├── cmd/
+│   └── api/
+│       └── main.go              # Punto de entrada del servidor
+│                               # - Carga configuración
+│                               # - Inicializa base de datos
+│                               # - Configura router HTTP y WebSockets
+│                               # - Arranca el servidor
 │
-├── api/
-│   ├── router.go              # Definición de rutas HTTP
-│   ├── middleware/            # Middlewares HTTP (auth, logs, CORS, etc.)
-│   └── handlers/              # Controladores HTTP (request → response)
+├── config/                      # Configuración de la aplicación
+│   └── config.go                # Lectura de variables de entorno
 │
-├── service/                   # Lógica de negocio de la aplicación
+├── internal/                    # Código interno del backend
+│   ├── handlers/                # Capa HTTP (Gin)
+│   ├── services/                # Lógica de negocio
+│   ├── repository/              # Acceso a datos (ORM)
+│   ├── websocket/               # Comunicación en tiempo real (WebSockets)
+│   └── models/                  # Modelos de dominio (mapeo con DB)
 │
-├── db/                        # Acceso a datos (Postgres + ORM)
+├── pkg/                         # Código genérico y reutilizable
 │
-├── data-types/                # Tipos de datos principales (structs)
-│
-├── ws/                        # WebSockets (chat en tiempo real)
-│
-├── utils/                     # Funciones auxiliares reutilizables
-│
-├── schema-sql/                # Esquema de la base de datos en SQL
+├── migrations/                  # Migraciones SQL incrementales
 │
 ├── go.mod
 └── go.sum
+
 ```
 
-### Estructura de devops
+### Estructura de nginx
 
 ```txt
-devops/
-├── docker/                      # Dockerfiles de los servicios
-│   ├── backend.Dockerfile       # Imagen del backend
-│   └── frontend.Dockerfile      # Imagen del frontend
-│
-├── nginx/                       # Reverse proxy
-│
-├── prometheus/                  # Configuración de Prometheus
-│
-├── grafana/                     # Configuración y dashboards de Grafana
-│
-├── waf/                         # Configuración del WAF / ModSecurity
-│
-├── vault/                       # Configuración de HashiCorp Vault
-│
-└── README.md                    # Documentación general de DevOps
+
+nginx/
+├── Dockerfile                   # Construcción de la imagen de Nginx
+├── nginx.conf                   # Configuración principal
+├── conf.d/                      # Configuraciones modulares (API, WS, frontend)
+└── modsecurity/                 # Configuración del WAF (ModSecurity)
+
 ```
 
-### Estructura del frontend
+### Estructura de vault
 
 ```txt
-/* TODO: */
+
+vault/
+├── Dockerfile                   # Imagen/configuración de Vault
+└── vault.hcl                    # Configuración principal de Vault
+
 ```
+
+### Estructura de prometheus
+
+```txt
+
+prometheus/
+├── Dockerfile                   # Imagen/configuración de Prometheus
+└── prometheus.yml               # Definición de targets y reglas
+
+```
+
+### Estructura de grafana
+
+```txt
+
+grafana/
+├── Dockerfile                   # Imagen/configuración de Grafana
+├── grafana.ini                  # Configuración general
+└── dashboards/                  # Dashboards versionados
+
+```
+
