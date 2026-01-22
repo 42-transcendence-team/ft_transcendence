@@ -1,38 +1,33 @@
 {
-  "name": "front",
+  "name": "transcendence",
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "homepage": "./",
   "scripts": {
     "build": "rsbuild build",
     "check": "biome check --write",
     "dev": "rsbuild dev --open",
     "format": "biome format --write",
     "lint": "eslint .",
-    "preview": "rsbuild preview",
-    "test": "rstest",
-    "test:watch": "rstest --watch"
+    "preview": "rsbuild preview"
   },
   "dependencies": {
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "react-router-dom": "^7.12.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.8",
     "@eslint/js": "^9.39.1",
     "@rsbuild/core": "^1.7.1",
     "@rsbuild/plugin-react": "^1.4.2",
-    "@rstest/core": "^0.7.8",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.1",
+    "@rsbuild/plugin-sass": "^1.4.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
-    "happy-dom": "^20.0.11",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.0"
   }

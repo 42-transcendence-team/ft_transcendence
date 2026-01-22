@@ -19,7 +19,20 @@
     /* type checking */
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+
+	"baseUrl": "./src",
+	"paths": {
+		"@pages/*": ["./pages/*"],
+		"@components/*": ["./components/*"],
+		"@styles/*": ["./styles/components/*"],
+		"@images/*": ["./assets/img/*"],
+		"@fonts/*": ["./assets/fonts/*"],
+		"@data/*": ["./assets/data/*"],
+		"@icons/*": ["./assets/icons/*"],
+		"@utils/*": ["./utils/*"],
+		"@hooks/*": ["./hooks/*"]
+	}
   },
   "include": ["src"]
 }
