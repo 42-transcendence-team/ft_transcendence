@@ -22,6 +22,7 @@ export default defineConfig({
 			'@fonts': './src/assets/fonts',
 			'@data': './src/assets/data',
 			'@icons': './src/assets/icons',
+			'@reset': './src/styles/App.scss'
 		}
 	}
 });
