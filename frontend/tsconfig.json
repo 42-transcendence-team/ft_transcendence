@@ -25,6 +25,7 @@
 	"paths": {
 		"@pages/*": ["./pages/*"],
 		"@components/*": ["./components/*"],
+		"@reset": ["./src/styles/App.scss"],
 		"@styles/*": ["./styles/components/*"],
 		"@images/*": ["./assets/img/*"],
 		"@fonts/*": ["./assets/fonts/*"],
