@@ -1,0 +1,18 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "${BACKEND_PORT}:8080"
+    environment:
+      GO_SERVICE_HOST: "${GO_SERVICE_HOST}"
+      GO_SERVICE_PORT: "${GO_SERVICE_PORT}"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    restart: unless-stopped
+
