@@ -21,7 +21,7 @@ func RecoveryJSON() gin.HandlerFunc {
 
 		c.AbortWithStatusJSON(http.StatusInternalServerError, appErr.ErrorResponse{
 			Error: appErr.ErrorBody{
-				Code:    "INTERNAL_ERROR",
+				Code:    appErr.CodeInternal,
 				Message: "An unexpected error has occurred",
 			},
 		})

@@ -42,8 +42,8 @@ func ErrorMiddleware() gin.HandlerFunc {
 		status := http.StatusInternalServerError
 		resp := appErr.ErrorResponse{
 			Error: appErr.ErrorBody{
-				Code:    "INTERNAL_ERROR",
-				Message: "Ha ocurrido un error inesperado",
+				Code:    appErr.CodeInternal,
+				Message: "An unexpected error has occurred",
 			},
 		}
 
