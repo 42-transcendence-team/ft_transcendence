@@ -1,29 +1,31 @@
 services:
   postgres:
-    container_name: postgres
-    image: docker.io/library/postgres:16-alpine # (David): Ruta de imagen completa para Podman.
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: transcendence
     volumes:
       - pgdata:/var/lib/postgresql/data
-    networks:
-      transc_net:
-        ipv4_address: 10.88.0.2
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d transcendence"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
 
   backend:
-    container_name: backend
     build:
       context: ./backend
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       GO_SERVICE_HOST: 0.0.0.0
       GO_SERVICE_PORT: 8080
 
-      #DB_HOST: postgres
-      DB_HOST: 10.88.0.2 # (David): IP fija del postgres por si falla el DNS de Podman.
+      DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: postgres
@@ -31,14 +33,7 @@ services:
       DB_SSLMODE: disable
       DB_TIMEZONE: Europe/Madrid
     ports:
-      - "38080:8080" # (David): No se me levanta. (En el 8080:8080, por ello el XXXXX:8080)
-    networks:
-      - transc_net
+      - "8080:8080"
 
 volumes:
   pgdata:
-
-networks:
-  transc_net:
-    external: true
-    name: transc_net # (David): Ayudita a Podman para que no se invente redes.
