@@ -1,10 +1,8 @@
 module backend
 
-// Cambio de "go 1.23.0" a "go 1.23".
+// Cambio de "go 1.25.7" a "go 1.25".
 // La directiva go no permite la versión completa con el patch (.0)
-go 1.23.0
-
-toolchain go1.24.12
+go 1.25
 
 require (
 	github.com/gin-gonic/gin v1.11.0

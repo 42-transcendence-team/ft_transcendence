@@ -1,9 +1,4 @@
-# (David):
-# Nombre de imagen con ruta completa para garantizar la
-# compatibilidad con WSL (usado por mí), ya que WSL usa Podman.
-# Podman no resuelve imágenes sin "registry" por defecto,
-# así se evitan errores durante el build en entornos WSL.
-FROM docker.io/library/golang:1.23-alpine
+FROM docker.io/library/golang:1.25.7-alpine
 
 WORKDIR /app
 
