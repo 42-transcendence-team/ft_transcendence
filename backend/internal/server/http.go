@@ -2,9 +2,10 @@ package server
 
 import (
 	"fmt"
-	"net/http"
 
 	"backend/config"
+	"backend/internal/handlers"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,11 +23,7 @@ func NewHTTPServer(conf config.Config) *HTTPServer {
 
 	_ = r.SetTrustedProxies(nil)
 
-	// Temporary health endpoint to verify HTTP server startup.
-	// Will be moved to a dedicated health handler when implementing healthcheck epic.
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
+	handlers.RegisterHealthHandler(r)
 
 	return &HTTPServer{
 		conf:   conf,
