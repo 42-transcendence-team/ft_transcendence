@@ -1,0 +1,32 @@
+@use '../abstracts/functions' as *;
+@use '../abstracts/mixins' as *;
+@use '../abstracts/variables' as *;
+
+.notfound-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.notfound-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.notfound-img {
+    width: 330px;
+    max-width: 110%;
+    margin-bottom: 24px;
+}
+
+/* TODO: cambiar color cuando se defina un poco mas el estilo de la web */
+.home-button {
+    padding: 12px 20px;
+    background-color: $orange-background-light;
+    color: $orange-main-text-light;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+}
