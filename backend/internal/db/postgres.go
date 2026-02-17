@@ -33,12 +33,12 @@ func ConnectPostgres(cfg config.Config) (*gorm.DB, error) {
 
 	db, err := gorm.Open(postgres.Open(dsn), gormCfg)
 	if err != nil {
-		return nil, fmt.Errorf("gorm open postgres: %w", err)
+		return nil, fmt.Errorf("db connect: gorm open postgres: %w", err)
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, fmt.Errorf("get sql.DB from gorm: %w", err)
+		return nil, fmt.Errorf("db connect: get sql.DB: %w", err)
 	}
 
 	tunePool(sqlDB, cfg)
