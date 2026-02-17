@@ -1,18 +1,86 @@
+name: transcendence
+
+
 services:
-  backend:
-    build:
-      context: ./backend
-    ports:
-      - "${BACKEND_PORT}:8080"
-    environment:
-      GO_SERVICE_HOST: "${GO_SERVICE_HOST}"
-      GO_SERVICE_PORT: "${GO_SERVICE_PORT}"
-    restart: unless-stopped
+    backend:
+        env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
+        build:
+            context: ./backend
+        ports:
+        - "${BACKEND_PORT}:8080"
+        environment:
+            GO_SERVICE_HOST: "${GO_SERVICE_HOST}"
+            GO_SERVICE_PORT: "${GO_SERVICE_PORT}"
+        restart: unless-stopped
+        depends_on:
+            postgres:
+                condition: service_healthy
+        # Falta hacer el healthcheck para el backend, para que el frontend dependa de el.
+        networks:
+            - back-front
+            - db-back
 
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "${FRONTEND_PORT}:3000"
-    restart: unless-stopped
+    frontend:
+        env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
+        build:
+            context: ./frontend
+        ports:
+            - "${FRONTEND_PORT}:3000"
+        volumes:
+            - /app/node_modules
+            - ./frontend:/app # Comparte el codigo fuente como volumen, por que los cambios se reflejan directamente en el contenedor
+        restart: unless-stopped
+        depends_on:
+            - backend
+        networks:
+            - back-front
 
+    postgres:
+        env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
+        image: postgres:latest # Por definir que version de postgres usar
+        environment:
+            POSTGRES_USER: "${POSTGRES_USER}"
+            POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+            POSTGRES_DB: "${POSTGRES_DB}"
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        ports:
+            - "${POSTGRES_PORT}:5432"
+        restart: unless-stopped
+        volumes:
+            - postgres_data:/var/lib/postgresql # Carpeta temporal para pruebas. Por definir donde se guardaran los datos de postgres
+        networks:
+            - db-view
+            - db-back
+
+
+    pgadmin:
+        env_file: .env
+        image: dpage/pgadmin4:latest # Visualizador de base de datos en la web para poder administrarla de forma mas sencilla y visual.
+        environment:
+            PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
+            PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
+        ports:
+            - "${PGADMIN_PORT}:80"
+        volumes:
+            - pgadmin_data:/var/lib/pgadmin
+        networks:
+            - db-view
+        restart: unless-stopped
+        depends_on:
+            postgres:
+                condition: service_healthy
+
+
+volumes:
+    postgres_data:
+    pgadmin_data:
+
+
+networks:
+    db-view:
+    db-back:
+    back-front: 
