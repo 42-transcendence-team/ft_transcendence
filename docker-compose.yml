@@ -27,6 +27,7 @@ services:
         ports:
             - "${FRONTEND_PORT}:3000"
         volumes:
+            - /app/node_modules
             - ./frontend:/app # Comparte el codigo fuente como volumen, por que los cambios se reflejan directamente en el contenedor
         restart: unless-stopped
         depends_on:
