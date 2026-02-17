@@ -2,20 +2,16 @@ package main
 
 import (
 	"backend/config"
-	"backend/internal/db"
 	"backend/internal/server"
 	"log"
 )
 
 func main() {
+
 	conf := config.Load()
 
-	gormDB, err := db.ConnectPostgres(conf)
-	if err != nil {
-		log.Fatalf("DB error de conexión: %v", err)
-	}
+	srv := server.NewHTTPServer(conf)
 
-	srv := server.NewHTTPServer(conf, gormDB)
 	if err := srv.Run(); err != nil {
 		log.Fatal(err)
 	}
