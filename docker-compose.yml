@@ -1,6 +1,3 @@
-name: transcendence
-
-
 services:
     backend:
         env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto

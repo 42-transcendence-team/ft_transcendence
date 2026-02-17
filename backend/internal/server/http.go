@@ -7,14 +7,16 @@ import (
 	"backend/internal/handlers"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type HTTPServer struct {
 	conf   config.Config
 	engine *gin.Engine
+	db     *gorm.DB
 }
 
-func NewHTTPServer(conf config.Config) *HTTPServer {
+func NewHTTPServer(conf config.Config, db *gorm.DB) *HTTPServer {
 
 	r := gin.New()
 
@@ -28,6 +30,7 @@ func NewHTTPServer(conf config.Config) *HTTPServer {
 	return &HTTPServer{
 		conf:   conf,
 		engine: r,
+		db:     db,
 	}
 }
 
