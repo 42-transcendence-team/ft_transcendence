@@ -12,7 +12,7 @@ func main() {
 
 	gormDB, err := db.ConnectPostgres(conf)
 	if err != nil {
-		log.Fatalf("DB error de conexión: %v", err)
+		log.Fatalf("[BOOT][DB] init failed: %v", err)
 	}
 
 	srv := server.NewHTTPServer(conf, gormDB)
