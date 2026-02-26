@@ -145,8 +145,11 @@ docker compose up --build
 
 ### Desarrollo sin Docker (backend)
 
+- cambiar la variable del .env: DB_HOST=postgres a -> DB_HOST=localhost
+
 ```bash
 export ENV=local
+docker compose up -d postgres
 go run ./cmd/api
 ```
 
