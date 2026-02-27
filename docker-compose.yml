@@ -36,16 +36,16 @@ services:
         env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
         image: postgres:latest # Por definir que version de postgres usar
         environment:
-            POSTGRES_USER: "${POSTGRES_USER}"
-            POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-            POSTGRES_DB: "${POSTGRES_DB}"
+            POSTGRES_USER: "${DB_USER}"
+            POSTGRES_PASSWORD: "${DB_PASSWORD}"
+            POSTGRES_DB: "${DB_NAME}"
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
             interval: 10s
             timeout: 5s
             retries: 5
         ports:
-            - "${POSTGRES_PORT}:5432"
+            - "${DB_PORT}:5432"
         restart: unless-stopped
         volumes:
             - postgres_data:/var/lib/postgresql # Carpeta temporal para pruebas. Por definir donde se guardaran los datos de postgres
