@@ -8,7 +8,11 @@ import (
 )
 
 func main() {
-	conf := config.Load()
+
+	conf, err := config.Load()
+	if err != nil {
+		log.Fatalf("[BOOT][CONFIG] invalid config: %v", err)
+	}
 
 	gormDB, err := db.ConnectPostgres(conf)
 	if err != nil {
@@ -17,7 +21,7 @@ func main() {
 
 	srv := server.NewHTTPServer(conf, gormDB)
 	if err := srv.Run(); err != nil {
-		log.Fatal(err)
+		log.Fatalf("[BOOT] server stopped with error: %v", err)
 	}
 
 }
