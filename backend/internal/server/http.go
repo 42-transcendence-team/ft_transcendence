@@ -5,6 +5,7 @@ import (
 
 	"backend/config"
 	"backend/internal/handlers"
+	"backend/internal/middlewares"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -28,12 +29,14 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB) *HTTPServer {
 	if conf.Env == "local" {
 		r.Use(gin.Logger())
 	}
-	r.Use(gin.Recovery())
+	
+	r.Use(middlewares.RecoveryJSON())    // captura panic y devuelve JSON
+	r.Use(middlewares.ErrorMiddleware()) // convierte c.Errors a JSON estándar
 
 	_ = r.SetTrustedProxies(nil)
 
 	handlers.RegisterHealthHandler(r)
-
+	
 	return &HTTPServer{
 		conf:   conf,
 		engine: r,

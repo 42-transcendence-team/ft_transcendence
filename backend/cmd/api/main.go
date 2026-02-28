@@ -20,8 +20,9 @@ func main() {
 	}
 
 	srv := server.NewHTTPServer(conf, gormDB)
+	log.Printf("[BOOT] starting server on %s:%s", conf.GoServiceHost, conf.GoServicePort)
+
 	if err := srv.Run(); err != nil {
 		log.Fatalf("[BOOT] server stopped with error: %v", err)
 	}
-
 }
