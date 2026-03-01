@@ -48,3 +48,27 @@ restart:
 re: remove start
 
 FORCE:
+
+help:
+	@echo "Available commands for ft_transcendence:"
+	@echo ""
+	@echo "Docker Management:"
+	@echo "  make start         - Build and start containers in foreground"
+	@echo "  make daemon        - Build and start containers in background (detached)"
+	@echo "  make stop          - Stop and remove containers"
+	@echo "  make restart       - Restart a service (use s=<name>)"
+	@echo "  make status        - Show running containers status"
+	@echo ""
+	@echo "Logs & Debugging:"
+	@echo "  make logs-all      - Tail logs from all services"
+	@echo "  make logs          - Tail logs from a specific service (use s=<name>)"
+	@echo "  make shell         - Open shell in a service (use s=<name>)"
+	@echo ""
+	@echo "Cleanup & Rebuild:"
+	@echo "  make remove        - Remove containers, volumes, and local images"
+	@echo "  make full-remove   - Deep clean: remove EVERYTHING including all images"
+	@echo "  make re            - Full reset: remove and start again"
+	@echo ""
+	@echo "Service Specific:"
+	@echo "  make build         - Build all images"
+	@echo "  make build-<svc>   - Build and restart a specific service"
