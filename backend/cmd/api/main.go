@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"backend/config"
 	"backend/internal/db"
 	"backend/internal/models"
@@ -26,11 +27,9 @@ func main() {
 	}
 
 	srv := server.NewHTTPServer(conf, gormDB)
-	if err := srv.Engine.Run(); err != nil {
-		log.Fatal(err)
-	log.Printf("[BOOT] starting server on %s:%s", conf.GoServiceHost, conf.GoServicePort)
-
-	if err := srv.Run(); err != nil {
-		log.Fatalf("[BOOT] server stopped with error: %v", err)
+	log.Printf("[BOOT] starting server on %s:%d", srv.Conf.GoServiceHost, srv.Conf.GoServicePort)
+	addr := fmt.Sprintf("%s:%d", srv.Conf.GoServiceHost, srv.Conf.GoServicePort)
+	if err := srv.Engine.Run(addr); err != nil {
+			log.Fatalf("[BOOT] server stopped with error: %v", err)
 	}
 }
