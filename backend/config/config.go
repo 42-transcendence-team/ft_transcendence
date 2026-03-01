@@ -1,18 +1,24 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Host string
-	Port string
+	Env string
+
+	BackendPort int
+
+	GoServiceHost string
+	GoServicePort int
 
 	DBHost     string
-	DBPort     string
+	DBPort     int
 	DBUser     string
 	DBPassword string
 	DBName     string
@@ -24,58 +30,50 @@ type Config struct {
 	DBConnMaxLifetimeMin int
 }
 
-func Load() Config {
-	// Try loading .env from common working directories:
-	// - repo root: "./.env"
-	// - backend folder: "../.env"
-	_ = godotenv.Load()
-	_ = godotenv.Load("../.env")
+func Load() (*Config, error) {
 
-	host := envOrDefault("GO_SERVICE_HOST", "0.0.0.0")
-	port := envOrDefault("GO_SERVICE_PORT", "8080")
+	env := strings.TrimSpace(os.Getenv("ENV"))
 
-	// DB defaults (Docker-friendly)
-	dbHost := envOrDefault("DB_HOST", "postgres")
-	dbPort := envOrDefault("DB_PORT", "5432")
-	dbUser := envOrDefault("DB_USER", "postgres")
-	dbPassword := envOrDefault("DB_PASSWORD", "postgres")
-	dbName := envOrDefault("DB_NAME", "postgres")
-	dbSSLMode := envOrDefault("DB_SSLMODE", "disable")
-	dbTimeZone := envOrDefault("DB_TIMEZONE", "Europe/Madrid")
-
-	// Pool tuning (opcionales)
-	dbMaxOpen := envIntOrDefault("DB_MAX_OPEN_CONNS", 25)
-	dbMaxIdle := envIntOrDefault("DB_MAX_IDLE_CONNS", 25)
-	dbMaxLife := envIntOrDefault("DB_CONN_MAX_LIFETIME_MIN", 5)
-
-	return Config{
-		Host: host,
-		Port: port,
-
-		DBHost:     dbHost,
-		DBPort:     dbPort,
-		DBUser:     dbUser,
-		DBPassword: dbPassword,
-		DBName:     dbName,
-		DBSSLMode:  dbSSLMode,
-		DBTimeZone: dbTimeZone,
-
-		DBMaxOpenConns:       dbMaxOpen,
-		DBMaxIdleConns:       dbMaxIdle,
-		DBConnMaxLifetimeMin: dbMaxLife,
+	if env != "local" && env != "prod" {
+		return nil, fmt.Errorf("ENV must be 'local' or 'prod' (got %q)", env)
 	}
-}
 
-func envOrDefault(key, def string) string {
-	v := os.Getenv(key)
-	if v == "" {
-		return def
+	// Cargar .env SOLO si local (para "go run" fuera de docker)
+	if env == "local" {
+		_ = godotenv.Load(".env")
+		_ = godotenv.Load("../.env")
 	}
-	return v
+
+	c := &Config{}
+	// Solo se colocan defaults a variables no criticas
+	c.Env = env
+
+	c.GoServiceHost = strings.TrimSpace(os.Getenv("GO_SERVICE_HOST"))
+	c.GoServicePort = envIntOrDefault("GO_SERVICE_PORT", 8080)
+
+	c.DBHost = strings.TrimSpace(os.Getenv("DB_HOST"))
+	c.DBPort = envIntOrDefault("DB_PORT", 5432)
+	c.DBName = strings.TrimSpace(os.Getenv("DB_NAME"))
+	c.DBUser = strings.TrimSpace(os.Getenv("DB_USER"))
+	c.DBPassword = strings.TrimSpace(os.Getenv("DB_PASSWORD"))
+	c.DBSSLMode = strings.TrimSpace(os.Getenv("DB_SSLMODE"))
+	c.DBTimeZone = strings.TrimSpace(os.Getenv("DB_TIMEZONE"))
+
+	// Pool (si no existen, luego tunePool mete defaults también)
+	c.DBMaxOpenConns = envIntOrDefault("DB_MAX_OPEN_CONNS", 25)
+	c.DBMaxIdleConns = envIntOrDefault("DB_MAX_IDLE_CONNS", 25)
+	c.DBConnMaxLifetimeMin = envIntOrDefault("DB_CONN_MAX_LIFETIME_MIN", 5)
+
+	// Validar que la configuracion sea valida
+	if err := c.Validate(); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 func envIntOrDefault(key string, def int) int {
-	v := os.Getenv(key)
+	v := strings.TrimSpace(os.Getenv(key))
 	if v == "" {
 		return def
 	}
