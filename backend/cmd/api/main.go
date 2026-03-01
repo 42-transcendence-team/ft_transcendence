@@ -26,6 +26,8 @@ func main() {
 	}
 
 	srv := server.NewHTTPServer(conf, gormDB)
+	if err := srv.Engine.Run(); err != nil {
+		log.Fatal(err)
 	log.Printf("[BOOT] starting server on %s:%s", conf.GoServiceHost, conf.GoServicePort)
 
 	if err := srv.Run(); err != nil {
