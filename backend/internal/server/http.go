@@ -9,12 +9,9 @@ import (
 )
 
 type HTTPServer struct {
-	Conf   config.Config
+	Conf   *config.Config
 	Engine *gin.Engine
 	Db     *gorm.DB
-	conf   *config.Config
-	engine *gin.Engine
-	db     *gorm.DB
 }
 
 func NewHTTPServer(conf *config.Config, db *gorm.DB) *HTTPServer {
@@ -25,10 +22,13 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB) *HTTPServer {
 
 	r := gin.New()
 
-	// Escribe en consola cada peticion a la pagina
-	r.Use(gin.Logger())
-	// Hace catch a todos los handlers del server para que los panics no tiren el servidor
-	r.Use(gin.Recovery())
+	// esto se deja asi si luego en prod metemos algun otro logger , sino en prod tbn se puede usar r.Use(gin.Logger())
+	if conf.Env == "local" {
+		r.Use(gin.Logger())
+	}
+
+	r.Use(middlewares.RecoveryJSON())    // captura panic y devuelve JSON
+	r.Use(middlewares.ErrorMiddleware()) // convierte c.Errors a JSON estándar
 
 	_ = r.SetTrustedProxies(nil)
 
@@ -36,23 +36,8 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB) *HTTPServer {
 		Conf:   conf,
 		Engine: r,
 		Db:     db,
-	// esto se deja asi si luego en prod metemos algun otro logger , sino en prod tbn se puede usar r.Use(gin.Logger())
-	if conf.Env == "local" {
-		r.Use(gin.Logger())
 	}
-	
-	r.Use(middlewares.RecoveryJSON())    // captura panic y devuelve JSON
-	r.Use(middlewares.ErrorMiddleware()) // convierte c.Errors a JSON estándar
 
-	_ = r.SetTrustedProxies(nil)
-
-	handlers.RegisterHealthHandler(r)
-	
-	return &HTTPServer{
-		conf:   conf,
-		engine: r,
-		db:     db,
-	}
 	srv.Router()
 
 	return srv
@@ -77,6 +62,4 @@ func (srv *HTTPServer) Router() {
 	srv.Engine.NoRoute(func(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "route not found"})
 	})
-	addr := fmt.Sprintf("%s:%d", srv.conf.GoServiceHost, srv.conf.GoServicePort)
-	return (srv.engine.Run(addr))
 }
