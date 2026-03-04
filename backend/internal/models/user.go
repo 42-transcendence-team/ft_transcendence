@@ -9,10 +9,10 @@ import (
 type User struct {
 	gorm.Model
 
-	Login    string  `gorm:"uniqueIndex;not null"` // Nickname unico de la cuenta (Ej: Login 42)
-	Email    *string `gorm:"uniqueIndex"`          // Correo electronico unico asociado
-	Password string  `gorm:"not null"`             // Contraseña de acceso a la cuenta
-	Role     string  `gorm:"not null"`             // Rol del usuario (Ej: 42, bh, normie...)
+	Login    string `gorm:"uniqueIndex;not null"` // Nickname unico de la cuenta (Ej: Login 42)
+	Email    string `gorm:"uniqueIndex"`          // Correo electronico unico asociado
+	Password string `gorm:"not null"`             // Contraseña de acceso a la cuenta
+	Role     string `gorm:"not null"`             // Rol del usuario (Ej: 42, bh, normie...)
 
 	Name     string    `gorm:"not null"` // Nombre de usuario
 	Surname  string    `gorm:"not null"` // Apellido de usuario
