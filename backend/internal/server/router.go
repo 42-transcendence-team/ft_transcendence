@@ -12,7 +12,6 @@ import (
 func (srv *HTTPServer) Router() {
 
 	routes.HealthRoutes(srv.Engine)
-	routes.TodoRoutes(srv.Engine, srv.Db)
 
 	// usaremos este grupo para definir las funciones del proyecto y aplicar middlewares comunes
 	// api := srv.Engine.Group("api/v1")
