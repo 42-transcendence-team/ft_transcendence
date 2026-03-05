@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/gin-gonic/gin"
 	routes "backend/internal/routes"
+	"github.com/gin-gonic/gin"
 )
 
 // El enroutador es una retaila de: Metodo -> ruta -> handler
@@ -13,7 +13,9 @@ func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 
 	// usaremos este grupo para definir las funciones del proyecto y aplicar middlewares comunes
-	// api := srv.Engine.Group("api/v1")
+	api := srv.Engine.Group("/api/v1")
+
+	routes.AuthRoutes(api)
 	// ejemplo:
 	// api.GET("/login", log42Aouth2)
 

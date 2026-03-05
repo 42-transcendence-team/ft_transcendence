@@ -12,8 +12,8 @@ type AppError struct {
 	Code       string
 	HTTPStatus int
 	Message    string
-	Details    map[string]string
-	Err        error // interno no exponer
+	Details    map[string]string `json:"details"`
+	Err        error             // interno no exponer
 }
 
 // Error hace que *AppError implemente la interfaz error de Go.
