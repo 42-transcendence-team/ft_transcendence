@@ -1,0 +1,63 @@
+# ================================================================
+# Stale Issue and PR Management
+# ================================================================
+# Marks issues stale after x days of inactivity, closes after x.
+# Marks PRs stale after x days, closes after x.
+#
+# Exempt labels — issues/PRs with these labels are never marked stale:
+#   standup, weekly-summary, pinned, blocked, wip, in-progress
+#
+# Runs daily at 06:00 UTC (before any standup).
+# Use workflow_dispatch to trigger manually.
+# ================================================================
+
+name: Stale
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    name: Mark and close stale items
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          # ── Issues ───────────────────────────────────────────────────
+          stale-issue-label: "stale"
+          days-before-stale: 7
+          days-before-close: 14
+          stale-issue-message: >
+            Esta issue lleva inactiva 7 dias.
+            Para reactivar dejar un comentario o simplemente quitar la estiqueta `stale` para resetear el contador de tiempo.
+          close-issue-message: >
+            Closing after 14 days of inactivity.
+            Reopen at any time if this is still relevant.
+          close-issue-label: "wont-fix"
+
+          # ── Pull Requests ─────────────────────────────────────────────
+          stale-pr-label: "stale"
+          days-before-pr-stale: 5
+          days-before-pr-close: 10
+          stale-pr-message: >
+            Hola @${{ github.event.pull_request.user.login }}, esta PR lleva 5 días sin cambios.
+            ¡No dejes que se oxide! Hazle un rebase o un push para que el bot no la cierre.
+          close-pr-message: >
+            Closing after 10 days of inactivity.
+            Reopen if you want to continue this work.
+
+          # ── Exempt labels ─────────────────────────────────────────────
+          exempt-issue-labels: "standup,weekly-summary,pinned,blocked,in-progress"
+          exempt-pr-labels: "blocked,wip,in-progress"
+
+          # ── Exempt all open milestones ─────────────────────────────────
+          exempt-all-milestones: true
+
+          # ── Limit operations per run to avoid rate limits ─────────────
+          operations-per-run: 30
