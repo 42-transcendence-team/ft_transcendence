@@ -2,7 +2,10 @@ package handlers
 
 import (
 	appErr "backend/internal/errors"
+	"backend/internal/models"
+	"backend/internal/repository"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -18,14 +21,33 @@ de q ha fallado segun la estructura d ela funcon apperr NewValidation()
 }
 */
 
+/*
+	type X struct {
+		dep *Y
+	}
+
+	func NewX(dep *Y) *X {
+		return &X{dep: dep}
+	}
+*/
+
+type AuthHandler struct {
+	userRepo *repository.UserRepository
+}
+
+func NewAuthHandler(userRepo *repository.UserRepository) *AuthHandler {
+	return &AuthHandler{userRepo: userRepo}
+}
+
+/* Register */
 type RegisterRequest struct {
 	Login           string `json:"login" binding:"required"`
 	Email           string `json:"email" binding:"required,email"`
 	Password        string `json:"password" binding:"required,min=8"`
-	ConfirmPassword string `json:"confirm-password" binding:"required,min=8,eqfield=Password"`
+	ConfirmPassword string `json:"confirm-password" binding:"required,eqfield=Password"`
 }
 
-func Register(c *gin.Context) {
+func (h *AuthHandler) Register(c *gin.Context) {
 
 	var req RegisterRequest
 
@@ -41,6 +63,13 @@ func Register(c *gin.Context) {
 		}
 		c.Abort()
 		return
+	}
+
+	user := NewUser(req.Login, req.Email)
+	err = h.userRepo.Create(&user)
+	if err != nil {
+		fmt.Printf(err.Error())
+		// como llegan los errores de la base de datos???
 	}
 
 	c.JSON(200, gin.H{
@@ -65,3 +94,12 @@ func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]
 
 	return fields
 }
+
+func NewUser(login string, email string) models.User {
+	return models.User{
+		Login: login,
+		Email: &email,
+	}
+}
+
+/* End of register */
