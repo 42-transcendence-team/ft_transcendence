@@ -79,7 +79,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	user, err := h.AuthService.Register(c, services.RegisterImput{
 		Login:    req.Login,
 		Email:    req.Email,
-		Password: HashedPassword, // esto hay que enviarlo ya hasheado o como se diga
+		Password: HashedPassword,
 	})
 	if err != nil {
 		// revisar si queremos que se devuelva asi este tipo de errores o hay que manejar los errores devuletos por la db
@@ -97,12 +97,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	//respuesta mal de moemnto
-	c.JSON(200, gin.H{
-		"message":         "register endpoint works",
-		"login":           user.Login,
-		"email":           user.Email,
-		"password-hashed": user.Password,
+	//Hay que ver como damos la respuesta al front
+	c.JSON(201, gin.H{
+		"message": "user created",
+		"user": gin.H{
+			"login": user.Login,
+			"email": user.Email,
+		},
 	})
 }
 
@@ -122,6 +123,7 @@ func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]
 	return fields
 }
 
+// esto lo pille de ahi -> https://gowebexamples.com/password-hashing/
 func hashPasword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err

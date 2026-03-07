@@ -13,15 +13,6 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-/* func (r *UserRepository) GetByEmail(user *models.User) {
-	r.db.Where("email = ?", email).First(&user)
-}
-
-func GetByLogin(login string) {
-
-}
-*/
-
 func (r *UserRepository) Create(user *models.User) error {
 	return r.db.Create(user).Error
 }

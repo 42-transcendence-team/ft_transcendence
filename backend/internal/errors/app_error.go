@@ -48,7 +48,7 @@ const (
 func NewBadRequest(msg string) *AppError {
 	return &AppError{
 		Code:       CodeBadRequest,
-		HTTPStatus: http.StatusBadRequest,
+		HTTPStatus: http.StatusBadRequest, //400
 		Message:    msg,
 	}
 }
@@ -56,7 +56,7 @@ func NewBadRequest(msg string) *AppError {
 func NewUnauthorized(msg string) *AppError {
 	return &AppError{
 		Code:       CodeUnauthorized,
-		HTTPStatus: http.StatusUnauthorized,
+		HTTPStatus: http.StatusUnauthorized, // 401
 		Message:    msg,
 	}
 }
@@ -64,7 +64,7 @@ func NewUnauthorized(msg string) *AppError {
 func NewForbidden(msg string) *AppError {
 	return &AppError{
 		Code:       CodeForbidden,
-		HTTPStatus: http.StatusForbidden,
+		HTTPStatus: http.StatusForbidden, // 403
 		Message:    msg,
 	}
 }
@@ -72,7 +72,7 @@ func NewForbidden(msg string) *AppError {
 func NewNotFound(msg string) *AppError {
 	return &AppError{
 		Code:       CodeNotFound,
-		HTTPStatus: http.StatusNotFound,
+		HTTPStatus: http.StatusNotFound, // 404
 		Message:    msg,
 	}
 }
@@ -80,7 +80,7 @@ func NewNotFound(msg string) *AppError {
 func NewConflict(msg string) *AppError {
 	return &AppError{
 		Code:       CodeConflict,
-		HTTPStatus: http.StatusConflict,
+		HTTPStatus: http.StatusConflict, // 409
 		Message:    msg,
 	}
 }
@@ -101,7 +101,7 @@ func NewValidation(details map[string]string) *AppError {
 func NewInternal(err error) *AppError {
 	return &AppError{
 		Code:       CodeInternal,
-		HTTPStatus: http.StatusInternalServerError,
+		HTTPStatus: http.StatusInternalServerError, // 500
 		Message:    "An unexpected error has occurred",
 		Err:        err,
 	}

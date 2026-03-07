@@ -5,18 +5,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/*
-cosas q hacer ->
-Request POST /api/v1/auth/register ok
-Validar input (email/login/password) ok
-Comprobar si ya existe (email o login únicos) ok
-Hashear password (NUNCA guardar plano)
-Crear usuario (ORM) ver como integrarlo con lo de sara
-Responder 201 Created con usuario “safe” (sin password)
-*/
-
 func AuthRoutes(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {
-	// comentario que habra q poner para el suager ese para registro de usuario
+	// puede que haya mas errores aun me queda por pulir alguno
+	// Registra un usuario (user-created-> 201, o bad-request-> 400, o no-valid-request-> 422, o conflict-> 409) en formato JSON
 	api.POST("auth/register", authHandler.Register)
 
 }
