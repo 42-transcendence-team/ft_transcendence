@@ -20,16 +20,6 @@ de q ha fallado segun la estructura d ela funcon apperr NewValidation()
 }
 */
 
-/*
-	type X struct {
-		dep *Y
-	}
-
-	func NewX(dep *Y) *X {
-		return &X{dep: dep}
-	}
-*/
-
 type AuthHandler struct {
 	AuthService *services.AuthService
 }
@@ -40,7 +30,8 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 
 /* Register */
 // que pasa si falla algo , un panic por ejemplo , se creea el usuario o se borra?
-// ahor amismo se crea , o por lo menos me da conflict si intento crear uno igual
+// ahor amismo se crea , o por lo menos me da conflict si intento crear uno igual, por q el panic se generaba despues de meterlo en la db,
+// y al no llegar al msg de exito se manda un CodeInternal, nose si eso hay que controlarlo
 type RegisterRequest struct {
 	Login           string `json:"login" binding:"required"`
 	Email           string `json:"email" binding:"required,email"`
@@ -62,6 +53,14 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		} else {
 			c.Error(appErr.NewBadRequest("invalid_request_body"))
 		}
+		c.Abort()
+		return
+	}
+
+	if !IsStrongPassword(req.Password) {
+		c.Error(appErr.NewValidation(map[string]string{
+			"password": "weak_password",
+		}))
 		c.Abort()
 		return
 	}
@@ -121,6 +120,30 @@ func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]
 	}
 
 	return fields
+}
+
+func IsStrongPassword(password string) bool {
+
+	var hasUpper bool
+	var hasLower bool
+	var hasNumber bool
+	var hasSymbol bool
+
+	for _, c := range password {
+
+		switch {
+		case 'A' <= c && c <= 'Z':
+			hasUpper = true
+		case 'a' <= c && c <= 'z':
+			hasLower = true
+		case '0' <= c && c <= '9':
+			hasNumber = true
+		default:
+			hasSymbol = true
+		}
+	}
+
+	return hasUpper && hasLower && hasNumber && hasSymbol
 }
 
 // esto lo pille de ahi -> https://gowebexamples.com/password-hashing/
