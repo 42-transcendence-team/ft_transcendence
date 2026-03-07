@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"golang.org/x/crypto/bcrypt"
 )
 
 /* JSON q manda el fronted
@@ -38,6 +39,8 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 }
 
 /* Register */
+// que pasa si falla algo , un panic por ejemplo , se creea el usuario o se borra?
+// ahor amismo se crea , o por lo menos me da conflict si intento crear uno igual
 type RegisterRequest struct {
 	Login           string `json:"login" binding:"required"`
 	Email           string `json:"email" binding:"required,email"`
@@ -63,10 +66,20 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// https://gowebexamples.com/password-hashing/
+	// no se si es demasiado simple
+	HashedPassword, err := hashPasword(req.Password)
+	// que error puede devolver al fallar el hasheo de la pasword?
+	if err != nil {
+		c.Error(appErr.NewConflict(err.Error()))
+		c.Abort()
+		return
+	}
+
 	user, err := h.AuthService.Register(c, services.RegisterImput{
 		Login:    req.Login,
 		Email:    req.Email,
-		Password: req.Password, // esto hay que enviarlo ya hasheado o como se diga
+		Password: HashedPassword, // esto hay que enviarlo ya hasheado o como se diga
 	})
 	if err != nil {
 		// revisar si queremos que se devuelva asi este tipo de errores o hay que manejar los errores devuletos por la db
@@ -86,9 +99,10 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	//respuesta mal de moemnto
 	c.JSON(200, gin.H{
-		"message": "register endpoint works",
-		"login":   user.Login,
-		"email":   user.Email,
+		"message":         "register endpoint works",
+		"login":           user.Login,
+		"email":           user.Email,
+		"password-hashed": user.Password,
 	})
 }
 
@@ -106,6 +120,16 @@ func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]
 	}
 
 	return fields
+}
+
+func hashPasword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 /* End of register */
