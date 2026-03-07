@@ -4,6 +4,7 @@ import (
 	"backend/internal/handlers"
 	"backend/internal/repository"
 	routes "backend/internal/routes"
+	"backend/internal/services"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,7 +16,8 @@ func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 
 	userRepo := repository.NewUserRepository(srv.Db)
-	authHandler := handlers.NewAuthHandler(userRepo)
+	authService := services.NewAuthService(userRepo)
+	authHandler := handlers.NewAuthHandler(authService)
 
 	// usaremos este grupo para definir las funciones del proyecto y aplicar middlewares comunes
 	api := srv.Engine.Group("/api/v1")

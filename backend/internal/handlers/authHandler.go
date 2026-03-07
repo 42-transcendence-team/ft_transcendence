@@ -2,10 +2,8 @@ package handlers
 
 import (
 	appErr "backend/internal/errors"
-	"backend/internal/models"
-	"backend/internal/repository"
+	"backend/internal/services"
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -32,11 +30,11 @@ de q ha fallado segun la estructura d ela funcon apperr NewValidation()
 */
 
 type AuthHandler struct {
-	userRepo *repository.UserRepository
+	AuthService *services.AuthService
 }
 
-func NewAuthHandler(userRepo *repository.UserRepository) *AuthHandler {
-	return &AuthHandler{userRepo: userRepo}
+func NewAuthHandler(authService *services.AuthService) *AuthHandler {
+	return &AuthHandler{AuthService: authService}
 }
 
 /* Register */
@@ -65,21 +63,36 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user := NewUser(req.Login, req.Email)
-	err = h.userRepo.Create(&user)
+	user, err := h.AuthService.Register(c, services.RegisterImput{
+		Login:    req.Login,
+		Email:    req.Email,
+		Password: req.Password, // esto hay que enviarlo ya hasheado o como se diga
+	})
 	if err != nil {
-		fmt.Printf(err.Error())
-		// como llegan los errores de la base de datos???
+		// revisar si queremos que se devuelva asi este tipo de errores o hay que manejar los errores devuletos por la db
+		// por si mandamos demasiada info al cliente message: 2much? y no se si el codigo de que ya hay una cuenta
+		// con ese loging o email es el codigo http 409 de conflict
+		/*
+			{
+				"error": {
+					"code": "CONFLICT",
+					"message": "ERROR: duplicate key value violates unique constraint \"idx_users_login\" (SQLSTATE 23505)"
+				}
+			}*/
+		c.Error(appErr.NewConflict(err.Error()))
+		c.Abort()
+		return
 	}
 
+	//respuesta mal de moemnto
 	c.JSON(200, gin.H{
 		"message": "register endpoint works",
-		"login":   req.Login,
-		"email":   req.Email,
+		"login":   user.Login,
+		"email":   user.Email,
 	})
 }
 
-// tal vez esto haya que quitarlo de aqui
+// tal vez esto haya que quitarlo de aqui, pero tampoco se dodne iria
 func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]string {
 
 	fields := make(map[string]string)
@@ -93,13 +106,6 @@ func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]
 	}
 
 	return fields
-}
-
-func NewUser(login string, email string) models.User {
-	return models.User{
-		Login: login,
-		Email: &email,
-	}
 }
 
 /* End of register */
