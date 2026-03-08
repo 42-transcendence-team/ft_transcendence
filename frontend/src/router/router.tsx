@@ -12,6 +12,7 @@ import { FAQ } from "@pages/FAQ";
 import { Developers } from "@pages/Developers";
 import { Cookies } from "@pages/Cookies";
 import { Contact } from "@pages/Contact";
+import { PrivacyPolicy } from "@pages/PrivacyPolicy";
 
 import { PrivateLayout } from "@components/PrivateLayout";
 
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
 	  { path: "developers", element: <Developers /> },
 	  { path: "cookies", element: <Cookies /> },
 	  { path: "contact", element: <Contact /> },
+	  { path: "privacy-policy", element: <PrivacyPolicy />},
       // ---------- RUTAS PRIVADAS ----------
       // Todas las privadas cuelgan de un layout común.
       {
