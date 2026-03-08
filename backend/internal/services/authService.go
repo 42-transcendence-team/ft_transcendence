@@ -1,10 +1,11 @@
 package services
 
 import (
+	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"backend/internal/repository"
-	"fmt"
-	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 type AuthService struct {
@@ -19,27 +20,81 @@ type RegisterImput struct {
 	Login    string
 	Email    string
 	Password string
+	Name     string
+	Surname  string
+	Birtday  time.Time
 }
 
-func (s *AuthService) Register(c *gin.Context, imput RegisterImput) (user models.User, err error) {
+func (s *AuthService) Register(imput RegisterImput) (user models.User, err error) {
 
-	// cuando tu mandas un usuario o un email duplicados el indice como que aumuenta pero no se guarda en al db por la flag
-	// `gorm:"uniqueIndex"` y el siguiente usuario se guarda con un indice mas nose si es el funcionamiento de gorm y asi esta bien.
-	// si intentas crear 1000 usuarios duplicados aunk no se guarden cuando crees uno q no sea duplicado se guardara como 1001
-	user = NewUser(imput.Login, imput.Email, imput.Password)
+	if !IsStrongPassword(imput.Password) {
+		return models.User{}, appErr.NewValidation(map[string]string{
+			"password": "weak_password",
+		})
+	}
+
+	// https://gowebexamples.com/password-hashing/
+	// no se si es demasiado simple
+	imput.Password, err = hashPassword(imput.Password)
+	if err != nil {
+		return models.User{}, appErr.NewInternal(err)
+	}
+
+	user = NewUser(imput)
 	err = s.userRepo.Create(&user)
 	if err != nil {
-		// como llegan los errores de la base de datos???
-		// los errores se estionan en el handler
-		fmt.Printf(err.Error())
+		if s.userRepo.IsDuplicatedKey(err) {
+			// esto detecta que el login o el email ya existen no hay dispincion de si es una cosa o la otra
+			return models.User{}, appErr.NewConflict("user_already_exists")
+		}
+		return models.User{}, appErr.NewInternal(err)
 	}
-	return user, err
+
+	return user, nil
 }
 
-func NewUser(login string, email string, password string) models.User {
+func NewUser(imput RegisterImput) models.User {
 	return models.User{
-		Login:    login,
-		Email:    &email,
-		Password: password,
+		Login:    imput.Login,
+		Email:    &imput.Email,
+		Password: imput.Password,
+		Name:     imput.Name,
+		Surname:  imput.Surname,
+		Birthday: imput.Birtday,
 	}
+}
+
+// esto lo pille de ahi -> https://gowebexamples.com/password-hashing/
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func (s *AuthService) CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+func IsStrongPassword(password string) bool {
+
+	var hasUpper bool
+	var hasLower bool
+	var hasNumber bool
+	var hasSymbol bool
+
+	for _, c := range password {
+
+		switch {
+		case 'A' <= c && c <= 'Z':
+			hasUpper = true
+		case 'a' <= c && c <= 'z':
+			hasLower = true
+		case '0' <= c && c <= '9':
+			hasNumber = true
+		default:
+			hasSymbol = true
+		}
+	}
+
+	return hasUpper && hasLower && hasNumber && hasSymbol
 }

@@ -4,19 +4,23 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"errors"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"golang.org/x/crypto/bcrypt"
 )
 
 /* JSON q manda el fronted
 Si algun campo no cumple als regals de la struct de abajo manda error con especificacioens
 de q ha fallado segun la estructura d ela funcon apperr NewValidation()
 {
-  "login": "angie",
-  "email": "angie@test.com",
-  "password": "12345678",
-  "confirm-password": "12345678"
+  "login": "prueba",
+  "email": "prueba@test.com",
+  "password": "angelaKk12132%",
+  "confirmPassword": "angelaKk12132%",
+  "name": "angela",
+  "Surname": "barrio",
+  "birthday": "2000-10-23" // tiene que ser este formato "aaaa-mm-dd"
 }
 */
 
@@ -29,14 +33,14 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 }
 
 /* Register */
-// que pasa si falla algo , un panic por ejemplo , se creea el usuario o se borra?
-// ahor amismo se crea , o por lo menos me da conflict si intento crear uno igual, por q el panic se generaba despues de meterlo en la db,
-// y al no llegar al msg de exito se manda un CodeInternal, nose si eso hay que controlarlo
 type RegisterRequest struct {
 	Login           string `json:"login" binding:"required"`
 	Email           string `json:"email" binding:"required,email"`
 	Password        string `json:"password" binding:"required,min=8"`
-	ConfirmPassword string `json:"confirm-password" binding:"required,eqfield=Password"`
+	ConfirmPassword string `json:"confirmPassword" binding:"required,eqfield=Password"`
+	Name            string `json:"name" binding:"required"`
+	Surname         string `json:"surname" binding:"required"`
+	Birthday        string `json:"birthday" binding:"required"` // en el front poner que la fecha tiene que ser yyyy-mm-dd esto no se si habria que cambiarlo para q sea dd-mm-aaaa
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -57,51 +61,38 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	if !IsStrongPassword(req.Password) {
+	birthday, err := time.Parse("2006-01-02", req.Birthday)
+	if err != nil {
 		c.Error(appErr.NewValidation(map[string]string{
-			"password": "weak_password",
+			"birthday": "invalid_format",
 		}))
 		c.Abort()
 		return
 	}
 
-	// https://gowebexamples.com/password-hashing/
-	// no se si es demasiado simple
-	HashedPassword, err := hashPasword(req.Password)
-	// que error puede devolver al fallar el hasheo de la pasword?
-	if err != nil {
-		c.Error(appErr.NewConflict(err.Error()))
-		c.Abort()
-		return
-	}
-
-	user, err := h.AuthService.Register(c, services.RegisterImput{
+	user, err := h.AuthService.Register(services.RegisterImput{
 		Login:    req.Login,
 		Email:    req.Email,
-		Password: HashedPassword,
+		Password: req.Password,
+		Name:     req.Name,
+		Surname:  req.Surname,
+		Birtday:  birthday,
 	})
 	if err != nil {
-		// revisar si queremos que se devuelva asi este tipo de errores o hay que manejar los errores devuletos por la db
-		// por si mandamos demasiada info al cliente message: 2much? y no se si el codigo de que ya hay una cuenta
-		// con ese loging o email es el codigo http 409 de conflict
-		/*
-			{
-				"error": {
-					"code": "CONFLICT",
-					"message": "ERROR: duplicate key value violates unique constraint \"idx_users_login\" (SQLSTATE 23505)"
-				}
-			}*/
-		c.Error(appErr.NewConflict(err.Error()))
+		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	//Hay que ver como damos la respuesta al front
+	// TODO: Hay que ver como damos la respuesta al front
 	c.JSON(201, gin.H{
 		"message": "user created",
 		"user": gin.H{
-			"login": user.Login,
-			"email": user.Email,
+			"login":    user.Login,
+			"email":    user.Email,
+			"name":     user.Name,
+			"surname":  user.Surname,
+			"birthday": user.Birthday,
 		},
 	})
 }
@@ -120,41 +111,6 @@ func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]
 	}
 
 	return fields
-}
-
-func IsStrongPassword(password string) bool {
-
-	var hasUpper bool
-	var hasLower bool
-	var hasNumber bool
-	var hasSymbol bool
-
-	for _, c := range password {
-
-		switch {
-		case 'A' <= c && c <= 'Z':
-			hasUpper = true
-		case 'a' <= c && c <= 'z':
-			hasLower = true
-		case '0' <= c && c <= '9':
-			hasNumber = true
-		default:
-			hasSymbol = true
-		}
-	}
-
-	return hasUpper && hasLower && hasNumber && hasSymbol
-}
-
-// esto lo pille de ahi -> https://gowebexamples.com/password-hashing/
-func hashPasword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
 }
 
 /* End of register */
