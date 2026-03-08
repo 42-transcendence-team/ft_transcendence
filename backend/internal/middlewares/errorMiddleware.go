@@ -4,7 +4,6 @@ import (
 	appErr "backend/internal/errors"
 	"net/http"
 
-	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -50,7 +49,7 @@ func ErrorMiddleware() gin.HandlerFunc {
 
 		// Si es AppError, usamos lo que ya viene definido
 		if ae, ok := err.(*appErr.AppError); ok {
-			fmt.Printf("ae.Details nil=%v len=%d\n", ae.Details == nil, len(ae.Details))
+			// debug fmt.Printf("ae.Details nil=%v len=%d\n", ae.Details == nil, len(ae.Details))
 			status = ae.HTTPStatus
 			resp.Error.Code = ae.Code
 			resp.Error.Message = ae.Message
