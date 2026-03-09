@@ -1,8 +1,9 @@
 package server
 
 import (
-	"github.com/gin-gonic/gin"
 	routes "backend/internal/routes"
+
+	"github.com/gin-gonic/gin"
 )
 
 // El enroutador es una retaila de: Metodo -> ruta -> handler
