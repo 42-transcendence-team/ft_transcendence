@@ -57,6 +57,9 @@ build-%: FORCE
 
 build-pgadmin: build-postgres
 
+back:
+	$(DC) up -d --build backend postgres
+
 # Para usar esta regla se debe ejecutar el comando con la variable s, por ejemplo: make shell s=backend
 shell:
 	$(DC) exec $(s) sh -c "bash || sh"
@@ -91,6 +94,7 @@ help:
 	@echo "Service Specific:"
 	@echo "  make build         - Build all images"
 	@echo "  make build-<svc>   - Build and restart a specific service"
+	@echo "  make back          - Start backend + postgres only"
 	@echo "  make build-pgadmin - Build pgAdmin service (depends on postgres)"
 	@echo ""
 	@echo "Development Environment:"

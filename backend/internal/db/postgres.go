@@ -26,6 +26,8 @@ func ConnectPostgres(cfg *config.Config) (*gorm.DB, error) {
 	)
 
 	gormCfg := &gorm.Config{
+		// necesario para que gorm pueda parsear los errores de postgres y poder saber por que falla, como gorm.ErrDuplicatedKey
+		TranslateError: true,
 		// Silencioso por defecto para no ensuciar logs.
 		// Si quieres debug en dev: db = db.Debug()
 		Logger: logger.Default.LogMode(logger.Silent),
