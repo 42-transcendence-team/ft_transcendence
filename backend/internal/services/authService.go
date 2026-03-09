@@ -16,7 +16,7 @@ func NewAuthService(userRepo *repository.UserRepository) *AuthService {
 	return &AuthService{userRepo: userRepo}
 }
 
-type RegisterImput struct {
+type RegisterInput struct {
 	Login    string
 	Email    string
 	Password string
@@ -25,9 +25,9 @@ type RegisterImput struct {
 	Birtday  time.Time
 }
 
-func (s *AuthService) Register(imput RegisterImput) (user models.User, err error) {
+func (s *AuthService) Register(input RegisterInput) (user models.User, err error) {
 
-	if !IsStrongPassword(imput.Password) {
+	if !IsStrongPassword(input.Password) {
 		return models.User{}, appErr.NewValidation(map[string]string{
 			"password": "weak_password",
 		})
@@ -35,12 +35,12 @@ func (s *AuthService) Register(imput RegisterImput) (user models.User, err error
 
 	// https://gowebexamples.com/password-hashing/
 	// no se si es demasiado simple
-	imput.Password, err = hashPassword(imput.Password)
+	input.Password, err = hashPassword(input.Password)
 	if err != nil {
 		return models.User{}, appErr.NewInternal(err)
 	}
 
-	user = NewUser(imput)
+	user = NewUser(input)
 	err = s.userRepo.Create(&user)
 	if err != nil {
 		if s.userRepo.IsDuplicatedKey(err) {
@@ -53,14 +53,14 @@ func (s *AuthService) Register(imput RegisterImput) (user models.User, err error
 	return user, nil
 }
 
-func NewUser(imput RegisterImput) models.User {
+func NewUser(input RegisterInput) models.User {
 	return models.User{
-		Login:    imput.Login,
-		Email:    &imput.Email,
-		Password: imput.Password,
-		Name:     imput.Name,
-		Surname:  imput.Surname,
-		Birthday: imput.Birtday,
+		Login:    input.Login,
+		Email:    &input.Email,
+		Password: input.Password,
+		Name:     input.Name,
+		Surname:  input.Surname,
+		Birthday: input.Birtday,
 	}
 }
 

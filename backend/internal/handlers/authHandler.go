@@ -70,7 +70,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.AuthService.Register(services.RegisterImput{
+	user, err := h.AuthService.Register(services.RegisterInput{
 		Login:    req.Login,
 		Email:    req.Email,
 		Password: req.Password,
