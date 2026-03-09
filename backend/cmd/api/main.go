@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"backend/config"
 	"backend/internal/db"
-	"backend/internal/models"
 	"backend/internal/server"
+	"fmt"
 	"log"
 )
 
@@ -21,15 +20,15 @@ func main() {
 		log.Fatalf("[BOOT][DB] init failed: %v", err)
 	}
 
-	err = gormDB.AutoMigrate(&models.User{})
+	err = db.Migrate(gormDB)
 	if err != nil {
-		log.Fatalf("[BOOT][DB] AutoMigrate failed: %v", err)
+		log.Fatalf("[BOOT][DB] Migrate failed: %v", err)
 	}
 
 	srv := server.NewHTTPServer(conf, gormDB)
 	log.Printf("[BOOT] starting server on %s:%d", srv.Conf.GoServiceHost, srv.Conf.GoServicePort)
 	addr := fmt.Sprintf("%s:%d", srv.Conf.GoServiceHost, srv.Conf.GoServicePort)
 	if err := srv.Engine.Run(addr); err != nil {
-			log.Fatalf("[BOOT] server stopped with error: %v", err)
+		log.Fatalf("[BOOT] server stopped with error: %v", err)
 	}
 }
