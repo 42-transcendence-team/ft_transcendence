@@ -56,7 +56,7 @@ func (s *AuthService) Register(input RegisterInput) (user models.User, err error
 func NewUser(input RegisterInput) models.User {
 	return models.User{
 		Login:    input.Login,
-		Email:    &input.Email,
+		Email:    input.Email,
 		Password: input.Password,
 		Name:     input.Name,
 		Surname:  input.Surname,
@@ -70,7 +70,7 @@ func hashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (s *AuthService) CheckPasswordHash(password, hash string) bool {
+func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
@@ -97,4 +97,23 @@ func IsStrongPassword(password string) bool {
 	}
 
 	return hasUpper && hasLower && hasNumber && hasSymbol
+}
+
+type LoginInput struct {
+	Identifier string
+	Password   string
+}
+
+func (s *AuthService) Login(input LoginInput) (*models.User, error) {
+
+	user, err := s.userRepo.FindByLoginOrEmail(input.Identifier)
+	if err != nil {
+		return nil, appErr.NewUnauthorized("email or login invalid credentials")
+	}
+
+	if !CheckPasswordHash(input.Password, user.Password) {
+		return nil, appErr.NewUnauthorized("password invalid credentials")
+	}
+
+	return user, err
 }
