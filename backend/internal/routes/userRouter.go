@@ -1,19 +1,17 @@
 package routes
 
 import (
-	"backend/internal/user"
+	"backend/internal/handlers"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-func UserRoutes(r *gin.Engine, db *gorm.DB) {
-	UserGroup := r.Group("/users")
+func UserRoutes(api *gin.RouterGroup, userHandler *handlers.UserHandler) {
+	UserGroup := api.Group("/users")
 	{
-		UserGroup.POST("", user.UserCreate(db))
-		UserGroup.GET("/index", user.UserIndex(db))
-		UserGroup.GET("/:id", user.UserShow(db))
-		UserGroup.DELETE("/:id", user.UserDelete(db))
-		UserGroup.PUT("/:id", user.UserUpdate(db))
+		UserGroup.GET("/", userHandler.GetAll)
+		// UserGroup.GET("/:id")
+		// UserGroup.DELETE("/:id")
+		//UserGroup.PUT("/:id", userHandler.Upload)
 	}
 }

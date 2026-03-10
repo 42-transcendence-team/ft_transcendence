@@ -44,7 +44,7 @@ func UserUpdate(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		user.Login = body.Login
-		user.Email = body.Email
+		user.Email = &body.Email
 		user.Password = body.Password
 		user.Role = body.Role
 		user.Name = body.Name

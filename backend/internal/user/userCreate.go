@@ -27,7 +27,7 @@ func UserCreate(db *gorm.DB) gin.HandlerFunc {
 		}
 		user := models.User{
 			Login:    body.Login,
-			Email:    body.Email,
+			Email:    &body.Email,
 			Password: body.Password,
 			Role:     body.Role,
 			Name:     body.Name,
