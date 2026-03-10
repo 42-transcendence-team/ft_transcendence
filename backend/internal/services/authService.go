@@ -108,11 +108,11 @@ func (s *AuthService) Login(input LoginInput) (*models.User, error) {
 
 	user, err := s.userRepo.FindByLoginOrEmail(input.Identifier)
 	if err != nil {
-		return nil, appErr.NewUnauthorized("email or login invalid credentials")
+		return nil, appErr.NewUnauthorized("invalid credentials")
 	}
 
 	if !CheckPasswordHash(input.Password, user.Password) {
-		return nil, appErr.NewUnauthorized("password invalid credentials")
+		return nil, appErr.NewUnauthorized("invalid credentials")
 	}
 
 	return user, err
