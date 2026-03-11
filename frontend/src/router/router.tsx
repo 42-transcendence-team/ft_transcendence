@@ -23,17 +23,14 @@ export const router = createBrowserRouter([
       // ---------- RUTAS PÚBLICAS ----------
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
-
-
-	  { path: "forgot-password", element: <ForgotPassword /> },
-	  { path: "reset-password/:token", element: <ResetPassword /> },
-
-	  { path: "about", element: <About /> },
-	  { path: "faq", element: <FAQ /> },
-	  { path: "developers", element: <Developers /> },
-	  { path: "cookies", element: <Cookies /> },
-	  { path: "contact", element: <Contact /> },
-	  { path: "privacy-policy", element: <PrivacyPolicy />},
+	    { path: "forgot-password", element: <ForgotPassword /> },
+	    { path: "reset-password/:token", element: <ResetPassword /> },
+	    { path: "about", element: <About /> },
+	    { path: "faq", element: <FAQ /> },
+	    { path: "developers", element: <Developers /> },
+	    { path: "cookies", element: <Cookies /> },
+	    { path: "contact", element: <Contact /> },
+	    { path: "privacy-policy", element: <PrivacyPolicy />},
       // ---------- RUTAS PRIVADAS ----------
       // Todas las privadas cuelgan de un layout común.
       {
@@ -44,8 +41,6 @@ export const router = createBrowserRouter([
           // { path: "profile/:username", element: <Profile /> },
         ],
       },
-
->>>>>>> main
       // ---------- NOT FOUND ----------
       { path: "*", element: <NotFound /> },
     ],
