@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"backend/internal/models"
+	"backend/internal/dto"
 	"backend/internal/services"
 	"net/http"
 
@@ -16,10 +16,18 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 	return &UserHandler{UserService: userService}
 }
 
-func (h *UserHandler) GetAll(c *gin.Context) {
-	var users []models.User
+func (h *UserHandler) Filter(c *gin.Context) {
 
-	err := h.UserService.GetAll(&users)
+	var filter dto.UserFilter
+
+	err := c.ShouldBindQuery(&filter)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	users, err := h.UserService.Filter(filter)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -27,4 +35,44 @@ func (h *UserHandler) GetAll(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, users)
+}
+
+func (h *UserHandler) Delete(c *gin.Context) {
+	var filter dto.UserFilter
+
+	err := c.ShouldBindJSON(&filter)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	err = h.UserService.Delete(filter)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}
+
+func (h *UserHandler) Modify(c *gin.Context) {
+	var user dto.UserFilter
+
+	err := c.ShouldBindJSON(&user)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	err = h.UserService.Modify(user)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User modified successfully"})
 }
