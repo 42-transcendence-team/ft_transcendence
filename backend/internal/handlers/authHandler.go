@@ -4,11 +4,21 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"errors"
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"net/http"
+	"time"
 )
+
+type AuthHandler struct {
+	AuthService *services.AuthService
+}
+
+func NewAuthHandler(authService *services.AuthService) *AuthHandler {
+	return &AuthHandler{AuthService: authService}
+}
+
+/* Register */
 
 /* JSON q manda el fronted
 Si algun campo no cumple als regals de la struct de abajo manda error con especificacioens
@@ -24,15 +34,6 @@ de q ha fallado segun la estructura d ela funcon apperr NewValidation()
 }
 */
 
-type AuthHandler struct {
-	AuthService *services.AuthService
-}
-
-func NewAuthHandler(authService *services.AuthService) *AuthHandler {
-	return &AuthHandler{AuthService: authService}
-}
-
-/* Register */
 type RegisterRequest struct {
 	Login           string `json:"login" binding:"required"`
 	Email           string `json:"email" binding:"required,email"`
@@ -47,16 +48,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	var req RegisterRequest
 
-	err := c.ShouldBindJSON(&req)
+	err := ValidationBindRequest(c, &req)
 	if err != nil {
-		var validationErr validator.ValidationErrors
-
-		if errors.As(err, &validationErr) {
-			fields := ValidationErrorsToMap(validationErr)
-			c.Error(appErr.NewValidation(fields))
-		} else {
-			c.Error(appErr.NewBadRequest("invalid_request_body"))
-		}
+		c.Error(err)
 		c.Abort()
 		return
 	}
@@ -99,6 +93,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 /* End of register */
 
+/* Login */
+
 /*
 peticion que manda el front
 {
@@ -106,8 +102,6 @@ peticion que manda el front
 	"password":	"Uwu&password&strong42"
 }
 */
-
-/* Login */
 
 type LoginRequest struct {
 	Identifier string `json:"identifier" binding:"required"`
@@ -118,16 +112,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	var req LoginRequest
 
-	err := c.ShouldBindJSON(&req)
+	err := ValidationBindRequest(c, &req)
 	if err != nil {
-		var validationErr validator.ValidationErrors
-
-		if errors.As(err, &validationErr) {
-			fields := ValidationErrorsToMap(validationErr)
-			c.Error(appErr.NewValidation(fields))
-		} else {
-			c.Error(appErr.NewBadRequest("invalid_request_body"))
-		}
+		c.Error(err)
 		c.Abort()
 		return
 	}
@@ -142,21 +129,59 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// hay q ver como se mandan los msg al front y que necesita
+	setCookie(c, strToken)
+
+	// TODO: hay q ver como se mandan los msg al front y que necesita
 	c.JSON(200, gin.H{
 		"message": "user login success",
 		"user": gin.H{
 			"id":    user.ID,
 			"login": user.Login,
 			"email": user.Email,
-			"token": strToken,
+			"token": strToken, // QUITAR ESTO DE AQUI SOLO ES PA PROBAR !!!!!!!!!!!!!!!
 		},
 	})
 }
 
+func setCookie(c *gin.Context, strToken string) {
+
+	exp := time.Now().Add(services.TokenTTL)
+
+	cookie := &http.Cookie{
+		Name:     "jwt",
+		Value:    strToken,
+		Expires:  exp,  // Expiración
+		HttpOnly: true, // Previene acceso por JS (seguridad)
+		// Secure:   true,              	// Solo enviar por HTTPS, para produccion
+		Secure:   false,                // para desarrollo, asi si haces http://localhost:8080 para pruebas funciona
+		SameSite: http.SameSiteLaxMode, // Protección CSRF
+		Path:     "/",
+	}
+
+	http.SetCookie(c.Writer, cookie)
+
+}
+
 /*End of login*/
 
+/*Request validation*/
 // tal vez esto haya que quitarlo de aqui, pero tampoco se dodne iria
+func ValidationBindRequest(c *gin.Context, req interface{}) error {
+
+	err := c.ShouldBindJSON(&req)
+
+	if err != nil {
+		var validationErr validator.ValidationErrors
+		if errors.As(err, &validationErr) {
+			fields := ValidationErrorsToMap(validationErr)
+			return appErr.NewValidation(fields)
+		}
+		return appErr.NewBadRequest("invalid_request_body")
+	}
+
+	return nil
+}
+
 func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]string {
 
 	fields := make(map[string]string)
@@ -171,3 +196,5 @@ func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]
 
 	return fields
 }
+
+/*End of request validation*/

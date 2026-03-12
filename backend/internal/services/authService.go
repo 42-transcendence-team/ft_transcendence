@@ -111,6 +111,9 @@ type CustomClaims struct {
 	jwt.StandardClaims
 }
 
+const TokenTTL = 24 * time.Hour // el token dura 24 horas
+// const TokenTTL = 60 * time.Second // si quieres que el token dure x segundos para probarlo
+
 func (s *AuthService) Login(input LoginInput) (string, *models.User, error) {
 
 	user, err := s.userRepo.FindByLoginOrEmail(input.Identifier)
@@ -132,17 +135,18 @@ func (s *AuthService) Login(input LoginInput) (string, *models.User, error) {
 
 func createJwtToken(user *models.User) (string, error) {
 
+	exp := time.Now().Add(TokenTTL)
+
 	claims := CustomClaims{
 		user.ID,
 		*user.Email,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(), // 24 h
-			// ExpiresAt: time.Now().Add(time.Minute * time.Duration(1)).Unix(), // para pruebas expira en 1 min
+			ExpiresAt: exp.Unix(),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	strToken, err := token.SignedString([]byte("JWT-supersecret-sign-password"))
+	strToken, err := token.SignedString([]byte("JWt-secret-hay-q-importarlo"))
 	if err != nil {
 		return "", appErr.NewInternal(err)
 	}
