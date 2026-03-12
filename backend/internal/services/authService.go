@@ -57,7 +57,7 @@ func (s *AuthService) Register(input RegisterInput) (user models.User, err error
 func NewUser(input RegisterInput) models.User {
 	return models.User{
 		Login:    input.Login,
-		Email:    input.Email,
+		Email:    &input.Email,
 		Password: input.Password,
 		Name:     input.Name,
 		Surname:  input.Surname,
@@ -108,7 +108,6 @@ type LoginInput struct {
 type CustomClaims struct {
 	Id    uint   `json:"id"`
 	Email string `json:"email"`
-	Role  string `json:"role"`
 	jwt.StandardClaims
 }
 
@@ -123,10 +122,19 @@ func (s *AuthService) Login(input LoginInput) (string, *models.User, error) {
 		return "", nil, appErr.NewUnauthorized("invalid credentials")
 	}
 
+	strToken, err := createJwtToken(user)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return strToken, user, err
+}
+
+func createJwtToken(user *models.User) (string, error) {
+
 	claims := CustomClaims{
 		user.ID,
-		user.Email,
-		user.Role,
+		*user.Email,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(), // 24 h
 			// ExpiresAt: time.Now().Add(time.Minute * time.Duration(1)).Unix(), // para pruebas expira en 1 min
@@ -134,20 +142,10 @@ func (s *AuthService) Login(input LoginInput) (string, *models.User, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenStr, err := token.SignedString([]byte("JWT-supersecret-sign-password"))
+	strToken, err := token.SignedString([]byte("JWT-supersecret-sign-password"))
 	if err != nil {
-		return "", nil, appErr.NewInternal(err)
+		return "", appErr.NewInternal(err)
 	}
 
-	/*cookie := http.Cookie{
-		Name:     "token",
-		Value:    tokenStr,
-		Expires:  expTime,
-		HttpOnly: true, // Importante: Evita acceso desde JS (XSS)
-		Secure:   true, // Importante: Solo enviar sobre HTTPS (poner false en localhost si no hay HTTPS)
-		Path:     "/",
-		SameSite: http.SameSiteLaxMode, // Protege contra CSRF
-	}*/
-
-	return tokenStr, user, err
+	return strToken, err
 }
