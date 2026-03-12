@@ -132,7 +132,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := h.AuthService.Login(services.LoginInput{
+	strToken, user, err := h.AuthService.Login(services.LoginInput{
 		Identifier: req.Identifier,
 		Password:   req.Password,
 	})
@@ -149,6 +149,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			"id":    user.ID,
 			"login": user.Login,
 			"email": user.Email,
+			"token": strToken,
 		},
 	})
 }

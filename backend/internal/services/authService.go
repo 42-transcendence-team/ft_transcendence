@@ -4,6 +4,7 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"backend/internal/repository"
+	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -104,16 +105,49 @@ type LoginInput struct {
 	Password   string
 }
 
-func (s *AuthService) Login(input LoginInput) (*models.User, error) {
+type CustomClaims struct {
+	Id    uint   `json:"id"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+	jwt.StandardClaims
+}
+
+func (s *AuthService) Login(input LoginInput) (string, *models.User, error) {
 
 	user, err := s.userRepo.FindByLoginOrEmail(input.Identifier)
 	if err != nil {
-		return nil, appErr.NewUnauthorized("invalid credentials")
+		return "", nil, appErr.NewUnauthorized("invalid credentials")
 	}
 
 	if !CheckPasswordHash(input.Password, user.Password) {
-		return nil, appErr.NewUnauthorized("invalid credentials")
+		return "", nil, appErr.NewUnauthorized("invalid credentials")
 	}
 
-	return user, err
+	claims := CustomClaims{
+		user.ID,
+		user.Email,
+		user.Role,
+		jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(), // 24 h
+			// ExpiresAt: time.Now().Add(time.Minute * time.Duration(1)).Unix(), // para pruebas expira en 1 min
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, err := token.SignedString([]byte("JWT-supersecret-sign-password"))
+	if err != nil {
+		return "", nil, appErr.NewInternal(err)
+	}
+
+	/*cookie := http.Cookie{
+		Name:     "token",
+		Value:    tokenStr,
+		Expires:  expTime,
+		HttpOnly: true, // Importante: Evita acceso desde JS (XSS)
+		Secure:   true, // Importante: Solo enviar sobre HTTPS (poner false en localhost si no hay HTTPS)
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode, // Protege contra CSRF
+	}*/
+
+	return tokenStr, user, err
 }
