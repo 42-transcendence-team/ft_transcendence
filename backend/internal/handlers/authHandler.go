@@ -119,7 +119,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	strToken, user, err := h.AuthService.Login(services.LoginInput{
+	strToken, user, expTime, err := h.AuthService.Login(services.LoginInput{
 		Identifier: req.Identifier,
 		Password:   req.Password,
 	})
@@ -129,7 +129,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	setCookie(c, strToken)
+	setCookie(c, strToken, expTime)
 
 	// TODO: hay q ver como se mandan los msg al front y que necesita
 	c.JSON(200, gin.H{
@@ -143,9 +143,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
-func setCookie(c *gin.Context, strToken string) {
-
-	exp := time.Now().Add(services.TokenTTL)
+func setCookie(c *gin.Context, strToken string, exp time.Time) {
 
 	cookie := &http.Cookie{
 		Name:     "jwt",

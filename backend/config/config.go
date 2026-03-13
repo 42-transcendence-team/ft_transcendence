@@ -28,6 +28,9 @@ type Config struct {
 	DBMaxOpenConns       int
 	DBMaxIdleConns       int
 	DBConnMaxLifetimeMin int
+
+	JwtSecret         string
+	JwtExpirationTime int
 }
 
 func Load() (*Config, error) {
@@ -58,6 +61,14 @@ func Load() (*Config, error) {
 	c.DBPassword = strings.TrimSpace(os.Getenv("DB_PASSWORD"))
 	c.DBSSLMode = strings.TrimSpace(os.Getenv("DB_SSLMODE"))
 	c.DBTimeZone = strings.TrimSpace(os.Getenv("DB_TIMEZONE"))
+
+	//Jwt
+	exp, err := strconv.Atoi(strings.TrimSpace(os.Getenv("JWT_EXPIRATION")))
+	if err != nil {
+		return nil, fmt.Errorf("JWT_EXPIRATION must be a number")
+	}
+	c.JwtExpirationTime = exp
+	c.JwtSecret = strings.TrimSpace(os.Getenv("JWT_SECRET"))
 
 	// Pool (si no existen, luego tunePool mete defaults también)
 	c.DBMaxOpenConns = envIntOrDefault("DB_MAX_OPEN_CONNS", 25)

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"backend/config"
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"backend/internal/repository"
@@ -12,10 +13,14 @@ import (
 
 type AuthService struct {
 	userRepo *repository.UserRepository
+	cfg      *config.Config
 }
 
-func NewAuthService(userRepo *repository.UserRepository) *AuthService {
-	return &AuthService{userRepo: userRepo}
+func NewAuthService(userRepo *repository.UserRepository, cfg *config.Config) *AuthService {
+	return &AuthService{
+		userRepo: userRepo,
+		cfg:      cfg,
+	}
 }
 
 type RegisterInput struct {
@@ -107,36 +112,35 @@ type LoginInput struct {
 }
 
 type CustomClaims struct {
+	Id uint `json:"id"`
 	jwt.RegisteredClaims
 }
 
-const TokenTTL = 24 * time.Hour // el token dura 24 horas
-// const TokenTTL = 60 * time.Second // si quieres que el token dure x segundos para probarlo
-
-func (s *AuthService) Login(input LoginInput) (string, *models.User, error) {
+func (s *AuthService) Login(input LoginInput) (string, *models.User, time.Time, error) {
 
 	user, err := s.userRepo.FindByLoginOrEmail(input.Identifier)
 	if err != nil {
-		return "", nil, appErr.NewUnauthorized("invalid credentials")
+		return "", nil, time.Time{}, appErr.NewUnauthorized("invalid credentials")
 	}
 
 	if !CheckPasswordHash(input.Password, user.Password) {
-		return "", nil, appErr.NewUnauthorized("invalid credentials")
+		return "", nil, time.Time{}, appErr.NewUnauthorized("invalid credentials")
 	}
 
-	strToken, err := createJwtToken(user)
+	strToken, expTime, err := s.CreateJwtToken(user)
 	if err != nil {
-		return "", nil, err
+		return "", nil, time.Time{}, err
 	}
 
-	return strToken, user, err
+	return strToken, user, expTime, err
 }
 
-func createJwtToken(user *models.User) (string, error) {
+func (s *AuthService) CreateJwtToken(user *models.User) (string, time.Time, error) {
 
-	exp := time.Now().Add(TokenTTL)
+	exp := time.Now().Add(time.Duration(s.cfg.JwtExpirationTime) * time.Second)
 
 	claims := CustomClaims{
+		user.ID,
 		jwt.RegisteredClaims{
 			Subject:   strconv.Itoa(int(user.ID)),     // "sub" quien es el dueño del token
 			ExpiresAt: jwt.NewNumericDate(exp),        // "exp" cuando deja el token de ser valido
@@ -145,10 +149,10 @@ func createJwtToken(user *models.User) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	strToken, err := token.SignedString([]byte("JWt-secret-hay-q-importarlo"))
+	strToken, err := token.SignedString([]byte(s.cfg.JwtSecret))
 	if err != nil {
-		return "", appErr.NewInternal(err)
+		return "", time.Time{}, appErr.NewInternal(err)
 	}
 
-	return strToken, err
+	return strToken, exp, err
 }
