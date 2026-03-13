@@ -4,8 +4,9 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"backend/internal/repository"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"strconv"
 	"time"
 )
 
@@ -106,9 +107,7 @@ type LoginInput struct {
 }
 
 type CustomClaims struct {
-	Id    uint   `json:"id"`
-	Email string `json:"email"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 const TokenTTL = 24 * time.Hour // el token dura 24 horas
@@ -138,10 +137,10 @@ func createJwtToken(user *models.User) (string, error) {
 	exp := time.Now().Add(TokenTTL)
 
 	claims := CustomClaims{
-		user.ID,
-		*user.Email,
-		jwt.StandardClaims{
-			ExpiresAt: exp.Unix(),
+		jwt.RegisteredClaims{
+			Subject:   strconv.Itoa(int(user.ID)),     // "sub" quien es el dueño del token
+			ExpiresAt: jwt.NewNumericDate(exp),        // "exp" cuando deja el token de ser valido
+			IssuedAt:  jwt.NewNumericDate(time.Now()), // "iat" cuando se creo el token
 		},
 	}
 
