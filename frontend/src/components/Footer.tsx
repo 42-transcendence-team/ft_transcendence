@@ -1,3 +1,4 @@
+import { NavLink } from "react-router"
 import logo from "../assets/icons/24_logo.png"
 
 export const Footer = () => {
@@ -6,12 +7,12 @@ export const Footer = () => {
 
 			<nav>
 				<ul>
-					<li><a href="/about">About</a></li>
-					<li><a href="/cookies">Cookies</a></li>
-					<li><a href="/faq">F.A.Q.</a></li>
-					<li><a href="/contact">Contact</a></li>
-					<li><a href="/developers">Developers</a></li>
-					<li><a href="/privacy-policy">Privacy Policy</a></li>
+					<li><NavLink to="/about">About</NavLink></li>
+					<li><NavLink to="/cookies">Cookies</NavLink></li>
+					<li><NavLink to="/faq">F.A.Q.</NavLink></li>
+					<li><NavLink to="/contact">Contact</NavLink></li>
+					<li><NavLink to="/developers">Developers</NavLink></li>
+					<li><NavLink to="/privacy-policy">Privacy Policy</NavLink></li>
 				</ul>
 			</nav>
 
