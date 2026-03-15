@@ -156,3 +156,13 @@ func (s *AuthService) CreateJwtToken(user *models.User) (string, time.Time, erro
 
 	return strToken, exp, err
 }
+
+func (s *AuthService) GetUserById(userID uint) (*models.User, error) {
+
+	user, err := s.userRepo.FindById(userID)
+	if err != nil {
+		return nil, appErr.NewUnauthorized("invalid user")
+	}
+
+	return user, err
+}

@@ -38,6 +38,10 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			if !exists {
 				// es que no hay userID en el contexto, creo q nunca deberia de no haber si lelgo hasta ahi pero puede ser bueno chekearlo
 			}
+			y luego
+			userID, ok := userIDValue.(uint) // para cambiar el tipo de variable de any a uint
+			if !ok {
+			}
 		*/
 
 		c.Next()
