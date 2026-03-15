@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/config"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"errors"
@@ -12,10 +13,14 @@ import (
 
 type AuthHandler struct {
 	AuthService *services.AuthService
+	cfg         *config.Config
 }
 
-func NewAuthHandler(authService *services.AuthService) *AuthHandler {
-	return &AuthHandler{AuthService: authService}
+func NewAuthHandler(authService *services.AuthService, cfg *config.Config) *AuthHandler {
+	return &AuthHandler{
+		AuthService: authService,
+		cfg:         cfg,
+	}
 }
 
 /* Register */
@@ -129,7 +134,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	setCookie(c, strToken, expTime)
+	h.setCookie(c, strToken, expTime)
 
 	// TODO: hay q ver como se mandan los msg al front y que necesita
 	c.JSON(200, gin.H{
@@ -151,7 +156,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	expTime := time.Unix(0, 0)
 
-	setCookie(c, "", expTime)
+	h.setCookie(c, "", expTime)
 
 	// TODO: hay q ver como se mandan los msg al front y que necesita
 	c.JSON(200, gin.H{
@@ -161,15 +166,22 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 /*End of logout*/
 
-func setCookie(c *gin.Context, strToken string, exp time.Time) {
+func (h *AuthHandler) setCookie(c *gin.Context, strToken string, exp time.Time) {
+
+	var secure bool
+
+	if h.cfg.Env == "prod" {
+		secure = true // Solo enviar por HTTPS, para produccion
+	} else {
+		secure = false // para desarrollo, asi si haces http://localhost:8080 para pruebas funciona
+	}
 
 	cookie := &http.Cookie{
 		Name:     "jwt",
 		Value:    strToken,
 		Expires:  exp,  // Expiración
 		HttpOnly: true, // Previene acceso por JS (seguridad)
-		// Secure:   true,              	// Solo enviar por HTTPS, para produccion
-		Secure:   false,                // para desarrollo, asi si haces http://localhost:8080 para pruebas funciona
+		Secure:   secure,
 		SameSite: http.SameSiteLaxMode, // Protección CSRF
 		Path:     "/",
 	}

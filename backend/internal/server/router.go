@@ -18,7 +18,7 @@ func (srv *HTTPServer) Router() {
 
 	userRepo := repository.NewUserRepository(srv.Db)
 	authService := services.NewAuthService(userRepo, srv.Conf)
-	authHandler := handlers.NewAuthHandler(authService)
+	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
 
 	api := srv.Engine.Group("/api/v1")
 
