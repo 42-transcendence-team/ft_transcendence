@@ -143,6 +143,24 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
+/*End of login*/
+
+/*Logout*/
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+
+	expTime := time.Unix(0, 0)
+
+	setCookie(c, "", expTime)
+
+	// TODO: hay q ver como se mandan los msg al front y que necesita
+	c.JSON(200, gin.H{
+		"message": "user logout success",
+	})
+}
+
+/*End of logout*/
+
 func setCookie(c *gin.Context, strToken string, exp time.Time) {
 
 	cookie := &http.Cookie{
@@ -156,11 +174,13 @@ func setCookie(c *gin.Context, strToken string, exp time.Time) {
 		Path:     "/",
 	}
 
+	if strToken == "" {
+		cookie.MaxAge = -1
+	}
+
 	http.SetCookie(c.Writer, cookie)
 
 }
-
-/*End of login*/
 
 /*Request validation*/
 // tal vez esto haya que quitarlo de aqui, pero tampoco se dodne iria

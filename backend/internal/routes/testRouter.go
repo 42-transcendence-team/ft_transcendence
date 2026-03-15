@@ -38,7 +38,7 @@ si haces http://localhost:8080/api/v1/test sin login ni registro (sin la cokie g
 te tiene que dar unautorized -> "missing auth token"
 
 si cambiais en el .env JWT_EXPIRATION=10 a 10 s veries que el token solo dura 10s entoces habra expirado y
-el front tendra q hacer login otra vez
+el front tendra q hacer login otra vez, la cokie y el token expiran a la vez
 */
 
 func TestRoute(incomingRoutes *gin.RouterGroup) {

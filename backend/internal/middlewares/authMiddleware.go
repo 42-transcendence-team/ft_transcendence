@@ -55,6 +55,7 @@ func ValidateToken(strToken string, cfg *config.Config) (*services.CustomClaims,
 		})
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
+			// si expira el token nunca llegara aqui por que la cokie directamente se borra, lo dejo por seguridad
 			return nil, appErr.NewUnauthorized("expired token")
 		}
 		if errors.Is(err, jwt.ErrTokenSignatureInvalid) {
