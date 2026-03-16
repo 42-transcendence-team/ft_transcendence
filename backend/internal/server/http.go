@@ -27,9 +27,9 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB) *HTTPServer {
 		r.Use(gin.Logger())
 	}
 
-	r.Use(middlewares.RecoveryJSON())    // captura panic y devuelve JSON
-	r.Use(middlewares.ErrorMiddleware()) // convierte c.Errors a JSON estándar
-	r.Use(middlewares.CORS())            // CORS para permitir peticiones desde el frontend
+	r.Use(middlewares.RecoveryJSON())           // captura panic y devuelve JSON
+	r.Use(middlewares.ErrorMiddleware())        // convierte c.Errors a JSON estándar
+	r.Use(middlewares.CORS(conf.GoAllowedURLs)) // CORS para permitir peticiones desde el frontend
 
 	_ = r.SetTrustedProxies(nil)
 
