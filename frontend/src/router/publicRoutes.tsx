@@ -12,10 +12,9 @@ import { PublicLayout } from "layouts/publicLayout"
 import { HomePage } from "@pages/HomePage";
 
 export const PublicRoutes = {
-	path: "/",
 	element: <PublicLayout />,
 	children: [
-		{ path: "/", element: <HomePage /> },
+		{ index: true, element: <HomePage /> },
 		{ path: "login", element: <Login /> },
 		{ path: "register", element: <Register /> },
 		{ path: "forgot-password", element: <ForgotPassword /> },

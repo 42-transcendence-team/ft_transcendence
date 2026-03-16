@@ -1,11 +1,10 @@
 import App from "../App";
 import { createBrowserRouter } from "react-router-dom";
 
-import { HomePage } from "@pages/HomePage";
 import { NotFound } from "@pages/NotFound";
 
-import { PrivateLayout } from "@components/PrivateLayout";
 import { PublicRoutes } from "./publicRoutes";
+import { PrivateRoutes } from "./privateRoutes"
 
 export const router = createBrowserRouter([
 	{
@@ -13,15 +12,7 @@ export const router = createBrowserRouter([
 		element: <App />,
 		children: [
 			PublicRoutes,
-			{
-				path: "app",
-				element: <PrivateLayout />,
-				children: [
-					{ index: true, element: <HomePage /> },
-					// Aquí irán más privadas: profile, settings, chat, etc.
-					// { path: "profile/:username", element: <Profile /> },
-				],
-			},
+			PrivateRoutes,
 			// ---------- NOT FOUND ----------
 			{ path: "*", element: <NotFound /> },
 		],
