@@ -3,6 +3,7 @@ package server
 import (
 	"backend/config"
 	"backend/internal/middlewares"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -28,6 +29,7 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB) *HTTPServer {
 
 	r.Use(middlewares.RecoveryJSON())    // captura panic y devuelve JSON
 	r.Use(middlewares.ErrorMiddleware()) // convierte c.Errors a JSON estándar
+	r.Use(middlewares.CORS())            // CORS para permitir peticiones desde el frontend
 
 	_ = r.SetTrustedProxies(nil)
 
