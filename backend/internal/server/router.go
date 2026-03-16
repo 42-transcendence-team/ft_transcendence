@@ -6,6 +6,7 @@ import (
 	"backend/internal/repository"
 	routes "backend/internal/routes"
 	"backend/internal/services"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,8 +18,12 @@ func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 
 	userRepo := repository.NewUserRepository(srv.Db)
+
 	authService := services.NewAuthService(userRepo, srv.Conf)
+	userService := services.NewUserService(userRepo)
+
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
+	userHandler := handlers.NewUserHandler(userService)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -31,6 +36,7 @@ func (srv *HTTPServer) Router() {
 	{
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
+		routes.UserRoutes(api, userHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 
