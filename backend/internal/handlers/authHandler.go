@@ -97,6 +97,64 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	})
 }
 
+/* End of register */
+
+/*
+peticion que manda el front
+{
+	"identifier": "login-or-email"
+	"password":	"Uwu&password&strong42"
+}
+*/
+
+/* Login */
+
+type LoginRequest struct {
+	Identifier string `json:"identifier" binding:"required"`
+	Password   string `json:"password" biding:"required"`
+}
+
+func (h *AuthHandler) Login(c *gin.Context) {
+
+	var req LoginRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		var validationErr validator.ValidationErrors
+
+		if errors.As(err, &validationErr) {
+			fields := ValidationErrorsToMap(validationErr)
+			c.Error(appErr.NewValidation(fields))
+		} else {
+			c.Error(appErr.NewBadRequest("invalid_request_body"))
+		}
+		c.Abort()
+		return
+	}
+
+	user, err := h.AuthService.Login(services.LoginInput{
+		Identifier: req.Identifier,
+		Password:   req.Password,
+	})
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	// hay q ver como se mandan los msg al front y que necesita
+	c.JSON(200, gin.H{
+		"message": "user login success",
+		"user": gin.H{
+			"id":    user.ID,
+			"login": user.Login,
+			"email": user.Email,
+		},
+	})
+}
+
+/*End of login*/
+
 // tal vez esto haya que quitarlo de aqui, pero tampoco se dodne iria
 func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]string {
 
@@ -112,5 +170,3 @@ func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]
 
 	return fields
 }
-
-/* End of register */
