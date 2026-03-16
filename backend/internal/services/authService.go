@@ -2,13 +2,15 @@ package services
 
 import (
 	"backend/config"
+	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"backend/internal/repository"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 	"strconv"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
@@ -163,6 +165,42 @@ func (s *AuthService) GetUserById(userID uint) (*models.User, error) {
 	if err != nil {
 		return nil, appErr.NewUnauthorized("invalid user")
 	}
+
+	return user, err
+}
+
+func (s *AuthService) RecoveryPassword(email string) (*models.User, error) {
+
+	user, err := s.userRepo.FindByLoginOrEmail(email)
+	if err != nil {
+		return nil, appErr.NewUnauthorized("invalid credentials")
+	}
+
+	return user, err
+}
+
+func (s *AuthService) ChangePassword(newPassword string, userID uint) (*models.User, error) {
+
+	user, err := s.userRepo.FindById(userID)
+	if err != nil {
+		return nil, appErr.NewUnauthorized("invalid user")
+	}
+
+	if !IsStrongPassword(newPassword) {
+		return nil, appErr.NewValidation(map[string]string{
+			"password": "weak_password",
+		})
+	}
+
+	newPassword, err = hashPassword(newPassword)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	_, err = s.userRepo.Modify(dto.UserModify{
+		Id:       userID,
+		Password: newPassword,
+	})
 
 	return user, err
 }

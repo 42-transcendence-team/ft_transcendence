@@ -17,10 +17,11 @@ type UserDelete struct {
 }
 
 type UserModify struct {
-	Id      uint   `form:"id"`
-	Login   string `form:"login"`
-	Email   string `form:"email"`
-	Name    string `form:"name"`
-	Surname string `form:"surname"`
-	Role    string `form:"role"`
+	Id       uint   `form:"id"`
+	Login    string `form:"login"`
+	Email    string `form:"email"`
+	Name     string `form:"name"`
+	Surname  string `form:"surname"`
+	Role     string `form:"role"`
+	Password string `form:"password"`
 }

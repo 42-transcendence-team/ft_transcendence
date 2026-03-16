@@ -34,7 +34,7 @@ de q ha fallado segun la estructura d ela funcon apperr NewValidation()
   "password": "angelaKk12132%",
   "confirmPassword": "angelaKk12132%",
   "name": "angela",
-  "Surname": "barrio",
+  "surname": "barrio",
   "birthday": "2000-10-23" // tiene que ser este formato "aaaa-mm-dd"
 }
 */
@@ -204,6 +204,46 @@ func (h *AuthHandler) Whoami(c *gin.Context) {
 
 /*End of whoami*/
 
+/*Forgot Password*/
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+
+	var req ForgotPasswordRequest
+
+	err := ValidationBindRequest(c, &req)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	user, err := h.AuthService.RecoveryPassword(req.Email)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	// TODO: hay q ver como se mandan los msg al front y que necesita
+	c.JSON(200, gin.H{
+		"message": "change forgot-password success",
+		"user": gin.H{
+			"id":    user.ID,
+			"login": user.Login,
+			"email": user.Email,
+			"token": strToken, // QUITAR ESTO DE AQUI SOLO ES PA PROBAR !!!!!!!!!!!!!!!
+		},
+	})
+}
+
+/*End of forgot Password*/
+
+/*Auth utils*/
+
 func (h *AuthHandler) setCookie(c *gin.Context, strToken string, exp time.Time) {
 
 	var secure bool
@@ -266,3 +306,5 @@ func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]
 }
 
 /*End of request validation*/
+
+/*End of auth utils*/

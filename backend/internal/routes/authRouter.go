@@ -12,7 +12,8 @@ func AuthRoutes(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {
 	api.POST("auth/login", authHandler.Login)
 	// Logout de usuario (user-logout-> 200) en formato JSON
 	api.POST("auth/logout", authHandler.Logout)
-
+	// Restablecer contraseña
+	api.POST("auth/forgot-Password", authHandler.ForgotPassword)
 }
 
 func AuthRoutesPrivate(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {

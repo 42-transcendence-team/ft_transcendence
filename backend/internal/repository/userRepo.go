@@ -54,11 +54,12 @@ func (r *UserRepository) Delete(request dto.UserDelete) (int64, error) {
 
 func (r *UserRepository) Modify(request dto.UserModify) (int64, error) {
 	result := r.db.Model(&models.User{}).Where("id = ?", request.Id).Updates(models.User{
-		Login:   request.Login,
-		Email:   &request.Email,
-		Name:    request.Name,
-		Surname: request.Surname,
-		Role:    request.Role,
+		Login:    request.Login,
+		Email:    &request.Email,
+		Name:     request.Name,
+		Surname:  request.Surname,
+		Role:     request.Role,
+		Password: request.Password,
 	})
 	return result.RowsAffected, result.Error
 }
