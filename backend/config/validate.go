@@ -39,6 +39,9 @@ func (c *Config) Validate() error {
 	if c.DBPassword == "CHANGE_ME" {
 		return fmt.Errorf("DB_PASSWORD cannot be 'CHANGE_ME'")
 	}
+	if c.JwtExpirationTime <= 0 {
+		return fmt.Errorf("JWT_EXPIRATION must be > 0")
+	}
 
 	switch c.DBSSLMode {
 	case "disable", "require", "verify-ca", "verify-full":

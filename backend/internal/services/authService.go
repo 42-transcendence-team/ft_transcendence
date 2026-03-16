@@ -1,19 +1,26 @@
 package services
 
 import (
+	"backend/config"
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"backend/internal/repository"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"strconv"
 	"time"
 )
 
 type AuthService struct {
 	userRepo *repository.UserRepository
+	cfg      *config.Config
 }
 
-func NewAuthService(userRepo *repository.UserRepository) *AuthService {
-	return &AuthService{userRepo: userRepo}
+func NewAuthService(userRepo *repository.UserRepository, cfg *config.Config) *AuthService {
+	return &AuthService{
+		userRepo: userRepo,
+		cfg:      cfg,
+	}
 }
 
 type RegisterInput struct {
@@ -70,7 +77,7 @@ func hashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (s *AuthService) CheckPasswordHash(password, hash string) bool {
+func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
@@ -97,4 +104,65 @@ func IsStrongPassword(password string) bool {
 	}
 
 	return hasUpper && hasLower && hasNumber && hasSymbol
+}
+
+type LoginInput struct {
+	Identifier string
+	Password   string
+}
+
+type CustomClaims struct {
+	Id uint `json:"id"`
+	jwt.RegisteredClaims
+}
+
+func (s *AuthService) Login(input LoginInput) (string, *models.User, time.Time, error) {
+
+	user, err := s.userRepo.FindByLoginOrEmail(input.Identifier)
+	if err != nil {
+		return "", nil, time.Time{}, appErr.NewUnauthorized("invalid credentials")
+	}
+
+	if !CheckPasswordHash(input.Password, user.Password) {
+		return "", nil, time.Time{}, appErr.NewUnauthorized("invalid credentials")
+	}
+
+	strToken, expTime, err := s.CreateJwtToken(user)
+	if err != nil {
+		return "", nil, time.Time{}, err
+	}
+
+	return strToken, user, expTime, err
+}
+
+func (s *AuthService) CreateJwtToken(user *models.User) (string, time.Time, error) {
+
+	exp := time.Now().Add(time.Duration(s.cfg.JwtExpirationTime) * time.Second)
+
+	claims := CustomClaims{
+		user.ID,
+		jwt.RegisteredClaims{
+			Subject:   strconv.Itoa(int(user.ID)),     // "sub" quien es el dueño del token
+			ExpiresAt: jwt.NewNumericDate(exp),        // "exp" cuando deja el token de ser valido
+			IssuedAt:  jwt.NewNumericDate(time.Now()), // "iat" cuando se creo el token
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	strToken, err := token.SignedString([]byte(s.cfg.JwtSecret))
+	if err != nil {
+		return "", time.Time{}, appErr.NewInternal(err)
+	}
+
+	return strToken, exp, err
+}
+
+func (s *AuthService) GetUserById(userID uint) (*models.User, error) {
+
+	user, err := s.userRepo.FindById(userID)
+	if err != nil {
+		return nil, appErr.NewUnauthorized("invalid user")
+	}
+
+	return user, err
 }
