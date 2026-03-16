@@ -15,7 +15,10 @@ export const RegisterForm = () => {
 	const [birthday, setBirthday] = useState("") // YYYY-MM-DD
 
 	// Control de valores disparado por el submit.
-	const handleSubmit = (e: React.FormEvent) => {
+	// Revisa:
+	//		backend/internal/routes/authRouter.go
+	//		backend/internal/handlers/authHandler.go
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		console.log("Username:", username)
 		console.log("Email:", email)
@@ -24,6 +27,46 @@ export const RegisterForm = () => {
 		console.log("Name:", name)
 		console.log("Surname:", surname)
 		console.log("Birthday:", birthday)
+		const payload = {
+			login: username, // Yo uso `username`, el backend `login`
+			email,
+			password,
+			confirmPassword,
+			name,
+			surname,
+			birthday
+		}
+		console.log("Payload:", payload)
+		try {
+			const response = await fetch("http://localhost:8080/auth/register", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify(payload)
+			})
+			const data = await response.json()
+			console.log("status:", response.status)
+			console.log("response:", data)
+			if (response.status === 201) {
+				console.log("Usuario creado correctamente")
+				return
+			}
+			if (response.status === 400) {
+				console.log("Body inválido")
+				return
+			}
+			if (response.status === 422) {
+				console.log("Error de validación")
+				return
+			}
+			if (response.status === 409) {
+				console.log("Conflicto, probablemente usuario o email ya existente")
+				return
+			}
+		} catch (error) {
+			console.error("Error de red:", error)
+		}
 	}
 
 	// Lo que se renderiza.
@@ -32,7 +75,7 @@ export const RegisterForm = () => {
 			<ul>
 				<li>
 					<label htmlFor="username">Username</label>
-					<br></br>
+					<br />
 					<input
 						id="username"
 						name="username"
@@ -43,7 +86,7 @@ export const RegisterForm = () => {
 				</li>
 				<li>
 					<label htmlFor="email">Email</label>
-					<br></br>
+					<br />
 					<input
 						id="email"
 						name="email"
@@ -54,65 +97,69 @@ export const RegisterForm = () => {
 				</li>
 				<li>
 					<label htmlFor="password">Password</label>
-					<br></br>
+					<br />
 					<input
 						id="password"
 						name="password"
 						type="password"
 						value={password}
-						onChange={(e) => set(e.target.value)}
+						onChange={(e) => setPassword(e.target.value)}
 					/>
 				</li>
 				<li>
 					<label htmlFor="confirmPassword">Confirm Password</label>
-					<br></br>
+					<br />
 					<input
 						id="confirmPassword"
 						name="confirmPassword"
-						type="confirmPassword"
+						type="password"
 						value={confirmPassword}
-						onChange={(e) => set(e.target.value)}
+						onChange={(e) => setConfirmPassword(e.target.value)}
 					/>
 				</li>
 				<li>
 					<label>Personal Data</label>
+				</li>
+				<li>
 					<label htmlFor="name">Name</label>
-					<br></br>
+					<br />
 					<input
 						id="name"
 						name="name"
-						type="name"
+						type="text"
 						value={name}
-						onChange={(e) => set(e.target.value)}
+						onChange={(e) => setName(e.target.value)}
 					/>
 				</li>
 				<li>
 					<label htmlFor="surname">Surname</label>
-					<br></br>
+					<br />
 					<input
 						id="surname"
 						name="surname"
-						type="surname"
+						type="text"
 						value={surname}
-						onChange={(e) => set(e.target.value)}
+						onChange={(e) => setSurname(e.target.value)}
 					/>
 				</li>
 				<li>
 					<label htmlFor="birthday">Birthday</label>
-					<br></br>
+					<br />
 					<input
 						id="birthday"
 						name="birthday"
-						type="birthday"
+						type="date"
 						value={birthday}
-						onChange={(e) => set(e.target.value)}
+						onChange={(e) => setBirthday(e.target.value)}
 					/>
 				</li>
 				<li>
 					<button type="submit">Register</button>
 				</li>
-				<p> Do you already have an account? <NavLink to="/login">Login</NavLink> </p>
 			</ul>
+				<li>
+					<p> Do you already have an account? <NavLink to="/login">Login</NavLink> </p>
+				</li>
 		</form>
 	)
 }
