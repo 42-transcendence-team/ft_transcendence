@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom"
+import { NavLink, useNavigate } from "react-router-dom"
 import { useState } from "react"
 
 export const RegisterForm = () => {
@@ -13,6 +13,10 @@ export const RegisterForm = () => {
 	const [name, setName] = useState("")
 	const [surname, setSurname] = useState("")
 	const [birthday, setBirthday] = useState("") // YYYY-MM-DD
+
+	// useNavigate() devuelve la función navigate que permite
+	// redirigir programáticamente a otra ruta.
+	const navigate = useNavigate()
 
 	// Control de valores disparado por el submit.
 	// Revisa:
@@ -50,6 +54,7 @@ export const RegisterForm = () => {
 			console.log("response:", data)
 			if (response.status === 201) {
 				console.log("Usuario creado correctamente")
+				navigate("/login")
 				return
 			}
 			if (response.status === 400) {
