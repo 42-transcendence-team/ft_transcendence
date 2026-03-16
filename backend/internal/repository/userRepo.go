@@ -21,44 +21,44 @@ func (r *UserRepository) Create(user *models.User) error {
 	return r.db.Create(user).Error
 }
 
-func (r *UserRepository) Filter(filter dto.UserFilter) ([]models.User, error) {
+func (r *UserRepository) Filter(request dto.UserFilter) ([]models.User, error) {
 	var users []models.User
 	query := r.db.Model(&models.User{})
 
-	if filter.Login != "" {
-		query = query.Where("login LIKE ?", "%"+filter.Login+"%")
+	if request.Login != "" {
+		query = query.Where("login LIKE ?", "%"+request.Login+"%")
 	}
-	if filter.Email != "" {
-		query = query.Where("email LIKE ?", "%"+filter.Email+"%")
+	if request.Email != "" {
+		query = query.Where("email LIKE ?", "%"+request.Email+"%")
 	}
 	// Con Name y Surname tengo la duda de como se va a pasar desde el front, un solo input (?)
-	if filter.Name != "" {
-		query = query.Where("name LIKE ?", "%"+filter.Name+"%")
+	if request.Name != "" {
+		query = query.Where("name LIKE ?", "%"+request.Name+"%")
 	}
-	if filter.Surname != "" {
-		query = query.Where("surname LIKE ?", "%"+filter.Surname+"%")
+	if request.Surname != "" {
+		query = query.Where("surname LIKE ?", "%"+request.Surname+"%")
 	}
 	// Aqui el rol cambiará, ya que no se si sera un select o asi en frontend por lo que no sera necesario el Like
-	if filter.Role != "" {
-		query = query.Where("role LIKE ?", "%"+filter.Role+"%")
+	if request.Role != "" {
+		query = query.Where("role LIKE ?", "%"+request.Role+"%")
 	}
 
-	err := query.Scopes(db.Paginate(filter.Page, filter.Limit)).Find(&users).Error
+	err := query.Scopes(db.Paginate(request.Page, request.Limit)).Find(&users).Error
 	return users, err
 }
 
-func (r *UserRepository) Delete(filter dto.UserFilter) (int64, error) {
-	result := r.db.Delete(&models.User{}, filter.Id)
+func (r *UserRepository) Delete(request dto.UserDelete) (int64, error) {
+	result := r.db.Delete(&models.User{}, request.Id)
 	return result.RowsAffected, result.Error
 }
 
-func (r *UserRepository) Modify(filter dto.UserFilter) (int64, error) {
-	result := r.db.Model(&models.User{}).Where("id = ?", filter.Id).Updates(models.User{
-		Login:   filter.Login,
-		Email:   &filter.Email,
-		Name:    filter.Name,
-		Surname: filter.Surname,
-		Role:    filter.Role,
+func (r *UserRepository) Modify(request dto.UserModify) (int64, error) {
+	result := r.db.Model(&models.User{}).Where("id = ?", request.Id).Updates(models.User{
+		Login:   request.Login,
+		Email:   &request.Email,
+		Name:    request.Name,
+		Surname: request.Surname,
+		Role:    request.Role,
 	})
 	return result.RowsAffected, result.Error
 }

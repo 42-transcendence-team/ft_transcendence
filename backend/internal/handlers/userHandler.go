@@ -17,17 +17,16 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 }
 
 func (h *UserHandler) Filter(c *gin.Context) {
+	var request dto.UserFilter
 
-	var filter dto.UserFilter
-
-	err := c.ShouldBindQuery(&filter)
+	err := c.ShouldBindQuery(&request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	users, err := h.UserService.Filter(filter)
+	users, err := h.UserService.Filter(request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -38,16 +37,16 @@ func (h *UserHandler) Filter(c *gin.Context) {
 }
 
 func (h *UserHandler) Delete(c *gin.Context) {
-	var filter dto.UserFilter
+	var request dto.UserDelete
 
-	err := c.ShouldBindJSON(&filter)
+	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	err = h.UserService.Delete(filter)
+	err = h.UserService.Delete(request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -58,16 +57,16 @@ func (h *UserHandler) Delete(c *gin.Context) {
 }
 
 func (h *UserHandler) Modify(c *gin.Context) {
-	var user dto.UserFilter
+	var request dto.UserModify
 
-	err := c.ShouldBindJSON(&user)
+	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	err = h.UserService.Modify(user)
+	err = h.UserService.Modify(request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()

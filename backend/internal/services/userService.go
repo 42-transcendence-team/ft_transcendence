@@ -22,7 +22,7 @@ func (s *UserService) Filter(filter dto.UserFilter) ([]models.User, error) {
 	return s.userRepo.Filter(filter)
 }
 
-func (s *UserService) Delete(filter dto.UserFilter) error {
+func (s *UserService) Delete(filter dto.UserDelete) error {
 	// Faltan todas las validaciones de eliminación, como accesos permitidos y denegados
 	// De momento funciona en cualquier caso y elimina el usuario segun su id
 	if filter.Id <= 0 {
@@ -40,7 +40,7 @@ func (s *UserService) Delete(filter dto.UserFilter) error {
 	return nil
 }
 
-func (s *UserService) Modify(filter dto.UserFilter) error {
+func (s *UserService) Modify(filter dto.UserModify) error {
 	// Faltan todas las validaciones como en la funcion Delete o Filter
 	if filter.Id <= 0 {
 		return appErr.NewValidation(map[string]string{
