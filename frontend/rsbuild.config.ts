@@ -4,9 +4,12 @@ import { pluginSass } from "@rsbuild/plugin-sass"
 
 // Docs: https://rsbuild.rs/config/
 export default defineConfig({
-  plugins: [
-	pluginReact(),
-	pluginSass()],
+	server: {
+		open: false
+	},
+	plugins: [
+		pluginReact(),
+		pluginSass()],
 	html: {
 		title: 'transcendence',
 		favicon: './public/favicon.png'
