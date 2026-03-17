@@ -52,7 +52,7 @@ func Load() (*Config, error) {
 
 	c.GoServiceHost = strings.TrimSpace(os.Getenv("GO_SERVICE_HOST"))
 	c.GoServicePort = envIntOrDefault("GO_SERVICE_PORT", 8080)
-	c.GoAllowedURLs = strings.Split(strings.TrimSpace(os.Getenv("GO_ALLOW_URLS")), ",")
+	c.GoAllowedURLs = strings.Split(strings.TrimSpace(os.Getenv("GO_ALLOWED_URLS")), ",")
 
 	c.DBHost = strings.TrimSpace(os.Getenv("DB_HOST"))
 	c.DBPort = envIntOrDefault("DB_PORT", 5432)
