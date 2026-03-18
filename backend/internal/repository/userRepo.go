@@ -78,3 +78,15 @@ func (r *UserRepository) FindByLoginOrEmail(identifier string) (*models.User, er
 
 	return &user, err
 }
+
+func (r *UserRepository) FindById(userID uint) (*models.User, error) {
+
+	var user models.User
+
+	err := r.db.Where("ID = ?", userID).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, err
+}
