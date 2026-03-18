@@ -30,13 +30,15 @@ func (srv *HTTPServer) Router() {
 	// rutas publicas
 	routes.AuthRoutes(api, authHandler)
 
+	// la dejo publica de momento, hasta que se implementen mas cosas , pero deberia de psara por el middleware de auth
+	routes.UserRoutes(api, userHandler)
+
 	// rutas privadas
 	protected := api.Group("/")
 	protected.Use(middlewares.AuthMiddleware(srv.Conf))
 	{
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
-		routes.UserRoutes(api, userHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 
