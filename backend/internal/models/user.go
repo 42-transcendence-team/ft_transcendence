@@ -17,7 +17,6 @@ type User struct {
 	Name     string    `gorm:"not null"` // Nombre de usuario
 	Surname  string    `gorm:"not null"` // Apellido de usuario
 	Birthday time.Time `gorm:"not null"` // Fecha de cunmpleaños del usuario
-	Age      uint8     `gorm:"not null"` // Edad del usuario
 
 	Status uint   // En el caso de que este online que estado quiere mostrar (Ej: 0 = offline, 1 = online, 2 = ausente...)
 	State  string // Estado del usuario like WhatsApp (Ej: "En una reunión", "Cago en todo", ...)
