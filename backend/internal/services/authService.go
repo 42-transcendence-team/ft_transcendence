@@ -5,9 +5,7 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"backend/internal/repository"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
-	"strconv"
+	"backend/internal/utils"
 	"time"
 )
 
@@ -34,7 +32,7 @@ type RegisterInput struct {
 
 func (s *AuthService) Register(input RegisterInput) (user models.User, err error) {
 
-	if !IsStrongPassword(input.Password) {
+	if !utils.IsStrongPassword(input.Password) {
 		return models.User{}, appErr.NewValidation(map[string]string{
 			"password": "weak_password",
 		})
@@ -42,7 +40,7 @@ func (s *AuthService) Register(input RegisterInput) (user models.User, err error
 
 	// https://gowebexamples.com/password-hashing/
 	// no se si es demasiado simple
-	input.Password, err = hashPassword(input.Password)
+	input.Password, err = utils.HashPassword(input.Password)
 	if err != nil {
 		return models.User{}, appErr.NewInternal(err)
 	}
@@ -71,49 +69,9 @@ func NewUser(input RegisterInput) models.User {
 	}
 }
 
-// esto lo pille de ahi -> https://gowebexamples.com/password-hashing/
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}
-
-func IsStrongPassword(password string) bool {
-
-	var hasUpper bool
-	var hasLower bool
-	var hasNumber bool
-	var hasSymbol bool
-
-	for _, c := range password {
-
-		switch {
-		case 'A' <= c && c <= 'Z':
-			hasUpper = true
-		case 'a' <= c && c <= 'z':
-			hasLower = true
-		case '0' <= c && c <= '9':
-			hasNumber = true
-		default:
-			hasSymbol = true
-		}
-	}
-
-	return hasUpper && hasLower && hasNumber && hasSymbol
-}
-
 type LoginInput struct {
 	Identifier string
 	Password   string
-}
-
-type CustomClaims struct {
-	Id uint `json:"id"`
-	jwt.RegisteredClaims
 }
 
 func (s *AuthService) Login(input LoginInput) (string, *models.User, time.Time, error) {
@@ -123,38 +81,16 @@ func (s *AuthService) Login(input LoginInput) (string, *models.User, time.Time, 
 		return "", nil, time.Time{}, appErr.NewUnauthorized("invalid credentials")
 	}
 
-	if !CheckPasswordHash(input.Password, user.Password) {
+	if !utils.CheckPasswordHash(input.Password, user.Password) {
 		return "", nil, time.Time{}, appErr.NewUnauthorized("invalid credentials")
 	}
 
-	strToken, expTime, err := s.CreateJwtToken(user)
+	strToken, expTime, err := utils.CreateJwtToken(user, s.cfg)
 	if err != nil {
 		return "", nil, time.Time{}, err
 	}
 
 	return strToken, user, expTime, err
-}
-
-func (s *AuthService) CreateJwtToken(user *models.User) (string, time.Time, error) {
-
-	exp := time.Now().Add(time.Duration(s.cfg.JwtExpirationTime) * time.Second)
-
-	claims := CustomClaims{
-		user.ID,
-		jwt.RegisteredClaims{
-			Subject:   strconv.Itoa(int(user.ID)),     // "sub" quien es el dueño del token
-			ExpiresAt: jwt.NewNumericDate(exp),        // "exp" cuando deja el token de ser valido
-			IssuedAt:  jwt.NewNumericDate(time.Now()), // "iat" cuando se creo el token
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	strToken, err := token.SignedString([]byte(s.cfg.JwtSecret))
-	if err != nil {
-		return "", time.Time{}, appErr.NewInternal(err)
-	}
-
-	return strToken, exp, err
 }
 
 func (s *AuthService) GetUserById(userID uint) (*models.User, error) {
