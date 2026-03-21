@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -31,7 +32,7 @@ type Config struct {
 
 	JwtSecret         string
 	JwtExpirationTime int
-  
+
 	GoAllowedURLs []string
 }
 
@@ -55,7 +56,12 @@ func Load() (*Config, error) {
 
 	c.GoServiceHost = strings.TrimSpace(os.Getenv("GO_SERVICE_HOST"))
 	c.GoServicePort = envIntOrDefault("GO_SERVICE_PORT", 8080)
-	c.GoAllowedURLs = strings.Split(strings.TrimSpace(os.Getenv("GO_ALLOWED_URLS")), ",")
+
+	urls, err := parseAndValidateURLs(os.Getenv("GO_ALLOWED_URLS"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid GO_ALLOWED_URLS: %w", err)
+	}
+	c.GoAllowedURLs = urls
 
 	c.DBHost = strings.TrimSpace(os.Getenv("DB_HOST"))
 	c.DBPort = envIntOrDefault("DB_PORT", 5432)
@@ -96,4 +102,37 @@ func envIntOrDefault(key string, def int) int {
 		return def
 	}
 	return n
+}
+
+func parseAndValidateURLs(s string) ([]string, error) {
+	if s == "" {
+		return []string{}, nil
+	}
+	parts := strings.Split(s, ",")
+	var urls []string
+	for _, p := range parts {
+		t := strings.TrimSpace(p)
+		t = strings.Trim(t, "\"")
+		if t == "" {
+			continue
+		}
+
+		u, err := url.Parse(t)
+		if err != nil {
+			return nil, fmt.Errorf("invalid URL '%s': %w", t, err)
+		}
+		if u.Scheme != "http" && u.Scheme != "https" {
+			return nil, fmt.Errorf("invalid scheme in URL '%s' (only http/https allowed)", t)
+		}
+
+		if u.Host == "" {
+			return nil, fmt.Errorf("invalid URL '%s': missing host", t)
+		}
+
+		urls = append(urls, t)
+	}
+	if len(urls) == 0 {
+		return nil, fmt.Errorf("URL list cannot be empty")
+	}
+	return urls, nil
 }
