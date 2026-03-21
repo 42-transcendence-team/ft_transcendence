@@ -1,0 +1,52 @@
+@use '../abstracts/variables' as *;
+
+.privateLayout {
+	min-height: 100vh;
+	padding: 6px;
+	display: grid;
+	gap: 6px;
+
+	grid-template-columns: 20% 1fr 76px;
+	grid-template-rows: 60px 1fr 76px;
+
+	grid-template-areas:
+		"left header  header"
+		"left content right"
+		"left footer  right";
+}
+
+.privateLayout__leftPanel {
+	grid-area: left;
+	background-color: $dark-purple-background-light;
+	border-radius: 10px;
+	color: white;
+	padding: 1rem;
+}
+
+.privateLayout__header {
+	grid-area: header;
+}
+
+.privateLayout__content {
+	grid-area: content;
+	background-color: rgba(255, 255, 255, 0.05);
+	border-radius: 10px;
+	color: white;
+	padding: 1rem;
+}
+
+.privateLayout__footer {
+	grid-area: footer;
+	background-color: $dark-purple-background-light;
+	border-radius: 10px;
+	color: white;
+	padding: 1rem;
+}
+
+.privateLayout__rightPanel {
+	grid-area: right;
+	background-color: lightgray;
+	border-radius: 10px;
+	color: black;
+	padding: 1rem;
+}
