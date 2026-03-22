@@ -1,6 +1,5 @@
-@use '../abstracts/functions' as *;
-@use '../abstracts/mixins' as *;
 @use '../abstracts/variables' as *;
+@use '../components/buttons' as *;
 
 .searchBar {
 	display: flex; // Pone el input y el botón uno al lado del otro
@@ -11,7 +10,7 @@
 }
 
 .searchBar__input {
-	flex: 0.5; // Hace que el input ocupe todo el ancho disponible
+	flex: 1; // Hace que el input ocupe todo el ancho disponible
 	height: 40px;
 	padding: 0 1rem;
 	border: none;
@@ -21,12 +20,7 @@
 }
 
 .searchBar__button {
-	width: 40px;
-	height: 40px;
-	border: none;
-	border-radius: 10px;
-	cursor: pointer;
-    background-color: lightgrey;
+	@extend .button--icon;
 }
 
 .searchBar__icon {

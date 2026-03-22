@@ -1,0 +1,20 @@
+@use '../abstracts/variables' as *;
+@use '../components/buttons' as *;
+
+.userMenu {
+	display: flex;
+	align-items: center;
+	height: 100%;
+}
+
+.userMenu__button {
+	@extend .button--icon;
+}
+
+.userMenu__icon {
+	font-size: 1rem;
+}
+
+.userMenu__dropdown {
+	display: none; // luego lo activaremos
+}
