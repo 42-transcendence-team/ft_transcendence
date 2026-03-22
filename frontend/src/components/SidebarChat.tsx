@@ -8,5 +8,7 @@ export const SidebarChat = () => {
 
 
     </nav>
+    /*<div className="sideBarChat__top"></div>
+    <div className="sideBarChat__bottom"></div>*/
   );
 };

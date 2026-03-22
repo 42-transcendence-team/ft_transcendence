@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import "../styles/components/_privHeader.scss"
 import logo from "../assets/icons/24_logo.png"
+import { SearchBar } from "@components/SearchBar.tsx";
 
 export function PrivHeader() {
 	return (
@@ -13,7 +14,9 @@ export function PrivHeader() {
 					<span className="privHeader__logo-text">Twenty Four</span>
 				</Link>
 			</div>
-			<div className="privHeader__center">Centro</div>
+			<div className="privHeader__center">
+				<SearchBar />
+			</div>
 			<div className="privHeader__rigth">Derecha</div>
 		</header>
 	);

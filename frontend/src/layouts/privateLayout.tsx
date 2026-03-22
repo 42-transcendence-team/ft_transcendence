@@ -18,7 +18,11 @@ export function PrivateLayout() {
 			</header>
 
 			<main className="privateLayout__content">
-				<Outlet />
+				<div className="privateLayout__contentFrame">
+					<div className="privateLayout__contentInner">
+					<Outlet />
+					</div>
+				</div>
 			</main>
 
 			<footer className="privateLayout__footer">
