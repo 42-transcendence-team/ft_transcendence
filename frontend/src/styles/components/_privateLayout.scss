@@ -7,8 +7,8 @@
 	gap: 6px;
 	box-sizing: border-box;
 
-	grid-template-columns: 20% minmax(0, 1fr) 76px;
-	grid-template-rows: 60px minmax(0, 1fr) 76px;
+	grid-template-columns: 25% minmax(0, 1fr) 76px;
+	grid-template-rows: 60px minmax(0, 1fr) 60px;
 
 	grid-template-areas:
 		"left header header"
