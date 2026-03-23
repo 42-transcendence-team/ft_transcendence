@@ -1,5 +1,5 @@
-import { NavLink } from "react-router-dom";
 import "../styles/components/_searchBar.scss"
+import { FiSearch } from "react-icons/fi";
 
 
 export const SearchBar = () => {
@@ -11,7 +11,7 @@ export const SearchBar = () => {
         placeholder="Buscar..." 
       />
       <button className="searchBar__button" type="button">
-        <span className="searchBar__icon">🔍</span>
+        <FiSearch className="searchBar__icon" />
       </button>
     </div>
   );
