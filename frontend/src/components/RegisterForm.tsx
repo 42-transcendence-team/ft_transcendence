@@ -11,6 +11,35 @@ type FormErrors = {
 	birthday: string
 }
 
+const calculateAge = (birthDateString: string): number => {
+	const today = new Date()
+	const birthDate = new Date(birthDateString)
+
+	let age = today.getFullYear() - birthDate.getFullYear()
+
+	const monthDiff = today.getMonth() - birthDate.getMonth()
+	const dayDiff = today.getDate() - birthDate.getDate()
+
+	// Si todavía no ha cumplido años este año, restamos 1
+	if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+		age--
+	}
+
+	return age
+}
+
+const isValidAgeForRegister = (birthDateString: string): boolean => {
+	const birthDate = new Date(birthDateString)
+
+	// Fecha inválida
+	if (Number.isNaN(birthDate.getTime())) {
+		return false
+	}
+
+	const age = calculateAge(birthDateString)
+	return age >= 18 && age <= 150
+}
+
 export const RegisterForm = () => {
 	// La siguiente estructura sintáctica se denomina "Array destructuring".
 	// useState devuelve un array con dos elementos:
@@ -92,6 +121,18 @@ export const RegisterForm = () => {
 		}
 		if (!birthday) {
 			newErrors.birthday = "La fecha de nacimiento es obligatoria."
+		} else {
+			const birthDate = new Date(birthday)
+			if (Number.isNaN(birthDate.getTime())) {
+				newErrors.birthday = "Introduce una fecha de nacimiento válida."
+			} else {
+				const age = calculateAge(birthday)
+				if (age < 18) {
+					newErrors.birthday = "Debes tener al menos 18 años para registrarte."
+				} else if (age > 150) {
+					newErrors.birthday = "Ojalá estuviese permitido superar los 150 años."
+				}
+			}
 		}
 		setErrors(newErrors)
 		return Object.values(newErrors).every((error) => error === "")
