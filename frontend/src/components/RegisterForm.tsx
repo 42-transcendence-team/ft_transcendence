@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { FormField } from "./FormField"
 
 type FormErrors = {
 	username: string
@@ -210,106 +211,111 @@ export const RegisterForm = () => {
 		}
 	}
 
+// Arrays de campos configurados para evitar la repetición de código en cada uno de los campos del formulario.
+
+	const accountFields = [
+		{
+			id: "username",
+			label: "Username",
+			type: "text",
+			value: username,
+			onChange: setUsername,
+			error: errors.username,
+		},
+		{
+			id: "email",
+			label: "Email",
+			type: "email",
+			value: email,
+			onChange: setEmail,
+			error: errors.email,
+		},
+		{
+			id: "password",
+			label: "Password",
+			type: "password",
+			value: password,
+			onChange: setPassword,
+			error: errors.password,
+		},
+		{
+			id: "confirmPassword",
+			label: "Confirm Password",
+			type: "password",
+			value: confirmPassword,
+			onChange: setConfirmPassword,
+			error: errors.confirmPassword,
+		},
+	]
+
+	const personalFields = [
+		{
+			id: "name",
+			label: "Name",
+			type: "text",
+			value: name,
+			onChange: setName,
+			error: errors.name,
+		},
+		{
+			id: "surname",
+			label: "Surname",
+			type: "text",
+			value: surname,
+			onChange: setSurname,
+			error: errors.surname,
+		},
+		{
+			id: "birthday",
+			label: "Birthday",
+			type: "date",
+			value: birthday,
+			onChange: setBirthday,
+			error: errors.birthday,
+		},
+	]
+
 	// Lo que se renderiza.
 	return (
 		<form onSubmit={handleSubmit}>
 			<ul>
-				<li>
-					<label htmlFor="username">Username</label>
-					<br />
-					<input
-						id="username"
-						name="username"
-						type="text"
-						value={username}
-						onChange={(e) => setUsername(e.target.value)}
+				{accountFields.map((field) => (
+					<FormField
+						key={field.id}
+						id={field.id}
+						label={field.label}
+						type={field.type}
+						value={field.value}
+						onChange={field.onChange}
+						error={field.error}
 					/>
-					{errors.username && <p>{errors.username}</p>}
-				</li>
+				))}
+
 				<li>
-					<label htmlFor="email">Email</label>
-					<br />
-					<input
-						id="email"
-						name="email"
-						type="email"
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
+					<h3>Personal Data</h3>
+				</li>
+
+				{personalFields.map((field) => (
+					<FormField
+						key={field.id}
+						id={field.id}
+						label={field.label}
+						type={field.type}
+						value={field.value}
+						onChange={field.onChange}
+						error={field.error}
 					/>
-					{errors.email && <p>{errors.email}</p>}
-				</li>
-				<li>
-					<label htmlFor="password">Password</label>
-					<br />
-					<input
-						id="password"
-						name="password"
-						type="password"
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
-					/>
-					{errors.password && <p>{errors.password}</p>}
-				</li>
-				<li>
-					<label htmlFor="confirmPassword">Confirm Password</label>
-					<br />
-					<input
-						id="confirmPassword"
-						name="confirmPassword"
-						type="password"
-						value={confirmPassword}
-						onChange={(e) => setConfirmPassword(e.target.value)}
-					/>
-					{errors.confirmPassword && <p>{errors.confirmPassword}</p>}
-				</li>
-				<br />
-				<li>
-					<label>--- Personal Data ---</label>
-				</li>
-				<br />
-				<li>
-					<label htmlFor="name">Name</label>
-					<br />
-					<input
-						id="name"
-						name="name"
-						type="text"
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-					/>
-					{errors.name && <p>{errors.name}</p>}
-				</li>
-				<li>
-					<label htmlFor="surname">Surname</label>
-					<br />
-					<input
-						id="surname"
-						name="surname"
-						type="text"
-						value={surname}
-						onChange={(e) => setSurname(e.target.value)}
-					/>
-					{errors.surname && <p>{errors.surname}</p>}
-				</li>
-				<li>
-					<label htmlFor="birthday">Birthday</label>
-					<br />
-					<input
-						id="birthday"
-						name="birthday"
-						type="date"
-						value={birthday}
-						onChange={(e) => setBirthday(e.target.value)}
-					/>
-					{errors.birthday && <p>{errors.birthday}</p>}
-				</li>
+				))}
+
 				<li>
 					<button type="submit" disabled={isSubmitting}>
 						{isSubmitting ? "Registering..." : "Register"}
 					</button>
 				</li>
 			</ul>
+
 			{serverMessage && <p>{serverMessage}</p>}
+
 			<p>
 				Do you already have an account? <NavLink to="/login">Login</NavLink>
 			</p>
