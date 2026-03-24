@@ -7,41 +7,47 @@ type FormErrors = {
 }
 
 export const LoginForm = () => {
+	const navigate = useNavigate()
 	const [identifier, setIdentifier] = useState("")
 	const [password, setPassword] = useState("")
 	const [errors, setErrors] = useState<FormErrors>({
 		identifier: "",
 		password: ""
 	})
+	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [serverMessage, setServerMessage] = useState("")
+	const validateForm = (): FormErrors => {
+		const newErrors: FormErrors = {
+			identifier: "",
+			password: ""
+		}
+		const usernameRegex = /^[A-Za-z0-9_-]+$/
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+		const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,64}$/
+		if (!identifier) {
+			newErrors.identifier = "Login o Email faltante"
+		} else if (!usernameRegex.test(identifier)) {
+			newErrors.identifier = "Login inválido: Solo se permiten letras, números, guion y guion bajo."
+		} else if (!emailRegex.test(identifier)) {
+			newErrors.identifier = "Email inválido: Estructura inválida"
+		}
+		if (!password) {
+			newErrors.password = "Contraseña faltante"
+		} else if (!passwordRegex.test(password)) {
+			newErrors.password =
+				"La contraseña debe tener entre 8 y 64 caracteres, incluir una mayúscula, un número y un símbolo como mínimo."
+		}
+		setErrors(newErrors)
+		return Object.values(newErrors).every((error) => error === "")
+	}
 
-const [serverMessage, setServerMessage] = useState("")
-const [isSubmitting, setIsSubmitting] = useState("")
-
-const navigate = useNavigate()
-const validateForm = () => {
-	const newErrors: FormErrors = {
-		identifier: "",
-		password: ""
-	}
-	// TODO const identifierRegex =
-	const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,64}$/
-	if (!identifier) {
-		newErrors.identifier = "Login o Email faltante"
-	}
-	if (!password) {
-		newErrors.password = "Contraseña faltante"
-	} else if (!passwordRegex.test(password)) {
-		newErrors.password =
-			"La contraseña debe tener entre 8 y 64 caracteres, incluir una mayúscula, un número y un símbolo como mínimo."
-	}
-	setErrors(newErrors)
-	return Object.values(newErrors).every((error) => error === "")
-}
+// Archivos a revisar:
+//		backend/internal/handlers/authHandler.go
 
 // TODO handleSubmit
 
 	return (
-		<form>
+		<form onSubmit={handleSubmit}>
 			<ul>
 				<li>
 					<label htmlFor="identifier">Username or Email</label>
