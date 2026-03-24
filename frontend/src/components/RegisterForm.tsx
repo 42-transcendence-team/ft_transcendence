@@ -55,7 +55,7 @@ export const RegisterForm = () => {
 		if (!username.trim()) {
 			newErrors.username = "El username es obligatorio."
 		} else if (!usernameRegex.test(username)) {
-			newErrors.username = "Solo se permiten letras, números, guion y guion bajwwwo."
+			newErrors.username = "Solo se permiten letras, números, guion y guion bajo."
 		}
 		if (!email.trim()) {
 			newErrors.email = "El email es obligatorio."
