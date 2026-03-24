@@ -52,10 +52,13 @@ export const RegisterForm = () => {
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 		const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s-]+$/
 		const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,64}$/
+		const maxLegth = 42
 		if (!username.trim()) {
 			newErrors.username = "El username es obligatorio."
 		} else if (!usernameRegex.test(username)) {
 			newErrors.username = "Solo se permiten letras, números, guion y guion bajo."
+		} else if (username.length > maxLegth) {
+			newErrors.username = "No está permitido, máximo de 42 caracteres."
 		}
 		if (!email.trim()) {
 			newErrors.email = "El email es obligatorio."
@@ -77,11 +80,15 @@ export const RegisterForm = () => {
 			newErrors.name = "El nombre es obligatorio."
 		} else if (!nameRegex.test(name)) {
 			newErrors.name = "El nombre solo puede contener letras."
+		} else if (name.length > maxLegth) {
+			newErrors.name = "No está permitido, máximo de 42 caracteres."
 		}
 		if (!surname.trim()) {
 			newErrors.surname = "El apellido es obligatorio."
 		} else if (!nameRegex.test(surname)) {
 			newErrors.surname = "El apellido solo puede contener letras."
+		} else if (surname.length > maxLegth) {
+			newErrors.surname = "No está permitido, máximo de 42 caracteres."
 		}
 		if (!birthday) {
 			newErrors.birthday = "La fecha de nacimiento es obligatoria."
