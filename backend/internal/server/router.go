@@ -4,7 +4,7 @@ import (
 	"backend/internal/handlers"
 	"backend/internal/middlewares"
 	"backend/internal/repository"
-	routes "backend/internal/routes"
+	"backend/internal/routes"
 	"backend/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -19,12 +19,16 @@ func (srv *HTTPServer) Router() {
 
   userRepo := repository.NewUserRepository(srv.Db)
 
-	authService := services.NewAuthService(userRepo, srv.Conf)
+	authService := services.NewAuthService(userRepo)
 	userService := services.NewUserService(userRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
 	userHandler := handlers.NewUserHandler(userService)
 
+	hub := services.NewHub(srv.Db)
+	go hub.Run()
+
+	// usaremos este grupo para definir las funciones del proyecto y aplicar middlewares comunes
 	api := srv.Engine.Group("/api/v1")
 
 	// rutas publicas
@@ -32,6 +36,9 @@ func (srv *HTTPServer) Router() {
   
   // la dejo publica de momento, hasta que se implementen mas cosas , pero deberia de psara por el middleware de auth
   routes.UserRoutes(api, userHandler)
+
+	// chat Routes
+	routes.chatRoutes()
   
 	// rutas privadas
 	protected := api.Group("/")

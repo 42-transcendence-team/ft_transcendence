@@ -1,24 +1,20 @@
 package services
 
 import (
-	"backend/config"
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"backend/internal/repository"
-	"backend/internal/utils"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
 	userRepo *repository.UserRepository
-	cfg      *config.Config
 }
 
-func NewAuthService(userRepo *repository.UserRepository, cfg *config.Config) *AuthService {
-	return &AuthService{
-		userRepo: userRepo,
-		cfg:      cfg,
-	}
+func NewAuthService(userRepo *repository.UserRepository) *AuthService {
+	return &AuthService{userRepo: userRepo}
 }
 
 type RegisterInput struct {
@@ -32,7 +28,7 @@ type RegisterInput struct {
 
 func (s *AuthService) Register(input RegisterInput) (user models.User, err error) {
 
-	if !utils.IsStrongPassword(input.Password) {
+	if !IsStrongPassword(input.Password) {
 		return models.User{}, appErr.NewValidation(map[string]string{
 			"password": "weak_password",
 		})
@@ -40,7 +36,7 @@ func (s *AuthService) Register(input RegisterInput) (user models.User, err error
 
 	// https://gowebexamples.com/password-hashing/
 	// no se si es demasiado simple
-	input.Password, err = utils.HashPassword(input.Password)
+	input.Password, err = hashPassword(input.Password)
 	if err != nil {
 		return models.User{}, appErr.NewInternal(err)
 	}
@@ -69,36 +65,37 @@ func NewUser(input RegisterInput) models.User {
 	}
 }
 
-type LoginInput struct {
-	Identifier string
-	Password   string
+// Esto lo pille de ahi -> https://gowebexamples.com/password-hashing/
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }
 
-func (s *AuthService) Login(input LoginInput) (string, *models.User, time.Time, error) {
-
-	user, err := s.userRepo.FindByLoginOrEmail(input.Identifier)
-	if err != nil {
-		return "", nil, time.Time{}, appErr.NewUnauthorized("invalid credentials")
-	}
-
-	if !utils.CheckPasswordHash(input.Password, user.Password) {
-		return "", nil, time.Time{}, appErr.NewUnauthorized("invalid credentials")
-	}
-
-	strToken, expTime, err := utils.CreateJwtToken(user, s.cfg)
-	if err != nil {
-		return "", nil, time.Time{}, err
-	}
-
-	return strToken, user, expTime, err
+func (s *AuthService) CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
-func (s *AuthService) GetUserById(userID uint) (*models.User, error) {
+func IsStrongPassword(password string) bool {
 
-	user, err := s.userRepo.FindById(userID)
-	if err != nil {
-		return nil, appErr.NewUnauthorized("invalid user")
+	var hasUpper bool
+	var hasLower bool
+	var hasNumber bool
+	var hasSymbol bool
+
+	for _, c := range password {
+
+		switch {
+		case 'A' <= c && c <= 'Z':
+			hasUpper = true
+		case 'a' <= c && c <= 'z':
+			hasLower = true
+		case '0' <= c && c <= '9':
+			hasNumber = true
+		default:
+			hasSymbol = true
+		}
 	}
 
-	return user, err
+	return hasUpper && hasLower && hasNumber && hasSymbol
 }
