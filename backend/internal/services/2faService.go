@@ -2,6 +2,7 @@ package services
 
 import (
 	"backend/internal/dto"
+	appErr "backend/internal/errors"
 	"backend/internal/repository"
 	"bytes"
 	"encoding/base64"
@@ -69,6 +70,8 @@ func (s *TwoFAService) Verify2FA(request dto.TwoFAVerify) (bool, error) {
 			Id:        request.Id,
 			Active2FA: true,
 		})
+	} else {
+		return false, appErr.NewUnauthorized("Invalid 2FA code")
 	}
 	return valid, nil
 }
@@ -85,4 +88,17 @@ func (s *TwoFAService) Disable2FA(request dto.TwoFADisable) (int64, error) {
 		return 0, nil
 	}
 	return rows, nil
+}
+
+func (s *TwoFAService) Login2FA(request dto.TwoFALogin) (bool, error) {
+	passcode := strings.TrimSpace(request.Code)
+	secret, err := s.UserRepo.Get2FASecret(request.Id)
+	if err != nil {
+		return false, err
+	}
+	valid := totp.Validate(passcode, secret)
+	if valid == false {
+		return false, appErr.NewUnauthorized("Invalid 2FA code")
+	}
+	return valid, nil
 }

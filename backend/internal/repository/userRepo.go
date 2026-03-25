@@ -3,6 +3,7 @@ package repository
 import (
 	"backend/internal/db"
 	"backend/internal/dto"
+	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"errors"
 
@@ -94,7 +95,7 @@ func (r *UserRepository) Get2FASecret(userID uint) (string, error) {
 		return "", err
 	}
 	if user.Secret2FA == nil {
-		return "", errors.New("2fa_not_enabled")
+		return "", appErr.NewBadRequest("2FA Not enabled")
 	}
 	return *user.Secret2FA, nil
 }

@@ -18,3 +18,8 @@ type TwoFAVerify struct {
 	Id   uint   `json:"id" binding:"required"`
 	Code string `json:"code" binding:"required"`
 }
+
+type TwoFALogin struct {
+	Id   uint   `json:"id" binding:"required"`
+	Code string `json:"code" binding:"required"`
+}

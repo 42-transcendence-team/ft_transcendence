@@ -84,4 +84,22 @@ func (h *TwoFAHandler) Disable2FA(c *gin.Context) {
 // Este handler creo que se llamaria en el proceso de auth despues de verificar la contraseña
 // para verificar el codigo TOTP si el usuario tiene 2FA habilitado.
 // Hablar con Angie para ver como añadirlo en el login
-func (h *TwoFAHandler) Login2FA(c *gin.Context) {}
+func (h *TwoFAHandler) Login2FA(c *gin.Context) {
+	var request dto.TwoFALogin
+
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	isValid, err := h.TwoFAService.Login2FA(request)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "2FA verified successfully", "isValid": isValid})
+}
