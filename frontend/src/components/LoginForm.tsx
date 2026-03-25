@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { FormField } from "./FormField"
 
 type FormErrors = {
 	identifier: string
@@ -8,80 +9,122 @@ type FormErrors = {
 
 export const LoginForm = () => {
 	const navigate = useNavigate()
+
 	const [identifier, setIdentifier] = useState("")
 	const [password, setPassword] = useState("")
 	const [errors, setErrors] = useState<FormErrors>({
 		identifier: "",
-		password: ""
+		password: "",
 	})
+
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [serverMessage, setServerMessage] = useState("")
-	const validateForm = (): FormErrors => {
+
+	const validateForm = (): boolean => {
 		const newErrors: FormErrors = {
 			identifier: "",
-			password: ""
+			password: "",
 		}
-		const usernameRegex = /^[A-Za-z0-9_-]+$/
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-		const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,64}$/
-		if (!identifier) {
-			newErrors.identifier = "Login o Email faltante"
-		} else if (!usernameRegex.test(identifier)) {
-			newErrors.identifier = "Login inválido: Solo se permiten letras, números, guion y guion bajo."
-		} else if (!emailRegex.test(identifier)) {
-			newErrors.identifier = "Email inválido: Estructura inválida"
+
+		const MAX_PASSWORD_LENGTH = 64
+
+		if (!identifier.trim()) {
+			newErrors.identifier = "Login o email faltante."
 		}
+
 		if (!password) {
-			newErrors.password = "Contraseña faltante"
-		} else if (!passwordRegex.test(password)) {
-			newErrors.password =
-				"La contraseña debe tener entre 8 y 64 caracteres, incluir una mayúscula, un número y un símbolo como mínimo."
+			newErrors.password = "Contraseña faltante."
+		} else if (password.length > MAX_PASSWORD_LENGTH) {
+			newErrors.password = `La contraseña no puede superar los ${MAX_PASSWORD_LENGTH} caracteres.`
 		}
+
 		setErrors(newErrors)
+
 		return Object.values(newErrors).every((error) => error === "")
 	}
 
-// Archivos a revisar:
-//		backend/internal/handlers/authHandler.go
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault()
 
-// TODO handleSubmit
+		setServerMessage("")
+
+		if (!validateForm()) return
+
+		setIsSubmitting(true)
+
+		try {
+			const response = await fetch("http://localhost:8080/api/v1/auth/login", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				credentials: "include",
+				body: JSON.stringify({
+					identifier: identifier.trim(),
+					password: password,
+				}),
+			})
+
+			const data = await response.json()
+
+			if (!response.ok) {
+				setServerMessage(data?.message || "Credenciales inválidas.")
+				return
+			}
+
+			navigate("/")
+		} catch {
+			setServerMessage("Error de conexión con el servidor.")
+		} finally {
+			setIsSubmitting(false)
+		}
+	}
+
+	const fields = [
+		{
+			id: "identifier",
+			label: "Username or Email",
+			type: "text",
+			value: identifier,
+			onChange: setIdentifier,
+			error: errors.identifier,
+		},
+		{
+			id: "password",
+			label: "Password",
+			type: "password",
+			value: password,
+			onChange: setPassword,
+			error: errors.password,
+		},
+	]
 
 	return (
 		<form onSubmit={handleSubmit}>
 			<ul>
-				<li>
-					<label htmlFor="identifier">Username or Email</label>
-					<br />
-					<input
-						id="identifier"
-						name="identifier"
-						type="text"
-						value={identifier}
-						onChange={(e) => setIdentifier(e.target.value)}
+				{fields.map((field) => (
+					<FormField
+						key={field.id}
+						id={field.id}
+						label={field.label}
+						type={field.type}
+						value={field.value}
+						onChange={field.onChange}
+						error={field.error}
 					/>
-					{errors.identifier && <p>{errors.identifier}</p>}
-				</li>
-				<li>
-					<label htmlFor="identifier">Password</label>
-					<br />
-					<input
-						id="password"
-						name="password"
-						type="password"
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
-					/>
-					{errors.password && <p>{errors.password}</p>}
-				</li>
+				))}
+
 				<li>
 					<button type="submit" disabled={isSubmitting}>
-						{isSubmitting ? "Logining..." : "Login"}
+						{isSubmitting ? "Logging in..." : "Login"}
 					</button>
 				</li>
 			</ul>
+
 			{serverMessage && <p>{serverMessage}</p>}
+
 			<p>
-				Don't have an account yet? <NavLink to="/register">Register</NavLink>
+				Don&apos;t have an account yet? <NavLink to="/register">Register</NavLink>
 			</p>
 		</form>
 	)
