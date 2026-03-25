@@ -39,6 +39,9 @@ func (c *Config) Validate() error {
 	if c.DBPassword == "CHANGE_ME" {
 		return fmt.Errorf("DB_PASSWORD cannot be 'CHANGE_ME'")
 	}
+	if c.JwtExpirationTime <= 0 {
+		return fmt.Errorf("JWT_EXPIRATION must be > 0")
+	}
 
 	switch c.DBSSLMode {
 	case "disable", "require", "verify-ca", "verify-full":
@@ -55,6 +58,12 @@ func (c *Config) Validate() error {
 		if c.DBSSLMode == "disable" {
 			return fmt.Errorf("DB_SSLMODE cannot be 'disable' in prod")
 		}
+	}
+	if len(c.GoAllowedURLs) == 0 {
+		if c.Env == "prod" {
+			return fmt.Errorf("GO_ALLOWED_URLS is required in production")
+		}
+		c.GoAllowedURLs = []string{"http://localhost:3000"} // Default si en .env esta vacia
 	}
 
 	// Pool:

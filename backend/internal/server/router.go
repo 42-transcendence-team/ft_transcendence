@@ -2,9 +2,11 @@ package server
 
 import (
 	"backend/internal/handlers"
+	"backend/internal/middlewares"
 	"backend/internal/repository"
 	routes "backend/internal/routes"
 	"backend/internal/services"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,15 +17,30 @@ func (srv *HTTPServer) Router() {
 
 	routes.HealthRoutes(srv.Engine)
 
-	userRepo := repository.NewUserRepository(srv.Db)
-	authService := services.NewAuthService(userRepo)
-	authHandler := handlers.NewAuthHandler(authService)
+  userRepo := repository.NewUserRepository(srv.Db)
 
-	// usaremos este grupo para definir las funciones del proyecto y aplicar middlewares comunes
+	authService := services.NewAuthService(userRepo, srv.Conf)
+	userService := services.NewUserService(userRepo)
+
+	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
+	userHandler := handlers.NewUserHandler(userService)
+
 	api := srv.Engine.Group("/api/v1")
+
+	// rutas publicas
 	routes.AuthRoutes(api, authHandler)
-	// ejemplo:
-	// api.GET("/login", log42Aouth2)
+  
+  // la dejo publica de momento, hasta que se implementen mas cosas , pero deberia de psara por el middleware de auth
+  routes.UserRoutes(api, userHandler)
+  
+	// rutas privadas
+	protected := api.Group("/")
+	protected.Use(middlewares.AuthMiddleware(srv.Conf))
+	{
+		routes.TestRoute(protected)
+		routes.AuthRoutesPrivate(protected, authHandler)
+		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
+  }
 
 	srv.Engine.NoMethod(func(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "method not allowed"})
