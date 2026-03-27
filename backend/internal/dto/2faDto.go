@@ -1,8 +1,7 @@
 package dto
 
 type TwoFAEnable struct {
-	Id    uint   `json:"id" binding:"required"`
-	Login string `json:"login" binding:"required"`
+	Id uint `json:"id" binding:"required"`
 }
 
 type TwoFASetup struct {
@@ -15,11 +14,12 @@ type TwoFADisable struct {
 }
 
 type TwoFAVerify struct {
-	Id   uint   `json:"id" binding:"required"`
+	Id   uint   `json:"id"`
 	Code string `json:"code" binding:"required"`
 }
 
 type TwoFALogin struct {
-	Id   uint   `json:"id" binding:"required"`
-	Code string `json:"code" binding:"required"`
+	Id        uint   `json:"id"`
+	TempToken string `json:"tempToken"`
+	Code      string `json:"code" binding:"required"`
 }

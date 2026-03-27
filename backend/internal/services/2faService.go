@@ -4,28 +4,36 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/repository"
+	"backend/internal/store"
+	"backend/internal/utils"
 	"bytes"
 	"encoding/base64"
 	"image/png"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pquerna/otp/totp"
 )
 
 type TwoFAService struct {
-	UserRepo *repository.UserRepository
+	UserRepo    *repository.UserRepository
+	authService *AuthService
 }
 
-func New2FAService(userRepo *repository.UserRepository) *TwoFAService {
-	return &TwoFAService{UserRepo: userRepo}
+func New2FAService(userRepo *repository.UserRepository, authService *AuthService) *TwoFAService {
+	return &TwoFAService{UserRepo: userRepo, authService: authService}
 }
 
 // Falta hacer todas las validaciones para ejecutar esto, como por ejemplo que el usuario exista, que no tenga ya 2FA habilitado, etc...
 func (s *TwoFAService) Enable2FA(request dto.TwoFAEnable) (*dto.TwoFASetup, error) {
+	req, err := s.UserRepo.FindById(request.Id)
+	if err != nil {
+		return nil, err
+	}
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "tuentifour",
-		AccountName: request.Login,
+		AccountName: req.Login,
 	})
 	if err != nil {
 		return nil, err
@@ -90,15 +98,34 @@ func (s *TwoFAService) Disable2FA(request dto.TwoFADisable) (int64, error) {
 	return rows, nil
 }
 
-func (s *TwoFAService) Login2FA(request dto.TwoFALogin) (bool, error) {
-	passcode := strings.TrimSpace(request.Code)
-	secret, err := s.UserRepo.Get2FASecret(request.Id)
+func (s *TwoFAService) Login2FA(request dto.TwoFALogin) (string, time.Time, error) {
+
+	data, ok := store.GlobalTempStore.Get(request.TempToken)
+	if !ok {
+		return "", time.Time{}, appErr.NewUnauthorized("Invalid or expired temp token")
+	}
+	if data.Expiry.Before(time.Now()) {
+		store.GlobalTempStore.Delete(request.TempToken)
+		return "", time.Time{}, appErr.NewUnauthorized("Invalid or expired temp token")
+	}
+
+	user, err := s.UserRepo.FindById(data.UserID)
 	if err != nil {
-		return false, err
+		return "", time.Time{}, appErr.NewBadRequest("User not found")
 	}
-	valid := totp.Validate(passcode, secret)
-	if valid == false {
-		return false, appErr.NewUnauthorized("Invalid 2FA code")
+
+	secret := user.Secret2FA
+
+	valid := totp.Validate(request.Code, *secret)
+	if !valid {
+		return "", time.Time{}, appErr.NewUnauthorized("Invalid 2FA code")
 	}
-	return valid, nil
+
+	strToken, expTime, err := utils.CreateJwtToken(user, s.authService.cfg)
+	if err != nil {
+		return "", time.Time{}, appErr.NewInternal(err)
+	}
+
+	s.authService.tempStore.Delete(request.TempToken)
+	return strToken, expTime, nil
 }

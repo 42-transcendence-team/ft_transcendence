@@ -6,10 +6,11 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type AuthHandler struct {
@@ -60,7 +61,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.AuthService.Register(services.RegisterInput{
+	user, err := h.AuthService.Register(dto.RegisterInput{
 		Login:    req.Login,
 		Email:    req.Email,
 		Password: req.Password,
@@ -110,7 +111,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	strToken, user, expTime, err := h.AuthService.Login(services.LoginInput{
+	result, err := h.AuthService.Login(dto.LoginInput{
 		Identifier: req.Identifier,
 		Password:   req.Password,
 	})
@@ -120,11 +121,31 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	if result.Requires2FA {
+		h.SetTempToken(c, result.TempToken, result.ExpTime)
+		c.JSON(200, gin.H{
+			"message":     "2FA required",
+			"requires2fa": true,
+			"user": gin.H{
+				"id":        result.User.ID,
+				"login":     result.User.Login,
+				"email":     result.User.Email,
+				"tempToken": result.TempToken,
+			},
+		})
+		return
+	}
+
+	strToken := result.Token
+	expTime := result.ExpTime
+	user := result.User
+
 	h.setCookie(c, strToken, expTime)
 
 	// TODO: hay q ver como se mandan los msg al front y que necesita
 	c.JSON(200, gin.H{
-		"message": "user login success",
+		"message":     "user login success",
+		"requires2fa": false,
 		"user": gin.H{
 			"id":    user.ID,
 			"login": user.Login,
@@ -216,6 +237,36 @@ func (h *AuthHandler) setCookie(c *gin.Context, strToken string, exp time.Time) 
 
 	http.SetCookie(c.Writer, cookie)
 
+}
+
+func (h *AuthHandler) SetTempToken(c *gin.Context, tempToken string, exp time.Time) {
+	var secure bool
+
+	if h.cfg.Env == "prod" {
+		secure = true // Solo enviar por HTTPS, para produccion
+	} else {
+		secure = false // para desarrollo, asi si haces http://localhost:8080 para pruebas funciona
+	}
+
+	cookie := &http.Cookie{
+		Name:     "tempToken",
+		Value:    tempToken,
+		Expires:  exp,  // Expiración
+		HttpOnly: true, // Previene acceso por JS (seguridad)
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode, // Protección CSRF
+		Path:     "/",
+	}
+
+	if tempToken == "" {
+		cookie.MaxAge = -1
+	}
+
+	http.SetCookie(c.Writer, cookie)
+}
+
+func (h *AuthHandler) ClearTempToken(c *gin.Context) {
+	h.SetTempToken(c, "", time.Unix(0, 0))
 }
 
 /*Request validation*/

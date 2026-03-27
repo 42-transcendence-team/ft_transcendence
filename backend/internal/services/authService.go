@@ -2,35 +2,30 @@ package services
 
 import (
 	"backend/config"
+	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"backend/internal/repository"
+	"backend/internal/store"
 	"backend/internal/utils"
 	"time"
 )
 
 type AuthService struct {
-	userRepo *repository.UserRepository
-	cfg      *config.Config
+	userRepo  *repository.UserRepository
+	cfg       *config.Config
+	tempStore *store.TempStore
 }
 
 func NewAuthService(userRepo *repository.UserRepository, cfg *config.Config) *AuthService {
 	return &AuthService{
-		userRepo: userRepo,
-		cfg:      cfg,
+		userRepo:  userRepo,
+		cfg:       cfg,
+		tempStore: store.NewTempStore(),
 	}
 }
 
-type RegisterInput struct {
-	Login    string
-	Email    string
-	Password string
-	Name     string
-	Surname  string
-	Birtday  time.Time
-}
-
-func (s *AuthService) Register(input RegisterInput) (user models.User, err error) {
+func (s *AuthService) Register(input dto.RegisterInput) (user models.User, err error) {
 
 	if !utils.IsStrongPassword(input.Password) {
 		return models.User{}, appErr.NewValidation(map[string]string{
@@ -58,7 +53,7 @@ func (s *AuthService) Register(input RegisterInput) (user models.User, err error
 	return user, nil
 }
 
-func NewUser(input RegisterInput) models.User {
+func NewUser(input dto.RegisterInput) models.User {
 	return models.User{
 		Login:    input.Login,
 		Email:    &input.Email,
@@ -69,28 +64,47 @@ func NewUser(input RegisterInput) models.User {
 	}
 }
 
-type LoginInput struct {
-	Identifier string
-	Password   string
-}
-
-func (s *AuthService) Login(input LoginInput) (string, *models.User, time.Time, error) {
+func (s *AuthService) Login(input dto.LoginInput) (dto.LoginResult, error) {
 
 	user, err := s.userRepo.FindByLoginOrEmail(input.Identifier)
 	if err != nil {
-		return "", nil, time.Time{}, appErr.NewUnauthorized("invalid credentials")
+		return dto.LoginResult{}, appErr.NewUnauthorized("invalid credentials")
 	}
 
 	if !utils.CheckPasswordHash(input.Password, user.Password) {
-		return "", nil, time.Time{}, appErr.NewUnauthorized("invalid credentials")
+		return dto.LoginResult{}, appErr.NewUnauthorized("invalid credentials")
+	}
+
+	if user.Active2FA {
+		tempToken, err := utils.CreateTempJwtToken()
+		if err != nil {
+			return dto.LoginResult{}, appErr.NewInternal(err)
+		}
+
+		store.GlobalTempStore.Set(tempToken, store.TempTokenData{
+			UserID: user.ID,
+			Expiry: time.Now().Add(5 * time.Minute),
+		})
+
+		return dto.LoginResult{
+			User:        user,
+			TempToken:   tempToken,
+			Requires2FA: true,
+		}, nil
 	}
 
 	strToken, expTime, err := utils.CreateJwtToken(user, s.cfg)
 	if err != nil {
-		return "", nil, time.Time{}, err
+		return dto.LoginResult{}, err
 	}
 
-	return strToken, user, expTime, err
+	return dto.LoginResult{
+		Token:       strToken,
+		TempToken:   "",
+		User:        user,
+		ExpTime:     expTime,
+		Requires2FA: false,
+	}, nil
 }
 
 func (s *AuthService) GetUserById(userID uint) (*models.User, error) {

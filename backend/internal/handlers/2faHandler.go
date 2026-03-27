@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"backend/internal/dto"
+	appErr "backend/internal/errors"
 	"backend/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -9,23 +10,25 @@ import (
 
 type TwoFAHandler struct {
 	TwoFAService *services.TwoFAService
+	AuthHandler  *AuthHandler
 }
 
-func New2FAHandler(twoFAService *services.TwoFAService) *TwoFAHandler {
-	return &TwoFAHandler{TwoFAService: twoFAService}
+func New2FAHandler(twoFAService *services.TwoFAService, authHandler *AuthHandler) *TwoFAHandler {
+	return &TwoFAHandler{TwoFAService: twoFAService, AuthHandler: authHandler}
 }
 
 // Se hace la peticion para generar una nueva clave TOTP.
 // Se devuelve un QR generado automaticamente
 func (h *TwoFAHandler) Enable2FA(c *gin.Context) {
-	var request dto.TwoFAEnable
-
-	err := c.ShouldBindJSON(&request)
-	if err != nil {
-		c.Error(err)
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
 		c.Abort()
 		return
 	}
+
+	var request dto.TwoFAEnable
+	request.Id = userIDValue.(uint)
 
 	key, err := h.TwoFAService.Enable2FA(request)
 	if err != nil {
@@ -40,7 +43,22 @@ func (h *TwoFAHandler) Enable2FA(c *gin.Context) {
 // Se hace la peticion para verificar el codigo TOTP generado en la app de autenticacion
 // Se devuelve un booleano indicando si el codigo es correcto o no
 func (h *TwoFAHandler) Verify2FA(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
+		c.Abort()
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		c.Error(appErr.NewUnauthorized("Invalid user ID in context"))
+		c.Abort()
+		return
+	}
+
 	var request dto.TwoFAVerify
+	request.Id = userID
 
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
@@ -62,14 +80,22 @@ func (h *TwoFAHandler) Verify2FA(c *gin.Context) {
 // Se hace la peticion para deshabilitar la 2FA
 // eliminando el secreto TOTP del usuario y marcando la 2FA como inactiva
 func (h *TwoFAHandler) Disable2FA(c *gin.Context) {
-	var request dto.TwoFADisable
-
-	err := c.ShouldBindJSON(&request)
-	if err != nil {
-		c.Error(err)
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
 		c.Abort()
 		return
 	}
+
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		c.Error(appErr.NewUnauthorized("Invalid user ID in context"))
+		c.Abort()
+		return
+	}
+
+	var request dto.TwoFADisable
+	request.Id = userID
 
 	del, err := h.TwoFAService.Disable2FA(request)
 	if err != nil {
@@ -87,19 +113,47 @@ func (h *TwoFAHandler) Disable2FA(c *gin.Context) {
 func (h *TwoFAHandler) Login2FA(c *gin.Context) {
 	var request dto.TwoFALogin
 
-	err := c.ShouldBindJSON(&request)
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
+		c.Abort()
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		c.Error(appErr.NewUnauthorized("Invalid user ID in context"))
+		c.Abort()
+		return
+	}
+
+	tempToken, err := c.Cookie("tempToken")
+	if err != nil {
+		c.Error(appErr.NewUnauthorized("Temp token not found in context"))
+		c.Abort()
+		return
+	}
+
+	request.TempToken = tempToken
+
+	err = c.ShouldBindJSON(&request)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	request.Id = userID
+	request.TempToken = tempToken
+
+	token, life, err := h.TwoFAService.Login2FA(request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	isValid, err := h.TwoFAService.Login2FA(request)
-	if err != nil {
-		c.Error(err)
-		c.Abort()
-		return
-	}
+	h.AuthHandler.setCookie(c, token, life)
+	h.AuthHandler.ClearTempToken(c)
 
-	c.JSON(200, gin.H{"message": "2FA verified successfully", "isValid": isValid})
+	c.JSON(200, gin.H{"message": "2FA verified successfully", "token": token})
 }
