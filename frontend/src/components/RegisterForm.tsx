@@ -51,11 +51,10 @@ export const RegisterForm = () => {
 		const usernameRegex = /^[A-Za-z0-9_-]+$/
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 		const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s-]+$/
-		const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,64}$/
 		if (!username.trim()) {
 			newErrors.username = "El username es obligatorio."
 		} else if (!usernameRegex.test(username)) {
-			newErrors.username = "Solo se permiten letras, números, guion y guion bajwwwo."
+			newErrors.username = "Solo se permiten letras, números, guion y guion bajo."
 		}
 		if (!email.trim()) {
 			newErrors.email = "El email es obligatorio."
@@ -64,9 +63,8 @@ export const RegisterForm = () => {
 		}
 		if (!password) {
 			newErrors.password = "La contraseña es obligatoria."
-		} else if (!passwordRegex.test(password)) {
-			newErrors.password =
-				"La contraseña debe tener entre 8 y 64 caracteres, incluir una mayúscula, un número y un símbolo como mínimo."
+		} else if (password.length < 8) {
+			newErrors.password = "La contraseña debe tener al menos 8 caracteres."
 		}
 		if (!confirmPassword) {
 			newErrors.confirmPassword = "Debes confirmar la contraseña."
