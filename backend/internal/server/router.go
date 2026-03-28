@@ -40,6 +40,7 @@ func (srv *HTTPServer) Router() {
 	protected := api.Group("/")
 	protected.Use(middlewares.AuthMiddleware(srv.Conf))
 	{
+
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
 		routes.FriendsRoutes(protected, friendHandler)

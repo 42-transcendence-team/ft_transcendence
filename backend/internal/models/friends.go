@@ -1,0 +1,36 @@
+package models
+
+import (
+	"time"
+)
+
+type RelationStatus string
+
+const (
+	RelationPending  RelationStatus = "pending"
+	RelationAccepted RelationStatus = "accepted"
+	RelationBlocked  RelationStatus = "blocked"
+)
+
+type FriendRequest struct {
+	ID        uint           `gorm:"primaryKey"`
+	SenderID  uint           `gorm:"not null;index"`
+	ReciverID uint           `gorm:"not null;index"`
+	Status    RelationStatus `gorm:"type:varchar(20);not null;default:'pending'"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type Block struct {
+	ID        uint `gorm:"primaryKey"`
+	BlokerID  uint `gorm:"not null;index"`
+	BlokedID  uint `gorm:"not null;index"`
+	CreatedAt time.Time
+}
+
+type Friendship struct {
+	ID        uint `gorm:"primaryKey"`
+	User1ID   uint `gorm:"not null;index"`
+	User2ID   uint `gorm:"not null;index"`
+	CreatedAt time.Time
+}
