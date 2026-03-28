@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Es para verificar el Token temporal que se genera al hacer login en el caso de que el usuario tenga 2FA activo
+// Permite acceder al endpoint de validacion del codigo TOTP
 func TwoFAMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tempToken, err := c.Cookie("tempToken")

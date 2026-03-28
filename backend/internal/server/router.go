@@ -35,7 +35,7 @@ func (srv *HTTPServer) Router() {
 	// la dejo publica de momento, hasta que se implementen mas cosas , pero deberia de psara por el middleware de auth
 	routes.UserRoutes(api, userHandler)
 
-	// Esto en realidad no se como poder hacerloo bonito
+	// Esto en realidad no se como poder hacerlo bonito
 	login := api.Group("/2fa")
 	login.Use(middlewares.TwoFAMiddleware(srv.Conf))
 	{

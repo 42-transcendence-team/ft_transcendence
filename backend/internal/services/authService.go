@@ -75,6 +75,7 @@ func (s *AuthService) Login(input dto.LoginInput) (dto.LoginResult, error) {
 		return dto.LoginResult{}, appErr.NewUnauthorized("invalid credentials")
 	}
 
+	// Crea un Token temporal en el caso de que el suaurio tenga 2FA activo para poder validar el codigo TOTP en el siguiente paso del login
 	if user.Active2FA {
 		tempToken, err := utils.CreateTempJwtToken()
 		if err != nil {
@@ -83,7 +84,12 @@ func (s *AuthService) Login(input dto.LoginInput) (dto.LoginResult, error) {
 
 		store.GlobalTempStore.Set(tempToken, store.TempTokenData{
 			UserID: user.ID,
-			Expiry: time.Now().Add(5 * time.Minute),
+			Expiry: time.Now().Add(5 * time.Minute), // ahora mismo dura 5min el temporal para pruebas, luego se puede ajustar
+			// se podria añadir un contador de intentos para eliminar el token despues de X intentos fallidos
+			// Intentos: 0,
+			// MaxIntentos: 5,
+			// Esto se puede usar para evitar ataques de fuerza bruta al endpoint de validacion 2FA
+			// Quizá tambien controlar las peticiones con el mismo correo/login para evitar ataques de fuerza bruta al login normal
 		})
 
 		return dto.LoginResult{

@@ -40,6 +40,7 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB) *HTTPServer {
 		Db:     db,
 	}
 
+	// Inicializa el TempStore global para la gestión de tokens temporales (en este caso para 2FA)
 	store.InitGlobalTempStore()
 
 	srv.Router()

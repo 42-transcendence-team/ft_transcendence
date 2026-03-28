@@ -25,11 +25,14 @@ func New2FAService(userRepo *repository.UserRepository, authService *AuthService
 	return &TwoFAService{UserRepo: userRepo, authService: authService}
 }
 
-// Falta hacer todas las validaciones para ejecutar esto, como por ejemplo que el usuario exista, que no tenga ya 2FA habilitado, etc...
+// Quizá haya que añadir alguna validacion en el futuro, ahora mismo hace la peticion por la cookie de sesion
 func (s *TwoFAService) Enable2FA(request dto.TwoFAEnable) (*dto.TwoFASetup, error) {
 	req, err := s.UserRepo.FindById(request.Id)
 	if err != nil {
 		return nil, err
+	}
+	if req.Active2FA {
+		return nil, appErr.NewBadRequest("2FA is already enabled for this user")
 	}
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "tuentifour",
@@ -58,14 +61,15 @@ func (s *TwoFAService) Enable2FA(request dto.TwoFAEnable) (*dto.TwoFASetup, erro
 	if err != nil || user == 0 {
 		return nil, err
 	}
-	// Guarda el QR generado en una imagen y crea la carpeta test
+	// Guarda el QR generado en una imagen y crea la carpeta test para hacer pruebas desde back
+	// Cuando se integre con front hay que borrar esto
 	os.Mkdir("./test", 0755)
 	os.WriteFile("./test/qr.png", buf.Bytes(), 0755)
 
 	return &dto.TwoFASetup{QR: qrBase64}, nil
 }
 
-// Falta hacer todas las validaciones para ejecutar esto, como por ejemplo que el usuario exista, que no tenga ya 2FA habilitado, etc...
+// No se que validaciones deberia pasar esto o si deberia hacerlo, ya que no puede existir sin Enable
 func (s *TwoFAService) Verify2FA(request dto.TwoFAVerify) (bool, error) {
 	passcode := strings.TrimSpace(request.Code)
 	secret, err := s.UserRepo.Get2FASecret(request.Id)
@@ -84,7 +88,7 @@ func (s *TwoFAService) Verify2FA(request dto.TwoFAVerify) (bool, error) {
 	return valid, nil
 }
 
-// Falta hacer todas las validaciones para ejecutar esto, como por ejemplo que el usuario exista, que no tenga ya 2FA habilitado, etc...
+// No se si habría que hacer alguina otra validacion, de momento se elimina segúin la cookie de sesion del usuario
 func (s *TwoFAService) Disable2FA(request dto.TwoFADisable) (int64, error) {
 	rows, err := s.UserRepo.Remove2FA(dto.UserRemove2FA{
 		Id: request.Id,
@@ -98,6 +102,7 @@ func (s *TwoFAService) Disable2FA(request dto.TwoFADisable) (int64, error) {
 	return rows, nil
 }
 
+// Se hace la peticion para la validacion del Secreto TOTP en base a la cookie temporal que genera el login
 func (s *TwoFAService) Login2FA(request dto.TwoFALogin) (string, time.Time, error) {
 
 	data, ok := store.GlobalTempStore.Get(request.TempToken)
@@ -126,6 +131,7 @@ func (s *TwoFAService) Login2FA(request dto.TwoFALogin) (string, time.Time, erro
 		return "", time.Time{}, appErr.NewInternal(err)
 	}
 
+	// Se elimina del mapa global el token temporal generado
 	s.authService.tempStore.Delete(request.TempToken)
 	return strToken, expTime, nil
 }

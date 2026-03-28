@@ -121,6 +121,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// En el caso de "FA activa, se genera un Roken temporal para poder comprobar el código TOTP
+	// Retorna para poder llamar al endpoint/handler de login 2FA
 	if result.Requires2FA {
 		h.SetTempToken(c, result.TempToken, result.ExpTime)
 		c.JSON(200, gin.H{
@@ -239,6 +241,8 @@ func (h *AuthHandler) setCookie(c *gin.Context, strToken string, exp time.Time) 
 
 }
 
+// Se genera un Token temporal para la validacion 2FA. Tiene menos timpo de vida y es mas simple que el bueno
+// Solo sirve para ir a la ruta de validacion para login 2FA
 func (h *AuthHandler) SetTempToken(c *gin.Context, tempToken string, exp time.Time) {
 	var secure bool
 
@@ -265,6 +269,7 @@ func (h *AuthHandler) SetTempToken(c *gin.Context, tempToken string, exp time.Ti
 	http.SetCookie(c.Writer, cookie)
 }
 
+// Un llamador a la funcion de arriba para borrar el Token temporal de las Cookies del usuario
 func (h *AuthHandler) ClearTempToken(c *gin.Context) {
 	h.SetTempToken(c, "", time.Unix(0, 0))
 }

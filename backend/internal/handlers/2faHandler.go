@@ -42,6 +42,7 @@ func (h *TwoFAHandler) Enable2FA(c *gin.Context) {
 
 // Se hace la peticion para verificar el codigo TOTP generado en la app de autenticacion
 // Se devuelve un booleano indicando si el codigo es correcto o no
+// Si el codigo es correcto se guarda el secreto TOTP en la base de datos y se marca la 2FA como activa
 func (h *TwoFAHandler) Verify2FA(c *gin.Context) {
 	userIDValue, exists := c.Get("userID")
 	if !exists {
@@ -109,7 +110,6 @@ func (h *TwoFAHandler) Disable2FA(c *gin.Context) {
 
 // Este handler creo que se llamaria en el proceso de auth despues de verificar la contraseña
 // para verificar el codigo TOTP si el usuario tiene 2FA habilitado.
-// Hablar con Angie para ver como añadirlo en el login
 func (h *TwoFAHandler) Login2FA(c *gin.Context) {
 	var request dto.TwoFALogin
 
@@ -127,6 +127,7 @@ func (h *TwoFAHandler) Login2FA(c *gin.Context) {
 		return
 	}
 
+	// Se obtiene el token temporal generado en el proceso de login
 	tempToken, err := c.Cookie("tempToken")
 	if err != nil {
 		c.Error(appErr.NewUnauthorized("Temp token not found in context"))
@@ -152,6 +153,7 @@ func (h *TwoFAHandler) Login2FA(c *gin.Context) {
 		return
 	}
 
+	// Se guarda el token definitivo y se elimina el temporal de las cookies del navegador
 	h.AuthHandler.setCookie(c, token, life)
 	h.AuthHandler.ClearTempToken(c)
 
