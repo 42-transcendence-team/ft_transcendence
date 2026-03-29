@@ -1,44 +1,35 @@
 package handlers
 
 import (
-	"fmt"
-	"net/http"
-
 	"backend/internal/services"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"gorm.io/gorm"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin:     func(r *http.Request) bool { return true },
+type ChatHandler struct {
+	ChatService *services.ChatService
 }
 
-func ServeWS(Hub *services.Hub, Db *gorm.DB) gin.HandlerFunc {
-    return func(c *gin.Context) {
-		
-        userID := uint(1)  // user id hardcodeado deberia extraerse del jwt
-				//userID := (uintValue)c.GET("userId") casteat a uint
+func (h *ChatHandler) CreateRoom(c *gin.Context) {
+	// 1. validar los datos
 
-        conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-        if err != nil {
-            fmt.Println("Error en Upgrade:", err)
-            return
-        }
-				client := &services.Client{
-						Hub:      Hub,
-						Conn:     conn,
-						Send:     make(chan []byte, 256),
-						UserID:   userID,
-						Channels: []string{"1"},
-				}
+	// 2. LLamar al servicio
+	// h.ChatService.CreateRoom()
 
-				client.Hub.Register <- client
+	// 3. devolver un json
+	// c.JSON(http.StatusOK, /*struct*/)
+}
 
-        go client.WritePump()
-        go client.ReadPump()
-    }
+func (h *ChatHandler) CreateConver(c *gin.Context) {
+	// 1. validar los datos
+
+	// 2. LLamar al servicio
+	// h.ChatService.CreateConver()
+
+	// 3. devolver un json
+	// c.JSON(http.StatusOK, /*struct*/)
+}
+
+func (h *ChatHandler) SendMsg(c *gin.Context) {
+
 }

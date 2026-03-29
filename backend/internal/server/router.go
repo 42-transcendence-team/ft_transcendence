@@ -18,12 +18,15 @@ func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 
   userRepo := repository.NewUserRepository(srv.Db)
+  chatRepo := repository.NewChatRepository(srv.Db)
 
 	authService := services.NewAuthService(userRepo)
 	userService := services.NewUserService(userRepo)
+	chatService := services.NewChatService(chatRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
 	userHandler := handlers.NewUserHandler(userService)
+	chatHandler := handlers.NewUserHandler(chatService)
 
 	hub := services.NewHub(srv.Db)
 	go hub.Run()
@@ -38,7 +41,7 @@ func (srv *HTTPServer) Router() {
   routes.UserRoutes(api, userHandler)
 
 	// chat Routes
-	routes.chatRoutes()
+	routes.ChatRoutes(api, chatHandler)
   
 	// rutas privadas
 	protected := api.Group("/")
