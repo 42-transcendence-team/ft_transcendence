@@ -3,7 +3,7 @@ package middlewares
 import (
 	"backend/config"
 	appErr "backend/internal/errors"
-	"backend/internal/services"
+	"backend/internal/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -48,9 +48,9 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-func ValidateToken(strToken string, cfg *config.Config) (*services.CustomClaims, error) {
+func ValidateToken(strToken string, cfg *config.Config) (*utils.CustomClaims, error) {
 
-	token, err := jwt.ParseWithClaims(strToken, &services.CustomClaims{},
+	token, err := jwt.ParseWithClaims(strToken, &utils.CustomClaims{},
 		func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, appErr.NewUnauthorized("invalid signing method")
@@ -68,7 +68,7 @@ func ValidateToken(strToken string, cfg *config.Config) (*services.CustomClaims,
 		return nil, appErr.NewUnauthorized("invalid token")
 	}
 
-	claims, ok := token.Claims.(*services.CustomClaims)
+	claims, ok := token.Claims.(*utils.CustomClaims)
 	if !ok || !token.Valid {
 		return nil, appErr.NewUnauthorized("invalid token")
 	}

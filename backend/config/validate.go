@@ -59,6 +59,12 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("DB_SSLMODE cannot be 'disable' in prod")
 		}
 	}
+	if len(c.GoAllowedURLs) == 0 {
+		if c.Env == "prod" {
+			return fmt.Errorf("GO_ALLOWED_URLS is required in production")
+		}
+		c.GoAllowedURLs = []string{"http://localhost:3000"} // Default si en .env esta vacia
+	}
 
 	// Pool:
 	if c.DBMaxOpenConns < 1 {
