@@ -30,7 +30,7 @@ type Block struct {
 
 type Friendship struct {
 	ID        uint `gorm:"primaryKey"`
-	User1ID   uint `gorm:"not null;index"`
-	User2ID   uint `gorm:"not null;index"`
+	User1ID   uint `gorm:"not null;uniqueIndex:idx_friendship"`
+	User2ID   uint `gorm:"not null;uniqueIndex:idx_friendship"`
 	CreatedAt time.Time
 }

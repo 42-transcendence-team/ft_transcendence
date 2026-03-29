@@ -37,14 +37,28 @@ Para bloquear
 */
 func FriendsRoutes(api *gin.RouterGroup, friendHandler *handlers.FriendHandler) {
 
-	// Mandar peticion de amistad
-	api.POST("friend/request", friendHandler.SendFriendRequest)
-	// Aceptar peticion de amistad
-	// Rechazar peticion de amistad
-	// Borrar amigo
-	// Bloquear usuario
-	// Desbloquear usuario
-	// Lista de usuarios bloqueados
-	// Lista de amigos
-	// Lista de peticiones
+	friends := api.Group("/friends")
+	{
+		// Lista de amigos
+		friends.GET("", friendHandler.ListFriends)
+
+		// Mandar peticion de amistad
+		friends.POST("/requests", friendHandler.SendFriendRequest)
+		// Lista de peticiones
+		friends.GET("/requests/incoming", friendHandler.ListIncomingRequests)
+		friends.GET("/requests/outgoing", friendHandler.ListOutgoingRequests)
+		// Aceptar peticion de amistad
+		friends.PATCH("/requests/:requestId/accept", friendHandler.AcceptFriendRequest)
+		// Rechazar peticion de amistad
+		friends.PATCH("/requests/:requestId/reject", friendHandler.RejectFriendRequest)
+
+		// Borrar amigo
+		/*
+			friends.DELETE("/:userId", friendHandler.DeleteFriend)
+			friends.POST("/blocks", friendHandler.BlockUser)
+			friends.DELETE("/blocks/:userId", friendHandler.UnblockUser)*/
+		// Bloquear usuario
+		// Desbloquear usuario
+		// Lista de usuarios bloqueados
+	}
 }
