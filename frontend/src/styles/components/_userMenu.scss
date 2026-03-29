@@ -45,19 +45,19 @@
 		font-size: 0.95rem;
 		text-align: left;
 		transition: background-color 0.2s ease, color 0.2s ease;
-	}
 
-	&__item:hover {
+		&:hover {
 		background-color: #f3f4f6;
-	}
+		}
 
-	&__item-icon {
+		&-icon {
 		font-size: 1.1rem;
 		flex-shrink: 0;
-	}
+		}
 
-	&__item--logout:hover {
+		&--logout:hover {
 		background-color: #fee2e2;
 		color: #b91c1c;
-	}
+		}
+  	}
 }
