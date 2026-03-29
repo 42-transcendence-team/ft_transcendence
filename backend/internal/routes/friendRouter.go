@@ -53,12 +53,13 @@ func FriendsRoutes(api *gin.RouterGroup, friendHandler *handlers.FriendHandler) 
 		friends.PATCH("/requests/:requestId/reject", friendHandler.RejectFriendRequest)
 
 		// Borrar amigo
-		/*
-			friends.DELETE("/:userId", friendHandler.DeleteFriend)
-			friends.POST("/blocks", friendHandler.BlockUser)
-			friends.DELETE("/blocks/:userId", friendHandler.UnblockUser)*/
+		// friends.DELETE("/:userId", friendHandler.DeleteFriend)
+
 		// Bloquear usuario
+		// friends.POST("/blocks", friendHandler.BlockUser)
 		// Desbloquear usuario
+		// friends.DELETE("/blocks/:userId", friendHandler.UnblockUser)
 		// Lista de usuarios bloqueados
+		//
 	}
 }
