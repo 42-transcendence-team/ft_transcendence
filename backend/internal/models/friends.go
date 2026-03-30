@@ -13,12 +13,12 @@ const (
 )
 
 type FriendRequest struct {
-	ID        uint           `gorm:"primaryKey"`
-	SenderID  uint           `gorm:"not null;index"`
-	ReciverID uint           `gorm:"not null;index"`
-	Status    RelationStatus `gorm:"type:varchar(20);not null;default:'pending'"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID         uint           `gorm:"primaryKey"`
+	SenderID   uint           `gorm:"not null;index"`
+	ReceiverID uint           `gorm:"not null;index"`
+	Status     RelationStatus `gorm:"type:varchar(20);not null;default:'pending'"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type Block struct {

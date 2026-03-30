@@ -32,15 +32,15 @@ func (r *FriendRepository) CreateFriendship(userID1 uint, userID2 uint) error {
 	return r.db.Create(&frisndship).Error
 }
 
-func (r *FriendRepository) SendFriendRequest(senderID uint, reciverID uint) error {
+func (r *FriendRepository) SendFriendRequest(senderID uint, receiverID uint) (*models.FriendRequest, error) {
 
 	friendRequest := models.FriendRequest{
-		SenderID:  senderID,
-		ReciverID: reciverID,
-		Status:    "pending",
+		SenderID:   senderID,
+		ReceiverID: receiverID,
+		Status:     models.RelationPending,
 	}
 
-	return r.db.Create(&friendRequest).Error
+	return &friendRequest, r.db.Create(&friendRequest).Error
 }
 
 func (r *FriendRepository) AreFriends(userID1 uint, userID2 uint) (bool, error) {
@@ -58,14 +58,14 @@ func (r *FriendRepository) AreFriends(userID1 uint, userID2 uint) (bool, error) 
 	return count > 0, nil
 }
 
-func (r *FriendRepository) IsRequest(senderID uint, reciverID uint) (bool, error) {
+func (r *FriendRepository) IsRequest(senderID uint, receiverID uint) (bool, error) {
 
 	var count int64
 
 	err := r.db.Model(&models.FriendRequest{}).Where(
-		"(sender_id = ? AND reciver_id = ?) OR (sender_id = ? AND reciver_id = ?)",
-		senderID, reciverID,
-		reciverID, senderID,
+		"(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)",
+		senderID, receiverID,
+		receiverID, senderID,
 	).Count(&count).Error
 
 	if err != nil {
@@ -92,6 +92,32 @@ func (r *FriendRepository) AreBlock(userID1 uint, userID2 uint) (bool, error) {
 	}
 
 	return count > 0, err
+}
+
+func (r *FriendRepository) ListOutgoingRequests(userID uint) ([]models.FriendRequest, error) {
+	var requests []models.FriendRequest
+
+	err := r.db.Where("sender_id = ? AND status = ?", userID, models.RelationPending).
+		Order("created_at DESC").
+		Find(&requests).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return requests, nil
+}
+
+func (r *FriendRepository) ListIncomingRequests(userID uint) ([]models.FriendRequest, error) {
+	var requests []models.FriendRequest
+
+	err := r.db.Where("receiver_id = ? AND status = ?", userID, models.RelationPending).
+		Order("created_at DESC").
+		Find(&requests).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return requests, nil
 }
 
 // siempre se van a guardar las relacciones en la base de datos el usuario 1 sera el indice menor
