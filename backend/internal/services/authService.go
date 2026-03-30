@@ -84,7 +84,7 @@ func (s *AuthService) Login(input dto.LoginInput) (dto.LoginResult, error) {
 
 		store.GlobalTempStore.Set(tempToken, store.TempTokenData{
 			UserID: user.ID,
-			Expiry: time.Now().Add(5 * time.Minute), // ahora mismo dura 5min el temporal para pruebas, luego se puede ajustar
+			Expiry: time.Now().Add(time.Duration(s.cfg.Expiration2FA) * time.Second), // ahora mismo dura 5min el temporal para pruebas, luego se puede ajustar
 			// se podria añadir un contador de intentos para eliminar el token despues de X intentos fallidos
 			// Intentos: 0,
 			// MaxIntentos: 5,

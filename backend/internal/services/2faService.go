@@ -35,7 +35,7 @@ func (s *TwoFAService) Enable2FA(request dto.TwoFAEnable) (*dto.TwoFASetup, erro
 		return nil, appErr.NewBadRequest("2FA is already enabled for this user")
 	}
 	key, err := totp.Generate(totp.GenerateOpts{
-		Issuer:      "tuentifour",
+		Issuer:      s.authService.cfg.Issuer2FA,
 		AccountName: req.Login,
 	})
 	if err != nil {
