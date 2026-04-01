@@ -54,6 +54,9 @@ importers:
       eslint-plugin-react-refresh:
         specifier: ^0.4.24
         version: 0.4.26(eslint@9.39.2(jiti@2.6.1))
+      postcss-pixels-to-rem:
+        specifier: ^0.8.0
+        version: 0.8.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -905,6 +908,9 @@ packages:
   picomatch@4.0.3:
     resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
     engines: {node: '>=12'}
+
+  postcss-pixels-to-rem@0.8.0:
+    resolution: {integrity: sha512-MghzOc6CueAS/35n/DjcoPmUrijHDxVrFR5FZqFlYjCFQ9TQO8ErHCPMv/Tgj+uOygGbcMKIqeIYZESKfJ2JCw==}
 
   postcss@8.5.6:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
@@ -2070,6 +2076,8 @@ snapshots:
   picocolors@1.1.1: {}
 
   picomatch@4.0.3: {}
+
+  postcss-pixels-to-rem@0.8.0: {}
 
   postcss@8.5.6:
     dependencies:

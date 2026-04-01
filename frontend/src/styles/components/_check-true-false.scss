@@ -1,0 +1,95 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/variables' as *;
+
+.check-true-false {
+    margin: 10px;
+    display: flex;
+    align-items: center;
+	justify-content: space-between;
+    color: $secondary-text-light;
+    font-family: sans-serif;
+    --medida-base: 1.5rem;
+
+    &__label {
+        margin-left: 10px;
+        cursor: pointer;
+        user-select: none;
+        font-size: 20px;
+    }
+
+    &__input {
+        appearance: none;
+        width: calc(var(--medida-base) * 1.8);
+        height: var(--medida-base);
+        border: 2px solid $red-border-light;
+        border-radius: var(--medida-base);
+        background: #f1e1e1;
+        position: relative;
+        box-sizing: border-box;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+
+        &::before {
+            content: "";
+            width: calc(var(--medida-base) * 0.7);
+            height: calc(var(--medida-base) * 0.7);
+            background: $red-background-light;
+            border: 2px solid $red-border-light;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: calc(var(--medida-base) * 0.1);
+            transform: translateY(-50%);
+            transition: all 0.3s ease-in-out;
+            z-index: 3;
+        }
+
+        &::after {
+            content: "✕";
+            font-size: calc(var(--medida-base) * 0.6);
+            font-weight: bold;
+            color: $red-background-light;
+            
+            position: absolute;
+            top: 50%;
+            right: calc(var(--medida-base) * 0.1);
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            width: calc(var(--medida-base) * 0.8);
+            height: calc(var(--medida-base) * 0.8);
+            
+            transition: all 0.3s ease-in-out;
+            opacity: 1;
+        }
+
+        &:checked {
+            border: 2px solid #02c202;
+            background: #e2f1e1;
+
+            &::before {
+                background: rgba(2, 194, 2, 0.5);
+                border: 2px solid #02c202;
+                left: calc(var(--medida-base) * (1.8 - 0.7 - 0.3));
+            }
+
+            &::after {
+                content: "";
+                font-size: 0;
+                
+                border-bottom: calc(var(--medida-base) * 0.07) solid #02c202;
+                border-left: calc(var(--medida-base) * 0.07) solid #02c202;
+                
+                width: calc(var(--medida-base) * 0.4);
+                height: calc(var(--medida-base) * 0.2);
+                
+                transform: translateY(-70%) rotate(-55deg);
+                
+                left: calc(var(--medida-base) * 0.25); 
+                right: auto;
+            }
+        }
+    }
+}
