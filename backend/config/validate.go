@@ -58,6 +58,9 @@ func (c *Config) Validate() error {
 		if c.DBSSLMode == "disable" {
 			return fmt.Errorf("DB_SSLMODE cannot be 'disable' in prod")
 		}
+		if c.JwtSecret == "" {
+			return fmt.Errorf("JWT_SECRET is required")
+		}
 	}
 	if len(c.GoAllowedURLs) == 0 {
 		if c.Env == "prod" {
