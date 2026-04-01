@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 
 import { PrivHeader } from "@components/PrivHeader";
+import { Footer } from "@components/Footer";
 import "../styles/components/_privateLayout.scss"
 
 export function PrivateLayout() {
@@ -26,7 +27,7 @@ export function PrivateLayout() {
 			</main>
 
 			<footer className="privateLayout__footer">
-				FOOTER
+				<Footer />
 			</footer>
 
 			<aside className="privateLayout__rightPanel">
