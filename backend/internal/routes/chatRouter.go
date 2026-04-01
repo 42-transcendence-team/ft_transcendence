@@ -7,8 +7,9 @@ import (
 )
 
 func ChatRoutes(api *gin.RouterGroup, chatHandler *handlers.ChatHandler) {
-	wsGroup := api.Group("/ws")
+	wsGroup := api.Group("/chat")
 	{
+		wsGroup.GET("/ws", chatHandler.SendMsg)
 		// Este grupo necesita un middleware ficticio que comprueba que tengas la cookie de authorizacion para poder llamar al grupo de endpoint de /ws
 		// wsGroup.Use(middlewares.AuthRequired()) 
 		wsGroup.GET("/room", chatHandler.CreateConver)

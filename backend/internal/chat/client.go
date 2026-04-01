@@ -78,7 +78,7 @@ func (c *Client) writePump() {
 
 			// Crea la cola de mensajes
 			n := len(c.send)
-			for i := range n {
+			for range n {
 				w.Write(newline)
 				w.Write(<-c.send)
 			}
@@ -96,7 +96,7 @@ func (c *Client) writePump() {
 }
 
 // Maneja las lecturas y escrituras de los websockets
-func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)

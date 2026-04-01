@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/internal/chat"
 	"backend/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -8,36 +9,19 @@ import (
 
 type ChatHandler struct {
 	ChatService *services.ChatService
+	Hub         *chat.Hub
 }
 
-func (h *ChatHandler) CreateRoom(c *gin.Context) {
-	// 1. validar los datos
-
-	// 2. LLamar al servicio
-	// h.ChatService.CreateRoom()
-
-	// 3. devolver un json
-	// c.JSON(http.StatusOK, /*struct*/)
-}
-
-func (h *ChatHandler) CreateConver(c *gin.Context) {
-	// 1. validar los datos
-
-	// 2. LLamar al servicio
-	// h.ChatService.CreateConver()
-
-	// 3. devolver un json
-	// c.JSON(http.StatusOK, /*struct*/)
+func NewChatHandler(chatService *services.ChatService, hub *chat.Hub) *ChatHandler {
+	return &ChatHandler{ChatService: chatService, Hub: hub}
 }
 
 func (h *ChatHandler) SendMsg(c *gin.Context) {
-    conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-    if err != nil { return }
-
-    userID := 1; /* leerlo de la cookie */
-    client := &hub.Client{UserID: userID, Conn: conn, Send: make(chan []byte, 256)}
-    h.Hub.Register <- client
-
-    go client.WritePump()
-    go client.ReadPump(h.Hub)
+	userID := c.MustGet("userID").(uint)
+	chat.ServeWs(h.Hub, c.Writer, c.Request)
+	_ = userID
 }
+
+func (h *ChatHandler) CreateRoom(c *gin.Context) {}
+func (h *ChatHandler) CreateConver(c *gin.Context) {}
+

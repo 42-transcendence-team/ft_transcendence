@@ -1,6 +1,7 @@
 package server
 
 import (
+	"backend/internal/chat"
 	"backend/internal/handlers"
 	"backend/internal/middlewares"
 	"backend/internal/repository"
@@ -13,49 +14,41 @@ import (
 // El enroutador es una retaila de: Metodo -> ruta -> handler
 // Para añadir un endpoint hay que confeccionar la funcion en internals/handlers y
 // añadir el enpoint con un comantario encima describiendo lo que hace para el swagger
+// internal/server/router.go
+// internal/server/router.go
+
 func (srv *HTTPServer) Router() {
 
 	routes.HealthRoutes(srv.Engine)
 
-  userRepo := repository.NewUserRepository(srv.Db)
-  chatRepo := repository.NewChatRepository(srv.Db)
+	userRepo := repository.NewUserRepository(srv.Db)
+	chatRepo := repository.NewChatRepository(srv.Db)
 
-	authService := services.NewAuthService(userRepo)
+	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
 	chatService := services.NewChatService(chatRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
 	userHandler := handlers.NewUserHandler(userService)
-	chatHandler := handlers.NewUserHandler(chatService)
 
-	hub := services.NewHub(srv.Db)
+	hub := chat.NewHub()
 	go hub.Run()
 
-	// usaremos este grupo para definir las funciones del proyecto y aplicar middlewares comunes
+	chatHandler := handlers.NewChatHandler(chatService, hub)
+
 	api := srv.Engine.Group("/api/v1")
 
-	// rutas publicas
 	routes.AuthRoutes(api, authHandler)
-  
-  // la dejo publica de momento, hasta que se implementen mas cosas , pero deberia de psara por el middleware de auth
-  routes.UserRoutes(api, userHandler)
+	routes.UserRoutes(api, userHandler)
 
-	// chat Routes
-	routes.ChatRoutes(api, chatHandler)
-  
-	// rutas privadas
 	protected := api.Group("/")
 	protected.Use(middlewares.AuthMiddleware(srv.Conf))
 	{
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
-		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
-  }
+		routes.ChatRoutes(protected, chatHandler)
+	}
 
-	srv.Engine.NoMethod(func(c *gin.Context) {
-		c.JSON(404, gin.H{"error": "method not allowed"})
-	})
-	srv.Engine.NoRoute(func(c *gin.Context) {
-		c.JSON(404, gin.H{"error": "route not found"})
-	})
+	srv.Engine.NoMethod(func(c *gin.Context) { c.JSON(404, gin.H{"error": "method not allowed"}) })
+	srv.Engine.NoRoute(func(c *gin.Context) { c.JSON(404, gin.H{"error": "route not found"}) })
 }
