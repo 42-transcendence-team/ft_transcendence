@@ -32,7 +32,6 @@ export default defineConfig({
     },
     tools: {
         postcss: (config) => {
-            // Sobrescribimos las opciones directamente para evitar el lío de tipos de TS
             config.postcssOptions = {
                 plugins: [
                     postcssPixelsToRem({
