@@ -34,20 +34,15 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			Si el usuario es validado por que el token esta bien pasa al siguiente paso (ya sea midelware o el handler de la ruta) , para en estaa request si quieres saber el id del
 			propietario se usara ->
 			algo asi userID es una unidad uint como el la db , asik podremos acceder facilmente a los datos
-			userIDValue, exists := c.Get("userID")
-			if !exists {
-				// es que no hay userID en el contexto, creo q nunca deberia de no haber si lelgo hasta ahi pero puede ser bueno chekearlo
-			}
-			y luego
-			userID, ok := userIDValue.(uint) // para cambiar el tipo de variable de any a uint
-			if !ok {
-			}
+			userID := c.MustGet("userID").(uint)
+			// (uint) para cambiar el tipo de variable de any a uint
 		*/
 
 		c.Next()
 	}
 }
 
+// TODO: esto deberia de ir en algun helper o algo? o en utils? lo uso en otro middleware
 func ValidateToken(strToken string, cfg *config.Config) (*utils.CustomClaims, error) {
 
 	token, err := jwt.ParseWithClaims(strToken, &utils.CustomClaims{},
