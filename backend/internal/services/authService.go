@@ -43,8 +43,6 @@ func (s *AuthService) Register(input RegisterInput) (user models.User, err error
 		})
 	}
 
-	// https://gowebexamples.com/password-hashing/
-	// no se si es demasiado simple
 	input.Password, err = utils.HashPassword(input.Password)
 	if err != nil {
 		return models.User{}, appErr.NewInternal(err)
@@ -75,7 +73,7 @@ func NewUser(input RegisterInput) models.User {
 }
 
 func IsValidAge(birthday time.Time) error {
-	// fecha_nacimiento <= (hoy - 18 años)
+
 	today := time.Now()
 	oldestAllowed := today.AddDate(-150, 0, 0)  // maxima edad permitida 150 años
 	youngestAllowed := today.AddDate(-18, 0, 0) // minima edad permitida 18 años

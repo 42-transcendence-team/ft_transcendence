@@ -26,9 +26,9 @@ func NewAuthHandler(authService *services.AuthService, cfg *config.Config) *Auth
 
 /* Register */
 
-/* JSON q manda el fronted
-Si algun campo no cumple als regals de la struct de abajo manda error con especificacioens
-de q ha fallado segun la estructura d ela funcon apperr NewValidation()
+/* JSON que manda el fronted
+Si algun campo no cumple las reglas de la struct de abajo manda error con especificacioens
+de que ha fallado segun la estructura d ela funcon apperr NewValidation()
 {
   "login": "prueba",
   "email": "prueba@test.com",
@@ -131,7 +131,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			"id":    user.ID,
 			"login": user.Login,
 			"email": user.Email,
-			"token": strToken, // QUITAR ESTO DE AQUI SOLO ES PA PROBAR !!!!!!!!!!!!!!!
 		},
 	})
 }
@@ -221,7 +220,7 @@ func (h *AuthHandler) setCookie(c *gin.Context, strToken string, exp time.Time) 
 }
 
 /*Request validation*/
-// tal vez esto haya que quitarlo de aqui, pero tampoco se dodne iria
+
 func ValidationBindRequest(c *gin.Context, req interface{}) error {
 
 	err := c.ShouldBindJSON(&req)
