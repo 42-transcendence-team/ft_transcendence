@@ -35,8 +35,10 @@ de q ha fallado segun la estructura d ela funcon apperr NewValidation()
   "password": "angelaKk12132%",
   "confirmPassword": "angelaKk12132%",
   "name": "angela",
-  "Surname": "barrio",
-  "birthday": "2000-10-23" // tiene que ser este formato "aaaa-mm-dd"
+  "surname": "barrio",
+  "birthday": "2000-10-23" , // tiene que ser este formato "aaaa-mm-dd"
+  "termsAndConditions": true,
+  "privacyPolicy": true
 }
 */
 
