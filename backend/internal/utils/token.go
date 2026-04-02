@@ -4,6 +4,7 @@ import (
 	"backend/config"
 	appErr "backend/internal/errors"
 	"backend/internal/models"
+	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"strconv"
 	"time"
@@ -34,4 +35,32 @@ func CreateJwtToken(user *models.User, cfg *config.Config) (string, time.Time, e
 	}
 
 	return strToken, exp, err
+}
+
+func ValidateToken(strToken string, cfg *config.Config) (*CustomClaims, error) {
+
+	token, err := jwt.ParseWithClaims(strToken, &CustomClaims{},
+		func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, appErr.NewUnauthorized("invalid signing method")
+			}
+			return []byte(cfg.JwtSecret), nil
+		})
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			// si expira el token nunca llegara aqui por que la cokie directamente se borra, lo dejo por seguridad
+			return nil, appErr.NewUnauthorized("expired token")
+		}
+		if errors.Is(err, jwt.ErrTokenSignatureInvalid) {
+			return nil, appErr.NewUnauthorized("invalid signature")
+		}
+		return nil, appErr.NewUnauthorized("invalid token")
+	}
+
+	claims, ok := token.Claims.(*CustomClaims)
+	if !ok || !token.Valid {
+		return nil, appErr.NewUnauthorized("invalid token")
+	}
+
+	return claims, nil
 }

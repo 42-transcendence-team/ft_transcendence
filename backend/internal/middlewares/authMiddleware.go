@@ -4,9 +4,7 @@ import (
 	"backend/config"
 	appErr "backend/internal/errors"
 	"backend/internal/utils"
-	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 /*
@@ -22,7 +20,7 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		claims, err := ValidateToken(strToken, cfg)
+		claims, err := utils.ValidateToken(strToken, cfg)
 		if err != nil {
 			c.Error(err)
 			c.Abort()
@@ -40,33 +38,4 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 
 		c.Next()
 	}
-}
-
-// TODO: esto deberia de ir en algun helper o algo? o en utils? lo uso en otro middleware
-func ValidateToken(strToken string, cfg *config.Config) (*utils.CustomClaims, error) {
-
-	token, err := jwt.ParseWithClaims(strToken, &utils.CustomClaims{},
-		func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, appErr.NewUnauthorized("invalid signing method")
-			}
-			return []byte(cfg.JwtSecret), nil
-		})
-	if err != nil {
-		if errors.Is(err, jwt.ErrTokenExpired) {
-			// si expira el token nunca llegara aqui por que la cokie directamente se borra, lo dejo por seguridad
-			return nil, appErr.NewUnauthorized("expired token")
-		}
-		if errors.Is(err, jwt.ErrTokenSignatureInvalid) {
-			return nil, appErr.NewUnauthorized("invalid signature")
-		}
-		return nil, appErr.NewUnauthorized("invalid token")
-	}
-
-	claims, ok := token.Claims.(*utils.CustomClaims)
-	if !ok || !token.Valid {
-		return nil, appErr.NewUnauthorized("invalid token")
-	}
-
-	return claims, nil
 }
