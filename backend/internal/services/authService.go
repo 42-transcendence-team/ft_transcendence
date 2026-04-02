@@ -27,10 +27,15 @@ type RegisterInput struct {
 	Password string
 	Name     string
 	Surname  string
-	Birtday  time.Time
+	Birthday time.Time
 }
 
 func (s *AuthService) Register(input RegisterInput) (user models.User, err error) {
+
+	err = IsValidAge(input.Birthday)
+	if err != nil {
+		return models.User{}, err
+	}
 
 	if !utils.IsStrongPassword(input.Password) {
 		return models.User{}, appErr.NewValidation(map[string]string{
@@ -65,8 +70,27 @@ func NewUser(input RegisterInput) models.User {
 		Password: input.Password,
 		Name:     input.Name,
 		Surname:  input.Surname,
-		Birthday: input.Birtday,
+		Birthday: input.Birthday,
 	}
+}
+
+func IsValidAge(birthday time.Time) error {
+	// fecha_nacimiento <= (hoy - 18 años)
+	today := time.Now()
+	oldestAllowed := today.AddDate(-150, 0, 0)  // maxima edad permitida 150 años
+	youngestAllowed := today.AddDate(-18, 0, 0) // minima edad permitida 18 años
+
+	if birthday.After(youngestAllowed) {
+		return appErr.NewValidation(map[string]string{
+			"birthday": "your age must be +18",
+		})
+	}
+	if birthday.Before(oldestAllowed) {
+		return appErr.NewValidation(map[string]string{
+			"birthday": "your age must be -150 years",
+		})
+	}
+	return nil
 }
 
 type LoginInput struct {

@@ -66,7 +66,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Password: req.Password,
 		Name:     req.Name,
 		Surname:  req.Surname,
-		Birtday:  birthday,
+		Birthday: birthday,
 	})
 	if err != nil {
 		c.Error(err)
