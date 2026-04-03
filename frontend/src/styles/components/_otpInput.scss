@@ -1,0 +1,32 @@
+@use "sass:color";
+
+@use "../abstracts/variables" as *;
+
+.otp {
+	display: flex;
+	gap: 0.5rem;
+	justify-content: center;
+	align-items: center;
+
+	&__separator {
+		font-size: 1.5rem;
+		color: #999;
+		margin: 0 0.25rem;
+	}
+
+	&__input {
+		width: 48px;
+		height: 48px;
+		text-align: center;
+		font-size: 1.5rem;
+		border-radius: 10px;
+		border: 1px solid #ccc;
+		outline: none;
+		transition: all 0.2s;
+
+		&:focus {
+			border-color: #7c5cff;
+			box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.2);
+		}
+	}
+}
