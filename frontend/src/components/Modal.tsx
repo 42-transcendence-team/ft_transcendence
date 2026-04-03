@@ -1,6 +1,21 @@
 import "@styles/_modal.scss";
 import { useEffect, useState } from "react";
 
+// Componente de ventana modal reutilizable
+// Props:
+// - open: boolean que controla si el modal está abierto o cerrado
+// - onClose: función que se llama para cerrar el modal
+// - title: título opcional del modal
+// - children: contenido del modal (puede ser cualquier elemento React y/o otros componentes creados por nosotros)
+
+// Para usarlo, simplemente envuelve el contenido que deseas mostrar dentro de este y controla su visibilidad con la prop "open". Por ejemplo:
+// <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="No es un título obligatorio">
+//  	<p>Este es el contenido de mi modal.</p>
+//  	<ComponentePersonalizado param="parametros que necesite el componente".../>
+// </Modal>
+
+// En el componente TwoFactorSettings se puede ver un ejemplo
+
 type Props = {
 	open: boolean;
 	onClose: () => void;
@@ -11,12 +26,13 @@ type Props = {
 function ModalHeader(props: { title?: string; onClose: () => void }) {
 	return (
 		<div className="modal__header">
-			<button className="modal__header--close" onClick={props.onClose}>
-				✕
-			</button>
+			<div></div>
 			{props.title && (
 				<h2 className="modal__header--title">{props.title}</h2>
 			)}
+			<button className="modal__header--close" onClick={props.onClose}>
+				✕
+			</button>
 		</div>
 	);
 }
