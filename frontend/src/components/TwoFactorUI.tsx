@@ -89,3 +89,16 @@ export function Footer2FA(props: Props) {
 		</div>
 	);
 }
+
+export function TwoFactorQRCode({ qrBase64 }: { qrBase64: string }) {
+  return (
+    <div className="otp__qr">
+      <p className="otp__qr--text">Escanea este código con tu app de autenticación:</p>
+      <img
+        src={`data:image/png;base64,${qrBase64}`}
+        alt="Código QR 2FA"
+        className="otp__qr--image"
+      />
+    </div>
+  );
+}
