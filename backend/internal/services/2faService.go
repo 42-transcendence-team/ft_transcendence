@@ -90,6 +90,16 @@ func (s *TwoFAService) Verify2FA(request dto.TwoFAVerify) (bool, error) {
 
 // No se si habría que hacer alguina otra validacion, de momento se elimina segúin la cookie de sesion del usuario
 func (s *TwoFAService) Disable2FA(request dto.TwoFADisable) (int64, error) {
+	passcode := strings.TrimSpace(request.Code)
+	secret, err := s.UserRepo.Get2FASecret(request.Id)
+	if err != nil {
+		return 0, err
+	}
+	valid := totp.Validate(passcode, secret)
+	if !valid {
+		return 0, appErr.NewUnauthorized("Invalid 2FA code")
+	}
+
 	rows, err := s.UserRepo.Remove2FA(dto.UserRemove2FA{
 		Id: request.Id,
 	})

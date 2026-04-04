@@ -30,11 +30,17 @@ export function TwoFactorSettings() {
 	const [mode, setMode] = useState<Mode>("enable");
 	const [otpCode, setOtpCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
 	const [animating, setAnimating] = useState<"on" | "off" | null>(null);
-	const [qr, setQr] = useState<string | null>(null);
+	const [qr, setQr] = useState<string>("");
 
 	const isComplete = otpCode.every(d => d !== "" && /\d/.test(d));
 
 	useEffect(() => {
+		if (modalOpen) {
+			setTimeout(() => {
+				document.getElementById("otp-0")?.focus();
+			}, 300);
+			return;
+		}
 		if (!modalOpen) setOtpCode(Array(CODE_LENGTH).fill(""));
 	}, [modalOpen]);
 
@@ -92,11 +98,15 @@ export function TwoFactorSettings() {
 			<Modal
 				open={modalOpen}
 				onClose={handleClose}
+				onSubmit={handleVerify}
+				submitDisabled={!isComplete}
 				title={texts[mode].title}
 			>
 				<p>{texts[mode].content}</p>
 
-				<TwoFactorQRCode qrBase64={qr || ""} />
+				{mode === "enable" && qr && (
+					<TwoFactorQRCode qrBase64={qr} />
+				)}
 
 				<OtpInput
 					onChange={(code) =>

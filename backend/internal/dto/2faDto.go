@@ -10,11 +10,12 @@ type TwoFASetup struct {
 }
 
 type TwoFADisable struct {
-	Id uint `json:"id" binding:"required"`
+	Id   uint   `json:"id" binding:"required"`
+	Code string `json:"code" binding:"required"`
 }
 
 type TwoFAVerify struct {
-	Id   uint   `json:"id"`
+	Id   uint   `json:"id" binding:"required"`
 	Code string `json:"code" binding:"required"`
 }
 
