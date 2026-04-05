@@ -1,15 +1,22 @@
-import { RegisterForm } from "../components/RegisterForm";
+import logo from "../assets/icons/24_logo.png"
+import { RegisterForm } from "../components/RegisterForm"
+import "../styles/pages/_authPages.scss"
 
 export const Register = () => {
-  return (
-    <>
-      <h2>REGISTER</h2>
-      <h1>Create account</h1>
-      <p>Aquí irán los inputs y botones</p>
-	  <p>New in Twenty Four? Create your free account now!</p>
-	  
-	  <RegisterForm />
-	
-	</>
-  );
-};
+	return (
+		<section className="auth-page">
+			<div className="auth-card">
+				<div className="auth-card__header">
+					<img className="auth-card__logo" src={logo} alt="Twenty Four logo" />
+					<h1 className="auth-card__title">Twenty Four</h1>
+				</div>
+
+				<p className="auth-card__subtitle">
+					New in Twenty Four? Create your free account now!
+				</p>
+
+				<RegisterForm />
+			</div>
+		</section>
+	)
+}

@@ -103,6 +103,7 @@ export const LoginForm = () => {
 			value: identifier,
 			onChange: setIdentifier,
 			error: errors.identifier,
+			placeholder: "Login or Email",
 		},
 		{
 			id: "password",
@@ -111,12 +112,13 @@ export const LoginForm = () => {
 			value: password,
 			onChange: setPassword,
 			error: errors.password,
+			placeholder: "Password",
 		},
 	]
 
 	return (
-		<form onSubmit={handleSubmit}>
-			<ul>
+		<form className="auth-form" onSubmit={handleSubmit}>
+			<div className="auth-form__group">
 				{fields.map((field) => (
 					<FormField
 						key={field.id}
@@ -126,16 +128,18 @@ export const LoginForm = () => {
 						value={field.value}
 						onChange={field.onChange}
 						error={field.error}
+						placeholder={field.placeholder}
 					/>
 				))}
-				<li>
-					<button type="submit" disabled={isSubmitting}>
-						{isSubmitting ? "Logging in..." : "Login"}
-					</button>
-				</li>
-			</ul>
-			{serverMessage && <p>{serverMessage}</p>}
-			<p>
+			</div>
+			
+			<button className="auth-form__submit" type="submit" disabled={isSubmitting}>
+				{isSubmitting ? "Logging in..." : "Login"}
+			</button>
+			
+			{serverMessage && <p className="auth-form__server-message">{serverMessage}</p>}
+			
+			<p className="auth-form__switch">
 				Don&apos;t have an account yet? <NavLink to="/register">Register</NavLink>
 			</p>
 		</form>
