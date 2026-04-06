@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"backend/internal/dto"
+	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,37 +38,91 @@ func (h *UserHandler) Filter(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
-func (h *UserHandler) Delete(c *gin.Context) {
-	var request dto.UserDelete
+func (h *UserHandler) GetSettings(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
+		c.Abort()
+		return
+	}
 
-	err := c.ShouldBindJSON(&request)
+	request := dto.UserResponse{
+		Id: userIDValue.(uint),
+	}
+
+	settings, err := h.UserService.GetSettings(request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	err = h.UserService.Delete(request)
-	if err != nil {
-		c.Error(err)
-		c.Abort()
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+	c.JSON(http.StatusOK, settings)
 }
 
-func (h *UserHandler) Modify(c *gin.Context) {
-	var request dto.UserModify
+func (h *UserHandler) RemoveAccount(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
+		c.Abort()
+		return
+	}
+	var request dto.UserDelete
 
-	err := c.ShouldBindJSON(&request)
+	request.Id = userIDValue.(uint)
+
+	err := h.UserService.RemoveAccount(request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	err = h.UserService.Modify(request)
+	c.JSON(http.StatusOK, gin.H{"message": "User removed successfully"})
+}
+
+func (h *UserHandler) ModifyAccount(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
+		c.Abort()
+		return
+	}
+
+	var req dto.UserModify
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	req.Id = userIDValue.(uint)
+
+	birthday, err := time.Parse("2006-01-02", req.Birthday)
+	if err != nil {
+		c.Error(appErr.NewValidation(map[string]string{
+			"birthday": "invalid_format",
+		}))
+		c.Abort()
+		return
+	}
+
+	request := dto.ModifyInput{
+		Id:               req.Id,
+		Code:             req.Code,
+		Email:            req.Email,
+		VerifyEmail:      req.VerifyEmail,
+		Password:         req.Password,
+		VerifyPassword:   req.VerifyPassword,
+		PreviousPassword: req.PreviousPassword,
+		Name:             req.Name,
+		Surname:          req.Surname,
+		Birthday:         birthday,
+	}
+
+	err = h.UserService.ModifyAccount(request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()

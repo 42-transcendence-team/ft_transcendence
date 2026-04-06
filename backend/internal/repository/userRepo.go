@@ -48,21 +48,62 @@ func (r *UserRepository) Filter(request dto.UserFilter) ([]models.User, error) {
 	return users, err
 }
 
+// Peticiones para modificacion de usuario (Pestaña Settings)
+
+func (r *UserRepository) GetUserData(userID uint) (*dto.UserResponse, error) {
+	var user models.User
+
+	err := r.db.Where("id = ?", userID).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Añadir campos para modificar en Settings si fuera necesario
+	response := dto.UserResponse{
+		Login:     user.Login,
+		Email:     user.Email,
+		Name:      user.Name,
+		Surname:   user.Surname,
+		Birthday:  user.Birthday,
+		Active2FA: user.Active2FA,
+	}
+
+	return &response, nil
+}
+
 func (r *UserRepository) Delete(request dto.UserDelete) (int64, error) {
 	result := r.db.Delete(&models.User{}, request.Id)
 	return result.RowsAffected, result.Error
 }
 
-func (r *UserRepository) Modify(request dto.UserModify) (int64, error) {
-	result := r.db.Model(&models.User{}).Where("id = ?", request.Id).Updates(models.User{
-		Login:     request.Login,
-		Email:     &request.Email,
-		Name:      request.Name,
-		Surname:   request.Surname,
-		Role:      request.Role,
-		Secret2FA: &request.Secret2FA,
-		Active2FA: request.Active2FA,
-	})
+func (r *UserRepository) GetPassword(userID uint) (string, error) {
+	var user models.User
+	err := r.db.Select("Password").Where("id = ?", userID).First(&user).Error
+	if err != nil {
+		return "", err
+	}
+	return user.Password, nil
+}
+
+func (r *UserRepository) UpdateUser(request dto.ModifyInput) (int64, error) {
+	updates := make(map[string]interface{})
+	if request.Email != "" {
+		updates["Email"] = request.Email
+	}
+	if request.Password != "" {
+		updates["Password"] = request.Password
+	}
+	if request.Name != "" {
+		updates["Name"] = request.Name
+	}
+	if request.Surname != "" {
+		updates["Surname"] = request.Surname
+	}
+	if !request.Birthday.IsZero() {
+		updates["Birthday"] = request.Birthday
+	}
+
+	result := r.db.Model(&models.User{}).Where("id = ?", request.Id).Updates(updates)
 	return result.RowsAffected, result.Error
 }
 
