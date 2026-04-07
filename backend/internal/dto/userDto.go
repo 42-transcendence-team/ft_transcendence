@@ -16,7 +16,6 @@ type UserFilter struct {
 }
 
 type UserResponse struct {
-	Id        uint      `json:"id"`
 	Login     string    `json:"login"`
 	Email     *string   `json:"email,omitempty"`
 	Name      string    `json:"name"`

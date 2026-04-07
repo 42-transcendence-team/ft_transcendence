@@ -46,11 +46,7 @@ func (h *UserHandler) GetSettings(c *gin.Context) {
 		return
 	}
 
-	request := dto.UserResponse{
-		Id: userIDValue.(uint),
-	}
-
-	settings, err := h.UserService.GetSettings(request)
+	settings, err := h.UserService.GetSettings(userIDValue.(uint))
 	if err != nil {
 		c.Error(err)
 		c.Abort()

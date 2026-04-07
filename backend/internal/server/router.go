@@ -32,9 +32,6 @@ func (srv *HTTPServer) Router() {
 	// rutas publicas
 	routes.AuthRoutes(api, authHandler)
 
-	// la dejo publica de momento, hasta que se implementen mas cosas , pero deberia de psara por el middleware de auth
-	routes.UserRoutes(api, userHandler)
-
 	// Esto en realidad no se como poder hacerlo bonito
 	login := api.Group("/2fa")
 	login.Use(middlewares.TwoFAMiddleware(srv.Conf))
@@ -49,6 +46,7 @@ func (srv *HTTPServer) Router() {
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
+		routes.UserRoutes(protected, userHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 

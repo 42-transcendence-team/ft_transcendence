@@ -26,8 +26,8 @@ func (s *UserService) Filter(filter dto.UserFilter) ([]models.User, error) {
 	return s.UserRepo.Filter(filter)
 }
 
-func (s *UserService) GetSettings(request dto.UserResponse) (*dto.UserResponse, error) {
-	return s.UserRepo.GetUserData(request.Id)
+func (s *UserService) GetSettings(userID uint) (*dto.UserResponse, error) {
+	return s.UserRepo.GetUserData(userID)
 }
 
 func (s *UserService) RemoveAccount(request dto.UserDelete) error {
