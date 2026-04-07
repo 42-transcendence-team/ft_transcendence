@@ -57,14 +57,14 @@ func (s *UserService) RemoveAccount(request dto.UserDelete) error {
 	return nil
 }
 
-func (s *UserService) ModifyAccount(request dto.ModifyInput) error {
-	req, err := s.UserRepo.FindById(request.Id)
+func (s *UserService) ModifyAccount(userID uint, request dto.ModifyInput) error {
+	req, err := s.UserRepo.FindById(userID)
 	if err != nil {
 		return err
 	}
 	if req.Active2FA {
 		passcode := strings.TrimSpace(request.Code)
-		secret, err := s.UserRepo.Get2FASecret(request.Id)
+		secret, err := s.UserRepo.Get2FASecret(userID)
 		if err != nil {
 			return err
 		}
@@ -80,7 +80,7 @@ func (s *UserService) ModifyAccount(request dto.ModifyInput) error {
 				"previous_password": "previous_password_required",
 			})
 		}
-		currentPassword, err := s.UserRepo.GetPassword(request.Id)
+		currentPassword, err := s.UserRepo.GetPassword(userID)
 		if err != nil {
 			return err
 		}
@@ -158,7 +158,7 @@ func (s *UserService) ModifyAccount(request dto.ModifyInput) error {
 		}
 	}
 
-	rows, err := s.UserRepo.UpdateUser(request)
+	rows, err := s.UserRepo.UpdateUser(userID, request)
 	if err != nil {
 		return appErr.NewInternal(err)
 	}

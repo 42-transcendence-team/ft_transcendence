@@ -31,7 +31,6 @@ type UserDelete struct {
 }
 
 type ModifyInput struct {
-	Id   uint
 	Code string
 
 	Email            string
@@ -45,7 +44,6 @@ type ModifyInput struct {
 }
 
 type UserModify struct {
-	Id   uint   `form:"id"`
 	Code string `form:"code"`
 
 	Email            string `form:"email"`

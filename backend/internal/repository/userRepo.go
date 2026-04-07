@@ -85,7 +85,7 @@ func (r *UserRepository) GetPassword(userID uint) (string, error) {
 	return user.Password, nil
 }
 
-func (r *UserRepository) UpdateUser(request dto.ModifyInput) (int64, error) {
+func (r *UserRepository) UpdateUser(userID uint, request dto.ModifyInput) (int64, error) {
 	updates := make(map[string]interface{})
 	if request.Email != "" {
 		updates["Email"] = request.Email
@@ -103,7 +103,7 @@ func (r *UserRepository) UpdateUser(request dto.ModifyInput) (int64, error) {
 		updates["Birthday"] = request.Birthday
 	}
 
-	result := r.db.Model(&models.User{}).Where("id = ?", request.Id).Updates(updates)
+	result := r.db.Model(&models.User{}).Where("id = ?", userID).Updates(updates)
 	return result.RowsAffected, result.Error
 }
 

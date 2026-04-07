@@ -98,8 +98,6 @@ func (h *UserHandler) ModifyAccount(c *gin.Context) {
 		return
 	}
 
-	req.Id = userIDValue.(uint)
-
 	birthday, err := time.Parse("2006-01-02", req.Birthday)
 	if err != nil {
 		c.Error(appErr.NewValidation(map[string]string{
@@ -110,7 +108,6 @@ func (h *UserHandler) ModifyAccount(c *gin.Context) {
 	}
 
 	request := dto.ModifyInput{
-		Id:               req.Id,
 		Code:             req.Code,
 		Email:            req.Email,
 		VerifyEmail:      req.VerifyEmail,
@@ -122,7 +119,7 @@ func (h *UserHandler) ModifyAccount(c *gin.Context) {
 		Birthday:         birthday,
 	}
 
-	err = h.UserService.ModifyAccount(request)
+	err = h.UserService.ModifyAccount(userIDValue.(uint), request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
