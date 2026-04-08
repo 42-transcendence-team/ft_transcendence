@@ -1,12 +1,14 @@
 @use '../abstracts/mixins' as *;
 
 .auth-page {
-	min-height: 100vh;
+	flex: 1;
+	width: 100%;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	padding: 32px 16px;
+	padding: 24px 16px;
 	background: linear-gradient(to bottom, #b39b6b, #a89062);
+	box-sizing: border-box;
 }
 
 .auth-card {

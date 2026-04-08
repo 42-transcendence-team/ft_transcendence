@@ -1,7 +1,7 @@
-
 import { Footer } from "@components/Footer";
 import { Header } from "@components/Header";
 import { Outlet, useLocation } from "react-router-dom";
+import "../styles/components/_publicLayout.scss"
 
 export function PublicLayout() {
 	// Layout común para todas las páginas públicas (footer, header...)
@@ -10,12 +10,16 @@ export function PublicLayout() {
 	// Usado para evitar mostrar el contenido del Header en caso de estar en las páginas asignadas
 	const location = useLocation()
 	const hideOnThisPages = ["/login", "/register"]
-	const noHeader = hideOnThisPages.includes(location.pathname)
+	const hideHeader = hideOnThisPages.includes(location.pathname)
 	
 	return (
-		<div>
-			{!noHeader && <Header />}
-			<Outlet />
+		<div className="public-layout">
+			{!hideHeader && <Header />}
+
+			<main className="public-layout__content">
+				<Outlet />
+			</main>
+
 			<Footer />
 		</div>
 	);
