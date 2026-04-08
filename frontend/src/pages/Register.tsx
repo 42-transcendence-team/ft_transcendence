@@ -4,7 +4,7 @@ import "../styles/pages/_authPages.scss"
 
 export const Register = () => {
 	return (
-		<section className="auth-page">
+		<section className="auth-page auth-page--register">
 			<div className="auth-card">
 				<div className="auth-card__header">
 					<img className="auth-card__logo" src={logo} alt="Twenty Four logo" />

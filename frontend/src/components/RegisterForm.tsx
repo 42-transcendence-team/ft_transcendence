@@ -285,7 +285,12 @@ export const RegisterForm = () => {
 	// Lo que se renderiza.
 	return (
 		<form className="auth-form" onSubmit={handleSubmit}>
-			<div className="auth-form__group">
+			
+			<div className="auth-form__section auth-form__section--account">
+				<h3 className="auth-form__section-title">ACCOUNT DATA</h3>
+			</div>
+
+			<div className="auth-form__group auth-form__group--account">
 				{accountFields.map((field) => (
 					<FormField
 						key={field.id}
@@ -300,11 +305,11 @@ export const RegisterForm = () => {
 				))}
 			</div>
 
-			<div className="auth-form__section">
+			<div className="auth-form__section auth-form__section--personal">
 				<h3 className="auth-form__section-title">PERSONAL DATA</h3>
 			</div>
 
-			<div className="auth-form__group">
+			<div className="auth-form__group auth-form__group--personal">
 				{personalFields.map((field) => (
 					<FormField
 						key={field.id}

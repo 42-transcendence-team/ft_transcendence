@@ -1,3 +1,5 @@
+@use '../abstracts/mixins' as *;
+
 .auth-page {
 	min-height: 100vh;
 	display: flex;
@@ -39,7 +41,7 @@
 }
 
 .auth-card__subtitle {
-	margin: 0 0 24px;
+	margin: 0 0 32px;
 	text-align: center;
 	font-size: 0.90rem;
 	line-height: 1.5;
@@ -211,4 +213,75 @@
 	.auth-form__section-title::after {
 		width: 26%;
 	}
+}
+
+@include desktop {
+  .auth-page--register .auth-card {
+    max-width: 860px;
+  }
+
+  .auth-page--register .auth-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "section-account section-personal"
+      "account personal"
+      "checkboxes checkboxes"
+      "submit submit"
+      "switch switch";
+    column-gap: 42px;
+    row-gap: 18px;
+    align-items: start;
+  }
+
+  .auth-page--register .auth-form__group--account {
+    grid-area: account;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .auth-page--register .auth-form__section--account {
+    grid-area: section-account;
+    margin: 0;
+    align-self: end;
+  }
+  
+  .auth-page--register .auth-form__section--personal {
+    grid-area: section-personal;
+    margin: 0;
+    align-self: end;
+  }
+
+  .auth-page--register .auth-form__group--personal {
+    grid-area: personal;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .auth-page--register .auth-form__checkboxes {
+    grid-area: checkboxes;
+    width: fit-content;
+    margin: 0 auto;
+  }
+
+  .auth-page--register .auth-form__submit {
+    grid-area: submit;
+    justify-self: center;
+    width: 280px;
+    margin-top: 4px;
+  }
+
+  .auth-page--register .auth-form__switch {
+    grid-area: switch;
+    margin: 0;
+    text-align: center;
+  }
+
+  .auth-page--register .auth-form__server-message {
+    grid-column: 1 / -1;
+    margin: 0 auto;
+    text-align: center;
+  }
 }
