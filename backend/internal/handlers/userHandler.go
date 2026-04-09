@@ -94,15 +94,6 @@ func (h *UserHandler) ModifyAccount(c *gin.Context) {
 		return
 	}
 
-	birthday, err := time.Parse("2006-01-02", req.Birthday)
-	if err != nil {
-		c.Error(appErr.NewValidation(map[string]string{
-			"birthday": "invalid_format",
-		}))
-		c.Abort()
-		return
-	}
-
 	request := dto.ModifyInput{
 		Code:             req.Code,
 		Email:            req.Email,
@@ -112,7 +103,18 @@ func (h *UserHandler) ModifyAccount(c *gin.Context) {
 		PreviousPassword: req.PreviousPassword,
 		Name:             req.Name,
 		Surname:          req.Surname,
-		Birthday:         birthday,
+	}
+
+	if req.Birthday != "" {
+		birthday, err := time.Parse("2006-01-02", req.Birthday)
+		if err != nil {
+			c.Error(appErr.NewValidation(map[string]string{
+				"birthday": "invalid_format",
+			}))
+			c.Abort()
+			return
+		}
+		request.Birthday = birthday
 	}
 
 	err = h.UserService.ModifyAccount(userIDValue.(uint), request)

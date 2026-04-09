@@ -45,14 +45,27 @@ export function Modal(props: Props) {
 	const modalRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
+		const handleKeyDownGlobal = (e: KeyboardEvent) => {
+			if (e.key === "Escape" && props.open)
+				props.onClose();
+		};
+
 		if (props.open) {
 			setIsVisible(true);
 			setIsClosing(false);
+			document.addEventListener("keydown", handleKeyDownGlobal);
 		} else {
 			setIsClosing(true);
-			setTimeout(() => { setIsVisible(false); }, 200);
+			const timer = setTimeout(() => {
+				setIsVisible(false);
+			}, 200);
+			document.removeEventListener("keydown", handleKeyDownGlobal);
+			return () => clearTimeout(timer);
 		}
-	}, [props.open]);
+		return () => {
+			document.removeEventListener("keydown", handleKeyDownGlobal);
+		};
+	}, [props.open, props.onClose]);
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
 		const target = e.target as HTMLElement;

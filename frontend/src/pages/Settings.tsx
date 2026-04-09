@@ -9,8 +9,8 @@ export function Settings() {
 	console.log(user);
 	return (
 		<>
-			<ModifyUserForm />
-			<TwoFactorSettings />
+			<ModifyUserForm user={user} />
+			<TwoFactorSettings active={user.twoFactorEnabled} />
 		</>
 	);
 }

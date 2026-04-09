@@ -12,6 +12,6 @@ func UserRoutes(api *gin.RouterGroup, userHandler *handlers.UserHandler) {
 		UserGroup.GET("/", userHandler.Filter)
 		UserGroup.GET("/settings", userHandler.GetSettings)
 		UserGroup.DELETE("/delete", userHandler.RemoveAccount)
-		UserGroup.PUT("/update", userHandler.ModifyAccount)
+		UserGroup.POST("/update", userHandler.ModifyAccount)
 	}
 }

@@ -12,7 +12,7 @@ type FormErrors = {
 	birthday: string
 }
 
-const calculateAge = (birthDateString: string): number => {
+export const calculateAge = (birthDateString: string): number => {
 	const today = new Date()
 	const birthDate = new Date(birthDateString)
 
