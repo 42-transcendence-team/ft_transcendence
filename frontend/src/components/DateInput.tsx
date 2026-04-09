@@ -10,6 +10,8 @@ type DateInputProps = {
 	className?: string;
 };
 
+// TODO: REVISAR PREVIEW DE DECHA NACIMIENTO, NO ACTUALIZA CON NUEVA FECHA ANTES DE GUARDAR
+
 export function DateInput(props: DateInputProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 

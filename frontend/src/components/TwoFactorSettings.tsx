@@ -81,6 +81,8 @@ export function TwoFactorSettings(active: { active: boolean }) {
 	};
 
 	const handleClose = () => {
+		if (animating === "on")
+			setActive2FA(false);
 		setAnimating(null);
 		setModalOpen(false);
 		setOtpCode(Array(CODE_LENGTH).fill(""));

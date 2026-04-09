@@ -56,6 +56,52 @@ type UserModify struct {
 	Birthday string `form:"birthday"`
 }
 
+type ModifyInputEmail struct {
+	Code string
+
+	Email       string
+	VerifyEmail string
+}
+
+type UserModifyEmail struct {
+	Code string `json:"code"`
+
+	Email       string `json:"email"`
+	VerifyEmail string `json:"verify_email"`
+}
+
+type ModifyInputData struct {
+	Code string
+
+	Name     string
+	Surname  string
+	Birthday time.Time
+}
+
+type UserModifyData struct {
+	Code string `json:"code"`
+
+	Name     string `json:"name"`
+	Surname  string `json:"surname"`
+	Birthday string `json:"birthday"`
+}
+
+type ModifyInputPass struct {
+	Code string
+
+	Password         string
+	VerifyPassword   string
+	PreviousPassword string
+}
+
+type UserModifyPass struct {
+	Code string `json:"code"`
+
+	Password         string `json:"password"`
+	VerifyPassword   string `json:"verify_password"`
+	PreviousPassword string `json:"previous_password"`
+}
+
 // Hasta aqui en principio estan hechas para las pruebas
 
 // DTOs para 2FA

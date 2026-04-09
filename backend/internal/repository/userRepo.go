@@ -85,14 +85,50 @@ func (r *UserRepository) GetPassword(userID uint) (string, error) {
 	return user.Password, nil
 }
 
-func (r *UserRepository) UpdateUser(userID uint, request dto.ModifyInput) (int64, error) {
+// func (r *UserRepository) UpdateUser(userID uint, request dto.ModifyInput) (int64, error) {
+// 	updates := make(map[string]interface{})
+// 	if request.Email != "" {
+// 		updates["Email"] = request.Email
+// 	}
+// 	if request.Password != "" {
+// 		updates["Password"] = request.Password
+// 	}
+// 	if request.Name != "" {
+// 		updates["Name"] = request.Name
+// 	}
+// 	if request.Surname != "" {
+// 		updates["Surname"] = request.Surname
+// 	}
+// 	if !request.Birthday.IsZero() {
+// 		updates["Birthday"] = request.Birthday
+// 	}
+
+// 	result := r.db.Model(&models.User{}).Where("id = ?", userID).Updates(updates)
+// 	return result.RowsAffected, result.Error
+// }
+
+func (r *UserRepository) UpdateUserEmail(userID uint, request dto.ModifyInputEmail) (int64, error) {
 	updates := make(map[string]interface{})
 	if request.Email != "" {
 		updates["Email"] = request.Email
 	}
+
+	result := r.db.Model(&models.User{}).Where("id = ?", userID).Updates(updates)
+	return result.RowsAffected, result.Error
+}
+
+func (r *UserRepository) UpdateUserPassword(userID uint, request dto.ModifyInputPass) (int64, error) {
+	updates := make(map[string]interface{})
 	if request.Password != "" {
 		updates["Password"] = request.Password
 	}
+
+	result := r.db.Model(&models.User{}).Where("id = ?", userID).Updates(updates)
+	return result.RowsAffected, result.Error
+}
+
+func (r *UserRepository) UpdateUserData(userID uint, request dto.ModifyInputData) (int64, error) {
+	updates := make(map[string]interface{})
 	if request.Name != "" {
 		updates["Name"] = request.Name
 	}
