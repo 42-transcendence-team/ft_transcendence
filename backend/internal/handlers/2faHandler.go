@@ -98,6 +98,13 @@ func (h *TwoFAHandler) Disable2FA(c *gin.Context) {
 	var request dto.TwoFADisable
 	request.Id = userID
 
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
 	del, err := h.TwoFAService.Disable2FA(request)
 	if err != nil {
 		c.Error(err)
