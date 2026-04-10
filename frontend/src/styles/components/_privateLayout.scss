@@ -8,7 +8,7 @@
 	box-sizing: border-box;
 
 	grid-template-columns: 25% minmax(0, 1fr) 76px;
-	grid-template-rows: 60px minmax(0, 1fr) 60px;
+	grid-template-rows: 60px minmax(0, 1fr) auto;
 
 	grid-template-areas:
 		"left header header"
@@ -51,11 +51,12 @@
 
 .privateLayout__footer {
 	grid-area: footer;
-	
-	background-color: $dark-purple-background-light;
+	min-width: 0;
+	min-height: 0;
+	padding: 0;
+	background: transparent;
 	border-radius: 10px;
-	color: $dark-purple-main-text-light;
-	padding: 1rem;
+	overflow: hidden;
 }
 
 .privateLayout__rightPanel {

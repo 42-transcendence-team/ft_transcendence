@@ -2,7 +2,7 @@
 
 .footer {
   width: 100%;
-  padding: 20px 32px;
+  padding: 12px 32px;
   background-color: #7c7af2;
   color: #fff;
 
@@ -52,6 +52,7 @@
 
 .footer__brand img {
   filter: invert(1);
+  width: 42px;
 }
 
 @include mobile {
