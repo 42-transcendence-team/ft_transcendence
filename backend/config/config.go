@@ -34,6 +34,8 @@ type Config struct {
 	JwtExpirationTime int
 
 	GoAllowedURLs []string
+	Issuer2FA     string
+	Expiration2FA int
 }
 
 func Load() (*Config, error) {
@@ -78,6 +80,14 @@ func Load() (*Config, error) {
 	}
 	c.JwtExpirationTime = exp
 	c.JwtSecret = strings.TrimSpace(os.Getenv("JWT_SECRET"))
+
+	// 2FA
+	c.Issuer2FA = strings.TrimSpace(os.Getenv("ISSUER_2FA"))
+	exp2FA, err := strconv.Atoi(strings.TrimSpace(os.Getenv("EXPIRATION_2FA")))
+	if err != nil {
+		return nil, fmt.Errorf("EXPIRATION_2FA must be a number")
+	}
+	c.Expiration2FA = exp2FA
 
 	// Pool (si no existen, luego tunePool mete defaults también)
 	c.DBMaxOpenConns = envIntOrDefault("DB_MAX_OPEN_CONNS", 25)

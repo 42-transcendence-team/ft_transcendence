@@ -8,7 +8,7 @@ import { UserMenu } from "./UserMenu";
 
 export function PrivHeader() {
 	return (
-		<header className="privHeader">
+		<header className="privHeader privateLayout__header">
 			<div className="privHeader__left">
 				<Link to="/app" className="privHeader__logo">
 					<img src={logo} alt="logo" className="privHeader__logo-img" />
@@ -18,7 +18,7 @@ export function PrivHeader() {
 			<div className="privHeader__center">
 				<SearchBar />
 			</div>
-			<div className="privHeader__rigth">
+			<div className="privHeader__right">
 				<UserMenu />
 			</div>
 		</header>

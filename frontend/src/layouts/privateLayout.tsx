@@ -14,14 +14,12 @@ export function PrivateLayout() {
 				LEFT PANEL
 			</aside>
 
-			<header className="privateLayout__header">
-				<PrivHeader />
-			</header>
+			<PrivHeader />
 
 			<main className="privateLayout__content">
 				<div className="privateLayout__contentFrame">
 					<div className="privateLayout__contentInner">
-					<Outlet />
+						<Outlet />
 					</div>
 				</div>
 			</main>
