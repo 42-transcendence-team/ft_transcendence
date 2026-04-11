@@ -29,6 +29,14 @@
 	margin-bottom: 16px;
 }
 
+.auth-card__homeLink {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	text-decoration: none;
+	color: inherit;
+}
+
 .auth-card__logo {
 	width: 72px;
 	height: auto;
