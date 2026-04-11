@@ -7,10 +7,13 @@ import { PrivacyPolicy } from "@pages/PrivacyPolicy";
 import { PublicLayout } from "layouts/publicLayout"
 import { ForgotPassword } from "@pages/ForgotPassword";
 import { ResetPassword } from "@pages/ResetPassword";
+import { HomePage } from "@pages/HomePage";
+
 
 export const PublicRoutes = {
 	element: <PublicLayout />,
 	children: [
+		{ index: true, element: <HomePage /> },
 		{ path: "about", element: <About /> },
 		{ path: "faq", element: <FAQ /> },
 		{ path: "developers", element: <Developers /> },

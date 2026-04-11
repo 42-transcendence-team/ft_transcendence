@@ -1,15 +1,17 @@
 import { Login } from "@pages/Login";
 import { Register } from "@pages/Register";
 
-
-import { PublicLayout } from "layouts/publicLayout"
+import { PublicLayout } from "layouts/publicLayout";
+import { GuestRoute } from "@components/GuestRoute.tsx";
 
 export const PublicNoAuthRoutes = {
-    element: <PublicLayout />,
-    children: [
-        { path: "login", element: <Login /> },
-        { path: "register", element: <Register /> },
-        
-    ],
+  element: (
+    <GuestRoute>
+      <PublicLayout />
+    </GuestRoute>
+  ),
+  children: [
+    { path: "login", element: <Login /> },
+    { path: "register", element: <Register /> },
+  ],
 };
-

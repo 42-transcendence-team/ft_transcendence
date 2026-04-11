@@ -8,9 +8,6 @@ import { PrivateRoutes } from "./privateRoutes"
 import { PublicNoAuthRoutes } from "./publicNoAuthRoutes";
 
 
-type AuthStatus = "loading" | "auth" | "guest"
-const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
-
 // loader 
 export const router = createBrowserRouter([
 	{
@@ -26,8 +23,4 @@ export const router = createBrowserRouter([
 	},
 ]);
 
-const response = await fetch("http://localhost:8080/api/v1/auth/me", {
-    method: "GET",
-    credentials: "include",
-});
 
