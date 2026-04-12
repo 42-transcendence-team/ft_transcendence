@@ -1,8 +1,9 @@
-import { NavLink } from 'react-router-dom';
-import logo from '../assets/icons/24_logo.png'; // O la ruta donde esté tu imagen
+import { NavLink } from "react-router-dom"
+import logo from "@icons/24_logo.png"
+
 export const Footer = () => {
 	return (
-		<footer>
+		<footer className="privateLayout__footer">
 
 			<nav>
 				<ul>

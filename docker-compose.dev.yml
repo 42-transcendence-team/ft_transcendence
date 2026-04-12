@@ -33,6 +33,8 @@ services:
             - backend
         networks:
             - back-front
+        environment:
+            - PUBLIC_API_URL=${PUBLIC_API_URL}
 
     postgres:
         env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto

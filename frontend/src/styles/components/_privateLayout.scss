@@ -6,6 +6,7 @@
 	display: grid;
 	gap: 6px;
 	box-sizing: border-box;
+	width: 100%;
 
 	grid-template-columns: 25% minmax(0, 1fr) 76px;
 	grid-template-rows: 60px minmax(0, 1fr) 60px;
@@ -14,65 +15,56 @@
 		"left header header"
 		"left content right"
 		"left footer right";
-}
 
-.privateLayout__leftPanel {
-	grid-area: left;
-	background-color: $dark-purple-background-light;
-	border-radius: 10px;
-	color: $dark-purple-main-text-light;
-	padding: 1rem;
-}
+	&__leftPanel {
+		grid-area: left;
+		background-color: $dark-purple-background-light;
+		border-radius: 10px;
+		color: $dark-purple-main-text-light;
+		padding: 1rem;
+	}
 
-.privateLayout__header {
-	grid-area: header;
-}
+	&__header {
+		grid-area: header;
+	}
 
-.privateLayout__content {
-	grid-area: content;
-	min-width: 0;
-	min-height: 0;
-	overflow: hidden;
-}
+	&__content {
+		grid-area: content;
+		min-width: 0;
+		min-height: 0;
+		overflow: hidden;
+	}
 
-.privateLayout__contentFrame {
-	height: 100%;
-	width: 100%;
-	background-color: rgba(255, 255, 255, 0.05);
-	display: flex;
-	flex-direction: column;
-}
+	&__contentFrame {
+		height: 100%;
+		width: 100%;
+		background-color: rgba(255, 255, 255, 0.05);
+		display: flex;
+		flex-direction: column;
+	}
 
-.privateLayout__contentInner {
-	flex: 1;
-	min-height: 0;
-	overflow-y: auto;
-}
+	&__contentInner {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		padding: 1rem;
+		background-color: $light-gray-common-components;
+		border-radius: 10px;
+	}
 
-.privateLayout__footer {
-	grid-area: footer;
-	
-	background-color: $dark-purple-background-light;
-	border-radius: 10px;
-	color: $dark-purple-main-text-light;
-	padding: 1rem;
-}
+	&__rightPanel {
+		grid-area: right;
+		background-color: $light-gray-common-components;
+		border-radius: 10px;
+		color: black;
+		padding: 1rem;
+	}
 
-.privateLayout__rightPanel {
-	grid-area: right;
-	background-color: $ligth-gray-common-componets;
-	border-radius: 10px;
-	color: black;
-	padding: 1rem;
-}
-
-
-
-.privateLayout__leftPanel,
-.privateLayout__header,
-.privateLayout__content,
-.privateLayout__footer,
-.privateLayout__rightPanel {
-	min-width: 0;
-	min-height: 0;
+	&__footer {
+		grid-area: footer;
+		background-color: $dark-purple-background-light;
+		border-radius: 10px;
+		color: $dark-purple-main-text-light;
+		padding: 1rem;
+	}
 }

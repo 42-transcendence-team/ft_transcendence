@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { Footer } from "@components/Footer";
 import { PrivHeader } from "@components/PrivHeader";
 import "../styles/components/_privateLayout.scss"
+import { Footer } from "@components/Footer";
 
 export function PrivateLayout() {
 	// Layout común para todas las páginas privadas (footer, header, chat...)
@@ -13,9 +14,7 @@ export function PrivateLayout() {
 				LEFT PANEL
 			</aside>
 
-			<header className="privateLayout__header">
-				<PrivHeader />
-			</header>
+			<PrivHeader />
 
 			<main className="privateLayout__content">
 				<div className="privateLayout__contentFrame">
@@ -32,6 +31,8 @@ export function PrivateLayout() {
 			<aside className="privateLayout__rightPanel">
 				RIGHT PANEL
 			</aside>
+
+			<Footer />
 		</div>
 	);
 }

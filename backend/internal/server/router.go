@@ -17,30 +17,40 @@ func (srv *HTTPServer) Router() {
 
 	routes.HealthRoutes(srv.Engine)
 
-  userRepo := repository.NewUserRepository(srv.Db)
+	userRepo := repository.NewUserRepository(srv.Db)
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
+	twoFAService := services.New2FAService(userRepo, authService)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
 	userHandler := handlers.NewUserHandler(userService)
+	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 
 	api := srv.Engine.Group("/api/v1")
 
 	// rutas publicas
 	routes.AuthRoutes(api, authHandler)
-  
-  // la dejo publica de momento, hasta que se implementen mas cosas , pero deberia de psara por el middleware de auth
-  routes.UserRoutes(api, userHandler)
-  
+
+	// la dejo publica de momento, hasta que se implementen mas cosas , pero deberia de psara por el middleware de auth
+	routes.UserRoutes(api, userHandler)
+
+	// Esto en realidad no se como poder hacerlo bonito
+	login := api.Group("/2fa")
+	login.Use(middlewares.TwoFAMiddleware(srv.Conf))
+	{
+		login.POST("/login", twoFAHandler.Login2FA)
+	}
+
 	// rutas privadas
 	protected := api.Group("/")
 	protected.Use(middlewares.AuthMiddleware(srv.Conf))
 	{
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
+		routes.TwoFARoutesPrivate(protected, twoFAHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
-  }
+	}
 
 	srv.Engine.NoMethod(func(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "method not allowed"})
