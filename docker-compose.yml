@@ -68,10 +68,19 @@ services:
             postgres:
                 condition: service_healthy
 
+    # redis:
+    #     env_file: .env
+    #     image: redis:latest
+    #     ports:
+    #         - "${REDIS_PORT}:6379"
+    #       volumenes:
+    # - redis_data:/data
+# restart: always
 
 volumes:
     postgres_data:
     pgadmin_data:
+    # redis_data:
 
 
 networks:
