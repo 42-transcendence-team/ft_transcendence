@@ -1,29 +1,84 @@
+import '../styles/pages/_profile.scss';
+import skullLogo from '../assets/icons/skull_logo.png';
+import photo1 from '../assets/img/choni1.png';
+import photo2 from '../assets/img/choni2.png';
+import photo3 from '../assets/img/choni3.png';
+
 export const Profile = () => (
-  <>
-    <h2>Profile --------------------------- Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam fringilla efficitur aliquet. Praesent viverra feugiat finibus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi eget nibh eleifend, bibendum eros ut, eleifend nisl. Aliquam mattis vitae ipsum id auctor. Duis commodo scelerisque lacus, ac vulputate ipsum condimentum eget. Vestibulum porttitor finibus scelerisque. Praesent finibus massa eget risus suscipit, dictum suscipit mi vestibulum. In ac varius lectus. Aliquam sagittis metus posuere, dapibus est at, lacinia mauris. Morbi blandit nec enim eu venenatis. Curabitur faucibus tincidunt massa quis interdum. Mauris sollicitudin metus sit amet augue iaculis eleifend. Aenean sagittis auctor libero, nec placerat justo volutpat ac. Aenean auctor pretium magna.
+  <div className='page-wrapper'>
+    <div className='profile-container'>
+      <div className='profile-banner'></div>
 
-Interdum et malesuada fames ac ante ipsum primis in faucibus. Vestibulum ac pharetra sapien. Curabitur lacinia tempus eleifend. Nullam ac ligula ac sem vulputate facilisis. Mauris sed leo nunc. Nulla tincidunt sem nulla, sit amet dignissim ipsum malesuada nec. Phasellus mauris quam, pellentesque ut bibendum ut, lobortis et ipsum. Nullam facilisis et est quis pellentesque. Vivamus non congue lectus, eget efficitur nunc. Morbi tortor massa, tempus a sem et, egestas condimentum magna. Proin enim lectus, pellentesque a turpis quis, ultricies maximus orci. Nunc ut tortor ac urna tincidunt congue vel eu nunc. Aenean sed ligula in dolor hendrerit volutpat. Praesent viverra odio laoreet est facilisis, sit amet laoreet dolor ultricies. Morbi pretium augue eu nibh elementum efficitur.
+      {/* 2. Sección de Información de Cabecera */}
+      <div className='profile-header-info'>
+        {/* logo */}
+        <div className='profile-logo'>
+          <img src={skullLogo} alt="Skull Icon" className='skull-icon' />
+          <div className='status-dot'></div>
+        </div>
 
-Integer eu feugiat felis. Vestibulum eget pretium quam, sed tristique nulla. Nunc a est eu metus rhoncus pulvinar. Suspendisse scelerisque consectetur neque vel imperdiet. Phasellus porttitor sem vel lectus auctor elementum. Nam id porttitor augue. Maecenas velit urna, facilisis ut erat a, eleifend iaculis ligula. In posuere hendrerit eros, vel bibendum enim tempus sit amet.
+        {/* Info Usuario */}
+        <div className='user-details'>
+          <div className='visitas'>
+            <i className="fas fa-chart-line"></i>
+            <span>Nº Visitas al perfil 1312</span>
+          </div>
+          <h4 className='user-name'>ignacio viseras riego</h4>
+        </div>
 
-Morbi dapibus ullamcorper ex at aliquam. Nam dignissim velit neque, nec mattis nulla aliquam id. Nulla sollicitudin vestibulum felis non convallis. Mauris ac mauris eget risus laoreet gravida. Sed in nulla sagittis, imperdiet ligula non, convallis ipsum. Nunc quis gravida lorem. Nullam posuere malesuada sem ac ultricies. Vivamus eu maximus augue, et semper urna. Morbi nec ante eu massa porttitor pellentesque. Sed lorem neque, luctus vel augue ut, blandit dictum lorem. Nunc euismod volutpat ullamcorper.
+        {/* btn de aaccion */}
+        <div className='action-buttons'>
+          <button className='share-btn'>Share</button>
+        </div>
+      </div>
 
-Fusce feugiat quis metus ac tempor. Suspendisse potenti. Nam lacinia sodales lectus vitae hendrerit. Donec non velit nec tellus iaculis ultrices. Aenean eu condimentum nulla. Nullam posuere, turpis non varius hendrerit, purus lacus volutpat libero, non rutrum risus urna quis nibh. Ut porttitor vestibulum elit, non placerat risus facilisis eget. Curabitur vitae odio bibendum, viverra tortor ac, porta lectus.
+      {/* 3. Sección del Feed */}
+      <div className='profile-feed'>
+        <p className='status-text'>Estado... (Nº maximo caracteres?)</p>
 
-Vestibulum ut dignissim nisl. Nam non leo ut felis mattis imperdiet a laoreet quam. In fermentum tellus ex, at viverra nunc convallis id. In viverra urna vel dolor accumsan semper tempor ac augue. Praesent eu semper ligula. Mauris eu scelerisque odio. Mauris pulvinar vitae leo at accumsan.
+        {/* seccion de post */}
+        <div className='feed-posts-container'>
+          
+          {/* Post txt */}
+          <div className='feed-post'>
+            <div className='post-header'>
+              <div className='small-logo'>
+                <img src={skullLogo} alt="Username logo" />
+              </div>
+              <div className='post-info'>
+                <span className='username'>Username</span>
+                <span className='time'>2 min</span>
+              </div>
+            </div>
+            <p className='post-message'>
+              No vea la lore k pesada neni. K YONI ES MIO!!!!!!!
+            </p>
+          </div>
 
-Curabitur id fermentum neque. Donec iaculis turpis pretium odio pharetra, in varius augue viverra. Praesent vitae lobortis nisl, a mattis dui. In a sodales augue. Proin dignissim imperdiet sapien, gravida faucibus est ultrices sed. Curabitur consectetur est ac ligula ornare molestie. Nam convallis, ligula non imperdiet feugiat, elit purus tincidunt mi, sit amet egestas tortor felis vitae urna. Phasellus id magna est. Nunc elementum ac nisl vel vestibulum. Fusce vulputate tincidunt efficitur.
+          {/* post txt + foto */}
+          <div className='feed-post highlighted-post'>
+            <div className='post-header'>
+              <div className='small-logo'>
+                <img src={skullLogo} alt="Username logo" />
+              </div>
+              <div className='post-info'>
+                <span className='username'>Username</span>
+                <span className='time'>2 min</span>
+              </div>
+            </div>
+            <p className='post-message'>Listo pal roneitoooo</p>
+            
+            {/* fotos */}
+            <div className='photo-gallery'>
+              <img src={photo1} alt="Photo 1" />
+              <img src={photo2} alt="Photo 2" />
+              <img src={photo3} alt="Photo 3" />
+              <div className='more-photos'>+5</div>
+            </div>
+          </div>
 
-Aenean in posuere ante. Donec semper justo nec euismod tempor. Phasellus rhoncus turpis ac elit maximus tempus at in nisl. Maecenas venenatis bibendum arcu eget dictum. Phasellus eu vulputate libero, sed congue diam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Fusce pellentesque lacinia placerat. Curabitur ornare quis elit non maximus. Nulla facilisi. Cras sit amet iaculis ante.
-
-Sed leo elit, auctor at ornare quis, pretium non erat. Vivamus laoreet venenatis neque, in venenatis diam eleifend eget. Morbi gravida erat nec nibh lacinia commodo. Morbi tellus turpis, vulputate nec lorem sit amet, iaculis congue ante. Curabitur a nibh ac arcu euismod auctor sit amet eget odio. Sed rhoncus molestie felis, id ornare lorem facilisis id. Nam nec aliquam ex. Quisque nec turpis elit. Sed vitae egestas orci.
-
-Nullam facilisis sapien id bibendum ultricies. Sed volutpat turpis ac sem pharetra vestibulum. Praesent lacinia sapien purus, ac venenatis libero egestas ac. In volutpat eu ligula ut accumsan. Suspendisse a massa lacinia, ornare urna sed, sagittis lacus. Curabitur nec finibus ante, nec auctor nulla. Integer quis tortor diam. Vestibulum vitae sodales odio. Fusce nec mauris mollis leo ultrices commodo.
-
-Integer eget diam blandit, tristique mauris sit amet, tincidunt mauris. Cras cursus egestas ante, ac imperdiet nibh vehicula a. Morbi et eros ligula. Vestibulum a nunc metus. Fusce vel lectus tempor, porta sapien eget, lobortis leo. Fusce pretium augue nec quam aliquet, ac cursus eros fermentum. Nam varius velit sapien, nec ullamcorper urna pharetra et.
-
-Sed lorem magna, auctor quis risus rutrum, iaculis posuere lacus. Etiam ornare magna lorem, at ornare mi eleifend non. Curabitur sollicitudin dui augue, vitae dignissim mi volutpat sed. Praesent ac maximus massa, non mattis velit. Duis pulvinar eu purus sit amet consequat. Sed pulvinar scelerisque velit nec feugiat. Morbi urna metus, tristique eu eros vel, semper pretium purus. In nec volutpat lorem. Maecenas dolor mi, facilisis nec nibh a, lobortis aliquet odio. Aliquam erat volutpat.
-
-Maecenas aliquet et velit nec pulvinar. Integer id ultricies eros, sit amet luctus ex. Quisque dui erat, malesuada nec leo ut, ultrices imperdiet eros. Maecenas eros leo, ultricies suscipit maximus a, varius tincidunt felis. Cras rutrum, nibh vitae venenatis fermentum, magna ex efficitur lacus, ac ultricies ex purus ac libero. Quisque eget porttitor nibh. Integer et metus non felis porttitor fringilla vel eu erat. Phasellus mollis vehicula vehicula. Morbi lacus urna, auctor at pulvinar ut, blandit vel magna. Nulla rutrum quis orci nec cursus. Cras nec magna facilisis, tempus lorem non, laoreet urna. Duis accumsan suscipit quam eget ornare. Donec quam magna, commodo at nunc quis, sodales vehicula velit. Quisque mollis ante vel dignissim ornare. Nunc nec enim nunc. Quisque vehicula arcu id ante eleifend bibendum. Nullam massa ex, egestas eget fringilla et, eleifend id ipsum. Phasellus malesuada a ligula eu.</h2>
-  </>
+        </div>
+      </div>
+    </div>
+  </div>
 );

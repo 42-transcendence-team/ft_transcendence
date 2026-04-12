@@ -3,6 +3,7 @@ package server
 import (
 	"backend/config"
 	"backend/internal/middlewares"
+	"backend/internal/store"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -38,6 +39,9 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB) *HTTPServer {
 		Engine: r,
 		Db:     db,
 	}
+
+	// Inicializa el TempStore global para la gestión de tokens temporales (en este caso para 2FA)
+	store.InitGlobalTempStore()
 
 	srv.Router()
 

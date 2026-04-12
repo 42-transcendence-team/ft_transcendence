@@ -21,4 +21,7 @@ a {
   min-height: 100vh;
   line-height: 1.1;
   flex-direction: column;
+  position: relative;
+  justify-content: center;
+  align-items: center;
 }

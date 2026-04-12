@@ -3,6 +3,7 @@ package repository
 import (
 	"backend/internal/db"
 	"backend/internal/dto"
+	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"errors"
 
@@ -54,13 +55,49 @@ func (r *UserRepository) Delete(request dto.UserDelete) (int64, error) {
 
 func (r *UserRepository) Modify(request dto.UserModify) (int64, error) {
 	result := r.db.Model(&models.User{}).Where("id = ?", request.Id).Updates(models.User{
-		Login:   request.Login,
-		Email:   &request.Email,
-		Name:    request.Name,
-		Surname: request.Surname,
-		Role:    request.Role,
+		Login:     request.Login,
+		Email:     &request.Email,
+		Name:      request.Name,
+		Surname:   request.Surname,
+		Role:      request.Role,
+		Secret2FA: &request.Secret2FA,
+		Active2FA: request.Active2FA,
 	})
 	return result.RowsAffected, result.Error
+}
+
+// Funciones para 2FA
+func (r *UserRepository) UpdateSecret2FA(request dto.UserSecret2FA) (int64, error) {
+	result := r.db.Model(&models.User{}).Where("id = ?", request.Id).Update("Secret2FA", request.Secret2FA)
+	return result.RowsAffected, result.Error
+}
+
+func (r *UserRepository) UpdateActive2FA(request dto.User2FAStatus) (int64, error) {
+	result := r.db.Model(&models.User{}).Where("id = ?", request.Id).Update("Active2FA", request.Active2FA)
+	return result.RowsAffected, result.Error
+}
+
+func (r *UserRepository) Remove2FA(request dto.UserRemove2FA) (int64, error) {
+	result := r.db.Model(&models.User{}).
+		Where("id = ?", request.Id).
+		Updates(map[string]interface{}{
+			"Secret2FA": nil,
+			"Active2FA": false,
+		})
+
+	return result.RowsAffected, result.Error
+}
+
+func (r *UserRepository) Get2FASecret(userID uint) (string, error) {
+	var user models.User
+	err := r.db.Select("Secret2FA").Where("id = ?", userID).First(&user).Error
+	if err != nil {
+		return "", err
+	}
+	if user.Secret2FA == nil {
+		return "", appErr.NewBadRequest("2FA Not enabled")
+	}
+	return *user.Secret2FA, nil
 }
 
 func (r *UserRepository) IsDuplicatedKey(err error) bool {

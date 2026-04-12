@@ -2,6 +2,7 @@ package routes
 
 import (
 	"backend/internal/handlers"
+
 	"github.com/gin-gonic/gin"
 )
 
