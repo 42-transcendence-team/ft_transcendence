@@ -1,6 +1,7 @@
 import "@styles/_tooltipSettings.scss";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, Fragment } from "react";
+import { useFormErrors } from "@hooks/useFormErrors";
 import { calculateAge } from "./RegisterForm";
 import { updateData } from "api/Settings";
 import { FormField } from "./FormField";
@@ -29,7 +30,8 @@ export function ModifyData({ user }: { user: any }) {
 
 	const [openModal, setOpenModal] = useState(false);
 	const [requestStatus, setRequestStatus] = useState<RequestStatus>(null);
-	const [formErrors, setFormErrors] = useState<Partial<Record<keyof SettingsFields, string>>>({});
+
+	const { formErrors, setFormErrors } = useFormErrors();
 
 	function handleInputChange(id: keyof SettingsFields, value: string) {
 		setFormData((prev) => ({ ...prev, [id]: value }));
@@ -116,22 +118,13 @@ export function ModifyData({ user }: { user: any }) {
 		});
 	};
 
-	useEffect(() => {
-		if (Object.keys(formErrors).length > 0) {
-			const timer = setTimeout(() => {
-				setFormErrors({});
-			}, 5000);
-			return () => clearTimeout(timer);
-		}
-	}, [formErrors]);
-
 	return (
 		<div className="">
-			<h2>Configuración de la cuenta</h2>
+			<h2 className="">Configuración de la cuenta</h2>
 			<form onSubmit={handleSubmit} className="">
 				{inputsConfig.map((field) => (
 					<Fragment key={field.id}>
-						<div style={{ position: 'relative', width: '100%' }}>
+						<div className="">
 							<FormField
 								id={field.id}
 								label={field.label}
@@ -139,6 +132,7 @@ export function ModifyData({ user }: { user: any }) {
 								value={formData[field.id]}
 								onChange={(value) => handleInputChange(field.id, value)}
 								ph={user[field.id] || undefined}
+								className=""
 							/>
 
 							{formErrors[field.id] && (
@@ -157,7 +151,7 @@ export function ModifyData({ user }: { user: any }) {
 					onClearError={() => clearError("birthday")}
 					placeholder={user.birthday}
 				/>
-				<button type="submit">Guardar cambios</button>
+				<button type="submit" className="">Guardar cambios</button>
 			</form>
 			<Modal
 				open={openModal}

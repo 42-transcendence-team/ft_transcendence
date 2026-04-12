@@ -1,6 +1,7 @@
 import "@styles/_tooltipSettings.scss";
 
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useState } from "react";
+import { useFormErrors } from "@hooks/useFormErrors";
 import { FormField } from "./FormField";
 import { updateEmail } from "api/Settings";
 import { Modal } from "./Modal";
@@ -27,7 +28,8 @@ export function ModifyEmail({ user }: { user: any }) {
 
 	const [openModal, setOpenModal] = useState(false);
 	const [requestStatus, setRequestStatus] = useState<RequestStatus>(null);
-	const [formErrors, setFormErrors] = useState<Partial<Record<keyof SettingsFields, string>>>({});
+
+	const { formErrors, setFormErrors } = useFormErrors();
 
 	function handleInputChange(id: keyof SettingsFields, value: string) {
 		setFormData((prev) => ({ ...prev, [id]: value }));
@@ -98,22 +100,13 @@ export function ModifyEmail({ user }: { user: any }) {
 		});
 	};
 
-	useEffect(() => {
-		if (Object.keys(formErrors).length > 0) {
-			const timer = setTimeout(() => {
-				setFormErrors({});
-			}, 5000);
-			return () => clearTimeout(timer);
-		}
-	}, [formErrors]);
-
 	return (
 		<div className="">
-			<h2>Configuración de la cuenta</h2>
+			<h2 className="">Configuración de la cuenta</h2>
 			<form onSubmit={handleSubmit} className="">
 				{inputsConfig.map((field) => (
 					<Fragment key={field.id}>
-						<div style={{ position: 'relative', width: '100%' }}>
+						<div className="">
 							<FormField
 								id={field.id}
 								label={field.label}
@@ -121,6 +114,7 @@ export function ModifyEmail({ user }: { user: any }) {
 								value={formData[field.id]}
 								onChange={(value) => handleInputChange(field.id, value)}
 								ph={user[field.id] || undefined}
+								className=""
 							/>
 
 							{formErrors[field.id] && (
@@ -131,7 +125,7 @@ export function ModifyEmail({ user }: { user: any }) {
 						</div>
 					</Fragment>
 				))}
-				<button type="submit">Guardar cambios</button>
+				<button type="submit" className="">Guardar cambios</button>
 			</form>
 			<Modal
 				open={openModal}
