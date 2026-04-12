@@ -1,0 +1,257 @@
+body {
+	background-color: $background-page;
+	margin: 0;
+	font-family: sans-serif; // la funte q se elija
+}
+
+.page-wrapper {
+	display: flex;
+	width: 100%;
+	height: 100%;
+	padding: 5px;
+	justify-content: center;
+	align-items: center;
+	background-color: $background-page;
+
+}
+
+.profile-container {
+	display: flex;
+	flex-direction: column;
+	background-color: $background-profile;
+	width: 100%;
+	height: 100%;
+	max-width: 1000px;
+    min-width: 320px;
+	border-radius: 10px;
+	overflow: hidden;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	
+}
+
+.profile-banner {
+	background-color: $color-banner;
+	// height: 150px;
+	height: 20vw;
+	min-height: 120px;
+    max-height: 250px;
+    width: 100%;
+	border-radius: 3px;
+}
+
+.profile-header-info {
+	display: flex;
+	align-items: flex-end;
+	padding: 0 15px 20px 15px;
+	position: relative;
+	margin-top: -60px;
+	gap: 20px;
+}
+
+.profile-logo {
+	position: relative;
+	width: 120px;
+	height: 120px;
+	border-radius: 50%;
+	background-color: $color-logo-bg;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+	.skull-icon {
+		width: 60%;
+		height: auto;
+	}
+
+	.status-dot {
+		position: absolute;
+		top: 5px;
+		right: 5px;
+		width: 25px;
+		height: 25px;
+		background-color: $color-status-dot;
+		border-radius: 50%;
+	}
+}
+
+// Info del Usuario
+.user-details {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+
+	.visitas {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: $color-visitas-text;
+		font-size: 0.9em;
+
+		i {
+			font-size: 1.1em;
+		}
+	}
+
+	.user-name {
+		margin: 0;
+		font-size: 1.5em;
+		font-weight: bold;
+		color: #333;
+	}
+}
+
+//TODO mover botones a scss superior 
+.action-buttons {
+	display: flex;
+	gap: 15px;
+
+	button {
+		padding: 10px 20px;
+		border: none;
+		border-radius: 5px;
+		cursor: pointer;
+		color: white;
+		font-weight: bold;
+		font-size: 0.9em;
+		transition: background-color 0.3s ease;
+
+		&:hover {
+			opacity: 0.9;
+		}
+	}
+
+	.share-btn {
+		background-color: $color-btn-share;
+	}
+}
+
+.profile-feed {
+	padding: 0 15px 10px 15px;
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+
+	.status-text {
+		margin: 0;
+		color: $color-text-light;
+		font-size: 0.9em;
+	}
+
+	.feed-posts-container {
+		border-radius: 10px;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.feed-post {
+		width: 100%;
+		padding: 15px;
+		background-color: $color-post-bg;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		box-sizing: border-box;
+		margin-bottom: 4px;
+		border-bottom: 1px solid #eee;
+		border-radius: 10px;
+		&:last-child {
+			border-bottom: none;
+		}
+
+		.post-header {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+
+			.small-logo {
+				width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				background-color: #f0f0f0;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				overflow: hidden;
+
+				img {
+					width: 60%;
+					height: auto;
+				}
+			}
+
+			.post-info {
+				display: flex;
+				flex-direction: row;
+				justify-content: space-between;
+				flex-grow: 1;
+
+				.username {
+					font-weight: bold;
+					font-size: 0.9em;
+				}
+
+				.time {
+					color: $color-text-light;
+					font-size: 0.8em;
+				}
+			}
+		}
+
+		.post-message {
+			margin: 0;
+			font-size: 0.95em;
+			color: #333;
+		}
+	}
+
+	.highlighted-post {
+		border: none; 
+	}
+
+	.photo-gallery {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr); 
+		gap: 10px;
+		margin-top: 10px;
+		width: 100%;
+
+		// Aplicamos estilos comunes a imágenes y al cuadro de "+5"
+		img, .more-photos {
+			width: 100%;
+			//TODO
+			// 'aspect-ratio: 1 / 1' las hace cuadradas
+			// 'aspect-ratio: 16 / 9' si prefieres que sean rectangulares
+			aspect-ratio: 1 / 1; 
+			
+			border-radius: 5px;
+			object-fit: cover; // Evita que la foto se estire feo
+			min-height: 80px; 
+			max-height: 200px;
+		}
+
+		.more-photos {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			background-color: #f0f0f0;
+			color: $color-text-light;
+			font-weight: bold;
+			font-size: 1.2rem;
+			cursor: pointer;
+			transition: background 0.2s;
+			&:hover {
+				background-color: darken(#f0f0f0, 5%);
+			}
+		}
+	}
+}
+
+//para q en telefono nbo se vea diminuto
+@media (max-width: 480px) {
+    .photo-gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
