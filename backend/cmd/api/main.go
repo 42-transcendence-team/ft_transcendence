@@ -6,6 +6,8 @@ import (
 	"backend/internal/server"
 	"fmt"
 	"log"
+	// "github.com/redis/go-redis/v9"
+	_ "github.com/redis/go-redis/v9"
 )
 
 func main() {
