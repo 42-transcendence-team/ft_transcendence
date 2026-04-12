@@ -57,6 +57,7 @@ func (h *UserHandler) GetSettings(c *gin.Context) {
 	c.JSON(http.StatusOK, settings)
 }
 
+// TODO: FALTA HACERLO EN FRONT
 func (h *UserHandler) RemoveAccount(c *gin.Context) {
 	userIDValue, exists := c.Get("userID")
 	if !exists {
@@ -77,56 +78,6 @@ func (h *UserHandler) RemoveAccount(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "User removed successfully"})
 }
-
-// func (h *UserHandler) ModifyAccount(c *gin.Context) {
-// 	userIDValue, exists := c.Get("userID")
-// 	if !exists {
-// 		c.Error(appErr.NewUnauthorized("User ID not found in context"))
-// 		c.Abort()
-// 		return
-// 	}
-
-// 	var req dto.UserModify
-
-// 	err := c.ShouldBindJSON(&req)
-// 	if err != nil {
-// 		c.Error(err)
-// 		c.Abort()
-// 		return
-// 	}
-
-// 	request := dto.ModifyInput{
-// 		Code:             req.Code,
-// 		Email:            req.Email,
-// 		VerifyEmail:      req.VerifyEmail,
-// 		Password:         req.Password,
-// 		VerifyPassword:   req.VerifyPassword,
-// 		PreviousPassword: req.PreviousPassword,
-// 		Name:             req.Name,
-// 		Surname:          req.Surname,
-// 	}
-
-// 	if req.Birthday != "" {
-// 		birthday, err := time.Parse("2006-01-02", req.Birthday)
-// 		if err != nil {
-// 			c.Error(appErr.NewValidation(map[string]string{
-// 				"birthday": "invalid_format",
-// 			}))
-// 			c.Abort()
-// 			return
-// 		}
-// 		request.Birthday = birthday
-// 	}
-
-// 	err = h.UserService.ModifyAccount(userIDValue.(uint), request)
-// 	if err != nil {
-// 		c.Error(err)
-// 		c.Abort()
-// 		return
-// 	}
-
-// 	c.JSON(http.StatusOK, gin.H{"message": "User modified successfully"})
-// }
 
 func (h *UserHandler) UpdatePersonalData(c *gin.Context) {
 	userIDValue, exists := c.Get("userID")

@@ -2,7 +2,7 @@ package dto
 
 import "time"
 
-// Hay que modificar todo esto, era solo de prueba y como "Chuleta" para toquetear al usuario
+// Esta es la peticion para busqueda, no esta terminada
 type UserFilter struct {
 	Id      uint   `form:"id"`
 	Login   string `form:"login"`
@@ -15,6 +15,7 @@ type UserFilter struct {
 	Page  int `form:"page"`
 }
 
+// Respuesta para los datos necesarios en Settings
 type UserResponse struct {
 	Login     string    `json:"login"`
 	Email     *string   `json:"email,omitempty"`
@@ -29,33 +30,7 @@ type UserDelete struct {
 	Code string `form:"code"`
 }
 
-type ModifyInput struct {
-	Code string
-
-	Email            string
-	VerifyEmail      string
-	Password         string
-	VerifyPassword   string
-	PreviousPassword string
-	Name             string
-	Surname          string
-	Birthday         time.Time
-}
-
-type UserModify struct {
-	Code string `form:"code"`
-
-	Email            string `form:"email"`
-	VerifyEmail      string `form:"verify_email"`
-	Password         string `form:"password"`
-	VerifyPassword   string `form:"verify_password"`
-	PreviousPassword string `form:"previous_password"`
-
-	Name     string `form:"name"`
-	Surname  string `form:"surname"`
-	Birthday string `form:"birthday"`
-}
-
+// Settings de usuario
 type ModifyInputEmail struct {
 	Code string
 
@@ -101,8 +76,6 @@ type UserModifyPass struct {
 	VerifyPassword   string `json:"verify_password"`
 	PreviousPassword string `json:"previous_password"`
 }
-
-// Hasta aqui en principio estan hechas para las pruebas
 
 // DTOs para 2FA
 type UserSecret2FA struct {
