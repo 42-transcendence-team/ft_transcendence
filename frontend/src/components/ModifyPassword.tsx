@@ -1,4 +1,4 @@
-import "@styles/_tooltipSettings.scss";
+import "@styles/_settingsSection.scss";
 
 import React, { Fragment, useState } from "react";
 import { FormField } from "./FormField";
@@ -19,6 +19,8 @@ const inputsConfig: Array<{ id: keyof SettingsFields; label: string; type: strin
 ];
 
 type RequestStatus = { type: "success" | "error"; message: string; } | null;
+
+//TODO: Si el usuario tiene 2FA activo, solicitar codigo en modal para confirmar
 
 export function ModifyPassword({ user }: { user: any }) {
 	const [formData, setFormData] = useState<SettingsFields>({
@@ -103,12 +105,12 @@ export function ModifyPassword({ user }: { user: any }) {
 	};
 
 	return (
-		<div className="">
-			<h2 className="">Configuración de la cuenta</h2>
-			<form onSubmit={handleSubmit} className="">
+		<div className="settings__section">
+			<h2 className="settings__title">Cambio de contraseña</h2>
+			<form onSubmit={handleSubmit} className="settings__form">
 				{inputsConfig.map((field) => (
 					<Fragment key={field.id}>
-						<div className="">
+						<div className="settings__field">
 							<FormField
 								id={field.id}
 								label={field.label}
@@ -120,14 +122,16 @@ export function ModifyPassword({ user }: { user: any }) {
 							/>
 
 							{formErrors[field.id] && (
-								<div className="field-tooltip" onClick={() => clearError(field.id)}>
+								<div className="settings__field-tooltip" onClick={() => clearError(field.id)}>
 									{formErrors[field.id]}
 								</div>
 							)}
 						</div>
 					</Fragment>
 				))}
-				<button type="submit" className="">Guardar cambios</button>
+				<button type="submit" className="settings__button">
+					Guardar cambios
+				</button>
 			</form>
 			<Modal
 				open={openModal}
