@@ -55,7 +55,7 @@
   width: 42px;
 }
 
-@include mobile {
+@media screen and (max-width: 700px) {
   .footer {
     display: grid;
     grid-template-columns: 1fr auto;
