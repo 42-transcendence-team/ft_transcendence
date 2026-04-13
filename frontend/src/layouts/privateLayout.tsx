@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-
+import { Footer } from "@components/Footer";
 import { PrivHeader } from "@components/PrivHeader";
 import { Footer } from "@components/Footer";
 import "../styles/components/_privateLayout.scss"
