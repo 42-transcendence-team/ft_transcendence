@@ -30,7 +30,7 @@ func (srv *HTTPServer) Router() {
 	api := srv.Engine.Group("/api/v1")
 
 	// rutas publicas
-	routes.AuthRoutes(api, authHandler)
+	routes.AuthRoutes(api, authHandler, userHandler)
 
 	// Esto en realidad no se como poder hacerlo bonito
 	login := api.Group("/2fa")

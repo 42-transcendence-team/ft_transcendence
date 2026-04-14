@@ -96,7 +96,7 @@ export type DeleteSettings = {
 
 export async function deleteAccount(settings: DeleteSettings) {
 	const res = await fetch(`${apiUrl}/users/delete`, {
-		method: "POST",
+		method: "DELETE",
 		headers: {
 			"Content-Type": "application/json",
 		},

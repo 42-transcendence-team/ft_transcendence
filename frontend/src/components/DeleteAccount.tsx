@@ -25,7 +25,7 @@ export function DeleteAccount({ user }: { user: any }) {
             setOpenConfirmModal(false);
             setShow2FA(true);
         } else {
-            executeDelete();
+            executeDelete(); 
         }
     };
 
@@ -37,7 +37,7 @@ export function DeleteAccount({ user }: { user: any }) {
             setOpenStatusModal(true);
             
             setTimeout(() => {
-                window.location.href = "/logout"; 
+                window.location.href = "/login"; 
             }, 2000);
             
         } catch (error: any) {

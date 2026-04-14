@@ -57,7 +57,6 @@ func (h *UserHandler) GetSettings(c *gin.Context) {
 	c.JSON(http.StatusOK, settings)
 }
 
-// TODO: FALTA HACERLO EN FRONT
 func (h *UserHandler) RemoveAccount(c *gin.Context) {
 	userIDValue, exists := c.Get("userID")
 	if !exists {
@@ -67,9 +66,16 @@ func (h *UserHandler) RemoveAccount(c *gin.Context) {
 	}
 	var request dto.UserDelete
 
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
 	request.Id = userIDValue.(uint)
 
-	err := h.UserService.RemoveAccount(request)
+	err = h.UserService.RemoveAccount(request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
