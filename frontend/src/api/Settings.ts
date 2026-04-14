@@ -2,15 +2,6 @@ import { buildApiError } from "./ApiError";
 
 const apiUrl = import.meta.env.PUBLIC_API_URL;
 
-type SettingsFields = {
-	email?: string;
-	verify_email?: string;
-	password?: string;
-	name?: string;
-	surname?: string;
-	birthday?: string;
-};
-
 export async function settingsLoader() {
 	const res = await fetch(`${apiUrl}/users/settings`, {
 		method: "GET",
@@ -27,24 +18,14 @@ export async function settingsLoader() {
 	return data;
 }
 
-export async function updateSettings(settings: SettingsFields) {
-	const res = await fetch(`${apiUrl}/users/update`, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		credentials: "include",
-		body: JSON.stringify(settings),
-	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => null);
-		throw buildApiError(res, data);
-	}
-	const data = await res.json();
-	return data;
-}
+export type DataSettings = {
+	code?: string;
+	name?: string;
+	surname?: string;
+	birthday?: string;
+};
 
-export async function updateData(settings: SettingsFields) {
+export async function updateData(settings: DataSettings) {
 	const res = await fetch(`${apiUrl}/users/update-user`, {
 		method: "POST",
 		headers: {
@@ -61,7 +42,14 @@ export async function updateData(settings: SettingsFields) {
 	return data;
 }
 
-export async function updatePassword(settings: SettingsFields) {
+export type PasswordSettings = {
+	code?: string;
+	previous_password: string;
+	password: string;
+	verify_password: string;
+};
+
+export async function updatePassword(settings: PasswordSettings) {
 	const res = await fetch(`${apiUrl}/users/update-password`, {
 		method: "POST",
 		headers: {
@@ -78,7 +66,13 @@ export async function updatePassword(settings: SettingsFields) {
 	return data;
 }
 
-export async function updateEmail(settings: SettingsFields) {
+export type EmailSettings = {
+	code?: string;
+	email: string;
+	verify_email: string;
+};
+
+export async function updateEmail(settings: EmailSettings) {
 	const res = await fetch(`${apiUrl}/users/update-email`, {
 		method: "POST",
 		headers: {
@@ -87,7 +81,28 @@ export async function updateEmail(settings: SettingsFields) {
 		credentials: "include",
 		body: JSON.stringify(settings),
 	});
-	console.log("Update Email Request:", settings);
+	if (!res.ok) {
+		const data = await res.json().catch(() => null);
+		throw buildApiError(res, data);
+	}
+	const data = await res.json();
+	return data;
+}
+
+export type DeleteSettings = {
+	password: string;
+	code?: string;
+};
+
+export async function deleteAccount(settings: DeleteSettings) {
+	const res = await fetch(`${apiUrl}/users/delete`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		credentials: "include",
+		body: JSON.stringify(settings),
+	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => null);
 		throw buildApiError(res, data);

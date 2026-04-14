@@ -1,16 +1,19 @@
 import "@styles/_settingsSection.scss";
 
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { FormField } from "./FormField";
-import { updatePassword } from "api/Settings";
+import { updatePassword, type PasswordSettings } from "api/Settings";
 import { Modal } from "./Modal";
 import { useFormErrors } from "@hooks/useFormErrors";
+import { Footer2FA, OtpInput } from "./TwoFactorUI";
 
 type SettingsFields = {
 	previous_password: string;
 	password: string;
 	verify_password: string;
 };
+
+//TODO - Pensar como mover cosas a Hook comun para evitar repetir codigo en los 3 componentes de modificacion de datos, email y password
 
 const inputsConfig: Array<{ id: keyof SettingsFields; label: string; type: string }> = [
 	{ id: "previous_password", label: "Contraseña anterior", type: "password" },
@@ -19,8 +22,6 @@ const inputsConfig: Array<{ id: keyof SettingsFields; label: string; type: strin
 ];
 
 type RequestStatus = { type: "success" | "error"; message: string; } | null;
-
-//TODO: Si el usuario tiene 2FA activo, solicitar codigo en modal para confirmar
 
 export function ModifyPassword({ user }: { user: any }) {
 	const [formData, setFormData] = useState<SettingsFields>({
@@ -31,6 +32,10 @@ export function ModifyPassword({ user }: { user: any }) {
 
 	const [openModal, setOpenModal] = useState(false);
 	const [requestStatus, setRequestStatus] = useState<RequestStatus>(null);
+
+	const [show2FA, setShow2FA] = useState(false);
+	const [otpCode, setOtpCode] = useState<string[]>(Array(6).fill(""));
+	const isComplete = otpCode.every((d) => d !== "" && /\d/.test(d));
 
 	const { formErrors, setFormErrors } = useFormErrors();
 
@@ -57,9 +62,49 @@ export function ModifyPassword({ user }: { user: any }) {
 			errors.password =
 				"La contraseña debe tener entre 8 y 64 caracteres, incluir una mayúscula, un número y un símbolo como mínimo.";
 
-	
+
 		return errors;
 	}
+
+	const cleanInputs = () => {
+		setFormData({
+			previous_password: "",
+			password: "",
+			verify_password: "",
+		});
+	};
+
+	const executeUpdate = async (verificationCode?: string) => {
+		const allowedFields = ["previous_password", "password", "verify_password"];
+		const buildRequestData = Object.fromEntries(
+			Object.entries(formData)
+				.filter(([key, value]) => allowedFields.includes(key) &&
+					value != null && value.trim() !== "")
+		);
+
+		const payload = {
+			...buildRequestData,
+			...(verificationCode && { code: verificationCode })
+		} as PasswordSettings;
+
+		try {
+			await updatePassword(payload);
+			setRequestStatus({
+				type: "success",
+				message: "Los cambios se han guardado correctamente."
+			});
+			setShow2FA(false);
+			setOpenModal(true);
+			cleanInputs();
+		} catch (error: any) {
+			setRequestStatus({
+				type: "error",
+				message: error?.data?.error?.message || "Error al guardar los cambios.",
+			});
+			setOpenModal(true);
+			cleanInputs();
+		}
+	};
 
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -67,34 +112,13 @@ export function ModifyPassword({ user }: { user: any }) {
 		setFormErrors(errors);
 
 		if (Object.keys(errors).length === 0) {
-			const allowedFields = ["previous_password", "password", "verify_password"];
-
-			const buildRequestData = Object.fromEntries(
-				Object.entries(formData)
-					.filter(([key, value]) => allowedFields.includes(key) &&
-						value != null && value.trim() !== "")
-			);
-
-			try {
-				await updatePassword(buildRequestData)
-
-				setRequestStatus({
-					type: "success",
-					message: "Los cambios se han guardado correctamente.",
-				});
-
-				setOpenModal(true);
-
-			} catch (error: any) {
-				setRequestStatus({
-					type: "error",
-					message: error?.data?.error?.message || "Error al guardar los cambios.",
-				});
-
-				setOpenModal(true);
+			if (user.active_2fa) {
+				setShow2FA(true);
+			} else {
+				await executeUpdate();
 			}
 		}
-	};
+	}
 
 	const clearError = (id: keyof SettingsFields) => {
 		setFormErrors((prev) => {
@@ -103,6 +127,16 @@ export function ModifyPassword({ user }: { user: any }) {
 			return newErrors;
 		});
 	};
+
+	useEffect(() => {
+		if (show2FA) {
+			setTimeout(() => {
+				document.getElementById("otp-0")?.focus();
+			}, 300);
+			return;
+		}
+		if (!show2FA) setOtpCode(Array(6).fill(""));
+	}, [show2FA]);
 
 	return (
 		<div className="settings__section">
@@ -133,6 +167,27 @@ export function ModifyPassword({ user }: { user: any }) {
 					Guardar cambios
 				</button>
 			</form>
+
+			<Modal
+				open={show2FA}
+				onClose={() => setShow2FA(false)}
+				title="Confirmar cambios"
+				onSubmit={() => executeUpdate(otpCode.join(""))}
+				submitDisabled={!isComplete}
+			>
+				<p className="modal__content">
+					Para completar los cambios, introduce el código de verificación.
+				</p>
+
+				<OtpInput onChange={setOtpCode} />
+
+				<Footer2FA
+					onClose={() => setShow2FA(false)}
+					onVerify={() => executeUpdate(otpCode.join(""))}
+					disabled={!isComplete}
+				/>
+			</Modal >
+
 			<Modal
 				open={openModal}
 				onClose={() => setOpenModal(false)}

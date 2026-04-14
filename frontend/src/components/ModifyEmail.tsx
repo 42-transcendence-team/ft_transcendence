@@ -1,15 +1,18 @@
 import "@styles/_settingsSection.scss";
 
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { useFormErrors } from "@hooks/useFormErrors";
 import { FormField } from "./FormField";
-import { updateEmail } from "api/Settings";
+import { updateEmail, type EmailSettings } from "api/Settings";
 import { Modal } from "./Modal";
+import { Footer2FA, OtpInput } from "./TwoFactorUI";
 
 type SettingsFields = {
 	email: string;
 	verify_email: string;
 };
+
+//TODO - Pensar como mover cosas a Hook comun para evitar repetir codigo en los 3 componentes de modificacion de datos, email y password
 
 const inputsConfig: Array<{ id: keyof SettingsFields; label: string; type: string }> = [
 	{ id: "email", label: "Email", type: "email" },
@@ -18,9 +21,7 @@ const inputsConfig: Array<{ id: keyof SettingsFields; label: string; type: strin
 
 type RequestStatus = { type: "success" | "error"; message: string; } | null;
 
-//TODO: Si el usuario tiene 2FA activo, solicitar codigo en modal para confirmar
-
-export function ModifyEmail({ user }: { user: any }) {
+export function ModifyEmail({ user, onUpdate }: { user: any; onUpdate: () => void }) {
 	const [formData, setFormData] = useState<SettingsFields>({
 		email: "",
 		verify_email: "",
@@ -28,6 +29,10 @@ export function ModifyEmail({ user }: { user: any }) {
 
 	const [openModal, setOpenModal] = useState(false);
 	const [requestStatus, setRequestStatus] = useState<RequestStatus>(null);
+
+	const [show2FA, setShow2FA] = useState(false);
+	const [otpCode, setOtpCode] = useState<string[]>(Array(6).fill(""));
+	const isComplete = otpCode.every((d) => d !== "" && /\d/.test(d));
 
 	const { formErrors, setFormErrors } = useFormErrors();
 
@@ -57,40 +62,59 @@ export function ModifyEmail({ user }: { user: any }) {
 		return errors;
 	}
 
+	const cleanInputs = () => {
+		setFormData({
+			email: "",
+			verify_email: "",
+		});
+	};
+
+	const executeUpdate = async (verificationCode?: string) => {
+		const allowedFields = ["email", "verify_email"];
+		const buildRequestData = Object.fromEntries(
+			Object.entries(formData)
+				.filter(([key, value]) => allowedFields.includes(key) &&
+					value != null && value.trim() !== "")
+		);
+
+		const payload = {
+			...buildRequestData,
+			...(verificationCode && { code: verificationCode })
+		} as EmailSettings;
+
+		try {
+			await updateEmail(payload);
+			setRequestStatus({
+				type: "success",
+				message: "Los cambios se han guardado correctamente."
+			});
+			setShow2FA(false);
+			setOpenModal(true);
+			cleanInputs();
+			onUpdate();
+		} catch (error: any) {
+			setRequestStatus({
+				type: "error",
+				message: error?.data?.error?.message || "Error al guardar los cambios.",
+			});
+			setOpenModal(true);
+			cleanInputs();
+		}
+	};
+
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const errors = validateForm();
 		setFormErrors(errors);
 
 		if (Object.keys(errors).length === 0) {
-			const allowedFields = ["email", "verify_email"];
-
-			const buildRequestData = Object.fromEntries(
-				Object.entries(formData)
-					.filter(([key, value]) => allowedFields.includes(key) &&
-						value != null && value.trim() !== "")
-			);
-
-			try {
-				await updateEmail(buildRequestData)
-
-				setRequestStatus({
-					type: "success",
-					message: "Los cambios se han guardado correctamente.",
-				});
-
-				setOpenModal(true);
-
-			} catch (error: any) {
-				setRequestStatus({
-					type: "error",
-					message: error?.data?.error?.message || "Error al guardar los cambios.",
-				});
-
-				setOpenModal(true);
+			if (user.active_2fa) {
+				setShow2FA(true);
+			} else {
+				await executeUpdate();
 			}
 		}
-	};
+	}
 
 	const clearError = (id: keyof SettingsFields) => {
 		setFormErrors((prev) => {
@@ -99,6 +123,16 @@ export function ModifyEmail({ user }: { user: any }) {
 			return newErrors;
 		});
 	};
+
+	useEffect(() => {
+			if (show2FA) {
+				setTimeout(() => {
+					document.getElementById("otp-0")?.focus();
+				}, 300);
+				return;
+			}
+			if (!show2FA) setOtpCode(Array(6).fill(""));
+		}, [show2FA]);
 
 	return (
 		<div className="settings__section">
@@ -129,6 +163,27 @@ export function ModifyEmail({ user }: { user: any }) {
 					Guardar cambios
 				</button>
 			</form>
+
+			<Modal
+				open={show2FA}
+				onClose={() => setShow2FA(false)}
+				title="Confirmar cambios"
+				onSubmit={() => executeUpdate(otpCode.join(""))}
+				submitDisabled={!isComplete}
+			>
+				<p className="modal__content">
+					Para completar los cambios, introduce el código de verificación.
+				</p>
+
+				<OtpInput onChange={setOtpCode} />
+
+				<Footer2FA
+					onClose={() => setShow2FA(false)}
+					onVerify={() => executeUpdate(otpCode.join(""))}
+					disabled={!isComplete}
+				/>
+			</Modal >
+
 			<Modal
 				open={openModal}
 				onClose={() => setOpenModal(false)}

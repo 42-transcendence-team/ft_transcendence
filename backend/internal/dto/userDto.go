@@ -26,8 +26,9 @@ type UserResponse struct {
 }
 
 type UserDelete struct {
-	Id   uint   `form:"id"`
-	Code string `form:"code"`
+	Id       uint   `form:"id"`
+	Password string `form:"password" binding:"required"`
+	Code     string `form:"code"`
 }
 
 // Settings de usuario
@@ -41,8 +42,8 @@ type ModifyInputEmail struct {
 type UserModifyEmail struct {
 	Code string `json:"code"`
 
-	Email       string `json:"email"`
-	VerifyEmail string `json:"verify_email"`
+	Email       string `json:"email" binding:"required,email"`
+	VerifyEmail string `json:"verify_email" binding:"required,email"`
 }
 
 type ModifyInputData struct {
@@ -72,9 +73,9 @@ type ModifyInputPass struct {
 type UserModifyPass struct {
 	Code string `json:"code"`
 
-	Password         string `json:"password"`
-	VerifyPassword   string `json:"verify_password"`
-	PreviousPassword string `json:"previous_password"`
+	Password         string `json:"password" binding:"required"`
+	VerifyPassword   string `json:"verify_password" binding:"required"`
+	PreviousPassword string `json:"previous_password" binding:"required"`
 }
 
 // DTOs para 2FA

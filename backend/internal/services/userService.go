@@ -30,6 +30,7 @@ func (s *UserService) GetSettings(userID uint) (*dto.UserResponse, error) {
 	return s.UserRepo.GetUserData(userID)
 }
 
+// TODO: Revisar validaciones y hacer las mismas en Front
 func (s *UserService) RemoveAccount(request dto.UserDelete) error {
 	req, err := s.UserRepo.FindById(request.Id)
 	if err != nil {
@@ -45,6 +46,13 @@ func (s *UserService) RemoveAccount(request dto.UserDelete) error {
 		if !valid {
 			return appErr.NewUnauthorized("Invalid 2FA code")
 		}
+	}
+	currentPassword, err := s.UserRepo.GetPassword(request.Id)
+	if err != nil {
+		return err
+	}
+	if !utils.CheckPasswordHash(request.Password, currentPassword) {
+		return appErr.NewUnauthorized("Invalid password")
 	}
 
 	rows, err := s.UserRepo.Delete(request)
@@ -126,6 +134,7 @@ func (s *UserService) ModifyPass(userID uint, request dto.ModifyInputPass) error
 	return nil
 }
 
+// TODO: Revisar validaciones y hacer las mismas en Front
 func (s *UserService) ModifyEmail(userID uint, request dto.ModifyInputEmail) error {
 	req, err := s.UserRepo.FindById(userID)
 	if err != nil {
@@ -172,6 +181,7 @@ func (s *UserService) ModifyEmail(userID uint, request dto.ModifyInputEmail) err
 	return nil
 }
 
+// TODO: Revisar validaciones y hacer las mismas en Front
 func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error {
 	req, err := s.UserRepo.FindById(userID)
 	if err != nil {
