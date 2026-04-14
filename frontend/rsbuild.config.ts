@@ -18,7 +18,10 @@ export default defineConfig({
 		sassLoaderOptions: (config) => {
 			const variablesPath = path.join(__dirname, 'src/styles/abstracts/_variables.scss');
 			const normalizedPath = variablesPath.replace(/\\/g, '/');
-			config.additionalData = `@use "${normalizedPath}" as *;`;
+			config.additionalData = `
+				@use "sass:color";
+				@use "${normalizedPath}" as *;
+			`;
 		},
 		}),
 	],
