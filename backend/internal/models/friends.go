@@ -9,7 +9,7 @@ type RelationStatus string
 const (
 	RelationPending  RelationStatus = "pending"
 	RelationAccepted RelationStatus = "accepted"
-	RelationBlocked  RelationStatus = "blocked"
+	RelationRejected RelationStatus = "rejected"
 )
 
 type FriendRequest struct {
@@ -23,8 +23,8 @@ type FriendRequest struct {
 
 type Block struct {
 	ID        uint `gorm:"primaryKey"`
-	BlokerID  uint `gorm:"not null;index"`
-	BlokedID  uint `gorm:"not null;index"`
+	BlockerID uint `gorm:"not null;index"`
+	BlockedID uint `gorm:"not null;index"`
 	CreatedAt time.Time
 }
 

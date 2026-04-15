@@ -76,6 +76,38 @@ func (r *FriendRepository) IsRequest(senderID uint, receiverID uint) (bool, erro
 	return count > 0, nil
 }
 
+func (r *FriendRepository) IsRequestForMe(senderID uint, receiverID uint) (bool, error) {
+
+	var count int64
+
+	err := r.db.Model(&models.FriendRequest{}).Where(
+		"(sender_id = ? AND receiver_id = ?)",
+		senderID, receiverID,
+	).Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	// si count > 0 hay peticion ya creada por parte de alguna de las partes
+	return count > 0, nil
+}
+
+func (r *FriendRepository) GetReqStatus(senderID uint, receiverID uint) (models.RelationStatus, error) {
+
+	var req models.FriendRequest
+
+	err := r.db.
+		Where("sender_id = ? AND receiver_id = ?", senderID, receiverID).
+		First(&req).Error
+
+	if err != nil {
+		return "", err
+	}
+
+	return req.Status, nil
+}
+
 // mira si hay bloqueo por alguna de las partes
 func (r *FriendRepository) AreBlock(userID1 uint, userID2 uint) (bool, error) {
 
@@ -118,6 +150,23 @@ func (r *FriendRepository) ListIncomingRequests(userID uint) ([]models.FriendReq
 	}
 
 	return requests, nil
+}
+
+func (r *FriendRepository) ChangeReqStatus(newStatus models.RelationStatus, senderID uint, receiverID uint) error {
+
+	result := r.db.Model(&models.FriendRequest{}).
+		Where("sender_id = ? && receiver_id = ?", senderID, receiverID).
+		Update("status", newStatus)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }
 
 // siempre se van a guardar las relacciones en la base de datos el usuario 1 sera el indice menor

@@ -96,6 +96,11 @@ func (h *FriendHandler) ListIncomingRequests(c *gin.Context) {
 
 func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 
+	userID := c.MustGet("userID").(uint)
+
+	senderID = 
+
+	err = h.FriendRequestService.AcceptFriendRequest(userID, senderID)
 }
 
 func (h *FriendHandler) RejectFriendRequest(c *gin.Context) {
