@@ -7,6 +7,7 @@ import (
 	"backend/internal/repository"
 	"backend/internal/utils"
 	"strings"
+	"time"
 
 	"github.com/pquerna/otp/totp"
 )
@@ -30,22 +31,44 @@ func (s *UserService) GetSettings(userID uint) (*dto.UserResponse, error) {
 	return s.UserRepo.GetUserData(userID)
 }
 
-// TODO: Revisar validaciones y hacer las mismas en Front
+func (s *UserService) require2FA(user *models.User, code *string) error {
+	if !user.Active2FA {
+		return nil
+	}
+
+	if code == nil || *code == "" {
+		return appErr.NewValidation(map[string]string{
+			"code": "2fa_required",
+		})
+	}
+
+	return s.Validate2FA(user.ID, *code)
+}
+
+func (s *UserService) Validate2FA(userID uint, code string) error {
+	passcode := strings.TrimSpace(code)
+
+	secret, err := s.UserRepo.Get2FASecret(userID)
+	if err != nil {
+		return err
+	}
+
+	if !totp.Validate(passcode, secret) {
+		return appErr.NewValidation(map[string]string{
+			"error": "invalid_2fa_code",
+		})
+	}
+
+	return nil
+}
+
 func (s *UserService) RemoveAccount(request dto.UserDelete) error {
 	req, err := s.UserRepo.FindById(request.Id)
 	if err != nil {
 		return err
 	}
-	if req.Active2FA {
-		passcode := strings.TrimSpace(request.Code)
-		secret, err := s.UserRepo.Get2FASecret(request.Id)
-		if err != nil {
-			return err
-		}
-		valid := totp.Validate(passcode, secret)
-		if !valid {
-			return appErr.NewUnauthorized("Invalid 2FA code")
-		}
+	if err := s.require2FA(req, request.Code); err != nil {
+		return err
 	}
 	currentPassword, err := s.UserRepo.GetPassword(request.Id)
 	if err != nil {
@@ -65,22 +88,19 @@ func (s *UserService) RemoveAccount(request dto.UserDelete) error {
 	return nil
 }
 
-// TODO: Revisar validaciones y hacer las mismas en Front
 func (s *UserService) ModifyPass(userID uint, request dto.ModifyInputPass) error {
 	req, err := s.UserRepo.FindById(userID)
 	if err != nil {
 		return err
 	}
-	if req.Active2FA {
-		passcode := strings.TrimSpace(request.Code)
-		secret, err := s.UserRepo.Get2FASecret(userID)
-		if err != nil {
-			return err
-		}
-		valid := totp.Validate(passcode, secret)
-		if !valid {
-			return appErr.NewUnauthorized("Invalid 2FA code")
-		}
+	if err := s.require2FA(req, request.Code); err != nil {
+		return err
+	}
+
+	if request.Password == "" {
+		return appErr.NewValidation(map[string]string{
+			"password": "password_required",
+		})
 	}
 
 	if request.Password != "" {
@@ -89,37 +109,45 @@ func (s *UserService) ModifyPass(userID uint, request dto.ModifyInputPass) error
 				"previous_password": "previous_password_required",
 			})
 		}
-		currentPassword, err := s.UserRepo.GetPassword(userID)
-		if err != nil {
-			return err
-		}
-		if !utils.CheckPasswordHash(request.PreviousPassword, currentPassword) {
-			return appErr.NewUnauthorized("Invalid previous password")
-		}
-		if currentPassword == request.Password {
-			return appErr.NewValidation(map[string]string{
-				"password": "new_password_must_be_different",
-			})
-		}
+
 		if request.VerifyPassword == "" {
 			return appErr.NewValidation(map[string]string{
 				"verify_password": "verify_password_required",
 			})
 		}
+
 		if request.VerifyPassword != request.Password {
 			return appErr.NewValidation(map[string]string{
 				"verify_password": "passwords_do_not_match",
 			})
 		}
+
 		if !utils.IsStrongPassword(request.Password) {
 			return appErr.NewValidation(map[string]string{
 				"password": "weak_password",
 			})
 		}
+
+		currentPassword, err := s.UserRepo.GetPassword(userID)
+		if err != nil {
+			return err
+		}
+
+		if !utils.CheckPasswordHash(request.PreviousPassword, currentPassword) {
+			return appErr.NewUnauthorized("Invalid previous password")
+		}
+
+		if utils.CheckPasswordHash(request.Password, currentPassword) {
+			return appErr.NewValidation(map[string]string{
+				"password": "new_password_must_be_different",
+			})
+		}
+
 		hashedPassword, err := utils.HashPassword(request.Password)
 		if err != nil {
 			return appErr.NewInternal(err)
 		}
+
 		request.Password = hashedPassword
 	}
 
@@ -134,40 +162,29 @@ func (s *UserService) ModifyPass(userID uint, request dto.ModifyInputPass) error
 	return nil
 }
 
-// TODO: Revisar validaciones y hacer las mismas en Front
 func (s *UserService) ModifyEmail(userID uint, request dto.ModifyInputEmail) error {
 	req, err := s.UserRepo.FindById(userID)
 	if err != nil {
 		return err
 	}
-	if req.Active2FA {
-		passcode := strings.TrimSpace(request.Code)
-		secret, err := s.UserRepo.Get2FASecret(userID)
-		if err != nil {
-			return err
-		}
-		valid := totp.Validate(passcode, secret)
-		if !valid {
-			return appErr.NewUnauthorized("Invalid 2FA code")
-		}
+	if err := s.require2FA(req, request.Code); err != nil {
+		return err
 	}
 
-	if request.Email != "" {
-		if request.VerifyEmail == "" {
-			return appErr.NewValidation(map[string]string{
-				"verify_email": "verify_email_required",
-			})
-		}
-		if request.VerifyEmail != request.Email {
-			return appErr.NewValidation(map[string]string{
-				"verify_email": "emails_do_not_match",
-			})
-		}
-		if request.Email == *req.Email {
-			return appErr.NewValidation(map[string]string{
-				"email": "new_email_must_be_different",
-			})
-		}
+	if request.VerifyEmail == "" {
+		return appErr.NewValidation(map[string]string{
+			"verify_email": "verify_email_required",
+		})
+	}
+	if request.VerifyEmail != request.Email {
+		return appErr.NewValidation(map[string]string{
+			"verify_email": "emails_do_not_match",
+		})
+	}
+	if req.Email != nil && request.Email == *req.Email {
+		return appErr.NewValidation(map[string]string{
+			"email": "new_email_must_be_different",
+		})
 	}
 
 	rows, err := s.UserRepo.UpdateUserEmail(userID, request)
@@ -181,46 +198,60 @@ func (s *UserService) ModifyEmail(userID uint, request dto.ModifyInputEmail) err
 	return nil
 }
 
-// TODO: Revisar validaciones y hacer las mismas en Front
 func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error {
 	req, err := s.UserRepo.FindById(userID)
 	if err != nil {
 		return err
 	}
-	if req.Active2FA {
-		passcode := strings.TrimSpace(request.Code)
-		secret, err := s.UserRepo.Get2FASecret(userID)
-		if err != nil {
-			return err
-		}
-		valid := totp.Validate(passcode, secret)
-		if !valid {
-			return appErr.NewUnauthorized("Invalid 2FA code")
-		}
+	if err := s.require2FA(req, request.Code); err != nil {
+		return err
 	}
 
-	if request.Name != "" {
-		if request.Name == req.Name {
+	if request.Name != nil {
+		if *request.Name == req.Name {
 			return appErr.NewValidation(map[string]string{
 				"name": "new_name_must_be_different",
 			})
 		}
-		if len(request.Name) > 50 {
+		if len(*request.Name) > 50 {
 			return appErr.NewValidation(map[string]string{
 				"name": "name_too_long",
 			})
 		}
 	}
 
-	if request.Surname != "" {
-		if request.Surname == req.Surname {
+	if request.Surname != nil {
+		if *request.Surname == req.Surname {
 			return appErr.NewValidation(map[string]string{
 				"surname": "new_surname_must_be_different",
 			})
 		}
-		if len(request.Surname) > 50 {
+		if len(*request.Surname) > 50 {
 			return appErr.NewValidation(map[string]string{
 				"surname": "surname_too_long",
+			})
+		}
+	}
+
+	if request.Birthday != nil {
+		if request.Birthday.Equal(req.Birthday) {
+			return appErr.NewValidation(map[string]string{
+				"birthday": "new_birthday_must_be_different",
+			})
+		}
+		if request.Birthday.After(time.Now()) {
+			return appErr.NewValidation(map[string]string{
+				"birthday": "birthday_cannot_be_in_future",
+			})
+		}
+		if utils.CalculateAge(*request.Birthday) < 18 {
+			return appErr.NewValidation(map[string]string{
+				"birthday": "user_must_be_at_least_18_years_old",
+			})
+		}
+		if utils.CalculateAge(*request.Birthday) > 120 {
+			return appErr.NewValidation(map[string]string{
+				"birthday": "user_age_unrealistic",
 			})
 		}
 	}

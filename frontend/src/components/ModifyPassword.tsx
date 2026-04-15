@@ -62,6 +62,8 @@ export function ModifyPassword({ user }: { user: any }) {
 			errors.password =
 				"La contraseña debe tener entre 8 y 64 caracteres, incluir una mayúscula, un número y un símbolo como mínimo.";
 
+		if (!formData.previous_password || !passwordRegex.test(formData.previous_password))
+			errors.previous_password = "Por favor, introduce tu contraseña actual para confirmar los cambios.";
 
 		return errors;
 	}
@@ -101,6 +103,7 @@ export function ModifyPassword({ user }: { user: any }) {
 				type: "error",
 				message: error?.data?.error?.message || "Error al guardar los cambios.",
 			});
+			setShow2FA(false);
 			setOpenModal(true);
 			cleanInputs();
 		}

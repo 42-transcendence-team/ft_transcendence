@@ -26,44 +26,44 @@ type UserResponse struct {
 }
 
 type UserDelete struct {
-	Id       uint   `form:"id"`
-	Password string `form:"password" binding:"required"`
-	Code     string `form:"code"`
+	Id       uint    `form:"id"`
+	Password string  `form:"password" binding:"required"`
+	Code     *string `form:"code"`
 }
 
 // Settings de usuario
 type ModifyInputEmail struct {
-	Code string
+	Code *string
 
 	Email       string
 	VerifyEmail string
 }
 
 type UserModifyEmail struct {
-	Code string `json:"code"`
+	Code *string `json:"code"`
 
 	Email       string `json:"email" binding:"required,email"`
 	VerifyEmail string `json:"verify_email" binding:"required,email"`
 }
 
 type ModifyInputData struct {
-	Code string
+	Code *string
 
-	Name     string
-	Surname  string
-	Birthday time.Time
+	Name     *string
+	Surname  *string
+	Birthday *time.Time
 }
 
 type UserModifyData struct {
-	Code string `json:"code"`
+	Code *string `json:"code"`
 
-	Name     string `json:"name"`
-	Surname  string `json:"surname"`
-	Birthday string `json:"birthday"`
+	Name     *string `json:"name"`
+	Surname  *string `json:"surname"`
+	Birthday *string `json:"birthday"`
 }
 
 type ModifyInputPass struct {
-	Code string
+	Code *string
 
 	Password         string
 	VerifyPassword   string
@@ -71,7 +71,7 @@ type ModifyInputPass struct {
 }
 
 type UserModifyPass struct {
-	Code string `json:"code"`
+	Code *string `json:"code"`
 
 	Password         string `json:"password" binding:"required"`
 	VerifyPassword   string `json:"verify_password" binding:"required"`

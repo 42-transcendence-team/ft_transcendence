@@ -4,7 +4,6 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
-	"log"
 	"net/http"
 	"time"
 
@@ -108,8 +107,8 @@ func (h *UserHandler) UpdatePersonalData(c *gin.Context) {
 		Surname: req.Surname,
 	}
 
-	if req.Birthday != "" {
-		birthday, err := time.Parse("2006-01-02", req.Birthday)
+	if req.Birthday != nil {
+		birthday, err := time.Parse("2006-01-02", *req.Birthday)
 		if err != nil {
 			c.Error(appErr.NewValidation(map[string]string{
 				"birthday": "invalid_format",
@@ -117,7 +116,7 @@ func (h *UserHandler) UpdatePersonalData(c *gin.Context) {
 			c.Abort()
 			return
 		}
-		request.Birthday = birthday
+		request.Birthday = &birthday
 	}
 
 	err = h.UserService.ModifyData(userIDValue.(uint), request)
@@ -153,7 +152,6 @@ func (h *UserHandler) UpdateEmail(c *gin.Context) {
 		VerifyEmail: req.VerifyEmail,
 	}
 
-	log.Printf("Parsed request: %+v", request)
 	err = h.UserService.ModifyEmail(userIDValue.(uint), request)
 	if err != nil {
 		c.Error(err)

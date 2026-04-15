@@ -51,14 +51,17 @@ export function ModifyEmail({ user, onUpdate }: { user: any; onUpdate: () => voi
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 		const errors: Partial<Record<keyof SettingsFields, string>> = {};
-		if (formData.email && formData.email !== formData.verify_email)
-			errors.verify_email = "Los emails no coinciden";
-		else if (formData.email && !formData.verify_email)
-			errors.verify_email = "Por favor, verifica tu email.";
-		else if (formData.verify_email && !formData.email)
-			errors.email = "Por favor, introduce tu email.";
+
+		if (!formData.email || !formData.verify_email) {
+			if (!formData.email)
+				errors.email = "Por favor, introduce tu nuevo email.";
+			if (!formData.verify_email)
+				errors.verify_email = "Por favor, verifica tu nuevo email.";
+		}
 		else if (formData.email && !emailRegex.test(formData.email))
 			errors.email = "El email no es válido.";
+		else if (formData.email !== formData.verify_email)
+			errors.verify_email = "Los emails no coinciden";
 		return errors;
 	}
 
@@ -97,6 +100,7 @@ export function ModifyEmail({ user, onUpdate }: { user: any; onUpdate: () => voi
 				type: "error",
 				message: error?.data?.error?.message || "Error al guardar los cambios.",
 			});
+			setShow2FA(false);
 			setOpenModal(true);
 			cleanInputs();
 		}

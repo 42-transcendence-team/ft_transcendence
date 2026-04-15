@@ -94,7 +94,8 @@ export function ModifyData({ user, onUpdate }: { user: any; onUpdate: () => void
 		const allowedFields = ["name", "surname", "birthday"];
 		const buildRequestData = Object.fromEntries(
 			Object.entries(formData)
-				.filter(([key, value]) => allowedFields.includes(key) && value != null && value.trim() !== "")
+				.filter(([key, value]) => allowedFields.includes(key) &&
+					value != null && value.trim() !== "")
 		);
 
 		const payload = {
@@ -117,6 +118,7 @@ export function ModifyData({ user, onUpdate }: { user: any; onUpdate: () => void
 				type: "error",
 				message: error?.data?.error?.message || "Error al guardar los cambios.",
 			});
+			setShow2FA(false);
 			setOpenModal(true);
 			cleanInputs();
 		}
