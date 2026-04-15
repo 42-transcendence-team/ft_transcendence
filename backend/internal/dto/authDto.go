@@ -1,5 +1,19 @@
 package dto
 
+import (
+	"backend/internal/models"
+	"time"
+)
+
+type RegisterInput struct {
+	Login    string
+	Email    string
+	Password string
+	Name     string
+	Surname  string
+	Birtday  time.Time
+}
+
 type RegisterRequest struct {
 	Login           string `json:"login" binding:"required"`
 	Email           string `json:"email" binding:"required,email"`
@@ -12,5 +26,18 @@ type RegisterRequest struct {
 
 type LoginRequest struct {
 	Identifier string `json:"identifier" binding:"required"`
-	Password   string `json:"password" biding:"required"`
+	Password   string `json:"password" binding:"required"`
+}
+
+type LoginInput struct {
+	Identifier string
+	Password   string
+}
+
+type LoginResult struct {
+	Token       string
+	TempToken   string
+	User        *models.User
+	ExpTime     time.Time
+	Requires2FA bool
 }

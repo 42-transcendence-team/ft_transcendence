@@ -1,0 +1,28 @@
+@use '../abstracts/variables' as *;
+@use '../components/buttons' as *;
+
+.searchBar {
+	display: flex; // Pone el input y el botón uno al lado del otro
+	gap: 0.5rem; // Deja un pequeño espacio entre ambos
+	align-items: center;
+	width: 100%;
+    
+}
+
+.searchBar__input {
+	flex: 1; // Hace que el input ocupe todo el ancho disponible
+	height: 40px;
+	padding: 0 1rem;
+	border: none;
+	border-radius: 10px;
+	outline: none;
+    background-color: $light-gray-common-components;
+}
+
+.searchBar__button {
+	@extend .button--icon;
+}
+
+.searchBar__icon {
+	font-size: 1.2rem;
+}

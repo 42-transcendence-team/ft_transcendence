@@ -80,6 +80,14 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("DB_CONN_MAX_LIFETIME_MIN must be >= 1 (got %d)", c.DBConnMaxLifetimeMin)
 	}
 
+	// 2FA
+	if c.Issuer2FA == "" {
+		return fmt.Errorf("ISSUER_2FA is required")
+	}
+	if c.Expiration2FA <= 0 {
+		return fmt.Errorf("EXPIRATION_2FA must be > 0")
+	}
+
 	return nil
 }
 
