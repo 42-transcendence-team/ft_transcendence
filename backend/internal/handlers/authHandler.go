@@ -21,10 +21,11 @@ type AuthHandler struct {
 	cfg         *config.Config
 }
 
-func NewAuthHandler(authService *services.AuthService, cfg *config.Config) *AuthHandler {
+func NewAuthHandler(authService *services.AuthService, cfg *config.Config, rdb *redis.Client) *AuthHandler {
 	return &AuthHandler{
 		AuthService: authService,
 		cfg:         cfg,
+		Redis:       rdb,
 	}
 }
 
@@ -127,8 +128,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	// Retorna para poder llamar al endpoint/handler de login 2FA
 	ctx := c.Request.Context()
 	if result.Requires2FA {
-		//en el futuro diria q se tiene q hacer un hash o algo al id pq el resultado del token seria 2fa_token:12
-		// y si en esa sesion cambias a otro id creo q podrias acceder a la sesion de otro usuario
 		rediskey := fmt.Sprintf("2fa_token:%s", result.TempToken)
 		timeExp := time.Until(result.ExpTime)
 		if timeExp < 0 {
