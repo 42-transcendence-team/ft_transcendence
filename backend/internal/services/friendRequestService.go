@@ -78,7 +78,73 @@ func (s *FriendRequestService) ListIncomingRequest(userID uint) ([]models.Friend
 	return requests, nil
 }
 
-func (s *FriendRequestService) AcceptFriendRequest(userID uint, senderID uint) error {
+func (s *FriendRequestService) AcceptFriendRequest(userID uint, reqID uint) (uint, error) {
+
+	// get senderID
+	senderID, err := s.friendsRepo.GetReqSenderID(reqID)
+	if err != nil {
+		return 0, appErr.NewNotFound("that friend request dont exist")
+	}
+
+	// miro si hay peticion de amistad para mi
+	isReq, err := s.friendsRepo.IsRequestForMe(senderID, userID)
+	if err != nil {
+		return 0, appErr.NewInternal(err)
+	}
+	if isReq != true {
+		return 0, appErr.NewForbidden("There are not a friend request for you")
+	}
+
+	// mirar el estado de la request , que este en pending
+	status, err := s.friendsRepo.GetReqStatus(senderID, userID)
+	if status == models.RelationAccepted {
+		return 0, appErr.NewConflict("ya fue aceptada la solicitud son amigos")
+	}
+	if status == models.RelationRejected {
+		return 0, appErr.NewForbidden("ya rechazaste la peticion")
+	}
+	if status != models.RelationPending {
+		return 0, appErr.NewForbidden("algo no va bien")
+	}
+
+	// el usuario autenticado tiene que ser el reciver
+	// pasan user desde el handler que ya es el usuario autenticado
+
+	// comprobar que no hay bloqueo
+	areBlock, err := s.friendsRepo.AreBlock(userID, senderID)
+	if areBlock == true {
+		return 0, appErr.NewForbidden("friend request not allowed")
+	}
+
+	// comprobar que no son amigos
+	areFriends, err := s.friendsRepo.AreFriends(userID, senderID)
+	if areFriends == true {
+		return 0, appErr.NewConflict("users are already friends")
+	}
+
+	// cambiar el estado e la requets a acepted
+	err = s.friendsRepo.ChangeReqStatus(models.RelationAccepted, senderID, userID)
+	if err != nil {
+		return 0, appErr.NewForbidden("error en la db o no se encontro la request para cambair estado")
+	}
+
+	// crear frindship
+	err = s.friendsRepo.CreateFriendship(userID, senderID)
+	if err != nil {
+		return 0, appErr.NewInternal(err)
+	}
+
+	// TODO: mandar notificacion
+
+	return senderID, nil
+}
+
+func (s *FriendRequestService) RejectFriendRequest(userID uint, reqID uint) error {
+	// get senderID
+	senderID, err := s.friendsRepo.GetReqSenderID(reqID)
+	if err != nil {
+		return appErr.NewNotFound("that friend request dont exist")
+	}
 
 	// miro si hay peticion de amistad para mi
 	isReq, err := s.friendsRepo.IsRequestForMe(senderID, userID)
@@ -102,51 +168,12 @@ func (s *FriendRequestService) AcceptFriendRequest(userID uint, senderID uint) e
 	}
 
 	// el usuario autenticado tiene que ser el reciver
-	// pasan user desde el handler que ya es el usuario autenticado
 
-	// comprobar que no hay bloqueo
-	areBlock, err := s.friendsRepo.AreBlock(userID, senderID)
-	if areBlock == true {
-		return appErr.NewForbidden("friend request not allowed")
-	}
-
-	// comprobar que no son amigos
-	areFriends, err := s.friendsRepo.AreFriends(userID, senderID)
-	if areFriends == true {
-		return appErr.NewConflict("users are already friends")
-	}
-
-	// cambiar el estado e la requets a acepted
-	err = s.friendsRepo.ChangeReqStatus(models.RelationAccepted, senderID, userID)
+	// cambiar estado a rejected
+	err = s.friendsRepo.ChangeReqStatus(models.RelationRejected, senderID, userID)
 	if err != nil {
 		return appErr.NewForbidden("error en la db o no se encontro la request para cambair estado")
 	}
-
-	// crear frindship
-	err = s.friendsRepo.CreateFriendship(userID, senderID)
-	if err != nil {
-		return appErr.NewInternal(err)
-	}
-	// mandar notificacion
-
-	return nil
-}
-
-func (s *FriendRequestService) RejectFriendRequest(userID uint, senderID uint) error {
-	// miro si hay peticion de amistad para mi
-	isReq, err := s.friendsRepo.IsRequestForMe(senderID, userID)
-	if err != nil {
-		return appErr.NewInternal(err)
-	}
-	if isReq != true {
-		return appErr.NewForbidden("There are not a friend request for you")
-	}
-
-	// mirar el estado de la request , que este en pending
-
-	// el usuario autenticado tiene que ser el reciver
-
-	// cambiar estado a rejected
 
 	return nil
 }

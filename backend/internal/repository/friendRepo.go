@@ -152,6 +152,7 @@ func (r *FriendRepository) ListIncomingRequests(userID uint) ([]models.FriendReq
 	return requests, nil
 }
 
+// TODO: alomejor soy retrasada y puedo directamente mandar la req y no el sender y el reciver ._.
 func (r *FriendRepository) ChangeReqStatus(newStatus models.RelationStatus, senderID uint, receiverID uint) error {
 
 	result := r.db.Model(&models.FriendRequest{}).
@@ -167,6 +168,19 @@ func (r *FriendRepository) ChangeReqStatus(newStatus models.RelationStatus, send
 	}
 
 	return nil
+}
+
+func (r *FriendRepository) GetReqSenderID(reqID uint) (uint, error) {
+
+	var req models.FriendRequest
+
+	err := r.db.Where("id = ?", reqID).
+		Find(&req).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return req.SenderID, nil
 }
 
 // siempre se van a guardar las relacciones en la base de datos el usuario 1 sera el indice menor

@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"backend/internal/dto"
-	// appErr "backend/internal/errors"
+	appErr "backend/internal/errors"
 	"backend/internal/services"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -98,11 +100,52 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 
 	userID := c.MustGet("userID").(uint)
 
-	senderID = 
+	paramStr := c.Param("requestId")
 
-	err = h.FriendRequestService.AcceptFriendRequest(userID, senderID)
+	id64, err := strconv.ParseUint(paramStr, 10, 32)
+	if err != nil {
+		appErr.NewBadRequest("Invalid request")
+		c.Abort()
+		return
+	}
+
+	reqID := uint(id64)
+
+	senderID, err := h.FriendRequestService.AcceptFriendRequest(userID, reqID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"request-acepted": gin.H{
+			"id":       reqID,
+			"senderID": senderID,
+			"userID":   userID,
+		},
+	})
 }
 
 func (h *FriendHandler) RejectFriendRequest(c *gin.Context) {
 
+	userID := c.MustGet("userID").(uint)
+
+	paramStr := c.Param("requestId")
+
+	id64, err := strconv.ParseUint(paramStr, 10, 32)
+	if err != nil {
+		appErr.NewBadRequest("Invalid request")
+		c.Abort()
+		return
+	}
+
+	reqID := uint(id64)
+
+	err = h.FriendRequestService.RejectFriendRequest(userID, reqID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
 }
