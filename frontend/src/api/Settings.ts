@@ -26,7 +26,7 @@ export type DataSettings = {
 };
 
 export async function updateData(settings: DataSettings) {
-	const res = await fetch(`${apiUrl}/users/update-user`, {
+	const res = await fetch(`${apiUrl}/users/data`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -50,7 +50,7 @@ export type PasswordSettings = {
 };
 
 export async function updatePassword(settings: PasswordSettings) {
-	const res = await fetch(`${apiUrl}/users/update-password`, {
+	const res = await fetch(`${apiUrl}/users/password`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -73,7 +73,7 @@ export type EmailSettings = {
 };
 
 export async function updateEmail(settings: EmailSettings) {
-	const res = await fetch(`${apiUrl}/users/update-email`, {
+	const res = await fetch(`${apiUrl}/users/email`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
