@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { FormField } from "./FormField"
-import { Login, Login2FA } from "api/Login"
+import { Login, Login2FA, getAuthenticatedUser } from "api/Login"
 import { Modal } from "@components/Modal"
 import { OtpInput, Footer2FA } from "@components/TwoFactorUI"
 
@@ -75,9 +75,9 @@ export const LoginForm = () => {
 			setErrors({ identifier: "", password: "" });
 			setServerMessage("");
 			
-			const username = data.user?.login || data.user?.username;
-			if (username) {
-				navigate(`/app/profile/${username}`);
+			const login = data.user?.login;
+			if (login) {
+				navigate(`/app/profile/${login}`);
 			} else {
 				navigate("/app");
 			}
@@ -105,11 +105,21 @@ export const LoginForm = () => {
 
 	const handleVerify2FA = async () => {
 		if (!isComplete || !tempToken) return;
-
+	
 		try {
 			await Login2FA(otpCode.join(""));
+		
+			const data = await getAuthenticatedUser();
 			setShow2FA(false);
-			navigate("/");
+		
+			const login = data.user?.login;
+		
+			if (login) {
+				navigate(`/app/profile/${login}`);
+				return;
+			}
+		
+			navigate("/app");
 		} catch (err: any) {
 			alert(err.message);
 		}
