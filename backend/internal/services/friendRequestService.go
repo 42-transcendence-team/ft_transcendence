@@ -85,6 +85,10 @@ func (s *FriendRequestService) AcceptFriendRequest(userID uint, reqID uint) (uin
 	if err != nil {
 		return 0, appErr.NewNotFound("that friend request dont exist")
 	}
+	// el usuario autenticado tiene que ser el reciver
+	if senderID == userID {
+		return 0, appErr.NewForbidden("no puedes aceptar tu propia solucitud")
+	}
 
 	// miro si hay peticion de amistad para mi
 	isReq, err := s.friendsRepo.IsRequestForMe(senderID, userID)
@@ -107,7 +111,6 @@ func (s *FriendRequestService) AcceptFriendRequest(userID uint, reqID uint) (uin
 		return 0, appErr.NewForbidden("algo no va bien")
 	}
 
-	// el usuario autenticado tiene que ser el reciver
 	// pasan user desde el handler que ya es el usuario autenticado
 
 	// comprobar que no hay bloqueo
@@ -123,7 +126,7 @@ func (s *FriendRequestService) AcceptFriendRequest(userID uint, reqID uint) (uin
 	}
 
 	// cambiar el estado e la requets a acepted
-	err = s.friendsRepo.ChangeReqStatus(models.RelationAccepted, senderID, userID)
+	err = s.friendsRepo.ChangeReqStatus(models.RelationAccepted, reqID)
 	if err != nil {
 		return 0, appErr.NewForbidden("error en la db o no se encontro la request para cambair estado")
 	}
@@ -139,41 +142,43 @@ func (s *FriendRequestService) AcceptFriendRequest(userID uint, reqID uint) (uin
 	return senderID, nil
 }
 
-func (s *FriendRequestService) RejectFriendRequest(userID uint, reqID uint) error {
+func (s *FriendRequestService) RejectFriendRequest(userID uint, reqID uint) (uint, error) {
 	// get senderID
 	senderID, err := s.friendsRepo.GetReqSenderID(reqID)
 	if err != nil {
-		return appErr.NewNotFound("that friend request dont exist")
+		return 0, appErr.NewNotFound("that friend request dont exist")
+	}
+	// el usuario autenticado tiene que ser el reciver
+	if senderID == userID {
+		return 0, appErr.NewForbidden("no puedes rechazar tu propia solucitud")
 	}
 
 	// miro si hay peticion de amistad para mi
 	isReq, err := s.friendsRepo.IsRequestForMe(senderID, userID)
 	if err != nil {
-		return appErr.NewInternal(err)
+		return 0, appErr.NewInternal(err)
 	}
 	if isReq != true {
-		return appErr.NewForbidden("There are not a friend request for you")
+		return 0, appErr.NewForbidden("There are not a friend request for you")
 	}
 
 	// mirar el estado de la request , que este en pending
 	status, err := s.friendsRepo.GetReqStatus(senderID, userID)
 	if status == models.RelationAccepted {
-		return appErr.NewConflict("ya fue aceptada la solicitud son amigos")
+		return 0, appErr.NewConflict("ya fue aceptada la solicitud son amigos")
 	}
 	if status == models.RelationRejected {
-		return appErr.NewForbidden("ya rechazaste la peticion")
+		return 0, appErr.NewForbidden("ya rechazaste la peticion")
 	}
 	if status != models.RelationPending {
-		return appErr.NewForbidden("algo no va bien")
+		return 0, appErr.NewForbidden("algo no va bien")
 	}
-
-	// el usuario autenticado tiene que ser el reciver
 
 	// cambiar estado a rejected
-	err = s.friendsRepo.ChangeReqStatus(models.RelationRejected, senderID, userID)
+	err = s.friendsRepo.ChangeReqStatus(models.RelationRejected, reqID)
 	if err != nil {
-		return appErr.NewForbidden("error en la db o no se encontro la request para cambair estado")
+		return 0, appErr.NewForbidden("error en la db o no se encontro la request para cambair estado")
 	}
 
-	return nil
+	return senderID, nil
 }

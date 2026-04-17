@@ -152,11 +152,10 @@ func (r *FriendRepository) ListIncomingRequests(userID uint) ([]models.FriendReq
 	return requests, nil
 }
 
-// TODO: alomejor soy retrasada y puedo directamente mandar la req y no el sender y el reciver ._.
-func (r *FriendRepository) ChangeReqStatus(newStatus models.RelationStatus, senderID uint, receiverID uint) error {
+func (r *FriendRepository) ChangeReqStatus(newStatus models.RelationStatus, reqID uint) error {
 
 	result := r.db.Model(&models.FriendRequest{}).
-		Where("sender_id = ? && receiver_id = ?", senderID, receiverID).
+		Where("sender_id = ?", reqID).
 		Update("status", newStatus)
 
 	if result.Error != nil {

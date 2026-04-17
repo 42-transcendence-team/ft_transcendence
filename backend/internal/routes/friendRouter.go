@@ -42,15 +42,19 @@ func FriendsRoutes(api *gin.RouterGroup, friendHandler *handlers.FriendHandler) 
 		// Lista de amigos
 		friends.GET("", friendHandler.ListFriends)
 
-		// Mandar peticion de amistad
-		friends.POST("/requests", friendHandler.SendFriendRequest)
-		// Lista de peticiones
-		friends.GET("/requests/incoming", friendHandler.ListIncomingRequests)
-		friends.GET("/requests/outgoing", friendHandler.ListOutgoingRequests)
-		// Aceptar peticion de amistad
-		friends.PATCH("/requests/:requestId/accept", friendHandler.AcceptFriendRequest)
-		// Rechazar peticion de amistad
-		friends.PATCH("/requests/:requestId/reject", friendHandler.RejectFriendRequest)
+		requests := api.Group("requests")
+		{
+			// Mandar peticion de amistad
+			requests.POST("/requests", friendHandler.SendFriendRequest)
+			// Lista de peticiones
+			requests.GET("/requests/incoming", friendHandler.ListIncomingRequests)
+			requests.GET("/requests/outgoing", friendHandler.ListOutgoingRequests)
+			// Aceptar peticion de amistad
+			requests.PATCH("/requests/:requestId/accept", friendHandler.AcceptFriendRequest)
+			// Rechazar peticion de amistad
+			requests.PATCH("/requests/:requestId/reject", friendHandler.RejectFriendRequest)
+
+		}
 
 		// Borrar amigo
 		// friends.DELETE("/:userId", friendHandler.DeleteFriend)
