@@ -4,6 +4,7 @@ import { FormField } from "./FormField"
 import { Login, Login2FA, getAuthenticatedUser } from "api/Login"
 import { Modal } from "@components/Modal"
 import { OtpInput, Footer2FA } from "@components/TwoFactorUI"
+import { useAuth } from "@components/AuthContext"
 
 // Archivos a revisar:
 //		backend/internal/handlers/authHandler.go
@@ -14,6 +15,8 @@ type FormErrors = {
 }
 
 export const LoginForm = () => {
+	const { refreshAuth } = useAuth()
+
 	const navigate = useNavigate()
 
 	const [identifier, setIdentifier] = useState("")
@@ -58,7 +61,9 @@ export const LoginForm = () => {
 		setIsSubmitting(true);
 		try {
 			const data = await Login(identifier, password);
-
+			console.log("LOGIN DATA:", data)
+			console.log("LOGIN USER LOGIN:", data?.user?.login);
+			
 			if (!data) {
 				setServerMessage("Error desconocido al intentar iniciar sesión.");
 				setIsSubmitting(false);
@@ -75,13 +80,21 @@ export const LoginForm = () => {
 			setErrors({ identifier: "", password: "" });
 			setServerMessage("");
 			
+			// Antes de navegar, refresca auth
+			await refreshAuth();
+
 			const login = data.user?.login;
+			console.log("LOGIN USER LOGIN:", login);
 			if (login) {
-				navigate(`/app/profile/${login}`);
+				window.location.href = `/app/profile/${login}`;
 			} else {
-				navigate("/app");
+				window.location.href = "/app";
 			}
 		} catch (err: any) {
+			console.log("LOGIN ERROR:", err)
+			console.log("LOGIN ERROR STATUS:", err?.status)
+			console.log("LOGIN ERROR DATA:", err?.data)
+
 			if (err?.status === 400 && err.data?.errors) {
 				setErrors((prev) => ({
 					...prev,
@@ -93,7 +106,7 @@ export const LoginForm = () => {
 				setServerMessage(err.data?.message || "Login/email o contraseña incorrectos.");
 			} else if (err?.status >= 500) {
 				setServerMessage("Error interno del servidor.");
-			} else if (err instanceof Error) {
+			} else if (err?.message) {
 				setServerMessage(err.message);
 			} else {
 				setServerMessage("No se pudo iniciar sesión.");
@@ -105,21 +118,22 @@ export const LoginForm = () => {
 
 	const handleVerify2FA = async () => {
 		if (!isComplete || !tempToken) return;
-	
+
 		try {
 			await Login2FA(otpCode.join(""));
-		
+			await refreshAuth();
+
 			const data = await getAuthenticatedUser();
 			setShow2FA(false);
-		
+
 			const login = data.user?.login;
-		
+
 			if (login) {
-				navigate(`/app/profile/${login}`);
+				window.location.href = `/app/profile/${login}`;
 				return;
 			}
-		
-			navigate("/app");
+
+			window.location.href = "/app";
 		} catch (err: any) {
 			alert(err.message);
 		}

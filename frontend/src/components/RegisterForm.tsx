@@ -53,6 +53,9 @@ export const RegisterForm = () => {
 	const [name, setName] = useState("")
 	const [surname, setSurname] = useState("")
 	const [birthday, setBirthday] = useState("") // YYYY-MM-DD
+	const [termsAndConditions, setTermsAndConditions] = useState(false)
+	const [privacyPolicy, setPrivacyPolicy] = useState(false)
+
 	const [errors, setErrors] = useState<FormErrors>({
 		username: "",
 		email: "",
@@ -164,7 +167,9 @@ export const RegisterForm = () => {
 			confirmPassword,
 			name,
 			surname,
-			birthday
+			birthday,
+			termsAndConditions,
+			privacyPolicy
 		}
 
 		console.log("Payload:", payload)
@@ -326,12 +331,22 @@ export const RegisterForm = () => {
 
 			<div className="auth-form__checkboxes">
 				<label className="auth-form__check">
-					<input type="checkbox" required />
+					<input
+						type="checkbox"
+						checked={termsAndConditions}
+						onChange={(e) => setTermsAndConditions(e.target.checked)}
+						required
+					/>
 					<span>I read Terms and Conditions...</span>
 				</label>
-
+						
 				<label className="auth-form__check">
-					<input type="checkbox" required />
+					<input
+						type="checkbox"
+						checked={privacyPolicy}
+						onChange={(e) => setPrivacyPolicy(e.target.checked)}
+						required
+					/>
 					<span>I accept Privacy Policy</span>
 				</label>
 			</div>

@@ -4,30 +4,32 @@ import type { ReactNode } from "react";
 export type AuthStatus = "loading" | "auth" | "guest";
 
 type AuthContextType = {
-  authStatus: AuthStatus;
+	authStatus: AuthStatus;
+	refreshAuth: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 type AuthProviderProps = {
-  authStatus: AuthStatus;
-  children: ReactNode;
+	authStatus: AuthStatus;
+	refreshAuth: () => Promise<void>;
+	children: ReactNode;
 };
 
-export const AuthProvider = ({ authStatus, children }: AuthProviderProps) => {
-  return (
-    <AuthContext.Provider value={{ authStatus }}>
-      {children}
-    </AuthContext.Provider>
-  );
+export const AuthProvider = ({ authStatus, refreshAuth, children }: AuthProviderProps) => {
+	return (
+		<AuthContext.Provider value={{ authStatus, refreshAuth }}>
+			{children}
+		</AuthContext.Provider>
+	);
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+	const context = useContext(AuthContext);
 
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
+	if (!context) {
+		throw new Error("useAuth must be used inside AuthProvider");
+	}
 
-  return context;
+	return context;
 };

@@ -11,7 +11,7 @@ type RegisterInput struct {
 	Password string
 	Name     string
 	Surname  string
-	Birtday  time.Time
+	Birthday time.Time
 }
 
 type RegisterRequest struct {
