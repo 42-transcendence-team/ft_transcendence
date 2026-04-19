@@ -82,12 +82,12 @@ export const RegisterForm = () => {
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 		const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s-]+$/
 		const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,64}$/
-		const maxLegth = 42
+		const maxLength = 42
 		if (!username.trim()) {
 			newErrors.username = "El username es obligatorio."
 		} else if (!usernameRegex.test(username)) {
 			newErrors.username = "Solo se permiten letras, números, guion y guion bajo."
-		} else if (username.length > maxLegth) {
+		} else if (username.length > maxLength) {
 			newErrors.username = "No está permitido, máximo de 42 caracteres."
 		}
 		if (!email.trim()) {
@@ -110,14 +110,14 @@ export const RegisterForm = () => {
 			newErrors.name = "El nombre es obligatorio."
 		} else if (!nameRegex.test(name)) {
 			newErrors.name = "El nombre solo puede contener letras."
-		} else if (name.length > maxLegth) {
+		} else if (name.length > maxLength) {
 			newErrors.name = "No está permitido, máximo de 42 caracteres."
 		}
 		if (!surname.trim()) {
 			newErrors.surname = "El apellido es obligatorio."
 		} else if (!nameRegex.test(surname)) {
 			newErrors.surname = "El apellido solo puede contener letras."
-		} else if (surname.length > maxLegth) {
+		} else if (surname.length > maxLength) {
 			newErrors.surname = "No está permitido, máximo de 42 caracteres."
 		}
 		if (!birthday) {
@@ -221,6 +221,7 @@ export const RegisterForm = () => {
 			value: username,
 			onChange: setUsername,
 			error: errors.username,
+			placeholder: "Login",
 		},
 		{
 			id: "email",
@@ -229,6 +230,7 @@ export const RegisterForm = () => {
 			value: email,
 			onChange: setEmail,
 			error: errors.email,
+			placeholder: "Email",
 		},
 		{
 			id: "password",
@@ -237,6 +239,7 @@ export const RegisterForm = () => {
 			value: password,
 			onChange: setPassword,
 			error: errors.password,
+			placeholder: "Password",
 		},
 		{
 			id: "confirmPassword",
@@ -245,6 +248,7 @@ export const RegisterForm = () => {
 			value: confirmPassword,
 			onChange: setConfirmPassword,
 			error: errors.confirmPassword,
+			placeholder: "Repeat Password",
 		},
 	]
 
@@ -256,6 +260,7 @@ export const RegisterForm = () => {
 			value: name,
 			onChange: setName,
 			error: errors.name,
+			placeholder: "Name",
 		},
 		{
 			id: "surname",
@@ -264,6 +269,7 @@ export const RegisterForm = () => {
 			value: surname,
 			onChange: setSurname,
 			error: errors.surname,
+			placeholder: "Surname",
 		},
 		{
 			id: "birthday",
@@ -272,13 +278,19 @@ export const RegisterForm = () => {
 			value: birthday,
 			onChange: setBirthday,
 			error: errors.birthday,
+			placeholder: "",
 		},
 	]
 
 	// Lo que se renderiza.
 	return (
-		<form onSubmit={handleSubmit}>
-			<ul>
+		<form className="auth-form" onSubmit={handleSubmit}>
+			
+			<div className="auth-form__section auth-form__section--account">
+				<h3 className="auth-form__section-title">ACCOUNT DATA</h3>
+			</div>
+
+			<div className="auth-form__group auth-form__group--account">
 				{accountFields.map((field) => (
 					<FormField
 						key={field.id}
@@ -288,13 +300,16 @@ export const RegisterForm = () => {
 						value={field.value}
 						onChange={field.onChange}
 						error={field.error}
+						placeholder={field.placeholder}
 					/>
 				))}
+			</div>
 
-				<li>
-					<h3>Personal Data</h3>
-				</li>
+			<div className="auth-form__section auth-form__section--personal">
+				<h3 className="auth-form__section-title">PERSONAL DATA</h3>
+			</div>
 
+			<div className="auth-form__group auth-form__group--personal">
 				{personalFields.map((field) => (
 					<FormField
 						key={field.id}
@@ -304,19 +319,30 @@ export const RegisterForm = () => {
 						value={field.value}
 						onChange={field.onChange}
 						error={field.error}
+						placeholder={field.placeholder}
 					/>
 				))}
+			</div>
 
-				<li>
-					<button type="submit" disabled={isSubmitting}>
-						{isSubmitting ? "Registering..." : "Register"}
-					</button>
-				</li>
-			</ul>
+			<div className="auth-form__checkboxes">
+				<label className="auth-form__check">
+					<input type="checkbox" required />
+					<span>I read Terms and Conditions...</span>
+				</label>
 
-			{serverMessage && <p>{serverMessage}</p>}
+				<label className="auth-form__check">
+					<input type="checkbox" required />
+					<span>I accept Privacy Policy</span>
+				</label>
+			</div>
 
-			<p>
+			<button className="auth-form__submit" type="submit" disabled={isSubmitting}>
+				{isSubmitting ? "Registering..." : "Create Now"}
+			</button>
+
+			{serverMessage && <p className="auth-form__server-message">{serverMessage}</p>}
+
+			<p className="auth-form__switch">
 				Do you already have an account? <NavLink to="/login">Login</NavLink>
 			</p>
 		</form>
