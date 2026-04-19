@@ -7,12 +7,13 @@ import (
 	"backend/internal/services"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
-	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"github.com/redis/go-redis/v9"
 )
 
 type AuthHandler struct {
@@ -189,16 +190,44 @@ func (h *AuthHandler) Login(c *gin.Context) {
 /*Logout*/
 
 func (h *AuthHandler) Logout(c *gin.Context) {
+	//todo delete???
+	// expTime := time.Unix(0, 0)
+	//ni compila
+	// userID, exists := c.Get("userID")
+	// ctx := c.Request.Context()
+	// sessionKey := fmt.Sprintf("session:%v", userID)
+	// if err != nil {
+	// 	log.Print("Error redis session deleted", err)
+	// }
+	// err = h.Redis.SRem(ctx, "online_users", userID).Err()
+	// if err != nil {
+	// 	log.Printf("Error deleting online user in redis: %v", err)
+	// }
 
+	// //TODO: borra el redis del user
+	//-----  LOGOUT segun stackoverflow  ------
+	userID, exists := c.Get("userID")
+	if !exists {
+		log.Println("Logout: userID not found in context")
+	}
+
+	ctx := c.Request.Context()
+	if exists {
+		sessionKey := fmt.Sprintf("session:%v", userID)
+		err := h.Redis.Del(ctx, sessionKey).Err()
+		if err != nil {
+			log.Printf("Error redis session deleted: %v", err)
+		}
+		errSrem := h.Redis.SRem(ctx, "online_users", userID).Err()
+		if errSrem != nil {
+			log.Printf("Error deleting online user in redis: %v", errSrem)
+		}
+	}
 	expTime := time.Unix(0, 0)
-
 	h.setCookie(c, "", expTime)
-	//TODO: borra el redis del user
-
 	// TODO: hay q ver como se mandan los msg al front y que necesita
-	c.JSON(200, gin.H{
-		"message": "user logout success",
-	})
+	c.JSON(200, gin.H{"message": "user logout success"})
+
 }
 
 /*End of logout*/
