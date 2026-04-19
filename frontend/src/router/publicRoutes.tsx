@@ -13,7 +13,7 @@ import { HomePage } from "@pages/HomePage";
 export const PublicRoutes = {
 	element: <PublicLayout />,
 	children: [
-		{ index: true, element: <HomePage /> },
+		//{ index: true, element: <HomePage /> },
 		{ path: "about", element: <About /> },
 		{ path: "faq", element: <FAQ /> },
 		{ path: "developers", element: <Developers /> },
