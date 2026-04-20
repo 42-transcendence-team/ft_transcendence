@@ -144,6 +144,7 @@ export const LoginForm = () => {
 							onChange={field.onChange}
 							error={field.error}
 							placeholder={field.placeholder}
+							className="form-field"
 						/>
 					))}
 				</div>

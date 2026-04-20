@@ -29,18 +29,6 @@ export const calculateAge = (birthDateString: string): number => {
 	return age
 }
 
-const isValidAgeForRegister = (birthDateString: string): boolean => {
-	const birthDate = new Date(birthDateString)
-
-	// Fecha inválida
-	if (Number.isNaN(birthDate.getTime())) {
-		return false
-	}
-
-	const age = calculateAge(birthDateString)
-	return age >= 18 && age <= 150
-}
-
 export const RegisterForm = () => {
 	// La siguiente estructura sintáctica se denomina "Array destructuring".
 	// useState devuelve un array con dos elementos:
@@ -301,6 +289,7 @@ export const RegisterForm = () => {
 						onChange={field.onChange}
 						error={field.error}
 						placeholder={field.placeholder}
+						className="form-field"
 					/>
 				))}
 			</div>
@@ -320,6 +309,7 @@ export const RegisterForm = () => {
 						onChange={field.onChange}
 						error={field.error}
 						placeholder={field.placeholder}
+						className="form-field"
 					/>
 				))}
 			</div>

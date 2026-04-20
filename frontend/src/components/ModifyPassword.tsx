@@ -13,7 +13,8 @@ type SettingsFields = {
 	verify_password: string;
 };
 
-//TODO - Pensar como mover cosas a Hook comun para evitar repetir codigo en los 3 componentes de modificacion de datos, email y password
+// TODO - Pensar como mover cosas a Hook comun para evitar repetir codigo en los 3 componentes de modificacion de datos, email y password
+// TODO - Aplicar estilos al formulario
 
 const inputsConfig: Array<{ id: keyof SettingsFields; label: string; type: string }> = [
 	{ id: "previous_password", label: "Contraseña anterior", type: "password" },
@@ -154,7 +155,7 @@ export function ModifyPassword({ user }: { user: any }) {
 								type={field.type}
 								value={formData[field.id]}
 								onChange={(value) => handleInputChange(field.id, value)}
-								ph={user[field.id] || undefined}
+								placeholder={user[field.id] || undefined}
 								className=""
 							/>
 

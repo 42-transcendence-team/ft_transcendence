@@ -21,7 +21,7 @@ export const FormField = ({
 }: FormFieldProps) => {
 	return (
 		<div className="form-field">
-			{label && <label htmlFor={id} className={className ? `${className}-label` : "default-label"}>
+			{label && <label htmlFor={id} className={className ? `${className}__label` : "default-label"}>
 				{label}
 			</label>}
 
@@ -32,10 +32,10 @@ export const FormField = ({
 				value={value}
 				placeholder={placeholder}
 				onChange={(e) => onChange(e.target.value)}
-				className={className ? `${className}-input` : "default-input"}
+				className={className ? `${className}__input` : "default-input"}
 			/>
 
-			{error && <p className={className ? `${className}-tooltip` : "default-tooltip"}>{error}</p>}
+			{error && <p className={className ? `${className}__tooltip` : "default-tooltip"}>{error}</p>}
 		</div>
 	)
 }
