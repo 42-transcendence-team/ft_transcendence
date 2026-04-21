@@ -4,7 +4,6 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
-	"log"
 	"net/http"
 	"time"
 
@@ -66,7 +65,6 @@ func (h *UserHandler) RemoveAccount(c *gin.Context) {
 	}
 	var request dto.UserDelete
 
-	log.Printf("User %d requested account deletion", userIDValue.(uint))
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		c.Error(appErr.NewBadRequest(err.Error())) // TODO - Revisar error que muestra, ahora mismo lo que devuelve el DTO
@@ -76,7 +74,6 @@ func (h *UserHandler) RemoveAccount(c *gin.Context) {
 
 	request.Id = userIDValue.(uint)
 
-	log.Printf("Processing account deletion for user %d with request: %+v", userIDValue.(uint), request)
 	err = h.UserService.RemoveAccount(request)
 	if err != nil {
 		c.Error(err)
