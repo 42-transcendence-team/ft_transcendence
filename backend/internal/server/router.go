@@ -44,7 +44,7 @@ func (srv *HTTPServer) Router() {
 
 	// rutas privadas
 	protected := api.Group("/")
-	protected.Use(middlewares.AuthMiddleware(srv.Conf))
+	protected.Use(middlewares.AuthMiddleware(srv.Conf, srv.Redis))
 	{
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)

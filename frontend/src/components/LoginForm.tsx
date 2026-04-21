@@ -58,7 +58,8 @@ export const LoginForm = () => {
 		setIsSubmitting(true);
 		try {
 			const data = await Login(identifier, password);
-
+			console.log("data", data);
+			console.log("111111");
 			if (!data) {
 				setServerMessage("Error desconocido al intentar iniciar sesión.");
 				setIsSubmitting(false);
@@ -71,7 +72,13 @@ export const LoginForm = () => {
 				setIsSubmitting(false);
 				return;
 			}
-
+			if (data.user){
+				navigate(`/app/profile/${data.user.login}`);//TODO se tiene que cambiar id por token por seguridad
+				setErrors({ identifier: "", password: "" });
+				setServerMessage("");
+				setIsSubmitting(false); 
+				return;
+			}
 			setErrors({ identifier: "", password: "" });
 			setServerMessage("");
 			navigate("/");

@@ -214,17 +214,18 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	ctx := c.Request.Context()
 	if exists {
 		sessionKey := fmt.Sprintf("session:%v", userID)
-		err := h.Redis.Del(ctx, sessionKey).Err()
+		err := h.Redis.Del(ctx, sessionKey).Err() //borramos la session
 		if err != nil {
 			log.Printf("Error redis session deleted: %v", err)
 		}
-		errSrem := h.Redis.SRem(ctx, "online_users", userID).Err()
+		errSrem := h.Redis.SRem(ctx, "online_users", userID).Err() //lo borramos de la lista de online_user
 		if errSrem != nil {
 			log.Printf("Error deleting online user in redis: %v", errSrem)
 		}
 	}
 	expTime := time.Unix(0, 0)
-	h.setCookie(c, "", expTime)
+	h.setCookie(c, "", expTime) //matamos la cokie
+	log.Printf("session borrada")
 	// TODO: hay q ver como se mandan los msg al front y que necesita
 	c.JSON(200, gin.H{"message": "user logout success"})
 
