@@ -9,8 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/pquerna/otp/totp"
 )
+
+var validate = validator.New()
 
 type UserService struct {
 	UserRepo *repository.UserRepository
@@ -162,6 +165,10 @@ func (s *UserService) ModifyPass(userID uint, request dto.ModifyInputPass) error
 	return nil
 }
 
+func isValidEmail(email string) bool {
+	return validate.Var(email, "required,email") == nil
+}
+
 func (s *UserService) ModifyEmail(userID uint, request dto.ModifyInputEmail) error {
 	req, err := s.UserRepo.FindById(userID)
 	if err != nil {
@@ -184,6 +191,12 @@ func (s *UserService) ModifyEmail(userID uint, request dto.ModifyInputEmail) err
 	if req.Email != nil && request.Email == *req.Email {
 		return appErr.NewValidation(map[string]string{
 			"email": "new_email_must_be_different",
+		})
+	}
+
+	if !isValidEmail(request.Email) || !isValidEmail(request.VerifyEmail) {
+		return appErr.NewValidation(map[string]string{
+			"error": "invalid_email_format",
 		})
 	}
 

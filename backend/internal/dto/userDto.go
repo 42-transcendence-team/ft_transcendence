@@ -26,9 +26,9 @@ type UserResponse struct {
 }
 
 type UserDelete struct {
-	Id       uint    `form:"id"`
-	Password string  `form:"password" binding:"required"`
-	Code     *string `form:"code"`
+	Id       uint    `json:"id"`
+	Password string  `json:"password" binding:"required"`
+	Code     *string `json:"code"`
 }
 
 // Settings de usuario
@@ -80,15 +80,15 @@ type UserModifyPass struct {
 
 // DTOs para 2FA
 type UserSecret2FA struct {
-	Id        uint    `form:"id"`
-	Secret2FA *string `form:"secret_2fa"`
+	Id        uint    `json:"id"`
+	Secret2FA *string `json:"secret_2fa"`
 }
 
 type User2FAStatus struct {
-	Id        uint `form:"id"`
-	Active2FA bool `form:"active_2fa"`
+	Id        uint `json:"id"`
+	Active2FA bool `json:"active_2fa"`
 }
 
 type UserRemove2FA struct {
-	Id uint `form:"id"`
+	Id uint `json:"id"`
 }
