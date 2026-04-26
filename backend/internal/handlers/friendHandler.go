@@ -119,7 +119,7 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"request-acepted": gin.H{
+		"request-accepted": gin.H{
 			"id":       reqID,
 			"senderID": senderID,
 			"userID":   userID,

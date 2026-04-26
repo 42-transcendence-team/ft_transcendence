@@ -4,6 +4,10 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"backend/internal/repository"
+	"errors"
+	"fmt"
+
+	"gorm.io/gorm"
 )
 
 type FriendRequestService struct {
@@ -33,20 +37,28 @@ func (s *FriendRequestService) SendRequest(receiverID uint, userID uint) (*model
 
 	// comprobar que no son amigos
 	areFriends, err := s.friendsRepo.AreFriends(userID, receiverID)
-	if areFriends == true {
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	} else if areFriends == true {
 		return nil, appErr.NewConflict("users are already friends")
 	}
 
 	// comprobar que no hay bloqueo
 	areBlock, err := s.friendsRepo.AreBlock(userID, receiverID)
-	if areBlock == true {
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	} else if areBlock == true {
 		return nil, appErr.NewForbidden("friend request not allowed")
 	}
 
+	// TODO: esto esta rarete solo verifico en una direccion que este pending
 	// comprobar que no hay solicitud pendiente
-	isRequest, err := s.friendsRepo.IsRequest(userID, receiverID)
-	if isRequest == true {
-		return nil, appErr.NewConflict("friend requets already exists")
+	hasPendingRequest, err := s.friendsRepo.HasPendingRequestBetweenUsers(userID, receiverID)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+	if hasPendingRequest {
+		return nil, appErr.NewConflict("friend request already exists")
 	}
 
 	// crear la solicitud, stado pendiente
@@ -78,107 +90,93 @@ func (s *FriendRequestService) ListIncomingRequest(userID uint) ([]models.Friend
 	return requests, nil
 }
 
-func (s *FriendRequestService) AcceptFriendRequest(userID uint, reqID uint) (uint, error) {
+func (s *FriendRequestService) AcceptFriendRequest(userID uint, reqID uint) (*models.FriendRequest, error) {
 
-	// get senderID
-	senderID, err := s.friendsRepo.GetReqSenderID(reqID)
+	req, err := s.ValidatePendingRequestForReceiver(userID, reqID)
 	if err != nil {
-		return 0, appErr.NewNotFound("that friend request dont exist")
+		return nil, err
 	}
-	// el usuario autenticado tiene que ser el reciver
-	if senderID == userID {
-		return 0, appErr.NewForbidden("no puedes aceptar tu propia solucitud")
-	}
-
-	// miro si hay peticion de amistad para mi
-	isReq, err := s.friendsRepo.IsRequestForMe(senderID, userID)
-	if err != nil {
-		return 0, appErr.NewInternal(err)
-	}
-	if isReq != true {
-		return 0, appErr.NewForbidden("There are not a friend request for you")
-	}
-
-	// mirar el estado de la request , que este en pending
-	status, err := s.friendsRepo.GetReqStatus(senderID, userID)
-	if status == models.RelationAccepted {
-		return 0, appErr.NewConflict("ya fue aceptada la solicitud son amigos")
-	}
-	if status == models.RelationRejected {
-		return 0, appErr.NewForbidden("ya rechazaste la peticion")
-	}
-	if status != models.RelationPending {
-		return 0, appErr.NewForbidden("algo no va bien")
-	}
-
-	// pasan user desde el handler que ya es el usuario autenticado
 
 	// comprobar que no hay bloqueo
-	areBlock, err := s.friendsRepo.AreBlock(userID, senderID)
-	if areBlock == true {
-		return 0, appErr.NewForbidden("friend request not allowed")
-	}
-
-	// comprobar que no son amigos
-	areFriends, err := s.friendsRepo.AreFriends(userID, senderID)
-	if areFriends == true {
-		return 0, appErr.NewConflict("users are already friends")
-	}
-
-	// cambiar el estado e la requets a acepted
-	err = s.friendsRepo.ChangeReqStatus(models.RelationAccepted, reqID)
+	areBlock, err := s.friendsRepo.AreBlock(userID, req.SenderID)
 	if err != nil {
-		return 0, appErr.NewForbidden("error en la db o no se encontro la request para cambair estado")
+		return nil, appErr.NewInternal(err)
+	} else if areBlock == true {
+		return nil, appErr.NewForbidden("Friend request not allowed")
 	}
 
 	// crear frindship
-	err = s.friendsRepo.CreateFriendship(userID, senderID)
+	// cambiar el estado e la requets a accepted
+	err = s.friendsRepo.BuildFriendship(*req)
 	if err != nil {
-		return 0, appErr.NewInternal(err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("Friend request not found")
+		}
+		return nil, appErr.NewInternal(err)
 	}
 
+	req.Status = models.RelationAccepted
 	// TODO: mandar notificacion
 
-	return senderID, nil
+	return req, nil
 }
 
-func (s *FriendRequestService) RejectFriendRequest(userID uint, reqID uint) (uint, error) {
-	// get senderID
-	senderID, err := s.friendsRepo.GetReqSenderID(reqID)
-	if err != nil {
-		return 0, appErr.NewNotFound("that friend request dont exist")
-	}
-	// el usuario autenticado tiene que ser el reciver
-	if senderID == userID {
-		return 0, appErr.NewForbidden("no puedes rechazar tu propia solucitud")
-	}
+func (s *FriendRequestService) RejectFriendRequest(userID uint, reqID uint) (*models.FriendRequest, error) {
 
-	// miro si hay peticion de amistad para mi
-	isReq, err := s.friendsRepo.IsRequestForMe(senderID, userID)
+	req, err := s.ValidatePendingRequestForReceiver(userID, reqID)
 	if err != nil {
-		return 0, appErr.NewInternal(err)
-	}
-	if isReq != true {
-		return 0, appErr.NewForbidden("There are not a friend request for you")
-	}
-
-	// mirar el estado de la request , que este en pending
-	status, err := s.friendsRepo.GetReqStatus(senderID, userID)
-	if status == models.RelationAccepted {
-		return 0, appErr.NewConflict("ya fue aceptada la solicitud son amigos")
-	}
-	if status == models.RelationRejected {
-		return 0, appErr.NewForbidden("ya rechazaste la peticion")
-	}
-	if status != models.RelationPending {
-		return 0, appErr.NewForbidden("algo no va bien")
+		return nil, err
 	}
 
 	// cambiar estado a rejected
-	err = s.friendsRepo.ChangeReqStatus(models.RelationRejected, reqID)
+	err = s.friendsRepo.RejectFriendRequest(reqID)
 	if err != nil {
-		return 0, appErr.NewForbidden("error en la db o no se encontro la request para cambair estado")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("Friend request not found")
+		}
+		return nil, appErr.NewInternal(err)
 	}
 
-	return senderID, nil
+	req.Status = models.RelationRejected
+	return req, nil
+}
+
+func (s *FriendRequestService) ValidatePendingRequestForReceiver(userID uint, reqID uint) (*models.FriendRequest, error) {
+
+	// miramos si existe la request
+	req, err := s.friendsRepo.GetReqByID(reqID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("Friend request not found")
+		}
+		return nil, appErr.NewInternal(err)
+	}
+
+	// pasan user desde el handler que ya es el usuario autenticado
+	// el usuario autenticado tiene que ser el reciver
+	if req.ReceiverID != userID {
+		return nil, appErr.NewForbidden("You are not the receiver of the request")
+	}
+
+	// mirar el estado de la request , que este en pending
+	switch req.Status {
+	case models.RelationPending:
+		// Ok , continue
+	case models.RelationAccepted:
+		return nil, appErr.NewConflict("Friend request already accepted")
+	case models.RelationRejected:
+		return nil, appErr.NewConflict("Friend request already rejected")
+	default:
+		return nil, appErr.NewInternal(fmt.Errorf("invalid friend request status: %v", req.Status))
+	}
+
+	// comprobar que no son amigos
+	areFriends, err := s.friendsRepo.AreFriends(userID, req.SenderID)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	} else if areFriends == true {
+		return nil, appErr.NewConflict("Users are already friends")
+	}
+
+	return req, nil
 }
