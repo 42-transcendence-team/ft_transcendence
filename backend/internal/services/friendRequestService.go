@@ -22,6 +22,17 @@ func NewFriendRequestService(friendRepo *repository.FriendRepository, userRepo *
 	}
 }
 
+// TODO: probablemete hay que sacarlo de auqui
+func (s *FriendRequestService) ListFriends(userID uint) ([]models.Friendship, error) {
+
+	requests, err := s.friendsRepo.ListFriends(userID)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	return requests, nil
+}
+
 func (s *FriendRequestService) SendRequest(receiverID uint, userID uint) (*models.FriendRequest, error) {
 
 	// comprobar que no se mandan una solicitud a el mismo
@@ -51,8 +62,7 @@ func (s *FriendRequestService) SendRequest(receiverID uint, userID uint) (*model
 		return nil, appErr.NewForbidden("friend request not allowed")
 	}
 
-	// TODO: esto esta rarete solo verifico en una direccion que este pending
-	// comprobar que no hay solicitud pendiente
+	//mirar si ya esixte una solicitud pendiente
 	hasPendingRequest, err := s.friendsRepo.HasPendingRequestBetweenUsers(userID, receiverID)
 	if err != nil {
 		return nil, appErr.NewInternal(err)
@@ -179,4 +189,26 @@ func (s *FriendRequestService) ValidatePendingRequestForReceiver(userID uint, re
 	}
 
 	return req, nil
+}
+
+// TODO: probablemnte hay que sacarlo de aqui
+func (s *FriendRequestService) DeleteFriend(userID uint, friendID uint) error {
+
+	// comprobar que no son amigos
+	areFriends, err := s.friendsRepo.AreFriends(userID, friendID)
+	if err != nil {
+		return appErr.NewInternal(err)
+	} else if areFriends == false {
+		return appErr.NewNotFound("you cant delete a friend who is not your friend")
+	}
+
+	err = s.friendsRepo.DeleteFriendship(userID, friendID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return appErr.NewNotFound("Friendship not found")
+		}
+		return appErr.NewInternal(err)
+	}
+
+	return nil
 }

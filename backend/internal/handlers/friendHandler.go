@@ -19,8 +19,21 @@ func NewFriendHandler(friendService *services.FriendRequestService) *FriendHandl
 	}
 }
 
+// TODO: al devolver la peticion alomejor hay que gestioanr que ya devuelva los datos del amigo para poder ensearlo en front, nombre foto de perfil etc
 func (h *FriendHandler) ListFriends(c *gin.Context) {
 
+	userID := c.MustGet("userID").(uint)
+
+	ListFriends, err := h.FriendRequestService.ListFriends(userID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": ListFriends,
+	})
 }
 
 /*
@@ -104,14 +117,14 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 
 	id64, err := strconv.ParseUint(paramStr, 10, 32)
 	if err != nil {
-		appErr.NewBadRequest("Invalid request")
+		c.Error(appErr.NewBadRequest("Invalid request"))
 		c.Abort()
 		return
 	}
 
 	reqID := uint(id64)
 
-	senderID, err := h.FriendRequestService.AcceptFriendRequest(userID, reqID)
+	req, err := h.FriendRequestService.AcceptFriendRequest(userID, reqID)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -120,9 +133,9 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"request-accepted": gin.H{
-			"id":       reqID,
-			"senderID": senderID,
-			"userID":   userID,
+			"id":       req.ID,
+			"senderID": req.SenderID,
+			"userID":   req.ReceiverID,
 		},
 	})
 }
@@ -135,14 +148,14 @@ func (h *FriendHandler) RejectFriendRequest(c *gin.Context) {
 
 	id64, err := strconv.ParseUint(paramStr, 10, 32)
 	if err != nil {
-		appErr.NewBadRequest("Invalid request")
+		c.Error(appErr.NewBadRequest("Invalid request"))
 		c.Abort()
 		return
 	}
 
 	reqID := uint(id64)
 
-	senderID, err := h.FriendRequestService.RejectFriendRequest(userID, reqID)
+	req, err := h.FriendRequestService.RejectFriendRequest(userID, reqID)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -151,9 +164,34 @@ func (h *FriendHandler) RejectFriendRequest(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"request-rejected": gin.H{
-			"id":       reqID,
-			"senderID": senderID,
-			"userID":   userID,
+			"id":       req.ID,
+			"senderID": req.SenderID,
+			"userID":   req.ReceiverID,
 		},
 	})
+}
+
+func (h *FriendHandler) DeleteFriend(c *gin.Context) {
+
+	userID := c.MustGet("userID").(uint)
+
+	paramStr := c.Param("userId")
+
+	id64, err := strconv.ParseUint(paramStr, 10, 32)
+	if err != nil {
+		c.Error(appErr.NewBadRequest("Invalid request"))
+		c.Abort()
+		return
+	}
+
+	deleteFriendID := uint(id64)
+
+	err = h.FriendRequestService.DeleteFriend(userID, deleteFriendID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(204, gin.H{})
 }

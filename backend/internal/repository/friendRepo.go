@@ -16,6 +16,18 @@ func NewFriendRepository(db *gorm.DB) *FriendRepository {
 	}
 }
 
+func (r *FriendRepository) ListFriends(userID uint) ([]models.Friendship, error) {
+	var requests []models.Friendship
+
+	err := r.db.Where("user1_id = ? OR user2_id = ?", userID, userID).
+		Find(&requests).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return requests, nil
+}
+
 // importante siempre guradar las relacciones asi:
 // userID1 = menor ID
 // userID2 = mayor ID
@@ -156,7 +168,7 @@ func (r *FriendRepository) AreBlock(userID1 uint, userID2 uint) (bool, error) {
 	var count int64
 
 	err := r.db.Model(&models.Block{}).Where(
-		"(bloker_id = ? AND bloked_id = ?) OR (bloker_id = ? AND bloked_id = ?)",
+		"(blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)",
 		userID1, userID2,
 		userID2, userID1,
 	).Count(&count).Error
@@ -217,8 +229,6 @@ func normalizePair(a, b uint) (uint, uint) {
 	return b, a
 }
 
-/* --------------------------------------------------------------- */
-
 func (r *FriendRepository) GetReqByID(reqID uint) (*models.FriendRequest, error) {
 
 	var req models.FriendRequest
@@ -230,4 +240,23 @@ func (r *FriendRepository) GetReqByID(reqID uint) (*models.FriendRequest, error)
 	}
 
 	return &req, nil
+}
+
+func (r *FriendRepository) DeleteFriendship(userID1 uint, userID2 uint) error {
+
+	u1, u2 := normalizePair(userID1, userID2)
+
+	result := r.db.
+		Where("user1_id = ? AND user2_id = ?", u1, u2).
+		Delete(&models.Friendship{})
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }

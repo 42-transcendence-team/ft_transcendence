@@ -57,7 +57,7 @@ func FriendsRoutes(api *gin.RouterGroup, friendHandler *handlers.FriendHandler) 
 		}
 
 		// Borrar amigo
-		// friends.DELETE("/:userId", friendHandler.DeleteFriend)
+		friends.DELETE("/:userId", friendHandler.DeleteFriend)
 
 		// Bloquear usuario
 		// friends.POST("/blocks", friendHandler.BlockUser)
