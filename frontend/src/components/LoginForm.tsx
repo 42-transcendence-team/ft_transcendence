@@ -4,7 +4,7 @@ import { FormField } from "./FormField"
 import { Login, Login2FA, getAuthenticatedUser } from "api/Login"
 import { Modal } from "@components/Modal"
 import { OtpInput, Footer2FA } from "@components/TwoFactorUI"
-import { useAuth } from "@components/AuthContext"
+import { useAuth } from "@components/auth-router/AuthContext"
 
 // Archivos a revisar:
 //		backend/internal/handlers/authHandler.go

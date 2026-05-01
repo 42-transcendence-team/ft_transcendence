@@ -1,3 +1,4 @@
+// TODO: esto creo que no tiene que estar en components pero tampoco se donde meterlo
 import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 

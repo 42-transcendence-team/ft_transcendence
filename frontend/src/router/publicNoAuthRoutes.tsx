@@ -2,7 +2,7 @@ import { Login } from "@pages/Login";
 import { Register } from "@pages/Register";
 
 import { PublicLayout } from "layouts/publicLayout";
-import { GuestRoute } from "@components/GuestRoute.tsx";
+import { GuestRoute } from "@components/auth-router/GuestRoute";
 
 export const PublicNoAuthRoutes = {
   element: (

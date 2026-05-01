@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@components/AuthContext";
+import { useAuth } from "@components/auth-router/AuthContext";
 
 // Componente para redireccionar el "home-root", la barra (`/`),
 // a `/app` en caso de estar autentificado o a `/login` en caso de

@@ -1,20 +1,20 @@
 import { Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import { useAuth } from "@components/AuthContext";
+import { useAuth } from "@components/auth-router/AuthContext";
 
-type GuestRouteProps = {
+type ProtectedRouteProps = {
   children: ReactNode;
 };
 
-export const GuestRoute = ({ children }: GuestRouteProps) => {
+export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { authStatus } = useAuth();
 
   if (authStatus === "loading") {
     return <div>Loading...</div>;
   }
 
-  if (authStatus === "auth") {
-    return <Navigate to="/app" replace />;
+  if (authStatus === "guest") {
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

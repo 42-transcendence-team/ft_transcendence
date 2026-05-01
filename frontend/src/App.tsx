@@ -2,7 +2,7 @@ import './styles/App.scss';
 
 import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { AuthProvider } from "@components/AuthContext";
+import { AuthProvider } from "@components/auth-router/AuthContext";
 
 type AuthStatus = "loading" | "auth" | "guest"
 // loading -> aun no se si hay sesion activa

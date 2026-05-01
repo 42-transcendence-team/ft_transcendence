@@ -3,7 +3,7 @@ import { PrivateLayout } from "layouts/privateLayout";
 import { HomePage } from "@pages/HomePage";
 import { Profile } from "@pages/Profile";
 
-import { ProtectedRoute } from "@components/ProtectedRoute";
+import { ProtectedRoute } from "@components/auth-router/ProtectedRoute";
 
 export const PrivateRoutes = {
   path: "app",

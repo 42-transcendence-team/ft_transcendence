@@ -6,7 +6,7 @@ import { NotFound } from "@pages/NotFound";
 import { PublicRoutes } from "./publicRoutes";
 import { PrivateRoutes } from "./privateRoutes"
 import { PublicNoAuthRoutes } from "./publicNoAuthRoutes";
-import { RootRedirect } from "@components/RootRedirect";
+import { RootRedirect } from "@components/auth-router/RootRedirect";
 
 // loader 
 export const router = createBrowserRouter([
