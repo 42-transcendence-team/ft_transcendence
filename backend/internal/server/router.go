@@ -18,14 +18,17 @@ func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 
 	userRepo := repository.NewUserRepository(srv.Db)
+	friendRepo := repository.NewFriendRepository(srv.Db)
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
 	twoFAService := services.New2FAService(userRepo, authService)
+	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
 	userHandler := handlers.NewUserHandler(userService)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
+	friendHandler := handlers.NewFriendHandler(friendService)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -46,8 +49,10 @@ func (srv *HTTPServer) Router() {
 	protected := api.Group("/")
 	protected.Use(middlewares.AuthMiddleware(srv.Conf))
 	{
+
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
+		routes.FriendsRoutes(protected, friendHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
