@@ -26,17 +26,19 @@ func NewAuthHandler(authService *services.AuthService, cfg *config.Config) *Auth
 
 /* Register */
 
-/* JSON q manda el fronted
-Si algun campo no cumple als regals de la struct de abajo manda error con especificacioens
-de q ha fallado segun la estructura d ela funcon apperr NewValidation()
+/* JSON que manda el fronted
+Si algun campo no cumple las reglas de la struct de abajo manda error con especificacioens
+de que ha fallado segun la estructura d ela funcon apperr NewValidation()
 {
   "login": "prueba",
   "email": "prueba@test.com",
   "password": "angelaKk12132%",
   "confirmPassword": "angelaKk12132%",
   "name": "angela",
-  "Surname": "barrio",
-  "birthday": "2000-10-23" // tiene que ser este formato "aaaa-mm-dd"
+  "surname": "barrio",
+  "birthday": "2000-10-23" , // tiene que ser este formato "aaaa-mm-dd"
+  "termsAndConditions": true,
+  "privacyPolicy": true
 }
 */
 
@@ -66,7 +68,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Password: req.Password,
 		Name:     req.Name,
 		Surname:  req.Surname,
-		Birtday:  birthday,
+		Birthday: birthday,
 	})
 	if err != nil {
 		c.Error(err)
@@ -151,7 +153,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			"id":    user.ID,
 			"login": user.Login,
 			"email": user.Email,
-			"token": strToken, // QUITAR ESTO DE AQUI SOLO ES PA PROBAR !!!!!!!!!!!!!!!
 		},
 	})
 }

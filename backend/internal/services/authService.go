@@ -27,14 +27,17 @@ func NewAuthService(userRepo *repository.UserRepository, cfg *config.Config) *Au
 
 func (s *AuthService) Register(input dto.RegisterInput) (user models.User, err error) {
 
+	err = IsValidAge(input.Birthday)
+	if err != nil {
+		return models.User{}, err
+	}
+
 	if !utils.IsStrongPassword(input.Password) {
 		return models.User{}, appErr.NewValidation(map[string]string{
 			"password": "weak_password",
 		})
 	}
 
-	// https://gowebexamples.com/password-hashing/
-	// no se si es demasiado simple
 	input.Password, err = utils.HashPassword(input.Password)
 	if err != nil {
 		return models.User{}, appErr.NewInternal(err)
@@ -60,8 +63,27 @@ func NewUser(input dto.RegisterInput) models.User {
 		Password: input.Password,
 		Name:     input.Name,
 		Surname:  input.Surname,
-		Birthday: input.Birtday,
+		Birthday: input.Birthday,
 	}
+}
+
+func IsValidAge(birthday time.Time) error {
+
+	today := time.Now()
+	oldestAllowed := today.AddDate(-150, 0, 0)  // maxima edad permitida 150 años
+	youngestAllowed := today.AddDate(-18, 0, 0) // minima edad permitida 18 años
+
+	if birthday.After(youngestAllowed) {
+		return appErr.NewValidation(map[string]string{
+			"birthday": "your age must be +18",
+		})
+	}
+	if birthday.Before(oldestAllowed) {
+		return appErr.NewValidation(map[string]string{
+			"birthday": "your age must be -150 years",
+		})
+	}
+	return nil
 }
 
 func (s *AuthService) Login(input dto.LoginInput) (dto.LoginResult, error) {

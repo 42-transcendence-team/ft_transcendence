@@ -1,11 +1,25 @@
 import "../styles/components/_userMenu.scss"
 import { FiUser, FiSettings, FiLogOut, FiMenu } from "react-icons/fi";
 import { useState, useRef, useEffect  } from "react";
+import { Logout } from "api/Logout";
+import { useAuth } from "@components/auth-router/AuthContext";
 
 
 export const UserMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
-
+  
+  const { refreshAuth } = useAuth();
+  
+  const handleLogoutClick = async () => {
+    try {
+      await Logout()
+      await refreshAuth();
+      console.log("Logout click");
+    } catch (error) {
+      console.log("logout ERROR", error);
+    }
+  };
+  
   return (
     <div className="userMenu">
       <button 
@@ -25,7 +39,11 @@ export const UserMenu = () => {
           <FiSettings className="userMenu__item-icon"/> 
           <span>Configuración</span>
         </button>
-        <button className="userMenu__item userMenu__item--logout" type="button">
+        <button 
+          className="userMenu__item userMenu__item--logout" 
+          type="button"
+          onClick={handleLogoutClick}
+        >
           <FiLogOut className="userMenu__item-icon" />
           <span>Cerrar sesión</span>
         </button>
