@@ -1,8 +1,12 @@
 import { NavLink } from "react-router-dom"
+import { useAuth } from "@components/auth-router/AuthContext"
 import logo from "../assets/icons/24_logo.png"
 import "../styles/components/_footer.scss"
 
 export const Footer = () => {
+	const { authStatus } = useAuth()
+	const brandTarget = authStatus === "auth" ? "/app" : "/login"
+
 	return (
 		<div className="footer">
 			<nav className="footer__nav">
@@ -16,10 +20,10 @@ export const Footer = () => {
 				</ul>
 			</nav>
 
-			<div className="footer__brand">
+			<NavLink to={brandTarget} className="footer__brand">
 				<img src={logo} alt="Twenty Four logo" width="80" />
 				<span>Twenty Four</span>
-			</div>
+			</NavLink>
 		</div>
 	)
 }
