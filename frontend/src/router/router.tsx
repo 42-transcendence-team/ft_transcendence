@@ -1,7 +1,7 @@
 import App from "../App";
 import { createBrowserRouter } from "react-router-dom";
 
-import { NotFound } from "@pages/NotFound";
+import { NotFoundRoute } from "@components/auth-router/NotFoundRoute";
 
 import { PublicRoutes } from "./publicRoutes";
 import { PrivateRoutes } from "./privateRoutes"
@@ -19,7 +19,7 @@ export const router = createBrowserRouter([
 			PublicNoAuthRoutes,
 			PrivateRoutes,
 			// ---------- NOT FOUND ----------
-			{ path: "*", element: <NotFound /> },
+			{ path: "*", element: <NotFoundRoute /> },,
 		],
 	},
 ]);
