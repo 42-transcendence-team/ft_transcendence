@@ -1,4 +1,4 @@
-import { useAuth } from '../context/AuthContext'; // Importamos el hook del contexto
+import { useAuth } from '../context/AuthContext';
 import '../styles/pages/_profile.scss';
 import skullLogo from '../assets/icons/skull_logo.png';
 import photo1 from '../assets/img/choni1.png';
