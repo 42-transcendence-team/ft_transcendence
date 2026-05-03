@@ -24,16 +24,13 @@ func (srv *HTTPServer) Router() {
 	twoFAService := services.New2FAService(userRepo, authService)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
-	userHandler := handlers.NewUserHandler(userService)
+	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 
 	api := srv.Engine.Group("/api/v1")
 
 	// rutas publicas
 	routes.AuthRoutes(api, authHandler)
-
-	// la dejo publica de momento, hasta que se implementen mas cosas , pero deberia de psara por el middleware de auth
-	routes.UserRoutes(api, userHandler)
 
 	// Esto en realidad no se como poder hacerlo bonito
 	login := api.Group("/2fa")
@@ -50,6 +47,7 @@ func (srv *HTTPServer) Router() {
 		routes.AuthRoutesPrivate(protected, authHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
+		routes.UserRoutes(protected, userHandler) //creo q puedo meter esto aqui
 	}
 
 	srv.Engine.NoMethod(func(c *gin.Context) {

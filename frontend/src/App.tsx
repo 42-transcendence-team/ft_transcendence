@@ -1,13 +1,15 @@
+// App.tsx - Limpio
 import './styles/App.scss';
-
 import { Outlet } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 
 const App = () => {
   return (
-    <div className="content">
-		<Outlet />
-    </div>
+    <AuthProvider>
+      <div className="content">
+        <Outlet /> 
+      </div>
+    </AuthProvider>
   );
 };
-
 export default App;

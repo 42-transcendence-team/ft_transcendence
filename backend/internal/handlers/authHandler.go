@@ -257,14 +257,22 @@ func (h *AuthHandler) Whoami(c *gin.Context) {
 		c.Abort()
 		return
 	}
+	ctx := c.Request.Context()
+	isOnline, _ := h.Redis.SIsMember(ctx, "online_users", user.ID).Result()
 
+	visitKey := fmt.Sprintf("visits:%d", user.ID)
+	visits, _ := h.Redis.Get(ctx, visitKey).Int() //al hacerlo asi no incrementamos el num de visitas
 	// TODO: hay q ver como se mandan los msg al front y que necesita saber
 	c.JSON(200, gin.H{
 		"authenticated": true,
 		"user": gin.H{
-			"id":    user.ID,
-			"login": user.Login,
-			"email": user.Email,
+			"id":       user.ID,
+			"login":    user.Login,
+			"email":    user.Email,
+			"name":     user.Name,
+			"surname":  user.Surname,
+			"isOnline": isOnline, // redis
+			"visits":   visits,   // redis
 		},
 	})
 }

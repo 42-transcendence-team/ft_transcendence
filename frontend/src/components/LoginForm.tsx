@@ -4,9 +4,7 @@ import { FormField } from "./FormField"
 import { Login, Login2FA } from "api/Login"
 import { Modal } from "@components/Modal"
 import { OtpInput, Footer2FA } from "@components/TwoFactorUI"
-
-// Archivos a revisar:
-//		backend/internal/handlers/authHandler.go
+import { useAuth } from "../context/AuthContext";
 
 type FormErrors = {
 	identifier: string
@@ -26,7 +24,7 @@ export const LoginForm = () => {
 
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [serverMessage, setServerMessage] = useState("")
-
+	const { refreshUser } = useAuth();
 	const [show2FA, setShow2FA] = useState(false);
 	const [tempToken, setTempToken] = useState<string | null>(null);
 	const [otpCode, setOtpCode] = useState<string[]>(Array(6).fill(""));
@@ -59,7 +57,6 @@ export const LoginForm = () => {
 		try {
 			const data = await Login(identifier, password);
 			console.log("data", data);
-			console.log("111111");
 			if (!data) {
 				setServerMessage("Error desconocido al intentar iniciar sesión.");
 				setIsSubmitting(false);
@@ -73,6 +70,7 @@ export const LoginForm = () => {
 				return;
 			}
 			if (data.user){
+				await refreshUser();
 				navigate(`/app/profile/${data.user.login}`);//TODO se tiene que cambiar id por token por seguridad
 				setErrors({ identifier: "", password: "" });
 				setServerMessage("");

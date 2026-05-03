@@ -56,3 +56,11 @@ func (s *UserService) Modify(filter dto.UserModify) error {
 	}
 	return nil
 }
+
+func (s *UserService) GetUserByID(userID uint) (*models.User, error) {
+	user, err := s.userRepo.FindById(userID)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
