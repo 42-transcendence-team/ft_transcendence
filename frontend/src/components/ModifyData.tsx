@@ -99,6 +99,15 @@ export function ModifyData({ user, onUpdate }: { user: any; onUpdate: () => void
 					value != null && value.trim() !== "")
 		);
 
+		if (Object.keys(buildRequestData).length === 0) {
+		setRequestStatus({
+			type: "error",
+			message: "No se han detectado cambios para guardar.",
+		});
+		setOpenModal(true);
+		return;
+	}
+
 		const payload = {
 			...buildRequestData,
 			...(verificationCode && { code: verificationCode })

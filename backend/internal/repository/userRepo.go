@@ -92,6 +92,12 @@ func (r *UserRepository) UpdateUserEmail(userID uint, request dto.ModifyInputEma
 	}
 
 	result := r.db.Model(&models.User{}).Where("id = ?", userID).Updates(updates)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+			return 0, appErr.NewConflict("Email already in use")
+		}
+		return 0, result.Error
+	}
 	return result.RowsAffected, result.Error
 }
 

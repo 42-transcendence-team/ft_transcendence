@@ -43,7 +43,7 @@ type UserModifyEmail struct {
 	Code *string `json:"code"`
 
 	Email       string `json:"email" binding:"required,email"`
-	VerifyEmail string `json:"verify_email" binding:"required,email"`
+	VerifyEmail string `json:"verify_email" binding:"required,email,eqfield=Email"`
 }
 
 type ModifyInputData struct {
@@ -74,7 +74,7 @@ type UserModifyPass struct {
 	Code *string `json:"code"`
 
 	Password         string `json:"password" binding:"required"`
-	VerifyPassword   string `json:"verify_password" binding:"required"`
+	VerifyPassword   string `json:"verify_password" binding:"required,eqfield=Password"`
 	PreviousPassword string `json:"previous_password" binding:"required"`
 }
 

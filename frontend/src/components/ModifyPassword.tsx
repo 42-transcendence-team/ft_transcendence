@@ -66,6 +66,12 @@ export function ModifyPassword({ user }: { user: any }) {
 		if (!formData.previous_password || !passwordRegex.test(formData.previous_password))
 			errors.previous_password = "Por favor, introduce tu contraseña actual para confirmar los cambios.";
 
+		if (!formData.password)
+			errors.password = "Por favor, introduce una nueva contraseña.";
+
+		if (!formData.verify_password)
+			errors.verify_password = "Por favor, verifica tu nueva contraseña.";
+		
 		return errors;
 	}
 

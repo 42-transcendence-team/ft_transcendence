@@ -100,59 +100,39 @@ func (s *UserService) ModifyPass(userID uint, request dto.ModifyInputPass) error
 		return err
 	}
 
-	if request.Password == "" {
+	if request.VerifyPassword != request.Password {
 		return appErr.NewValidation(map[string]string{
-			"password": "password_required",
+			"verify_password": "passwords_do_not_match",
 		})
 	}
 
-	if request.Password != "" {
-		if request.PreviousPassword == "" {
-			return appErr.NewValidation(map[string]string{
-				"previous_password": "previous_password_required",
-			})
-		}
-
-		if request.VerifyPassword == "" {
-			return appErr.NewValidation(map[string]string{
-				"verify_password": "verify_password_required",
-			})
-		}
-
-		if request.VerifyPassword != request.Password {
-			return appErr.NewValidation(map[string]string{
-				"verify_password": "passwords_do_not_match",
-			})
-		}
-
-		if !utils.IsStrongPassword(request.Password) {
-			return appErr.NewValidation(map[string]string{
-				"password": "weak_password",
-			})
-		}
-
-		currentPassword, err := s.UserRepo.GetPassword(userID)
-		if err != nil {
-			return err
-		}
-
-		if !utils.CheckPasswordHash(request.PreviousPassword, currentPassword) {
-			return appErr.NewUnauthorized("Invalid previous password")
-		}
-
-		if utils.CheckPasswordHash(request.Password, currentPassword) {
-			return appErr.NewValidation(map[string]string{
-				"password": "new_password_must_be_different",
-			})
-		}
-
-		hashedPassword, err := utils.HashPassword(request.Password)
-		if err != nil {
-			return appErr.NewInternal(err)
-		}
-
-		request.Password = hashedPassword
+	if !utils.IsStrongPassword(request.Password) {
+		return appErr.NewValidation(map[string]string{
+			"password": "weak_password",
+		})
 	}
+
+	currentPassword, err := s.UserRepo.GetPassword(userID)
+	if err != nil {
+		return err
+	}
+
+	if !utils.CheckPasswordHash(request.PreviousPassword, currentPassword) {
+		return appErr.NewUnauthorized("Invalid previous password")
+	}
+
+	if utils.CheckPasswordHash(request.Password, currentPassword) {
+		return appErr.NewValidation(map[string]string{
+			"password": "new_password_must_be_different",
+		})
+	}
+
+	hashedPassword, err := utils.HashPassword(request.Password)
+	if err != nil {
+		return appErr.NewInternal(err)
+	}
+
+	request.Password = hashedPassword
 
 	rows, err := s.UserRepo.UpdateUserPassword(userID, request)
 	if err != nil {
@@ -178,11 +158,6 @@ func (s *UserService) ModifyEmail(userID uint, request dto.ModifyInputEmail) err
 		return err
 	}
 
-	if request.VerifyEmail == "" {
-		return appErr.NewValidation(map[string]string{
-			"verify_email": "verify_email_required",
-		})
-	}
 	if request.VerifyEmail != request.Email {
 		return appErr.NewValidation(map[string]string{
 			"verify_email": "emails_do_not_match",
@@ -202,7 +177,7 @@ func (s *UserService) ModifyEmail(userID uint, request dto.ModifyInputEmail) err
 
 	rows, err := s.UserRepo.UpdateUserEmail(userID, request)
 	if err != nil {
-		return appErr.NewInternal(err)
+		return err
 	}
 	if rows == 0 {
 		return appErr.NewNotFound("user_not_found")

@@ -139,9 +139,9 @@ func (h *UserHandler) UpdateEmail(c *gin.Context) {
 
 	var req dto.UserModifyEmail
 
-	err := c.ShouldBindJSON(&req)
+	err := ValidationBindRequest(c, &req)
 	if err != nil {
-		c.Error(appErr.NewBadRequest(err.Error())) // TODO - Revisar error que muestra, ahora mismo lo que devuelve el DTO
+		c.Error(err)
 		c.Abort()
 		return
 	}
@@ -172,9 +172,9 @@ func (h *UserHandler) UpdatePassword(c *gin.Context) {
 
 	var req dto.UserModifyPass
 
-	err := c.ShouldBindJSON(&req)
+	err := ValidationBindRequest(c, &req)
 	if err != nil {
-		c.Error(appErr.NewBadRequest(err.Error())) // TODO - Revisar error que muestra, ahora mismo lo que devuelve el DTO
+		c.Error(err)
 		c.Abort()
 		return
 	}
