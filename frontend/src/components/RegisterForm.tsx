@@ -29,18 +29,6 @@ const calculateAge = (birthDateString: string): number => {
 	return age
 }
 
-const isValidAgeForRegister = (birthDateString: string): boolean => {
-	const birthDate = new Date(birthDateString)
-
-	// Fecha inválida
-	if (Number.isNaN(birthDate.getTime())) {
-		return false
-	}
-
-	const age = calculateAge(birthDateString)
-	return age >= 18 && age <= 150
-}
-
 export const RegisterForm = () => {
 	// La siguiente estructura sintáctica se denomina "Array destructuring".
 	// useState devuelve un array con dos elementos:
@@ -331,22 +319,6 @@ export const RegisterForm = () => {
 
 			<div className="auth-form__checkboxes">
 				<label className="auth-form__check">
-<<<<<<< HEAD
-					<input type="checkbox" required />
-					<span>I read Terms and Conditions...</span>
-				</label>
-
-				<label className="auth-form__check">
-					<input type="checkbox" required />
-					<span>I accept Privacy Policy</span>
-				</label>
-			</div>
-
-			<button className="auth-form__submit" type="submit" disabled={isSubmitting}>
-				{isSubmitting ? "Registering..." : "Create Now"}
-			</button>
-
-=======
 					<input
 						type="checkbox"
 						checked={termsAndConditions}
@@ -371,7 +343,6 @@ export const RegisterForm = () => {
 				{isSubmitting ? "Registering..." : "Create Now"}
 			</button>
 
->>>>>>> origin/jwt
 			{serverMessage && <p className="auth-form__server-message">{serverMessage}</p>}
 
 			<p className="auth-form__switch">
