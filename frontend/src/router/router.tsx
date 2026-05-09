@@ -19,7 +19,7 @@ export const router = createBrowserRouter([
 			PublicNoAuthRoutes,
 			PrivateRoutes,
 			// ---------- NOT FOUND ----------
-			{ path: "*", element: <NotFoundRoute /> },,
+			{ path: "*", element: <NotFoundRoute /> },
 		],
 	},
 ]);
