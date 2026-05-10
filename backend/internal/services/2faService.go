@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"image/png"
-	"os"
 	"strings"
 	"time"
 
@@ -61,10 +60,6 @@ func (s *TwoFAService) Enable2FA(request dto.TwoFAEnable) (*dto.TwoFASetup, erro
 	if err != nil || user == 0 {
 		return nil, err
 	}
-	// Guarda el QR generado en una imagen y crea la carpeta test para hacer pruebas desde back
-	// Cuando se integre con front hay que borrar esto
-	os.Mkdir("./test", 0755)
-	os.WriteFile("./test/qr.png", buf.Bytes(), 0755)
 
 	return &dto.TwoFASetup{QR: qrBase64}, nil
 }
