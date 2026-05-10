@@ -186,26 +186,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 /*End of login*/
-
 /*Logout*/
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	//todo delete???
-	// expTime := time.Unix(0, 0)
-	//ni compila
-	// userID, exists := c.Get("userID")
-	// ctx := c.Request.Context()
-	// sessionKey := fmt.Sprintf("session:%v", userID)
-	// if err != nil {
-	// 	log.Print("Error redis session deleted", err)
-	// }
-	// err = h.Redis.SRem(ctx, "online_users", userID).Err()
-	// if err != nil {
-	// 	log.Printf("Error deleting online user in redis: %v", err)
-	// }
-
-	// //TODO: borra el redis del user
-	//-----  LOGOUT segun stackoverflow  ------
 	userID, exists := c.Get("userID")
 	if !exists {
 		log.Println("Logout: userID not found in context")
