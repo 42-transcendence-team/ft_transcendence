@@ -53,8 +53,7 @@
 			padding: 4px;
 
 			&:hover {
-				background-color: color.scale($light-gray-common-components,
-						$lightness: -10%);
+				background-color: color.scale($light-gray-common-components, $lightness: -10%);
 			}
 		}
 

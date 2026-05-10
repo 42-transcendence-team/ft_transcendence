@@ -12,7 +12,7 @@ type FormErrors = {
 	birthday: string
 }
 
-const calculateAge = (birthDateString: string): number => {
+export const calculateAge = (birthDateString: string): number => {
 	const today = new Date()
 	const birthDate = new Date(birthDateString)
 
@@ -27,18 +27,6 @@ const calculateAge = (birthDateString: string): number => {
 	}
 
 	return age
-}
-
-const isValidAgeForRegister = (birthDateString: string): boolean => {
-	const birthDate = new Date(birthDateString)
-
-	// Fecha inválida
-	if (Number.isNaN(birthDate.getTime())) {
-		return false
-	}
-
-	const age = calculateAge(birthDateString)
-	return age >= 18 && age <= 150
 }
 
 export const RegisterForm = () => {
@@ -301,6 +289,7 @@ export const RegisterForm = () => {
 						onChange={field.onChange}
 						error={field.error}
 						placeholder={field.placeholder}
+						className="form-field"
 					/>
 				))}
 			</div>
@@ -320,6 +309,7 @@ export const RegisterForm = () => {
 						onChange={field.onChange}
 						error={field.error}
 						placeholder={field.placeholder}
+						className="form-field"
 					/>
 				))}
 			</div>
