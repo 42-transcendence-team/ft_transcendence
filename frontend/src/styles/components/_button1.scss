@@ -1,0 +1,23 @@
+.action-buttons {
+	display: flex;
+	gap: 15px;
+
+	button {
+		padding: 10px 20px;
+		border: none;
+		border-radius: 5px;
+		cursor: pointer;
+		color: white;
+		font-weight: bold;
+		font-size: 0.9em;
+		transition: background-color 0.3s ease;
+
+		&:hover {
+			opacity: 0.9;
+		}
+	}
+
+	.share-btn {
+		background-color: $color-btn-share;
+	}
+}
