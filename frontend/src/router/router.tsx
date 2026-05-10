@@ -13,6 +13,7 @@ export const router = createBrowserRouter([
 	{
 		path: "/",
 		element: <App />,
+		HydrateFallback: () => <div>Cargando aplicación...</div>, // Deberiamos hacer un componente de carga comun y bonmito
 		children: [
 			{ index: true, element: <RootRedirect /> },
 			PublicRoutes,

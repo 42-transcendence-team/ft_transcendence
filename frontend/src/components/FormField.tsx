@@ -1,10 +1,11 @@
 type FormFieldProps = {
 	id: string
-	label: string
+	label?: string
 	type: string
 	value: string
 	onChange: (value: string) => void
 	error?: string
+	className?: string
 	placeholder?: string
 }
 
@@ -15,25 +16,26 @@ export const FormField = ({
 	value,
 	onChange,
 	error,
+	className,
 	placeholder,
 }: FormFieldProps) => {
 	return (
 		<div className="form-field">
-			<label className="form-field__label" htmlFor={id}>
+			{label && <label htmlFor={id} className={className ? `${className}__label` : "default-label"}>
 				{label}
-			</label>
+			</label>}
 
 			<input
-				className={`form-field__input ${error ? "form-field__input--error" : ""}`}
 				id={id}
 				name={id}
 				type={type}
 				value={value}
 				placeholder={placeholder}
 				onChange={(e) => onChange(e.target.value)}
+				className={className ? `${className}__input` : "default-input"}
 			/>
 
-			{error && <p className="form-field__error">{error}</p>}
+			{error && <p className={className ? `${className}__tooltip` : "default-tooltip"}>{error}</p>}
 		</div>
 	)
 }

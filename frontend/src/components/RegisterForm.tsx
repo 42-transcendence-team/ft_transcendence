@@ -13,7 +13,7 @@ type FormErrors = {
 	birthday: string
 }
 
-const calculateAge = (birthDateString: string): number => {
+export const calculateAge = (birthDateString: string): number => {
 	const today = new Date()
 	const birthDate = new Date(birthDateString)
 
@@ -291,6 +291,7 @@ export const RegisterForm = () => {
 						onChange={field.onChange}
 						error={field.error}
 						placeholder={field.placeholder}
+						className="form-field"
 					/>
 				))}
 			</div>
@@ -310,6 +311,7 @@ export const RegisterForm = () => {
 						onChange={field.onChange}
 						error={field.error}
 						placeholder={field.placeholder}
+						className="form-field"
 					/>
 				))}
 			</div>
