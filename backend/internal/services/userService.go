@@ -254,3 +254,19 @@ func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error
 
 	return nil
 }
+
+func (s *UserService) GetUserByID(userID uint) (*models.User, error) {
+	user, err := s.UserRepo.FindById(userID)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *UserService) GetUserByLogin(login string) (*models.User, error) {
+	user, err := s.UserRepo.FindByLoginOrEmail(login)
+	if err != nil {
+		return nil, appErr.NewUnauthorized("user_not_found")
+	}
+	return user, nil
+}

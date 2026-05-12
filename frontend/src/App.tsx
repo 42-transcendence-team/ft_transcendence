@@ -1,5 +1,5 @@
+// App.tsx - Limpio
 import './styles/App.scss';
-
 import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AuthProvider } from "@components/auth-router/AuthContext";
@@ -8,6 +8,7 @@ type AuthStatus = "loading" | "auth" | "guest"
 // loading -> aun no se si hay sesion activa
 // auth -> usuario autenticado
 // guest -> usuario no autenticado
+// import { AuthProvider } from "./context/AuthContext";
 
 const App = () => {
 
@@ -60,5 +61,4 @@ const App = () => {
     </AuthProvider>
   );
 };
-
 export default App;

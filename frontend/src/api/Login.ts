@@ -31,13 +31,53 @@ export async function Login(identifier: string, password: string) {
 		body: JSON.stringify({ identifier: identifier.trim(), password }),
 	});
 
-	const data: LoginResponse = await res.json().catch(() => null);
+	//const data: LoginResponse = await res.json().catch(() => null);
+	console.log("res", res);
+	let data: LoginResponse | null = null;
+	try {
+		data = await res.json();
+	} catch {
+		data = null;
+	}
+	// console.log("data", data);
 
 	if (!res.ok)
 		throw buildApiError(res, data);
 
 	return data;
 }
+
+//todo
+// export async function Logout() {
+//     const res = await fetch(`${apiUrl}/auth/logout`, {
+//         method: "POST",
+//         credentials: "include",
+//     });
+//     return res.ok;
+// }
+
+
+export async function GetMyProfile() {
+    const res = await fetch(`${apiUrl}/users/me`, {
+        method: "GET",
+        credentials: "include", // jwt cockie
+    });
+    if (!res.ok)
+		throw new Error("No se pudo cargar el perfil");
+    return await res.json();
+}
+
+//todo para pillar los usuarios de los amigos 
+// export async function GetProfile(login: string) {
+//     const res = await fetch(`${apiUrl}/users/profile/${login}`, {
+//         method: "GET",
+//         credentials: "include", // Importante para enviar el JWT en la cookie
+//     });
+//     if (!res.ok)
+// 		throw new Error("No se pudo cargar el perfil");
+//     return await res.json();
+// }
+
 
 export async function Login2FA(code: string) {
 	const res = await fetch(`${apiUrl}/2fa/login`, {

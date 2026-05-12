@@ -260,3 +260,58 @@ func (r *FriendRepository) DeleteFriendship(userID1 uint, userID2 uint) error {
 
 	return nil
 }
+
+func (r *FriendRepository) ListBlocks(userID uint) ([]models.Block, error) {
+	var requests []models.Block
+
+	err := r.db.Where("blocker_id = ?", userID).
+		Find(&requests).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return requests, nil
+}
+
+func (r *FriendRepository) CreateBlock(BlockerID uint, BlockedID uint) error {
+
+	Block := models.Block{
+		BlockerID: BlockerID,
+		BlockedID: BlockedID,
+	}
+
+	return r.db.Create(&Block).Error
+}
+
+func (r *FriendRepository) DeleteBlock(BlockerID uint, BlockedID uint) error {
+
+	result := r.db.
+		Where("blocker_id = ? AND blocked_id = ?", BlockerID, BlockedID).
+		Delete(&models.Block{})
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+/*
+var count int64
+
+	err := r.db.Model(&models.Block{}).Where(
+		"(blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)",
+		userID1, userID2,
+		userID2, userID1,
+	).Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+*/

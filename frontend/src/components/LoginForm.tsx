@@ -26,7 +26,7 @@ export const LoginForm = () => {
 
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [serverMessage, setServerMessage] = useState("")
-
+	//const { refreshUser } = useAuth();
 	const [show2FA, setShow2FA] = useState(false);
 	const [tempToken, setTempToken] = useState<string | null>(null);
 	const [otpCode, setOtpCode] = useState<string[]>(Array(6).fill(""));
@@ -61,6 +61,7 @@ export const LoginForm = () => {
 			console.log("LOGIN DATA:", data)
 			console.log("LOGIN USER LOGIN:", data?.user?.login);
 			
+			//console.log("data", data);
 			if (!data) {
 				setServerMessage("Unknown error while trying to log in.");
 				setIsSubmitting(false);
@@ -73,7 +74,14 @@ export const LoginForm = () => {
 				setIsSubmitting(false);
 				return;
 			}
-
+			if (data.user){
+				await refreshAuth();
+				navigate(`/app/profile/${data.user.login}`);//TODO se tiene que cambiar id por token por seguridad
+				setErrors({ identifier: "", password: "" });
+				setServerMessage("");
+				setIsSubmitting(false); 
+				return;
+			}
 			setErrors({ identifier: "", password: "" });
 			setServerMessage("");
 			

@@ -24,11 +24,12 @@ func (srv *HTTPServer) Router() {
 	userService := services.NewUserService(userRepo)
 	twoFAService := services.New2FAService(userRepo, authService)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
+	blockService := services.NewBlockUserService(friendRepo, userRepo)
 
-	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
-	userHandler := handlers.NewUserHandler(userService)
+	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
+	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
-	friendHandler := handlers.NewFriendHandler(friendService)
+	friendHandler := handlers.NewFriendHandler(friendService, blockService)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -48,11 +49,10 @@ func (srv *HTTPServer) Router() {
 
 	// rutas privadas
 	protected := api.Group("/")
-	protected.Use(middlewares.AuthMiddleware(srv.Conf))
+	protected.Use(middlewares.AuthMiddleware(srv.Conf, srv.Redis))
 	{
-
 		routes.TestRoute(protected)
-		routes.AuthRoutesPrivate(protected, authHandler)
+		routes.AuthRoutesPrivate(protected, authHandler) //hacer que no se llame cuando el usuario no este autenticado
 		routes.FriendsRoutes(protected, friendHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
 		routes.UserRoutes(protected, userHandler)

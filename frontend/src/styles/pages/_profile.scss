@@ -243,7 +243,7 @@ body {
 			cursor: pointer;
 			transition: background 0.2s;
 			&:hover {
-				background-color: darken(#f0f0f0, 5%);
+				background-color: color.adjust(#f0f0f0, $lightness: -5%);
 			}
 		}
 	}

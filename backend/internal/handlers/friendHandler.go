@@ -11,11 +11,13 @@ import (
 
 type FriendHandler struct {
 	FriendRequestService *services.FriendRequestService
+	BlockUserService     *services.BlockUserService
 }
 
-func NewFriendHandler(friendService *services.FriendRequestService) *FriendHandler {
+func NewFriendHandler(friendService *services.FriendRequestService, blockService *services.BlockUserService) *FriendHandler {
 	return &FriendHandler{
 		FriendRequestService: friendService,
+		BlockUserService:     blockService,
 	}
 }
 
@@ -77,14 +79,12 @@ func (h *FriendHandler) ListOutgoingRequests(c *gin.Context) {
 
 	userID := c.MustGet("userID").(uint)
 
-	listOutReq, err := h.FriendRequestService.ListOutgoingRequest(userID)
+	response, err := h.FriendRequestService.ListOutgoingRequest(userID)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
-
-	response := dto.MapToResponse(listOutReq, userID)
 
 	c.JSON(200, gin.H{
 		"data": response,
@@ -95,14 +95,12 @@ func (h *FriendHandler) ListIncomingRequests(c *gin.Context) {
 
 	userID := c.MustGet("userID").(uint)
 
-	listIncReq, err := h.FriendRequestService.ListIncomingRequest(userID)
+	response, err := h.FriendRequestService.ListIncomingRequest(userID)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
-
-	response := dto.MapToResponse(listIncReq, userID)
 
 	c.JSON(200, gin.H{
 		"data": response,
@@ -187,6 +185,65 @@ func (h *FriendHandler) DeleteFriend(c *gin.Context) {
 	deleteFriendID := uint(id64)
 
 	err = h.FriendRequestService.DeleteFriend(userID, deleteFriendID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(204, gin.H{})
+}
+
+func (h *FriendHandler) ListBlocks(c *gin.Context) {
+
+	userID := c.MustGet("userID").(uint)
+
+	ListBlocks, err := h.BlockUserService.ListBlocks(userID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": ListBlocks,
+	})
+}
+
+func (h *FriendHandler) BlockUser(c *gin.Context) {
+
+	var req dto.SendBlockedRequest
+
+	err := ValidationBindRequest(c, &req)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	BlockerID := c.MustGet("userID").(uint)
+	err = h.BlockUserService.BlockUser(BlockerID, req.BlockedID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+}
+
+func (h *FriendHandler) UnblockUser(c *gin.Context) {
+	Blocked := c.Param("userId")
+
+	id64, err := strconv.ParseUint(Blocked, 10, 32)
+	if err != nil {
+		c.Error(appErr.NewBadRequest("Invalid request"))
+		c.Abort()
+		return
+	}
+
+	deleteFriendID := uint(id64)
+
+	userID := c.MustGet("userID").(uint)
+	err = h.BlockUserService.UnblockUser(userID, deleteFriendID)
 	if err != nil {
 		c.Error(err)
 		c.Abort()

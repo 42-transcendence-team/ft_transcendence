@@ -36,6 +36,10 @@ type Config struct {
 	GoAllowedURLs []string
 	Issuer2FA     string
 	Expiration2FA int
+
+	RedisHost		string
+	RedisPort		string
+	RedisPassword	string
 }
 
 func Load() (*Config, error) {
@@ -88,6 +92,11 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("EXPIRATION_2FA must be a number")
 	}
 	c.Expiration2FA = exp2FA
+
+	//Redis
+	c.RedisHost = strings.TrimSpace(os.Getenv("REDIS_HOST"))
+	c.RedisPort = strings.TrimSpace(os.Getenv("REDIS_PORT"))
+	c.RedisPassword = strings.TrimSpace(os.Getenv("REDIS_PASSWORD"))
 
 	// Pool (si no existen, luego tunePool mete defaults también)
 	c.DBMaxOpenConns = envIntOrDefault("DB_MAX_OPEN_CONNS", 25)

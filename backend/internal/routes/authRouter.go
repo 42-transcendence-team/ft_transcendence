@@ -13,13 +13,17 @@ func AuthRoutes(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {
 	api.POST("auth/login", authHandler.Login)
 	// TODO - Esto creo que no deberia ir aqui
 	// Logout de usuario (user-logout-> 200) en formato JSON
-	// api.POST("auth/logout", authHandler.Logout)
+	//api.POST("auth/logout", authHandler.Logout)
+	//NOTE - BORRAR EN PROD - Endpoint solo para testing
+	//api.GET("/users", userHandler.Filter)
+	//api.POST("auth/logout", authHandler.Logout)
 
 }
 
 func AuthRoutesPrivate(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {
-	// Dice al front quien es el usuario authenticado (user-authenticate-> 200, unauthorized-> 401, internal-> 500) en formato JSON
-	api.GET("auth/me", authHandler.Whoami)
 	// Logout de usuario (user-logout-> 200) en formato JSON
 	api.POST("auth/logout", authHandler.Logout)
+	// Dice al front quien es el usuario authenticado (user-authenticate-> 200, unauthorized-> 401, internal-> 500) en formato JSON
+	api.GET("auth/me", authHandler.Whoami)
+
 }

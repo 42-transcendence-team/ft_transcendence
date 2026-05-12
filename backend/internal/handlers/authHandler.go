@@ -6,21 +6,27 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	//"github.com/go-playground/validator/v10"
+	"github.com/redis/go-redis/v9"
 )
 
 type AuthHandler struct {
 	AuthService *services.AuthService
+	Redis       *redis.Client
 	cfg         *config.Config
 }
 
-func NewAuthHandler(authService *services.AuthService, cfg *config.Config) *AuthHandler {
+func NewAuthHandler(authService *services.AuthService, cfg *config.Config, rdb *redis.Client) *AuthHandler {
 	return &AuthHandler{
 		AuthService: authService,
 		cfg:         cfg,
+		Redis:       rdb,
 	}
 }
 
@@ -104,7 +110,6 @@ peticion que manda el front
 func (h *AuthHandler) Login(c *gin.Context) {
 
 	var req dto.LoginRequest
-
 	err := ValidationBindRequest(c, &req)
 	if err != nil {
 		c.Error(err)
@@ -124,15 +129,27 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	// En el caso de "FA activa, se genera un Roken temporal para poder comprobar el código TOTP
 	// Retorna para poder llamar al endpoint/handler de login 2FA
+	ctx := c.Request.Context()
 	if result.Requires2FA {
+		rediskey := fmt.Sprintf("2fa_token:%s", result.TempToken)
+		timeExp := time.Until(result.ExpTime)
+		if timeExp < 0 {
+			log.Printf("authHandler: Expired session %v", err)
+			c.AbortWithStatusJSON(401, gin.H{"Error": "Expired session"})
+			return
+		}
+		err := h.Redis.Set(ctx, rediskey, result.User.ID, timeExp).Err()
+		if err != nil {
+			log.Printf("authHandler: Redis error %v", err)
+			c.AbortWithStatusJSON(500, gin.H{"Error": "Server error (redis error)"})
+			return
+		}
 		h.SetTempToken(c, result.TempToken, result.ExpTime)
 		c.JSON(200, gin.H{
 			"message":     "2FA required",
 			"requires2fa": true,
 			"user": gin.H{
 				"id":        result.User.ID,
-				"login":     result.User.Login,
-				"email":     result.User.Email,
 				"tempToken": result.TempToken,
 			},
 		})
@@ -144,7 +161,19 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	user := result.User
 
 	h.setCookie(c, strToken, expTime)
-
+	timeExp := time.Until(expTime)
+	if timeExp < 0 {
+		log.Printf("authHandler: Expired session %v", err)
+		c.AbortWithStatusJSON(400, gin.H{"Error": "Expired session"})
+		return
+	}
+	// ctx := c.Request.Context()
+	sessionKey := fmt.Sprintf("session:%d", user.ID)
+	err = h.Redis.Set(ctx, sessionKey, strToken, timeExp).Err()
+	if err != nil {
+		log.Printf("Error: registration redis session")
+	}
+	h.Redis.SAdd(ctx, "online_users", user.ID)
 	// TODO: hay q ver como se mandan los msg al front y que necesita
 	c.JSON(200, gin.H{
 		"message":     "user login success",
@@ -162,15 +191,45 @@ func (h *AuthHandler) Login(c *gin.Context) {
 /*Logout*/
 
 func (h *AuthHandler) Logout(c *gin.Context) {
+	//todo delete???
+	// expTime := time.Unix(0, 0)
+	//ni compila
+	// userID, exists := c.Get("userID")
+	// ctx := c.Request.Context()
+	// sessionKey := fmt.Sprintf("session:%v", userID)
+	// if err != nil {
+	// 	log.Print("Error redis session deleted", err)
+	// }
+	// err = h.Redis.SRem(ctx, "online_users", userID).Err()
+	// if err != nil {
+	// 	log.Printf("Error deleting online user in redis: %v", err)
+	// }
 
+	// //TODO: borra el redis del user
+	//-----  LOGOUT segun stackoverflow  ------
+	userID, exists := c.Get("userID")
+	if !exists {
+		log.Println("Logout: userID not found in context")
+	}
+
+	ctx := c.Request.Context()
+	if exists {
+		sessionKey := fmt.Sprintf("session:%v", userID)
+		err := h.Redis.Del(ctx, sessionKey).Err() //borramos la session
+		if err != nil {
+			log.Printf("Error redis session deleted: %v", err)
+		}
+		errSrem := h.Redis.SRem(ctx, "online_users", userID).Err() //lo borramos de la lista de online_user
+		if errSrem != nil {
+			log.Printf("Error deleting online user in redis: %v", errSrem)
+		}
+	}
 	expTime := time.Unix(0, 0)
-
-	h.setCookie(c, "", expTime)
-
+	h.setCookie(c, "", expTime) //matamos la cokie
+	log.Printf("session borrada")
 	// TODO: hay q ver como se mandan los msg al front y que necesita
-	c.JSON(200, gin.H{
-		"message": "user logout success",
-	})
+	c.JSON(200, gin.H{"message": "user logout success"})
+
 }
 
 /*End of logout*/
@@ -199,14 +258,22 @@ func (h *AuthHandler) Whoami(c *gin.Context) {
 		c.Abort()
 		return
 	}
+	ctx := c.Request.Context()
+	isOnline, _ := h.Redis.SIsMember(ctx, "online_users", user.ID).Result()
 
+	visitKey := fmt.Sprintf("visits:%d", user.ID)
+	visits, _ := h.Redis.Get(ctx, visitKey).Int() //al hacerlo asi no incrementamos el num de visitas
 	// TODO: hay q ver como se mandan los msg al front y que necesita saber
 	c.JSON(200, gin.H{
 		"authenticated": true,
 		"user": gin.H{
-			"id":    user.ID,
-			"login": user.Login,
-			"email": user.Email,
+			"id":       user.ID,
+			"login":    user.Login,
+			"email":    user.Email,
+			"name":     user.Name,
+			"surname":  user.Surname,
+			"isOnline": isOnline, // redis
+			"visits":   visits,   // redis
 		},
 	})
 }

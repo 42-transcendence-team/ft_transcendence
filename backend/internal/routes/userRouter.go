@@ -14,5 +14,9 @@ func UserRoutes(api *gin.RouterGroup, userHandler *handlers.UserHandler) {
 		UserGroup.POST("/password", userHandler.UpdatePassword)
 		UserGroup.POST("/email", userHandler.UpdateEmail)
 		UserGroup.POST("/data", userHandler.UpdatePersonalData)
+		UserGroup.GET("/", userHandler.Filter)
+		//UserGroup.DELETE("/", userHandler.Delete)
+		//UserGroup.PUT("/", userHandler.Modify)
+		UserGroup.GET("/me", userHandler.GetMe)
 	}
 }
