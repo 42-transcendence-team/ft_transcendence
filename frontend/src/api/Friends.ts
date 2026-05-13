@@ -1,6 +1,4 @@
-import { buildApiError } from "./ApiError";
-
-const apiUrl = import.meta.env.PUBLIC_API_URL;
+import { apiRequest } from "./ApiRequest";
 
 export type FriendRequest = {
     id: number;
@@ -15,33 +13,19 @@ export type FriendRequestResponse = {
 }
 
 export async function getIncomingFriendRequests() {
-    const res = await fetch(`${apiUrl}/friends/requests/incoming`, {
-        method: "GET",
-        credentials: "include"
-    })
+	const data = await apiRequest({
+		endpoint: "friends/requests/incoming",
+	});
 
-    const data: FriendRequestResponse = await res.json().catch(() => null);
-
-    if (!res.ok) {
-        throw buildApiError(res, data);
-    }
-
-    return data;
+	return data;
 }
 
 export async function getOutcomingFriendRequests() {
-    const res = await fetch(`${apiUrl}/friends/requests/outgoing`, {
-        method: "GET",
-        credentials: "include"
-    })
+	const data = await apiRequest({
+		endpoint: "friends/requests/outgoing",
+	});
 
-    const data: FriendRequestResponse = await res.json().catch(() => null);
-
-    if (!res.ok) {
-        throw buildApiError(res, data);
-    }
-
-    return data;
+	return data;
 }
 
 export type DoSomethingFriendRequest = {
@@ -52,33 +36,21 @@ export type DoSomethingFriendRequest = {
 
 
 export async function acceptFriendRequest(requestId: number) {
-    const res = await fetch(`${apiUrl}/friends/requests/${requestId}/accept`, {
-        method: "PATCH",
-        credentials: "include"
-    })
+	const data = await apiRequest({
+		endpoint: `friends/requests/${requestId}/accept`,
+		method: "PATCH",
+	});
 
-    const data: DoSomethingFriendRequest = await res.json().catch(() => null);
-
-    if (!res.ok) {
-        throw buildApiError(res, data);
-    }
-
-    return data;
+	return data;
 }
 
 export async function rejectFriendRequest(requestId: number) {
-    const res = await fetch(`${apiUrl}/friends/requests/${requestId}/reject`, {
-        method: "PATCH",
-        credentials: "include"
-    })
+	const data = await apiRequest({
+		endpoint: `friends/requests/${requestId}/reject`,
+		method: "PATCH",
+	});
 
-    const data: DoSomethingFriendRequest = await res.json().catch(() => null);
-
-    if (!res.ok) {
-        throw buildApiError(res, data);
-    }
-
-    return data;
+	return data;
 }
 
 export type Friend = {
@@ -86,21 +58,10 @@ export type Friend = {
     username: string;
 }
 
-type ListFriendsResponse = {
-    data: Friend[];
-}
-
 export async function listFriendsRequest() {
-    const res = await fetch(`${apiUrl}/friends`, {
-        method: "GET",
-        credentials: "include"
-    })
-
-    const data: ListFriendsResponse = await res.json().catch(() => null);
-
-    if (!res.ok) {
-        throw buildApiError(res, data);
-    }
+    const data = await apiRequest({
+        endpoint: "friends",
+    });
 
     return data;
 }
