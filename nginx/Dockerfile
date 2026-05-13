@@ -10,3 +10,5 @@ EXPOSE 80
 EXPOSE 443
 
 CMD ["nginx", "-g", "daemon off;"]
+
+# TODO - Añadir certificados SSL de Let's Encrypt para producción. Para desarrollo, se pueden usar certificados autofirmados.
