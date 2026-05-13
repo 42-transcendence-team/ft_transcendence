@@ -1,21 +1,33 @@
+import { redirect } from "react-router-dom";
+
 import { PrivateLayout } from "layouts/privateLayout";
+import { HomePage } from "@pages/HomePage"
+import { Profile } from "@pages/Profile"
+import { Settings } from "@pages/Settings"
+import { settingsLoader } from "../api/Settings"
 
 import { HomePage } from "@pages/HomePage";
 import { Profile } from "@pages/Profile";
 import { Friends } from "@pages/Friends";
+import { getAuthenticatedUser } from "../api/Login";
 
-import { ProtectedRoute } from "@components/auth-router/ProtectedRoute";
+const privateLoader = async () => {
+	try {
+		await getAuthenticatedUser();
+		return null;
+	} catch {
+		throw redirect("/login");
+	}
+};
 
 export const PrivateRoutes = {
-  path: "app",
-  element: (
-    <ProtectedRoute>
-      <PrivateLayout />
-    </ProtectedRoute>
-  ),
-  children: [
-    { index: true, element: <HomePage /> },
-    { path: "profile/:username", element: <Profile /> },
+	path: "app",
+	loader: privateLoader,
+	element: <PrivateLayout />,
+	children: [
+		{ index: true, element: <HomePage /> },
+		{ path: "profile/:username", element: <Profile /> },
+		{ path: "settings", element: <Settings />, loader: settingsLoader },
     { path: "friends/:username", element: <Friends /> },
-  ],
+	],
 };

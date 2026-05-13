@@ -11,6 +11,10 @@ func AuthRoutes(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {
 	api.POST("auth/register", authHandler.Register)
 	// Login de usuario validando credenciales (user-login-> 200, o bad-request-> 400, o no-valid-request-> 422, o unauthorized-> 401) en formato JSON
 	api.POST("auth/login", authHandler.Login)
+	// TODO - Esto creo que no deberia ir aqui
+	// Logout de usuario (user-logout-> 200) en formato JSON
+	// api.POST("auth/logout", authHandler.Logout)
+
 }
 
 func AuthRoutesPrivate(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {
