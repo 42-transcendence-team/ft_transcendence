@@ -5,7 +5,7 @@ import { HomePage } from "@pages/HomePage"
 import { Profile } from "@pages/Profile"
 import { Settings } from "@pages/Settings"
 import { settingsLoader } from "../api/Settings"
-
+import { Friends } from "@pages/Friends";
 import { getAuthenticatedUser } from "../api/Login";
 
 const privateLoader = async () => {
@@ -25,5 +25,6 @@ export const PrivateRoutes = {
 		{ index: true, element: <HomePage /> },
 		{ path: "profile/:username", element: <Profile /> },
 		{ path: "settings", element: <Settings />, loader: settingsLoader },
+    { path: "friends/:username", element: <Friends /> },
 	],
 };
