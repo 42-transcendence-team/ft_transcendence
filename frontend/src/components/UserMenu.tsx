@@ -1,6 +1,6 @@
 import "../styles/components/_userMenu.scss"
 import { FiUser, FiSettings, FiLogOut, FiMenu } from "react-icons/fi";
-import { useState, useRef, useEffect  } from "react";
+import { useState  } from "react";
 import { Logout } from "api/Logout";
 import { useAuth } from "@components/auth-router/AuthContext";
 

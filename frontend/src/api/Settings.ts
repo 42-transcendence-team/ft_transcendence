@@ -1,20 +1,10 @@
-import { buildApiError } from "./ApiError";
-
-const apiUrl = import.meta.env.PUBLIC_API_URL;
+import { apiRequest } from "./ApiRequest";
 
 export async function settingsLoader() {
-	const res = await fetch(`${apiUrl}/users/settings`, {
-		method: "GET",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		credentials: "include",
+	const data = apiRequest({
+		endpoint: "users/settings",
 	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => null);
-		throw buildApiError(res, data);
-	}
-	const data = await res.json();
+	
 	return data;
 }
 
@@ -26,19 +16,12 @@ export type DataSettings = {
 };
 
 export async function updateData(settings: DataSettings) {
-	const res = await fetch(`${apiUrl}/users/data`, {
+	const data = await apiRequest({
+		endpoint: "users/data",
 		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		credentials: "include",
-		body: JSON.stringify(settings),
+		body: settings,
 	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => null);
-		throw buildApiError(res, data);
-	}
-	const data = await res.json();
+
 	return data;
 }
 
@@ -50,19 +33,12 @@ export type PasswordSettings = {
 };
 
 export async function updatePassword(settings: PasswordSettings) {
-	const res = await fetch(`${apiUrl}/users/password`, {
+	const data = await apiRequest({
+		endpoint: "users/password",
 		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		credentials: "include",
-		body: JSON.stringify(settings),
+		body: settings,
 	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => null);
-		throw buildApiError(res, data);
-	}
-	const data = await res.json();
+
 	return data;
 }
 
@@ -73,19 +49,12 @@ export type EmailSettings = {
 };
 
 export async function updateEmail(settings: EmailSettings) {
-	const res = await fetch(`${apiUrl}/users/email`, {
+	const data = await apiRequest({
+		endpoint: "users/email",
 		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		credentials: "include",
-		body: JSON.stringify(settings),
+		body: settings,
 	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => null);
-		throw buildApiError(res, data);
-	}
-	const data = await res.json();
+
 	return data;
 }
 
@@ -95,18 +64,11 @@ export type DeleteSettings = {
 };
 
 export async function deleteAccount(settings: DeleteSettings) {
-	const res = await fetch(`${apiUrl}/users/delete`, {
+	const data = await apiRequest({
+		endpoint: "users/delete",
 		method: "DELETE",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		credentials: "include",
-		body: JSON.stringify(settings),
+		body: settings,
 	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => null);
-		throw buildApiError(res, data);
-	}
-	const data = await res.json();
+
 	return data;
 }

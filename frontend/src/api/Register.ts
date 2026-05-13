@@ -1,3 +1,5 @@
+import { apiRequest } from "./ApiRequest"
+
 export type RegisterPayload = {
 	login: string
 	email: string
@@ -16,25 +18,12 @@ export type RegisterResponse = {
 	[key: string]: unknown
 }
 
-export const registerUser = async (
-	payload: RegisterPayload,
-): Promise<RegisterResponse> => {
-	const response = await fetch("http://localhost:8080/api/v1/auth/register", {
+export async function registerUser(payload: RegisterPayload): Promise<RegisterResponse> {
+	const data = apiRequest({
+		endpoint: "auth/register",
 		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify(payload),
+		body: payload,
 	})
-
-	const data: RegisterResponse = await response.json()
-
-	if (!response.ok) {
-		throw {
-			status: response.status,
-			data,
-		}
-	}
 
 	return data
 }
