@@ -77,14 +77,12 @@ func (h *FriendHandler) ListOutgoingRequests(c *gin.Context) {
 
 	userID := c.MustGet("userID").(uint)
 
-	listOutReq, err := h.FriendRequestService.ListOutgoingRequest(userID)
+	response, err := h.FriendRequestService.ListOutgoingRequest(userID)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
-
-	response := dto.MapToResponse(listOutReq, userID)
 
 	c.JSON(200, gin.H{
 		"data": response,
@@ -95,14 +93,12 @@ func (h *FriendHandler) ListIncomingRequests(c *gin.Context) {
 
 	userID := c.MustGet("userID").(uint)
 
-	listIncReq, err := h.FriendRequestService.ListIncomingRequest(userID)
+	response, err := h.FriendRequestService.ListIncomingRequest(userID)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
-
-	response := dto.MapToResponse(listIncReq, userID)
 
 	c.JSON(200, gin.H{
 		"data": response,

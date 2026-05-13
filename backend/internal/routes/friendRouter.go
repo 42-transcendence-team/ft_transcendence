@@ -57,6 +57,7 @@ func FriendsRoutes(api *gin.RouterGroup, friendHandler *handlers.FriendHandler) 
 		}
 
 		// Borrar amigo
+		// TODO: cuando me borrro a mi mismo me d aun 404 arreglar
 		friends.DELETE("/:userId", friendHandler.DeleteFriend)
 
 		// Bloquear usuario
