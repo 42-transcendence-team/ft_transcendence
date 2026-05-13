@@ -5,9 +5,6 @@ import { HomePage } from "@pages/HomePage"
 import { Profile } from "@pages/Profile"
 import { Settings } from "@pages/Settings"
 import { settingsLoader } from "../api/Settings"
-
-import { HomePage } from "@pages/HomePage";
-import { Profile } from "@pages/Profile";
 import { Friends } from "@pages/Friends";
 import { getAuthenticatedUser } from "../api/Login";
 
