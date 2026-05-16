@@ -6,6 +6,7 @@ import (
 	"backend/internal/repository"
 	routes "backend/internal/routes"
 	"backend/internal/services"
+	"backend/internal/storage"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +18,8 @@ func (srv *HTTPServer) Router() {
 
 	routes.HealthRoutes(srv.Engine)
 
+	srv.Engine.Static("/uploads", "./uploads")
+
 	userRepo := repository.NewUserRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
 	postRepo := repository.NewPostRepository(srv.Db)
@@ -25,7 +28,8 @@ func (srv *HTTPServer) Router() {
 	userService := services.NewUserService(userRepo)
 	twoFAService := services.New2FAService(userRepo, authService)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
-	postService := services.NewPostService(postRepo)
+	postImageStorage := storage.NewPostImageStorage("./uploads", "/uploads")
+	postService := services.NewPostService(postRepo, postImageStorage)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
 	userHandler := handlers.NewUserHandler(userService)
