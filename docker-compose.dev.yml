@@ -76,22 +76,36 @@ services:
                 condition: service_healthy
 
     nginx:
-      build:
-        context: ./nginx
+        build:
+          context: ./nginx
 
-      ports:
-        - "80:80"
-        - "443:443"
+        ports:
+          - "80:80"
+          - "443:443"
 
-      depends_on:
-        backend:
-          condition: service_started
-        frontend:
-          condition: service_started
+        depends_on:
+          backend:
+            condition: service_started
+          frontend:
+            condition: service_started
+          docusaurus:
+            condition: service_started
 
-      networks:
-        - back-front
-        - db-view
+        networks:
+          - back-front
+          - db-view
+
+    docusaurus:
+        build:
+          context: ./docusaurus
+        ports:
+          - "3001:3000"
+        volumes:
+          - ./docusaurus:/app
+          - /app/node_modules
+        restart: unless-stopped
+        networks:
+          - back-front
 
 
 volumes:
