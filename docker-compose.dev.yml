@@ -94,18 +94,20 @@ services:
         networks:
           - back-front
           - db-view
+          - docs-view
 
     docusaurus:
         build:
           context: ./docusaurus
-        ports:
-          - "3001:3000"
+        expose:
+            - "3000"
         volumes:
           - ./docusaurus:/app
           - /app/node_modules
         restart: unless-stopped
         networks:
-          - back-front
+            - docs-view
+            - back-front
 
 
 volumes:
@@ -116,4 +118,5 @@ volumes:
 networks:
     db-view:
     db-back:
-    back-front: 
+    back-front:
+    docs-view:
