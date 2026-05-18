@@ -75,6 +75,24 @@ services:
             postgres:
                 condition: service_healthy
 
+    nginx:
+      build:
+        context: ./nginx
+
+      ports:
+        - "80:80"
+        - "443:443"
+
+      depends_on:
+        backend:
+          condition: service_started
+        frontend:
+          condition: service_started
+
+      networks:
+        - back-front
+        - db-view
+
 
 volumes:
     postgres_data:
