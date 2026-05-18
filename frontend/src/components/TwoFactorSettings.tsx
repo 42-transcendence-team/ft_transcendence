@@ -24,8 +24,8 @@ const texts = {
 	},
 };
 
-export function TwoFactorSettings() {
-	const [active2FA, setActive2FA] = useState(false);
+export function TwoFactorSettings(active: { active: boolean }) {
+	const [active2FA, setActive2FA] = useState(active.active);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [mode, setMode] = useState<Mode>("enable");
 	const [otpCode, setOtpCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
@@ -81,6 +81,8 @@ export function TwoFactorSettings() {
 	};
 
 	const handleClose = () => {
+		if (animating === "on")
+			setActive2FA(false);
 		setAnimating(null);
 		setModalOpen(false);
 		setOtpCode(Array(CODE_LENGTH).fill(""));

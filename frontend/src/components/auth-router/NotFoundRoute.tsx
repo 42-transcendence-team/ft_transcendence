@@ -1,0 +1,20 @@
+import { Navigate } from "react-router-dom"
+import { NotFound } from "@pages/NotFound"
+import { useAuth } from "@components/auth-router/AuthContext"
+
+// Controla las rutas inexistentes.
+// Los guests se redirigen a login.
+// Los usuarios autenticados ven el 404.
+export const NotFoundRoute = () => {
+	const { authStatus } = useAuth()
+
+	if (authStatus === "loading") {
+		return <div>Loading...</div>
+	}
+
+	if (authStatus === "guest") {
+		return <Navigate to="/login" replace />
+	}
+
+	return <NotFound />
+}

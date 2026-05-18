@@ -18,19 +18,28 @@ func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 
 	userRepo := repository.NewUserRepository(srv.Db)
+	friendRepo := repository.NewFriendRepository(srv.Db)
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
 	twoFAService := services.New2FAService(userRepo, authService)
+	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
+	friendHandler := handlers.NewFriendHandler(friendService)
 
 	api := srv.Engine.Group("/api/v1")
 
 	// rutas publicas
-	routes.AuthRoutes(api, authHandler)
+	routes.AuthRoutes(api, authHandler)//todo se usa??
+	// rutas publicas para usuarios no autenticados
+	publicForNoAuth := api.Group("/")
+	publicForNoAuth.Use(middlewares.RejectIfAuthMiddleware(srv.Conf))
+	{
+		routes.AuthRoutes(publicForNoAuth, authHandler)
+	}
 
 	// Esto en realidad no se como poder hacerlo bonito
 	login := api.Group("/2fa")
@@ -43,9 +52,12 @@ func (srv *HTTPServer) Router() {
 	protected := api.Group("/")
 	protected.Use(middlewares.AuthMiddleware(srv.Conf, srv.Redis))
 	{
+
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
+		routes.FriendsRoutes(protected, friendHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
+		routes.UserRoutes(protected, userHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 		routes.UserRoutes(protected, userHandler) //creo q puedo meter esto aqui
 	}
