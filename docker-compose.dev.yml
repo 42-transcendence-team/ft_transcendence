@@ -95,6 +95,7 @@ services:
           - back-front
           - db-view
           - docs-view
+          - monitoring
 
     docusaurus:
         build:
@@ -109,10 +110,45 @@ services:
             - docs-view
             - back-front
 
+    prometheus:
+        build: 
+            context: ./prometheus
+        volumes:
+            - prometheus_data:/prometheus
+        expose:
+            - "9090"
+        command:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+        networks:
+            - monitoring
+
+    grafana:
+        build:
+            context: ./grafana
+        volumes:
+            - grafana_data:/var/lib/grafana
+        expose:
+            - "3000"
+        depends_on:
+            - prometheus
+        networks:
+            - monitoring
+
+    # 
+    node-exporter:
+        image: prom/node-exporter:latest
+        expose:
+            - "9100"
+        networks:
+            - monitoring
+
 
 volumes:
     postgres_data:
     pgadmin_data:
+    prometheus_data:
+    grafana_data:
 
 
 networks:
@@ -120,3 +156,4 @@ networks:
     db-back:
     back-front:
     docs-view:
+    monitoring:
