@@ -1,0 +1,47 @@
+
+.request-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 80px;
+    padding: 1rem;
+    border-radius: 12px;
+    background-color: green;
+    box-sizing: border-box;
+}
+
+.request-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.small-logo {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background-color: #f0f0f0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+
+	img {
+		width: 60%;
+		height: auto;
+	}
+}
+
+.request-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+
+button {
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}

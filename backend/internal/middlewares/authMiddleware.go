@@ -24,7 +24,7 @@ func AuthMiddleware(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 			return
 		}
 
-		claims, err := ValidateToken(strToken, cfg)
+		claims, err := utils.ValidateToken(strToken, cfg)
 		if err != nil {
 			c.Error(err)
 			c.Abort()
@@ -45,44 +45,10 @@ func AuthMiddleware(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 			Si el usuario es validado por que el token esta bien pasa al siguiente paso (ya sea midelware o el handler de la ruta) , para en estaa request si quieres saber el id del
 			propietario se usara ->
 			algo asi userID es una unidad uint como el la db , asik podremos acceder facilmente a los datos
-			userIDValue, exists := c.Get("userID")
-			if !exists {
-				// es que no hay userID en el contexto, creo q nunca deberia de no haber si lelgo hasta ahi pero puede ser bueno chekearlo
-			}
-			y luego
-			userID, ok := userIDValue.(uint) // para cambiar el tipo de variable de any a uint
-			if !ok {
-			}
+			userID := c.MustGet("userID").(uint)
+			// (uint) para cambiar el tipo de variable de any a uint
 		*/
 
 		c.Next()
 	}
-}
-
-func ValidateToken(strToken string, cfg *config.Config) (*utils.CustomClaims, error) {
-
-	token, err := jwt.ParseWithClaims(strToken, &utils.CustomClaims{},
-		func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, appErr.NewUnauthorized("invalid signing method")
-			}
-			return []byte(cfg.JwtSecret), nil
-		})
-	if err != nil {
-		if errors.Is(err, jwt.ErrTokenExpired) {
-			// si expira el token nunca llegara aqui por que la cokie directamente se borra, lo dejo por seguridad
-			return nil, appErr.NewUnauthorized("expired token")
-		}
-		if errors.Is(err, jwt.ErrTokenSignatureInvalid) {
-			return nil, appErr.NewUnauthorized("invalid signature")
-		}
-		return nil, appErr.NewUnauthorized("invalid token")
-	}
-
-	claims, ok := token.Claims.(*utils.CustomClaims)
-	if !ok || !token.Valid {
-		return nil, appErr.NewUnauthorized("invalid token")
-	}
-
-	return claims, nil
 }

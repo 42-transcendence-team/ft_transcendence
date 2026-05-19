@@ -13,7 +13,9 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
+    "date-fns-tz": "^3.2.0",
     "react": "^19.2.3",
+    "react-datepicker": "^9.1.0",
     "react-dom": "^19.2.3",
     "react-icons": "^5.6.0",
     "react-router": "^7.13.0",

@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"backend/internal/dto"
+	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -42,37 +44,155 @@ func (h *UserHandler) Filter(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
-func (h *UserHandler) Delete(c *gin.Context) {
+func (h *UserHandler) GetSettings(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
+		c.Abort()
+		return
+	}
+
+	settings, err := h.UserService.GetSettings(userIDValue.(uint))
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, settings)
+}
+
+func (h *UserHandler) RemoveAccount(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
+		c.Abort()
+		return
+	}
 	var request dto.UserDelete
 
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
-		c.Error(err)
+		c.Error(appErr.NewBadRequest(err.Error())) // TODO - Revisar error que muestra, ahora mismo lo que devuelve el DTO
 		c.Abort()
 		return
 	}
 
-	err = h.UserService.Delete(request)
+	request.Id = userIDValue.(uint)
+
+	err = h.UserService.RemoveAccount(request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "User removed successfully"})
 }
 
-func (h *UserHandler) Modify(c *gin.Context) {
-	var request dto.UserModify
+func (h *UserHandler) UpdatePersonalData(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
+		c.Abort()
+		return
+	}
 
-	err := c.ShouldBindJSON(&request)
+	var req dto.UserModifyData
+
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	err = h.UserService.Modify(request)
+	request := dto.ModifyInputData{
+		Code:    req.Code,
+		Name:    req.Name,
+		Surname: req.Surname,
+	}
+
+	if req.Birthday != nil {
+		birthday, err := time.Parse("2006-01-02", *req.Birthday)
+		if err != nil {
+			c.Error(appErr.NewValidation(map[string]string{
+				"birthday": "invalid_format",
+			}))
+			c.Abort()
+			return
+		}
+		request.Birthday = &birthday
+	}
+
+	err = h.UserService.ModifyData(userIDValue.(uint), request)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User modified successfully"})
+}
+
+func (h *UserHandler) UpdateEmail(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
+		c.Abort()
+		return
+	}
+
+	var req dto.UserModifyEmail
+
+	err := ValidationBindRequest(c, &req)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	request := dto.ModifyInputEmail{
+		Code:        req.Code,
+		Email:       req.Email,
+		VerifyEmail: req.VerifyEmail,
+	}
+
+	err = h.UserService.ModifyEmail(userIDValue.(uint), request)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User modified successfully"})
+}
+
+func (h *UserHandler) UpdatePassword(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
+		c.Abort()
+		return
+	}
+
+	var req dto.UserModifyPass
+
+	err := ValidationBindRequest(c, &req)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	request := dto.ModifyInputPass{
+		Code:             req.Code,
+		Password:         req.Password,
+		VerifyPassword:   req.VerifyPassword,
+		PreviousPassword: req.PreviousPassword,
+	}
+
+	err = h.UserService.ModifyPass(userIDValue.(uint), request)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
