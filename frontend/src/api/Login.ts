@@ -1,6 +1,4 @@
-import { buildApiError } from "./ApiError";
-
-const apiUrl = import.meta.env.PUBLIC_API_URL;
+import { apiRequest } from "./ApiRequest";
 
 export type LoginResponse = {
 	requires2fa?: boolean;
@@ -24,26 +22,11 @@ export type AuthMeResponse = {
 };
 
 export async function Login(identifier: string, password: string) {
-	const res = await fetch(`${apiUrl}/auth/login`, {
+	const data = await apiRequest({
+		endpoint: "auth/login",
 		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		credentials: "include",
-		body: JSON.stringify({ identifier: identifier.trim(), password }),
+		body: { identifier: identifier.trim(), password },
 	});
-	console.log("res", res);
-	let data: LoginResponse | null = null;
-	try {
-		data = await res.json();
-	} catch {
-		data = null;
-	}
-	// console.log("data", data);
-
-	// todo se hace en rama redis 
-  // const data: LoginResponse = await res.json().catch(() => null);
-
-	if (!res.ok)
-		throw buildApiError(res, data);
 
 	return data;
 }
@@ -59,13 +42,10 @@ export async function Login(identifier: string, password: string) {
 
 
 export async function GetMyProfile() {
-    const res = await fetch(`${apiUrl}/users/me`, {
-        method: "GET",
-        credentials: "include", // jwt cockie
-    });
-    if (!res.ok)
-		throw new Error("No se pudo cargar el perfil");
-    return await res.json();
+    const data = apiRequest({
+		endpoint: "users/me",
+	});
+	return data;
 }
 
 //todo para pillar los usuarios de los amigos 
@@ -81,32 +61,19 @@ export async function GetMyProfile() {
 
 
 export async function Login2FA(code: string) {
-	const res = await fetch(`${apiUrl}/2fa/login`, {
+	const data = await apiRequest({
+		endpoint: "2fa/login",
 		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		credentials: "include",
-		body: JSON.stringify({ code }),
+		body: { code },
 	});
 
-	if (!res.ok) {
-		const data = await res.json().catch(() => null);
-		throw buildApiError(res, data);
-	}
-
-	return true;
+	return data;
 }
 
 export async function getAuthenticatedUser() {
-	const res = await fetch(`${apiUrl}/auth/me`, {
-		method: "GET",
-		credentials: "include",
+	const data = await apiRequest({
+		endpoint: "auth/me",
 	});
-
-	const data: AuthMeResponse = await res.json().catch(() => null);
-
-	if (!res.ok) {
-		throw buildApiError(res, data);
-	}
-
+	
 	return data;
 }
