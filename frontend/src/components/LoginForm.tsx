@@ -1,13 +1,13 @@
-import { NavLink } from "react-router-dom"
+import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react"
 import { FormField } from "./FormField"
 import { Login, Login2FA, getAuthenticatedUser } from "api/Login"
 import { Modal } from "@components/Modal"
 import { OtpInput, Footer2FA } from "@components/TwoFactorUI"
-import { useAuth } from "../context/AuthContext";
+import { useAuth as useUserAuth} from "../context/AuthContext";
 
 //todo creo q este es mejor
-//import { useAuth } from "@components/auth-router/AuthContext"
+import { useAuth as useRouterAuth} from "@components/auth-router/AuthContext"
 
 // Formulario de login.
 // Valida credenciales, gestiona el flujo 2FA y actualiza el estado global de autenticación.
@@ -17,7 +17,8 @@ type FormErrors = {
 }
 
 export const LoginForm = () => {
-	const { refreshAuth } = useAuth()
+	const navigate = useNavigate();
+	const { refreshAuth } = useRouterAuth()
 
 	const [identifier, setIdentifier] = useState("")
 	const [password, setPassword] = useState("")
@@ -29,7 +30,7 @@ export const LoginForm = () => {
 
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [serverMessage, setServerMessage] = useState("")
-	const { refreshUser } = useAuth();
+	const { refreshUser } = useUserAuth();
 	const [show2FA, setShow2FA] = useState(false);
 	const [tempToken, setTempToken] = useState<string | null>(null);
 	const [otpCode, setOtpCode] = useState<string[]>(Array(6).fill(""));

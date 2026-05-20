@@ -9,10 +9,10 @@ import (
 func UserRoutes(api *gin.RouterGroup, userHandler *handlers.UserHandler) {
 	UserGroup := api.Group("/users")
 	{
-    //todo se usan???
+		//todo se usan???
 		UserGroup.GET("/", userHandler.Filter)
-		UserGroup.DELETE("/", userHandler.Delete)
-		UserGroup.PUT("/", userHandler.Modify)
+		// UserGroup.DELETE("/", userHandler.Delete)
+		// UserGroup.PUT("/", userHandler.Modify)
 		UserGroup.GET("/me", userHandler.GetMe)
 		// cuando se borre el usuario tambien hay que borrar las tablas de relacciones entre usuarios
 		// y peticiones pendientes , bloqueos

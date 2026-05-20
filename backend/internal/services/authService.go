@@ -146,7 +146,7 @@ func (s *AuthService) GetUserById(userID uint) (*models.User, error) {
 }
 
 func (s *UserService) GetUserByLogin(login string) (*models.User, error) {
-	user, err := s.userRepo.FindByLoginOrEmail(login)
+	user, err := s.UserRepo.FindByLoginOrEmail(login)
 	if err != nil {
 		return nil, appErr.NewUnauthorized("user_not_found")
 	}

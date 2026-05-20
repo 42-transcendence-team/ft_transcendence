@@ -4,10 +4,9 @@ import (
 	"backend/config"
 	appErr "backend/internal/errors"
 	"backend/internal/utils"
-	"errors"
 	"fmt"
+
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
 )
 

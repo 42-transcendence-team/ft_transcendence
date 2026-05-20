@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
+	_ "github.com/go-playground/validator/v10"
 	"github.com/redis/go-redis/v9"
 )
 

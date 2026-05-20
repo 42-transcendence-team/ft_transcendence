@@ -33,7 +33,6 @@ func (srv *HTTPServer) Router() {
 	api := srv.Engine.Group("/api/v1")
 
 	// rutas publicas
-	routes.AuthRoutes(api, authHandler)//todo se usa??
 	// rutas publicas para usuarios no autenticados
 	publicForNoAuth := api.Group("/")
 	publicForNoAuth.Use(middlewares.RejectIfAuthMiddleware(srv.Conf))
@@ -59,7 +58,6 @@ func (srv *HTTPServer) Router() {
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
 		routes.UserRoutes(protected, userHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
-		routes.UserRoutes(protected, userHandler) //creo q puedo meter esto aqui
 	}
 
 	srv.Engine.NoMethod(func(c *gin.Context) {
