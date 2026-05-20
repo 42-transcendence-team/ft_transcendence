@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
+	_ "github.com/go-playground/validator/v10"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -32,17 +32,19 @@ func NewAuthHandler(authService *services.AuthService, cfg *config.Config, rdb *
 
 /* Register */
 
-/* JSON q manda el fronted
-Si algun campo no cumple als regals de la struct de abajo manda error con especificacioens
-de q ha fallado segun la estructura d ela funcon apperr NewValidation()
+/* JSON que manda el fronted
+Si algun campo no cumple las reglas de la struct de abajo manda error con especificacioens
+de que ha fallado segun la estructura d ela funcon apperr NewValidation()
 {
   "login": "prueba",
   "email": "prueba@test.com",
   "password": "angelaKk12132%",
   "confirmPassword": "angelaKk12132%",
   "name": "angela",
-  "Surname": "barrio",
-  "birthday": "2000-10-23" // tiene que ser este formato "aaaa-mm-dd"
+  "surname": "barrio",
+  "birthday": "2000-10-23" , // tiene que ser este formato "aaaa-mm-dd"
+  "termsAndConditions": true,
+  "privacyPolicy": true
 }
 */
 
@@ -72,7 +74,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Password: req.Password,
 		Name:     req.Name,
 		Surname:  req.Surname,
-		Birtday:  birthday,
+		Birthday: birthday,
 	})
 	if err != nil {
 		c.Error(err)
@@ -180,7 +182,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			"id":    user.ID,
 			"login": user.Login,
 			"email": user.Email,
-			"token": strToken, // QUITAR ESTO DE AQUI SOLO ES PA PROBAR !!!!!!!!!!!!!!!
 		},
 	})
 }
@@ -322,38 +323,3 @@ func (h *AuthHandler) SetTempToken(c *gin.Context, tempToken string, exp time.Ti
 func (h *AuthHandler) ClearTempToken(c *gin.Context) {
 	h.SetTempToken(c, "", time.Unix(0, 0))
 }
-
-/*Request validation*/
-// tal vez esto haya que quitarlo de aqui, pero tampoco se dodne iria
-func ValidationBindRequest(c *gin.Context, req interface{}) error {
-
-	err := c.ShouldBindJSON(&req)
-
-	if err != nil {
-		var validationErr validator.ValidationErrors
-		if errors.As(err, &validationErr) {
-			fields := ValidationErrorsToMap(validationErr)
-			return appErr.NewValidation(fields)
-		}
-		return appErr.NewBadRequest("invalid_request_body")
-	}
-
-	return nil
-}
-
-func ValidationErrorsToMap(validationErr validator.ValidationErrors) map[string]string {
-
-	fields := make(map[string]string)
-
-	for _, err := range validationErr {
-
-		field := err.Field()
-		rule := err.Tag()
-
-		fields[field] = rule
-	}
-
-	return fields
-}
-
-/*End of request validation*/

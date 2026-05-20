@@ -4,8 +4,8 @@ services:
         build:
             context: ./backend
             dockerfile: Dockerfile.dev
-        ports:
-        - "${BACKEND_PORT}:8080"
+        expose:
+            - "8080"
         restart: unless-stopped
         depends_on:
             postgres:
@@ -26,8 +26,8 @@ services:
         env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
         build:
             context: ./frontend
-        ports:
-            - "${FRONTEND_PORT}:3000"
+        expose:
+            - "3000"
         volumes:
             - /app/node_modules
             - ./frontend:/app # Comparte el codigo fuente como volumen, por que los cambios se reflejan directamente en el contenedor
@@ -51,8 +51,8 @@ services:
             interval: 10s
             timeout: 5s
             retries: 5
-        ports:
-            - "${DB_PORT}:5432"
+        expose:
+            - "5432"
         restart: unless-stopped
         volumes:
             - postgres_data:/var/lib/postgresql # Carpeta temporal para pruebas. Por definir donde se guardaran los datos de postgres
@@ -67,8 +67,8 @@ services:
         environment:
             PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
             PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
-        ports:
-            - "${PGADMIN_PORT}:80"
+        expose:
+            - "80"
         volumes:
             - pgadmin_data:/var/lib/pgadmin
         networks:
@@ -81,8 +81,8 @@ services:
         env_file: .env
         image: redis:latest
         command: redis-server --requirepass ${REDIS_PASSWORD}
-        # ports:
-        #     - "${REDIS_PORT}:6379"
+        ports:
+            - "${REDIS_PORT}:6379"
         restart: always
         volumes:
             - redis_data:/data
@@ -94,11 +94,81 @@ services:
             timeout: 3s
             retries: 5
 
+    nginx:
+        build:
+          context: ./nginx
+
+        ports:
+          - "80:80"
+          - "443:443"
+
+        depends_on:
+          backend:
+            condition: service_started
+          frontend:
+            condition: service_started
+          docusaurus:
+            condition: service_started
+
+        networks:
+          - back-front
+          - db-view
+          - docs-view
+          - monitoring
+
+    docusaurus:
+        build:
+          context: ./docusaurus
+        expose:
+            - "3000"
+        volumes:
+          - ./docusaurus:/app
+          - /app/node_modules
+        restart: unless-stopped
+        networks:
+            - docs-view
+            - back-front
+
+    prometheus:
+        build: 
+            context: ./prometheus
+        volumes:
+            - prometheus_data:/prometheus
+        expose:
+            - "9090"
+        command:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+        networks:
+            - monitoring
+
+    grafana:
+        build:
+            context: ./grafana
+        volumes:
+            - grafana_data:/var/lib/grafana
+        expose:
+            - "3000"
+        depends_on:
+            - prometheus
+        networks:
+            - monitoring
+
+    # 
+    node-exporter:
+        image: prom/node-exporter:latest
+        expose:
+            - "9100"
+        networks:
+            - monitoring
+
 
 volumes:
     postgres_data:
     pgadmin_data:
     redis_data:
+    prometheus_data:
+    grafana_data:
 
 
 networks:
@@ -106,3 +176,5 @@ networks:
     db-back:
     back-front: 
     redis:
+    docs-view:
+    monitoring:

@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { registerUser } from "../api/Register"
 import { FormField } from "./FormField"
 
 type FormErrors = {
@@ -12,7 +13,7 @@ type FormErrors = {
 	birthday: string
 }
 
-const calculateAge = (birthDateString: string): number => {
+export const calculateAge = (birthDateString: string): number => {
 	const today = new Date()
 	const birthDate = new Date(birthDateString)
 
@@ -29,18 +30,6 @@ const calculateAge = (birthDateString: string): number => {
 	return age
 }
 
-const isValidAgeForRegister = (birthDateString: string): boolean => {
-	const birthDate = new Date(birthDateString)
-
-	// Fecha inválida
-	if (Number.isNaN(birthDate.getTime())) {
-		return false
-	}
-
-	const age = calculateAge(birthDateString)
-	return age >= 18 && age <= 150
-}
-
 export const RegisterForm = () => {
 	// La siguiente estructura sintáctica se denomina "Array destructuring".
 	// useState devuelve un array con dos elementos:
@@ -53,6 +42,9 @@ export const RegisterForm = () => {
 	const [name, setName] = useState("")
 	const [surname, setSurname] = useState("")
 	const [birthday, setBirthday] = useState("") // YYYY-MM-DD
+	const [termsAndConditions, setTermsAndConditions] = useState(false)
+	const [privacyPolicy, setPrivacyPolicy] = useState(false)
+
 	const [errors, setErrors] = useState<FormErrors>({
 		username: "",
 		email: "",
@@ -82,56 +74,64 @@ export const RegisterForm = () => {
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 		const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s-]+$/
 		const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,64}$/
-		const maxLegth = 42
+		const maxLength = 42
 		if (!username.trim()) {
-			newErrors.username = "El username es obligatorio."
+			newErrors.username = "Username is required."
 		} else if (!usernameRegex.test(username)) {
-			newErrors.username = "Solo se permiten letras, números, guion y guion bajo."
-		} else if (username.length > maxLegth) {
-			newErrors.username = "No está permitido, máximo de 42 caracteres."
+			newErrors.username = "Only letters, numbers, hyphens and underscores are allowed."
+		} else if (username.length > maxLength) {
+			newErrors.username = "Maximum length is 42 characters."
 		}
+
 		if (!email.trim()) {
-			newErrors.email = "El email es obligatorio."
+			newErrors.email = "Email is required."
 		} else if (!emailRegex.test(email)) {
-			newErrors.email = "Introduce un email válido."
+			newErrors.email = "Enter a valid email address."
 		}
+
 		if (!password) {
-			newErrors.password = "La contraseña es obligatoria."
+			newErrors.password = "Password is required."
 		} else if (!passwordRegex.test(password)) {
 			newErrors.password =
-				"La contraseña debe tener entre 8 y 64 caracteres, incluir una mayúscula, un número y un símbolo como mínimo."
+				"Password must be between 8 and 64 characters and include at least one uppercase letter, one number and one symbol."
 		}
+
 		if (!confirmPassword) {
-			newErrors.confirmPassword = "Debes confirmar la contraseña."
+			newErrors.confirmPassword = "You must confirm your password."
 		} else if (confirmPassword !== password) {
-			newErrors.confirmPassword = "Las contraseñas no coinciden."
+			newErrors.confirmPassword = "Passwords do not match."
 		}
+
 		if (!name.trim()) {
-			newErrors.name = "El nombre es obligatorio."
+			newErrors.name = "Name is required."
 		} else if (!nameRegex.test(name)) {
-			newErrors.name = "El nombre solo puede contener letras."
-		} else if (name.length > maxLegth) {
-			newErrors.name = "No está permitido, máximo de 42 caracteres."
+			newErrors.name = "Name can only contain letters."
+		} else if (name.length > maxLength) {
+			newErrors.name = "Maximum length is 42 characters."
 		}
+
 		if (!surname.trim()) {
-			newErrors.surname = "El apellido es obligatorio."
+			newErrors.surname = "Surname is required."
 		} else if (!nameRegex.test(surname)) {
-			newErrors.surname = "El apellido solo puede contener letras."
-		} else if (surname.length > maxLegth) {
-			newErrors.surname = "No está permitido, máximo de 42 caracteres."
+			newErrors.surname = "Surname can only contain letters."
+		} else if (surname.length > maxLength) {
+			newErrors.surname = "Maximum length is 42 characters."
 		}
+
 		if (!birthday) {
-			newErrors.birthday = "La fecha de nacimiento es obligatoria."
+			newErrors.birthday = "Birthday is required."
 		} else {
 			const birthDate = new Date(birthday)
+		
 			if (Number.isNaN(birthDate.getTime())) {
-				newErrors.birthday = "Introduce una fecha de nacimiento válida."
+				newErrors.birthday = "Enter a valid birthday."
 			} else {
 				const age = calculateAge(birthday)
+			
 				if (age < 18) {
-					newErrors.birthday = "Debes tener al menos 18 años para registrarte."
+					newErrors.birthday = "You must be at least 18 years old to register."
 				} else if (age > 150) {
-					newErrors.birthday = "Ojalá estuviese permitido superar los 150 años."
+					newErrors.birthday = "Age cannot be greater than 150 years."
 				}
 			}
 		}
@@ -139,24 +139,16 @@ export const RegisterForm = () => {
 		return Object.values(newErrors).every((error) => error === "")
 	}
 
-	// Control de valores disparado por el submit.
-	// Revisa:
-	//		backend/internal/routes/authRouter.go
-	//		backend/internal/handlers/authHandler.go
+	// Gestiona el submit, valida el formulario y envía el payload mediante el helper de registro.
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		setServerMessage("")
+
 		const isValid = validateForm()
 		if (!isValid) {
 			return
 		}
-		console.log("Username:", username)
-		console.log("Email:", email)
-		console.log("Password:", password)
-		console.log("Password Repeat:", confirmPassword)
-		console.log("Name:", name)
-		console.log("Surname:", surname)
-		console.log("Birthday:", birthday)
+
 		const payload = {
 			login: username, // Yo uso `username`, el backend `login`
 			email,
@@ -164,54 +156,52 @@ export const RegisterForm = () => {
 			confirmPassword,
 			name,
 			surname,
-			birthday
+			birthday,
+			termsAndConditions,
+			privacyPolicy,
 		}
-
-		console.log("Payload:", payload)
 
 		try {
 			setIsSubmitting(true)
-			const response = await fetch("http://localhost:8080/api/v1/auth/register", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify(payload)
-			})
-			const data = await response.json()
-			console.log("status:", response.status)
-			console.log("response:", data)
-			if (response.status === 201) {
-				console.log("Usuario creado correctamente")
-				setServerMessage("Usuario creado correctamente.")
-				navigate("/login")
-				return
-			}
-			if (response.status === 400) {
-				console.log("Body inválido")
-				setServerMessage("La petición no es válida.")
-				return
-			}
-			if (response.status === 422) {
-				console.log("Error de validación")
-				setServerMessage("Hay campos inválidos. Revisa el formulario.")
-				return
-			}
-			if (response.status === 409) {
-				console.log("Conflicto, probablemente usuario o email ya existente")
-				setServerMessage("El username o el email ya existen.")
-				return
-			}
-			setServerMessage("Ha ocurrido un error inesperado.")
+
+			await registerUser(payload)
+
+			setServerMessage("User created successfully.")
+			navigate("/login")
+			return
 		} catch (error) {
-			console.error("Error de red:", error)
-			setServerMessage("Error de red al conectar con el servidor.")
+			console.error("Register error:", error)
+
+			if (
+				typeof error === "object" &&
+				error !== null &&
+				"status" in error
+			) {
+				const apiError = error as { status: number }
+
+				if (apiError.status === 400) {
+					setServerMessage("Invalid request.")
+					return
+				}
+
+				if (apiError.status === 422) {
+					setServerMessage("Some fields are invalid. Please check the form.")
+					return
+				}
+
+				if (apiError.status === 409) {
+					setServerMessage("Username or email already exists.")
+					return
+				}
+			}
+
+			setServerMessage("Unexpected error. Please try again.")
 		} finally {
 			setIsSubmitting(false)
 		}
 	}
 
-// Arrays de campos configurados para evitar la repetición de código en cada uno de los campos del formulario.
+	// Arrays de campos configurados para evitar la repetición de código en cada uno de los campos del formulario.
 
 	const accountFields = [
 		{
@@ -221,6 +211,7 @@ export const RegisterForm = () => {
 			value: username,
 			onChange: setUsername,
 			error: errors.username,
+			placeholder: "Login",
 		},
 		{
 			id: "email",
@@ -229,6 +220,7 @@ export const RegisterForm = () => {
 			value: email,
 			onChange: setEmail,
 			error: errors.email,
+			placeholder: "Email",
 		},
 		{
 			id: "password",
@@ -237,6 +229,7 @@ export const RegisterForm = () => {
 			value: password,
 			onChange: setPassword,
 			error: errors.password,
+			placeholder: "Password",
 		},
 		{
 			id: "confirmPassword",
@@ -245,6 +238,7 @@ export const RegisterForm = () => {
 			value: confirmPassword,
 			onChange: setConfirmPassword,
 			error: errors.confirmPassword,
+			placeholder: "Repeat Password",
 		},
 	]
 
@@ -256,6 +250,7 @@ export const RegisterForm = () => {
 			value: name,
 			onChange: setName,
 			error: errors.name,
+			placeholder: "Name",
 		},
 		{
 			id: "surname",
@@ -264,6 +259,7 @@ export const RegisterForm = () => {
 			value: surname,
 			onChange: setSurname,
 			error: errors.surname,
+			placeholder: "Surname",
 		},
 		{
 			id: "birthday",
@@ -272,13 +268,19 @@ export const RegisterForm = () => {
 			value: birthday,
 			onChange: setBirthday,
 			error: errors.birthday,
+			placeholder: "",
 		},
 	]
 
 	// Lo que se renderiza.
 	return (
-		<form onSubmit={handleSubmit}>
-			<ul>
+		<form className="auth-form" onSubmit={handleSubmit}>
+			
+			<div className="auth-form__section auth-form__section--account">
+				<h3 className="auth-form__section-title">ACCOUNT DATA</h3>
+			</div>
+
+			<div className="auth-form__group auth-form__group--account">
 				{accountFields.map((field) => (
 					<FormField
 						key={field.id}
@@ -288,13 +290,17 @@ export const RegisterForm = () => {
 						value={field.value}
 						onChange={field.onChange}
 						error={field.error}
+						placeholder={field.placeholder}
+						className="form-field"
 					/>
 				))}
+			</div>
 
-				<li>
-					<h3>Personal Data</h3>
-				</li>
+			<div className="auth-form__section auth-form__section--personal">
+				<h3 className="auth-form__section-title">PERSONAL DATA</h3>
+			</div>
 
+			<div className="auth-form__group auth-form__group--personal">
 				{personalFields.map((field) => (
 					<FormField
 						key={field.id}
@@ -304,19 +310,41 @@ export const RegisterForm = () => {
 						value={field.value}
 						onChange={field.onChange}
 						error={field.error}
+						placeholder={field.placeholder}
+						className="form-field"
 					/>
 				))}
+			</div>
 
-				<li>
-					<button type="submit" disabled={isSubmitting}>
-						{isSubmitting ? "Registering..." : "Register"}
-					</button>
-				</li>
-			</ul>
+			<div className="auth-form__checkboxes">
+				<label className="auth-form__check">
+					<input
+						type="checkbox"
+						checked={termsAndConditions}
+						onChange={(e) => setTermsAndConditions(e.target.checked)}
+						required
+					/>
+					<span>I read Terms and Conditions...</span>
+				</label>
+						
+				<label className="auth-form__check">
+					<input
+						type="checkbox"
+						checked={privacyPolicy}
+						onChange={(e) => setPrivacyPolicy(e.target.checked)}
+						required
+					/>
+					<span>I accept Privacy Policy</span>
+				</label>
+			</div>
 
-			{serverMessage && <p>{serverMessage}</p>}
+			<button className="auth-form__submit" type="submit" disabled={isSubmitting}>
+				{isSubmitting ? "Registering..." : "Create Now"}
+			</button>
 
-			<p>
+			{serverMessage && <p className="auth-form__server-message">{serverMessage}</p>}
+
+			<p className="auth-form__switch">
 				Do you already have an account? <NavLink to="/login">Login</NavLink>
 			</p>
 		</form>

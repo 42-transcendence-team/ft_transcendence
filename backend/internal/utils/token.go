@@ -6,6 +6,7 @@ import (
 	"backend/internal/models"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"strconv"
 	"time"
 
@@ -47,4 +48,34 @@ func CreateTempJwtToken() (string, error) {
 	}
 
 	return hex.EncodeToString(b), nil
+}
+
+func ValidateToken(strToken string, cfg *config.Config) (*CustomClaims, error) {
+	token, err := jwt.ParseWithClaims(
+		strToken,
+		&CustomClaims{},
+		func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, appErr.NewUnauthorized("invalid signing method")
+			}
+			return []byte(cfg.JwtSecret), nil
+		},
+	)
+
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, appErr.NewUnauthorized("expired token")
+		}
+		if errors.Is(err, jwt.ErrTokenSignatureInvalid) {
+			return nil, appErr.NewUnauthorized("invalid signature")
+		}
+		return nil, appErr.NewUnauthorized("invalid token")
+	}
+
+	claims, ok := token.Claims.(*CustomClaims)
+	if !ok || !token.Valid {
+		return nil, appErr.NewUnauthorized("invalid token")
+	}
+
+	return claims, nil
 }
