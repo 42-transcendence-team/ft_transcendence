@@ -1,8 +1,8 @@
 import './styles/App.scss';
-
 import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { AuthProvider } from "@components/auth-router/AuthContext";
+import { AuthProvider as RouterAuthProvider } from "@components/auth-router/AuthContext";
+import { AuthProvider as UserAuthProvider } from "./context/AuthContext"; 
 import { apiRequest } from 'api/ApiRequest';
 
 type AuthStatus = "loading" | "auth" | "guest"
@@ -44,14 +44,14 @@ const App = () => {
 		// antes el provider solo recibia authStatus
 		// ahora tambien recibe refreshAuth para poder reutilizar esta comprobacion
 		// desde otros componentes, por ejemplo LoginForm
-		<AuthProvider authStatus={authStatus} refreshAuth={refreshAuth}>
-			<div className="content">
-				{/* esto era solo para depurar, mejor quitarlo del render final */}
-				{/* <div>Estado auth: {authStatus}</div> */}
-				<Outlet />
-			</div>
-		</AuthProvider>
+
+		<UserAuthProvider>
+            <RouterAuthProvider authStatus={authStatus} refreshAuth={refreshAuth}>
+                <div className="content">
+                    <Outlet />
+                </div>
+            </RouterAuthProvider>
+        </UserAuthProvider>
 	);
 };
-
 export default App;

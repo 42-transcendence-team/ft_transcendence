@@ -31,6 +31,35 @@ export async function Login(identifier: string, password: string) {
 	return data;
 }
 
+//todo
+// export async function Logout() {
+//     const res = await fetch(`${apiUrl}/auth/logout`, {
+//         method: "POST",
+//         credentials: "include",
+//     });
+//     return res.ok;
+// }
+
+
+export async function GetMyProfile() {
+    const data = apiRequest({
+		endpoint: "users/me",
+	});
+	return data;
+}
+
+//todo para pillar los usuarios de los amigos 
+// export async function GetProfile(login: string) {
+//     const res = await fetch(`${apiUrl}/users/profile/${login}`, {
+//         method: "GET",
+//         credentials: "include", // Importante para enviar el JWT en la cookie
+//     });
+//     if (!res.ok)
+// 		throw new Error("No se pudo cargar el perfil");
+//     return await res.json();
+// }
+
+
 export async function Login2FA(code: string) {
 	const data = await apiRequest({
 		endpoint: "2fa/login",
