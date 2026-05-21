@@ -5,23 +5,68 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"fmt"
-	"net/http"
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"net/http"
+	"strconv"
+	"time"
 )
 
 type UserHandler struct {
-	UserService *services.UserService
-	Redis       *redis.Client
+	UserService           *services.UserService
+	Redis                 *redis.Client
+	AdvancedSearchService *services.AdvancedSearchService
 }
 
-func NewUserHandler(userService *services.UserService, redisClient *redis.Client) *UserHandler {
+func NewUserHandler(userService *services.UserService, redisClient *redis.Client, advancedSearchService *services.AdvancedSearchService) *UserHandler {
 	return &UserHandler{
-		UserService: userService,
-		Redis:       redisClient,
+		UserService:           userService,
+		Redis:                 redisClient,
+		AdvancedSearchService: advancedSearchService,
 	}
+}
+
+func (h *UserHandler) AdvancedSearch(c *gin.Context) {
+
+	userID := c.MustGet("userID").(uint)
+
+	query := parseSearchQuery(c)
+
+	result, err := h.AdvancedSearchService.SearchUsers(userID, query)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, result)
+}
+
+func parseSearchQuery(c *gin.Context) dto.UserFilter {
+
+	q := c.Query("q")
+	sort := c.Query("sort")
+	// TODO: si no mandan pagina poner la 1 por defecto, validar numeros positivos y dentro de un limite
+	page, err := strconv.Atoi(c.Query("page"))
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return dto.UserFilter{}
+	}
+	// TODO: si no mandan limit poner 5 por defecto, validar numeros positivos y dentro de un limite
+	limit, err := strconv.Atoi(c.Query("limit"))
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return dto.UserFilter{}
+	}
+
+	return (dto.UserFilter{
+		Q:     q,
+		Sort:  sort,
+		Page:  page,
+		Limit: limit,
+	})
 }
 
 func (h *UserHandler) Filter(c *gin.Context) {

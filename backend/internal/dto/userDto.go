@@ -11,9 +11,30 @@ type UserFilter struct {
 	Surname string `form:"surname"`
 	Role    string `form:"role"`
 
-	Limit int `form:"limit"`
-	Page  int `form:"page"`
+	Q        string `form:"q"` // Texto a buscar
+	Relation string `form:"relation"`
+	Sort     string `form:"sort"`  // Como lo voy a ordenar?
+	Limit    int    `form:"limit"` // Cuantos resultados por pagina
+	Page     int    `form:"page"`  // que pagina quieres ?
 }
+
+type UserSearch struct {
+	Id         uint   `json:"id"`
+	Login      string `json:"login"`
+	AvatarURL  string `json:"avatar_url"`
+	Status     string `json:"status"`
+	Relation   string `json:"relation"`
+	CanSendReq string `json:"can-send-request"`
+}
+
+/*posibles valores de relation
+none
+friends
+pending_sent
+pending_received
+blocked_by_me
+blocked_me
+*/
 
 // Respuesta para los datos necesarios en Settings
 type UserResponse struct {
