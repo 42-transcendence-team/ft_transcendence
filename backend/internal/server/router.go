@@ -31,14 +31,15 @@ func (srv *HTTPServer) Router() {
 	postImageStorage := storage.NewPostImageStorage("./uploads", "/uploads")
 	postService := services.NewPostService(postRepo, postImageStorage)
 
-	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
-	userHandler := handlers.NewUserHandler(userService)
+	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
+	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 	friendHandler := handlers.NewFriendHandler(friendService)
 	postHandler := handlers.NewPostHandler(postService)
 
 	api := srv.Engine.Group("/api/v1")
 
+	// rutas publicas
 	// rutas publicas para usuarios no autenticados
 	publicForNoAuth := api.Group("/")
 	publicForNoAuth.Use(middlewares.RejectIfAuthMiddleware(srv.Conf))
@@ -55,7 +56,7 @@ func (srv *HTTPServer) Router() {
 
 	// rutas privadas
 	protected := api.Group("/")
-	protected.Use(middlewares.AuthMiddleware(srv.Conf))
+	protected.Use(middlewares.AuthMiddleware(srv.Conf, srv.Redis))
 	{
 
 		routes.TestRoute(protected)

@@ -4,7 +4,7 @@ import (
 	"backend/config"
 	"backend/internal/middlewares"
 	"backend/internal/store"
-
+	"github.com/redis/go-redis/v9"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -13,9 +13,10 @@ type HTTPServer struct {
 	Conf   *config.Config
 	Engine *gin.Engine
 	Db     *gorm.DB
+	Redis	*redis.Client
 }
 
-func NewHTTPServer(conf *config.Config, db *gorm.DB) *HTTPServer {
+func NewHTTPServer(conf *config.Config, db *gorm.DB, rdb *redis.Client) *HTTPServer {
 
 	if conf.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -38,12 +39,11 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB) *HTTPServer {
 		Conf:   conf,
 		Engine: r,
 		Db:     db,
+		Redis:	rdb,
 	}
 
 	// Inicializa el TempStore global para la gestión de tokens temporales (en este caso para 2FA)
 	store.InitGlobalTempStore()
-
 	srv.Router()
-
 	return srv
 }

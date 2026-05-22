@@ -10,12 +10,15 @@ services:
         depends_on:
             postgres:
                 condition: service_healthy
+            redis:
+                condition: service_healthy
         # Falta hacer el healthcheck para el backend, para que el frontend dependa de el.
         volumes:
           - ./backend:/app
         environment:
           - GIN_MODE=debug
         networks:
+            - redis
             - back-front
             - db-back
 
@@ -74,6 +77,22 @@ services:
         depends_on:
             postgres:
                 condition: service_healthy
+    redis:
+        env_file: .env
+        image: redis:latest
+        command: redis-server --requirepass ${REDIS_PASSWORD}
+        ports:
+            - "${REDIS_PORT}:6379"
+        restart: always
+        volumes:
+            - redis_data:/data
+        networks:
+            - redis
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
 
     nginx:
         build:
@@ -147,6 +166,7 @@ services:
 volumes:
     postgres_data:
     pgadmin_data:
+    redis_data:
     prometheus_data:
     grafana_data:
 
@@ -154,6 +174,7 @@ volumes:
 networks:
     db-view:
     db-back:
-    back-front:
+    back-front: 
+    redis:
     docs-view:
     monitoring:
