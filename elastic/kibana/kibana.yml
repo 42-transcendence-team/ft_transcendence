@@ -1,0 +1,31 @@
+# =================== Configuración del Servidor ===================
+server.name: "kibana"
+server.host: "0.0.0.0"
+# Aquí usamos la variable del puerto interna por si necesitas cambiarla en el .env
+server.port: ${KIBANA_PORT}
+
+# Idioma de la interfaz (cámbialo a "en" si lo prefieres en inglés)
+i18n.locale: "es-ES"
+
+# =================== Conexión con Elasticsearch ===================
+# Apunta al nombre del servicio de tu docker-compose y su puerto SSL
+elasticsearch.hosts: [ "https://elasticsearch:9200" ]
+
+# Usuario interno del sistema para que Kibana se comunique con la API
+elasticsearch.username: "kibana_system"
+# Lee directamente la contraseña que definiste en tu archivo .env
+elasticsearch.password: ${KIBANA_PASSWORD}
+
+# =================== Configuración de Seguridad SSL ===================
+# Ruta interna al certificado de la CA dentro del volumen 'certs_data'
+elasticsearch.ssl.certificateAuthorities: [ "config/certs/ca/ca.crt" ]
+
+# Verificación estricta del certificado de Elasticsearch
+elasticsearch.ssl.verificationMode: certificate
+
+# =================== Llaves de Encriptación xpack ===================
+# Obligatorias para asegurar los paneles de control, sesiones y reportes.
+# Mapean uno a uno con las llaves que tienes en tu archivo .env
+xpack.security.encryptionKey: ${ENCRYPTION_KEY}
+xpack.encryptedSavedObjects.encryptionKey: ${ENCRYPTION_KEY}
+xpack.reporting.encryptionKey: ${ENCRYPTION_KEY}
