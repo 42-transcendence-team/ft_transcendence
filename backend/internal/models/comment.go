@@ -6,16 +6,16 @@ import (
 	"gorm.io/gorm"
 )
 
-type Post struct {
+type Comment struct {
 	ID uint `gorm:"primaryKey" json:"id"`
+
+	PostID uint `gorm:"not null;index" json:"postId"`
+	Post   Post `gorm:"foreignKey:PostID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 
 	UserID uint `gorm:"not null;index" json:"userId"`
 	User   User `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"user,omitempty"`
 
-	Content   *string `gorm:"type:text" json:"content,omitempty"`
-	ImagePath *string `gorm:"type:varchar(255)" json:"imagePath,omitempty"`
-
-	Comments []Comment `gorm:"foreignKey:PostID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"comments,omitempty"`
+	Content string `gorm:"type:text;not null" json:"content"`
 
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
