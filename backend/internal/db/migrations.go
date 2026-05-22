@@ -13,7 +13,6 @@ func Migrate(db *gorm.DB) error {
 		&models.Block{},
 		&models.Friendship{},
 		&models.Post{},
-		&models.PostMedia{},
 		&models.Comment{},
 	)
 }

@@ -6,7 +6,6 @@ import (
 	"backend/internal/repository"
 	routes "backend/internal/routes"
 	"backend/internal/services"
-	"backend/internal/storage"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,20 +21,16 @@ func (srv *HTTPServer) Router() {
 
 	userRepo := repository.NewUserRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
-	postRepo := repository.NewPostRepository(srv.Db)
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
 	twoFAService := services.New2FAService(userRepo, authService)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
-	postImageStorage := storage.NewPostImageStorage("./uploads", "/uploads")
-	postService := services.NewPostService(postRepo, postImageStorage)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 	friendHandler := handlers.NewFriendHandler(friendService)
-	postHandler := handlers.NewPostHandler(postService)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -64,7 +59,6 @@ func (srv *HTTPServer) Router() {
 		routes.FriendsRoutes(protected, friendHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
 		routes.UserRoutes(protected, userHandler)
-		routes.PostRoutes(protected, postHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 
