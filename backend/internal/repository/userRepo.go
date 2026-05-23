@@ -48,6 +48,53 @@ func (r *UserRepository) Filter(request dto.UserFilter) ([]models.User, error) {
 	return users, err
 }
 
+func (r *UserRepository) buildAdvancedSearchQuery(userID uint, filter dto.UserFilter) *gorm.DB {
+	query := r.db.Model(&models.User{})
+
+	query = query.Where("id != ?", userID)
+
+	if filter.Q != "" {
+		search := "%" + filter.Q + "%"
+
+		query = query.Where(
+			"login ILIKE ? OR name ILIKE ? OR surname ILIKE ?",
+			search, search, search,
+		)
+	}
+	return query
+}
+
+func (r *UserRepository) SearchUsers(userID uint, filter dto.UserFilter) ([]models.User, error) {
+	var users []models.User
+
+	query := r.buildAdvancedSearchQuery(userID, filter)
+
+	switch filter.Sort {
+	case "username_asc":
+		query = query.Order("login ASC")
+	case "username_desc":
+		query = query.Order("login DESC")
+	case "newest":
+		query = query.Order("created_at DESC")
+	case "oldest":
+		query = query.Order("created_at ASC")
+	}
+
+	err := query.Scopes(db.Paginate(filter.Page, filter.Limit)).Find(&users).Error
+
+	return users, err
+}
+
+func (r *UserRepository) CountSearchUsers(userID uint, filter dto.UserFilter) (int64, error) {
+	var count int64
+
+	query := r.buildAdvancedSearchQuery(userID, filter)
+
+	err := query.Count(&count).Error
+
+	return count, err
+}
+
 // Peticiones para modificacion de usuario (Pestaña Settings)
 
 func (r *UserRepository) GetUserData(userID uint) (*dto.UserResponse, error) {

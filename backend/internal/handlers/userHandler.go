@@ -26,49 +26,7 @@ func NewUserHandler(userService *services.UserService, redisClient *redis.Client
 	}
 }
 
-func (h *UserHandler) AdvancedSearch(c *gin.Context) {
-
-	userID := c.MustGet("userID").(uint)
-
-	query := parseSearchQuery(c)
-
-	result, err := h.AdvancedSearchService.SearchUsers(userID, query)
-	if err != nil {
-		c.Error(err)
-		c.Abort()
-		return
-	}
-
-	c.JSON(200, result)
-}
-
-func parseSearchQuery(c *gin.Context) dto.UserFilter {
-
-	q := c.Query("q")
-	sort := c.Query("sort")
-	// TODO: si no mandan pagina poner la 1 por defecto, validar numeros positivos y dentro de un limite
-	page, err := strconv.Atoi(c.Query("page"))
-	if err != nil {
-		c.Error(appErr.NewInternal(err))
-		c.Abort()
-		return dto.UserFilter{}
-	}
-	// TODO: si no mandan limit poner 5 por defecto, validar numeros positivos y dentro de un limite
-	limit, err := strconv.Atoi(c.Query("limit"))
-	if err != nil {
-		c.Error(appErr.NewInternal(err))
-		c.Abort()
-		return dto.UserFilter{}
-	}
-
-	return (dto.UserFilter{
-		Q:     q,
-		Sort:  sort,
-		Page:  page,
-		Limit: limit,
-	})
-}
-
+// TODO: borrar luego esta funcion
 func (h *UserHandler) Filter(c *gin.Context) {
 	var request dto.UserFilter
 
@@ -87,6 +45,74 @@ func (h *UserHandler) Filter(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, users)
+}
+
+func (h *UserHandler) AdvancedSearch(c *gin.Context) {
+
+	userID := c.MustGet("userID").(uint)
+
+	query, err := parseSearchQuery(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	response, err := h.AdvancedSearchService.SearchUsers(userID, query)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, response)
+}
+
+func parseSearchQuery(c *gin.Context) (*dto.UserFilter, error) {
+
+	q := c.Query("q")
+	sort := c.Query("sort")
+	pageStr := c.Query("page")
+	page := 1
+	if pageStr != "" {
+		pageNb, err := strconv.Atoi(pageStr)
+		if err != nil {
+			return nil, appErr.NewValidation(map[string]string{
+				"page": "must be a valid number",
+			})
+		}
+		if pageNb < 1 {
+			return nil, appErr.NewValidation(map[string]string{
+				"page": "must be greater than 0",
+			})
+		}
+		page = pageNb
+
+	}
+
+	limitStr := c.Query("limit")
+	limit := 5
+	if limitStr != "" {
+		limitNb, err := strconv.Atoi(limitStr)
+		if err != nil {
+			return nil, appErr.NewValidation(map[string]string{
+				"limit": "must be a valid number",
+			})
+		}
+		if limitNb < 1 || limitNb > 50 {
+			return nil, appErr.NewValidation(map[string]string{
+				"limit": "must be greater than 0 && lower than 50",
+			})
+		}
+		limit = limitNb
+	}
+
+	return (&dto.UserFilter{
+		Q:     q,
+		Sort:  sort,
+		Page:  page,
+		Limit: limit,
+	}), nil
 }
 
 func (h *UserHandler) GetSettings(c *gin.Context) {

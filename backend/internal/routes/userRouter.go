@@ -9,7 +9,7 @@ import (
 func UserRoutes(api *gin.RouterGroup, userHandler *handlers.UserHandler) {
 	UserGroup := api.Group("/users")
 	{
-		//todo se usan???
+		// TODO: borrar luego Para mi son utiles para probar cosas
 		UserGroup.GET("/", userHandler.Filter)
 		// UserGroup.DELETE("/", userHandler.Delete)
 		// UserGroup.PUT("/", userHandler.Modify)

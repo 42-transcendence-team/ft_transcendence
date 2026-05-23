@@ -2,6 +2,8 @@ package dto
 
 import "time"
 
+// Relation: none | friends | pending_sent | pending_received | blocked_by_me | blocked_me
+
 // Esta es la peticion para busqueda, no esta terminada
 type UserFilter struct {
 	Id      uint   `form:"id"`
@@ -19,22 +21,21 @@ type UserFilter struct {
 }
 
 type UserSearch struct {
-	Id         uint   `json:"id"`
+	ID         uint   `json:"id"`
 	Login      string `json:"login"`
 	AvatarURL  string `json:"avatar_url"`
 	Status     string `json:"status"`
 	Relation   string `json:"relation"`
-	CanSendReq string `json:"can-send-request"`
+	CanSendReq bool   `json:"can_send_request"`
 }
 
-/*posibles valores de relation
-none
-friends
-pending_sent
-pending_received
-blocked_by_me
-blocked_me
-*/
+type UserSearchResponse struct {
+	Items   []UserSearch `json:"items"`
+	Page    int          `json:"page"`
+	Limit   int          `json:"limit"`
+	Total   int64        `json:"total"`
+	HasNext bool         `json:"has_next"`
+}
 
 // Respuesta para los datos necesarios en Settings
 type UserResponse struct {

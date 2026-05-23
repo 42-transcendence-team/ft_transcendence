@@ -6,6 +6,8 @@ services:
             dockerfile: Dockerfile.dev
         expose:
             - "8080"
+        ports: 
+            - 8080:8080
         restart: unless-stopped
         depends_on:
             postgres:
@@ -21,7 +23,7 @@ services:
             - redis
             - back-front
             - db-back
-
+        
     frontend:
         env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
         build:

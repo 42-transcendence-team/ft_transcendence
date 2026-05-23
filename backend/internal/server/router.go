@@ -24,7 +24,7 @@ func (srv *HTTPServer) Router() {
 	userService := services.NewUserService(userRepo)
 	twoFAService := services.New2FAService(userRepo, authService)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
-	advancedSearchService := services.NewAdvancedSearch(userRepo)
+	advancedSearchService := services.NewAdvancedSearch(userRepo, friendRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis, advancedSearchService)
