@@ -13,11 +13,11 @@ type UserFilter struct {
 	Surname string `form:"surname"`
 	Role    string `form:"role"`
 
-	Q        string `form:"q"` // Texto a buscar
-	Relation string `form:"relation"`
-	Sort     string `form:"sort"`  // Como lo voy a ordenar?
-	Limit    int    `form:"limit"` // Cuantos resultados por pagina
-	Page     int    `form:"page"`  // que pagina quieres ?
+	Q         string   `form:"q"` // Texto a buscar
+	Relations []string `form:"relation"`
+	Sort      string   `form:"sort"`  // Como lo voy a ordenar?
+	Limit     int      `form:"limit"` // Cuantos resultados por pagina
+	Page      int      `form:"page"`  // que pagina quieres ?
 }
 
 type UserSearch struct {

@@ -5,11 +5,13 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
 type UserHandler struct {
@@ -107,11 +109,23 @@ func parseSearchQuery(c *gin.Context) (*dto.UserFilter, error) {
 		limit = limitNb
 	}
 
+	relationsStr := c.Query("relations")
+	relations := strings.Split(relationsStr, ",")
+	cleanRelations := []string{}
+	for _, relation := range relations {
+		trimmed := strings.TrimSpace(relation)
+
+		if trimmed != "" {
+			cleanRelations = append(cleanRelations, trimmed)
+		}
+	}
+
 	return (&dto.UserFilter{
-		Q:     q,
-		Sort:  sort,
-		Page:  page,
-		Limit: limit,
+		Q:         q,
+		Relations: relations,
+		Sort:      sort,
+		Page:      page,
+		Limit:     limit,
 	}), nil
 }
 

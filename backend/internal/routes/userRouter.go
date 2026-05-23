@@ -23,7 +23,8 @@ func UserRoutes(api *gin.RouterGroup, userHandler *handlers.UserHandler) {
 		UserGroup.POST("/data", userHandler.UpdatePersonalData)
 
 		// Busqueda avanzada
-		// Ejemplo de query basica GET /api/users/search?q=ange&sort=username_asc&page=2&limit=10
+		// Ejemplo de query basica
+		// GET /api/users/search?q=ange&sort=username_asc&page=2&limit=10&relations=friends,pending_sent
 		UserGroup.GET("/search", userHandler.AdvancedSearch)
 	}
 }
