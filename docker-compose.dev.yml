@@ -6,6 +6,8 @@ services:
             dockerfile: Dockerfile.dev
         expose:
             - "8080"
+        ports:
+            - "8080:8080"
         restart: unless-stopped
         depends_on:
             postgres:
@@ -184,14 +186,15 @@ services:
             soft: -1
             hard: -1
         healthcheck:
-          test:
-            [
-              "CMD-SHELL",
-              "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
-            ]
-          interval: 10s
-          timeout: 10s
-          retries: 120
+            test:
+              [
+                "CMD-SHELL",
+                "curl -s -k https://localhost:9200 | grep -q 'missing authentication credentials'",
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 60s
 
     kibana:
         image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
@@ -212,12 +215,75 @@ services:
           test:
             [
               "CMD-SHELL",
-              "curl -s --cacert config/certs/ca/ca.crt https://localhost:5601/api/status | grep -q '\"state\":\"green\"'",
+              "curl -s http://localhost:5601/api/status | grep -q '\"state\":\"green\"'",
             ]
           interval: 10s
-          timeout: 10s
-          retries: 120
+          timeout: 5s
+          retries: 5
+          start_period: 60s
 
+    # Puede dar error por permisos de usuario, en ese caso hacer en terminal "sudo chown root:root ./elastic/metricbeat/metricbeat.yml"
+    metricbeat:
+        image: docker.elastic.co/beats/metricbeat:${STACK_VERSION}
+        env_file: .env
+        user: root
+        volumes:
+          - metricbeat_data:/usr/share/metricbeat/data
+          - certs_data:/usr/share/metricbeat/certs
+          - ./elastic/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+          - /var/run/docker.sock:/var/run/docker.sock:ro
+          - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+          - /proc:/hostfs/proc:ro
+          - /:/hostfs:ro
+        networks:
+          - elastic
+        command: ["metricbeat", "-e", "--strict.perms=false"]
+        depends_on:
+          elasticsearch:
+            condition: service_started
+          kibana:
+            condition: service_started
+
+    filebeat:
+        image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+        env_file: .env
+        user: root
+        volumes:
+          - filebeat_data:/usr/share/filebeat/data
+          - certs_data:/usr/share/filebeat/certs
+          - ./elastic/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+          - ./elastic/filebeat/ingest_data:/usr/share/filebeat/ingest_data:ro
+          - /var/run/docker.sock:/var/run/docker.sock:ro
+          - /var/lib/docker/containers:/var/lib/docker/containers:ro
+        networks:
+          - elastic
+        command: ["filebeat", "-e", "--strict.perms=false"]
+        depends_on:
+          elasticsearch:
+            condition: service_started
+          kibana:
+            condition: service_started
+        
+    logstash:
+        image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+        env_file: .env
+        group_add:
+          - 0 
+        volumes:
+          - logstash_data:/usr/share/logstash/data
+          - certs_data:/usr/share/logstash/certs:ro
+          - ./elastic/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+          - ./elastic/logstash/ingest_data:/usr/share/logstash/ingest_data:ro
+        networks:
+          - elastic
+        environment:
+          - xpack.monitoring.enabled=false
+          - ELASTIC_HOSTS=https://elasticsearch:9200
+        depends_on:
+          elasticsearch:
+            condition: service_started
+          kibana:
+            condition: service_started
 
 volumes:
     postgres_data:

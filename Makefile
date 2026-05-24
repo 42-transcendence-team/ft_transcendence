@@ -34,7 +34,7 @@ full-remove:
 	$(DC) down --rmi all --volumes --remove-orphans
 
 dev:
-	$(DC) -f $(DEV) up --build --no-attach grafana --no-attach elasticsearch
+	$(DC) -f $(DEV) up --build --no-attach grafana --no-attach elasticsearch --no-attach kibana --no-attach metricbeat
 
 dev-demon:
 	$(DC) -f $(DEV) up --build -d
