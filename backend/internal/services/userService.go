@@ -254,3 +254,11 @@ func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error
 
 	return nil
 }
+
+func (s *UserService) GetUserByID(userID uint) (*models.User, error) {
+	user, err := s.UserRepo.FindById(userID)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
