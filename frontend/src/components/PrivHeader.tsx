@@ -3,10 +3,17 @@ import { Link } from "react-router-dom";
 
 import "../styles/components/_privHeader.scss"
 import logo from "../assets/icons/24_logo.png"
-import { SearchBar } from "./SearchBar.tsx";
+import { SearchBar } from "./advancedSearch/SearchBar.tsx";
 import { UserMenu } from "./UserMenu";
+import { searchUsers } from "../api/userSearch.tsx";
 
 export function PrivHeader() {
+
+	const handleHeaderSearch = async (query: string) => {
+		const response = await searchUsers(query);
+		console.log(response);
+	}
+
 	return (
 		<header className="privHeader privateLayout__header">
 			<div className="privHeader__left">
@@ -16,7 +23,7 @@ export function PrivHeader() {
 				</Link>
 			</div>
 			<div className="privHeader__center">
-				<SearchBar />
+				<SearchBar onSearch={handleHeaderSearch}/>
 			</div>
 			<div className="privHeader__right">
 				<UserMenu />
