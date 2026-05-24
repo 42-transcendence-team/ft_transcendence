@@ -22,18 +22,21 @@ func (srv *HTTPServer) Router() {
 	userRepo := repository.NewUserRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
 	postRepo := repository.NewPostRepository(srv.Db)
+	commentRepo := repository.NewCommentRepository(srv.Db)
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
 	twoFAService := services.New2FAService(userRepo, authService)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 	postService := services.NewPostService(postRepo)
+	commentService := services.NewCommentService(commentRepo, postRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 	friendHandler := handlers.NewFriendHandler(friendService)
 	postHandler := handlers.NewPostHandler(postService)
+	commentHandler := handlers.NewCommentHandler(commentService)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -63,6 +66,7 @@ func (srv *HTTPServer) Router() {
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
 		routes.UserRoutes(protected, userHandler)
 		routes.PostRoutes(protected, postHandler)
+		routes.CommentRoutes(protected, commentHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 
