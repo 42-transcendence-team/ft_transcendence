@@ -1,3 +1,9 @@
+// Service = capa de lógica de negocio.
+// Aquí se validan las reglas propias de los posts, como que el contenido
+// no esté vacío o que no supere la longitud máxima.
+// El handler recibe la petición HTTP y el repository habla con la DB;
+// este archivo queda en medio para decidir si la operación tiene sentido.
+
 package services
 
 import (
@@ -23,16 +29,29 @@ func NewPostService(postRepo *repository.PostRepository) *PostService {
 	}
 }
 
-func (s *PostService) CreateTextPost(input dto.CreatePostInput) (*dto.PostResponse, error) {
+func (s *PostService) CreatePost(input dto.CreatePostInput) (*dto.PostResponse, error) {
 	content := strings.TrimSpace(input.Content)
 
-	if content == "" {
+	var contentPtr *string
+	if content != "" {
+		contentPtr = &content
+	}
+
+	var imagePathPtr *string
+	if input.ImagePath != nil {
+		imagePath := strings.TrimSpace(*input.ImagePath)
+		if imagePath != "" {
+			imagePathPtr = &imagePath
+		}
+	}
+
+	if contentPtr == nil && imagePathPtr == nil {
 		return nil, appErr.NewValidation(map[string]string{
-			"content": "required",
+			"post": "content_or_image_required",
 		})
 	}
 
-	if len([]rune(content)) > maxPostContentLength {
+	if contentPtr != nil && len([]rune(*contentPtr)) > maxPostContentLength {
 		return nil, appErr.NewValidation(map[string]string{
 			"content": "max",
 		})
@@ -40,8 +59,8 @@ func (s *PostService) CreateTextPost(input dto.CreatePostInput) (*dto.PostRespon
 
 	post := models.Post{
 		UserID:    input.UserID,
-		Content:   &content,
-		ImagePath: nil,
+		Content:   contentPtr,
+		ImagePath: imagePathPtr,
 	}
 
 	createdPost, err := s.postRepo.Create(&post)

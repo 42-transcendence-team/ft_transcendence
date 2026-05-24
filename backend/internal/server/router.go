@@ -6,6 +6,7 @@ import (
 	"backend/internal/repository"
 	routes "backend/internal/routes"
 	"backend/internal/services"
+	"backend/internal/storage"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,12 +18,15 @@ func (srv *HTTPServer) Router() {
 
 	routes.HealthRoutes(srv.Engine)
 
+	srv.Engine.MaxMultipartMemory = 8 << 20 // 8 MB
 	srv.Engine.Static("/uploads", "./uploads")
 
 	userRepo := repository.NewUserRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
 	postRepo := repository.NewPostRepository(srv.Db)
 	commentRepo := repository.NewCommentRepository(srv.Db)
+
+	imageStorage := storage.NewImageStorage("uploads")
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
@@ -35,7 +39,7 @@ func (srv *HTTPServer) Router() {
 	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 	friendHandler := handlers.NewFriendHandler(friendService)
-	postHandler := handlers.NewPostHandler(postService)
+	postHandler := handlers.NewPostHandler(postService, imageStorage)
 	commentHandler := handlers.NewCommentHandler(commentService)
 
 	api := srv.Engine.Group("/api/v1")
