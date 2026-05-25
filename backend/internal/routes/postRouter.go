@@ -18,5 +18,8 @@ func PostRoutes(api *gin.RouterGroup, postHandler *handlers.PostHandler) {
 
 		// Obtiene un post concreto por ID.
 		posts.GET("/:id", postHandler.GetPostByID)
+
+		// Borra un post propio.
+		posts.DELETE("/:id", postHandler.DeletePost)
 	}
 }

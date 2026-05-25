@@ -15,4 +15,10 @@ func CommentRoutes(api *gin.RouterGroup, commentHandler *handlers.CommentHandler
 		// Crea un comentario en un post.
 		posts.POST("/:id/comments", commentHandler.CreateComment)
 	}
+
+	comments := api.Group("/comments")
+	{
+		// Borra un comentario propio.
+		comments.DELETE("/:id", commentHandler.DeleteComment)
+	}
 }

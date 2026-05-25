@@ -84,3 +84,30 @@ func (s *PostService) GetPostByID(postID uint) (*dto.PostResponse, error) {
 	response := dto.NewPostResponse(*post)
 	return &response, nil
 }
+
+func (s *PostService) DeletePost(userID uint, postID uint) (*string, error) {
+	post, err := s.postRepo.FindByID(postID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("post_not_found")
+		}
+		return nil, appErr.NewInternal(err)
+	}
+
+	if post.UserID != userID {
+		return nil, appErr.NewForbidden("cannot_delete_other_user_post")
+	}
+
+	imagePath := post.ImagePath
+
+	rows, err := s.postRepo.Delete(post)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	if rows == 0 {
+		return nil, appErr.NewNotFound("post_not_found")
+	}
+
+	return imagePath, nil
+}

@@ -38,3 +38,8 @@ func (r *PostRepository) FindByID(postID uint) (*models.Post, error) {
 
 	return &post, nil
 }
+
+func (r *PostRepository) Delete(post *models.Post) (int64, error) {
+	result := r.db.Select("Comments").Delete(post)
+	return result.RowsAffected, result.Error
+}

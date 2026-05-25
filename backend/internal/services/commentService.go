@@ -79,3 +79,28 @@ func (s *CommentService) ListCommentsByPostID(postID uint) ([]dto.CommentRespons
 
 	return dto.NewCommentResponseList(comments), nil
 }
+
+func (s *CommentService) DeleteComment(userID uint, commentID uint) error {
+	comment, err := s.commentRepo.FindByID(commentID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return appErr.NewNotFound("comment_not_found")
+		}
+		return appErr.NewInternal(err)
+	}
+
+	if comment.UserID != userID {
+		return appErr.NewForbidden("cannot_delete_other_user_comment")
+	}
+
+	rows, err := s.commentRepo.Delete(comment)
+	if err != nil {
+		return appErr.NewInternal(err)
+	}
+
+	if rows == 0 {
+		return appErr.NewNotFound("comment_not_found")
+	}
+
+	return nil
+}

@@ -55,3 +55,8 @@ func (r *CommentRepository) ListByPostID(postID uint) ([]models.Comment, error) 
 
 	return comments, nil
 }
+
+func (r *CommentRepository) Delete(comment *models.Comment) (int64, error) {
+	result := r.db.Delete(comment)
+	return result.RowsAffected, result.Error
+}

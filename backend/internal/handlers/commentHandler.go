@@ -96,3 +96,35 @@ func parseUintParam(param string, errorMessage string) (uint, error) {
 
 	return uint(id64), nil
 }
+
+func (h *CommentHandler) DeleteComment(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.Error(appErr.NewUnauthorized("User ID not found in context"))
+		c.Abort()
+		return
+	}
+
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		c.Error(appErr.NewUnauthorized("Invalid user ID in context"))
+		c.Abort()
+		return
+	}
+
+	commentID, err := parseUintParam(c.Param("id"), "invalid_comment_id")
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	err = h.CommentService.DeleteComment(userID, commentID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
