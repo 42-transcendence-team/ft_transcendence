@@ -94,6 +94,19 @@ services:
             timeout: 3s
             retries: 5
 
+    redisinsight:
+        env_file: .env
+        image: redislabs/redisinsight:latest
+        expose:
+            - "5540"
+        restart: unless-stopped
+        depends_on:
+            redis:
+                condition: service_healthy
+        networks:
+            - redis
+            - redis-view
+
     nginx:
         build:
           context: ./nginx
@@ -114,7 +127,9 @@ services:
           - back-front
           - db-view
           - docs-view
-          - monitoring
+          - monitoring # TODO - Revisar las redes que son compartidas con NGINX
+          - elastic
+          - redis-view
 
     docusaurus:
         build:
@@ -178,3 +193,5 @@ networks:
     redis:
     docs-view:
     monitoring:
+    elastic:
+    redis-view:

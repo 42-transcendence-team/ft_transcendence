@@ -4,24 +4,28 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/repository"
-	"backend/internal/store"
 	"backend/internal/utils"
 	"bytes"
+	"context"
 	"encoding/base64"
+	"fmt"
 	"image/png"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/pquerna/otp/totp"
+	"github.com/redis/go-redis/v9"
 )
 
 type TwoFAService struct {
 	UserRepo    *repository.UserRepository
 	authService *AuthService
+	redis       *redis.Client
 }
 
-func New2FAService(userRepo *repository.UserRepository, authService *AuthService) *TwoFAService {
-	return &TwoFAService{UserRepo: userRepo, authService: authService}
+func New2FAService(userRepo *repository.UserRepository, authService *AuthService, redis *redis.Client) *TwoFAService {
+	return &TwoFAService{UserRepo: userRepo, authService: authService, redis: redis}
 }
 
 // Quizá haya que añadir alguna validacion en el futuro, ahora mismo hace la peticion por la cookie de sesion
@@ -110,16 +114,23 @@ func (s *TwoFAService) Disable2FA(request dto.TwoFADisable) (int64, error) {
 // Se hace la peticion para la validacion del Secreto TOTP en base a la cookie temporal que genera el login
 func (s *TwoFAService) Login2FA(request dto.TwoFALogin) (string, time.Time, error) {
 
-	data, ok := store.GlobalTempStore.Get(request.TempToken)
-	if !ok {
-		return "", time.Time{}, appErr.NewUnauthorized("Invalid or expired temp token")
-	}
-	if data.Expiry.Before(time.Now()) {
-		store.GlobalTempStore.Delete(request.TempToken)
+	key := fmt.Sprintf("2fa_token:%s", request.TempToken)
+
+	userIDStr, err := s.redis.Get(
+		context.Background(),
+		key,
+	).Result()
+
+	if err != nil {
 		return "", time.Time{}, appErr.NewUnauthorized("Invalid or expired temp token")
 	}
 
-	user, err := s.UserRepo.FindById(data.UserID)
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		return "", time.Time{}, appErr.NewInternal(err)
+	}
+
+	user, err := s.UserRepo.FindById(uint(userID))
 	if err != nil {
 		return "", time.Time{}, appErr.NewBadRequest("User not found")
 	}
@@ -136,7 +147,7 @@ func (s *TwoFAService) Login2FA(request dto.TwoFALogin) (string, time.Time, erro
 		return "", time.Time{}, appErr.NewInternal(err)
 	}
 
-	// Se elimina del mapa global el token temporal generado
-	s.authService.tempStore.Delete(request.TempToken)
+	s.redis.Del(context.Background(), key)
+
 	return strToken, expTime, nil
 }

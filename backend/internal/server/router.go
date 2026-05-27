@@ -22,7 +22,7 @@ func (srv *HTTPServer) Router() {
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
-	twoFAService := services.New2FAService(userRepo, authService)
+	twoFAService := services.New2FAService(userRepo, authService, srv.Redis)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)

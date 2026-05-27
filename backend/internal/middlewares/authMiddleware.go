@@ -5,6 +5,7 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/utils"
 	"fmt"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -23,6 +24,7 @@ func AuthMiddleware(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 			return
 		}
 
+		log.Printf("AuthMiddleware: Received request with JWT token: %s", strToken)
 		claims, err := utils.ValidateToken(strToken, cfg)
 		if err != nil {
 			c.Error(err)
@@ -30,8 +32,11 @@ func AuthMiddleware(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 			return
 		}
 
+		log.Printf("AuthMiddleware: Validated JWT token for user ID %d", claims.Id)
+
 		ctx := c.Request.Context()
 		sessionKey := fmt.Sprintf("session:%d", claims.Id)
+		log.Printf("AuthMiddleware: Checking Redis for session key: %s", sessionKey)
 
 		storedToken, err := rdb.Get(ctx, sessionKey).Result()
 		if err == redis.Nil || storedToken != strToken {
@@ -39,6 +44,8 @@ func AuthMiddleware(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		log.Printf("AuthMiddleware: Session valid for user ID %d", claims.Id)
+
 		c.Set("userID", claims.Id) // guarda dentro del contexto el usuario que hace la peticion
 		/*
 			Si el usuario es validado por que el token esta bien pasa al siguiente paso (ya sea midelware o el handler de la ruta) , para en estaa request si quieres saber el id del
