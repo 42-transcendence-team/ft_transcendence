@@ -5,13 +5,18 @@ import "../styles/components/_privHeader.scss"
 import logo from "../assets/icons/24_logo.png"
 import { SearchBar } from "./advancedSearch/SearchBar.tsx";
 import { UserMenu } from "./UserMenu";
-import { searchUsers } from "../api/userSearch.tsx";
+import { searchUsers, type UserSearch } from "../api/userSearch.tsx";
+import { useState } from 'react';
+import { SearchResults } from "./advancedSearch/SearchResults.tsx";
 
 export function PrivHeader() {
 
+	const [searchResults, setSearchResults]	= useState<UserSearch[]>([]);
+
 	const handleHeaderSearch = async (query: string) => {
 		const response = await searchUsers(query);
-		console.log(response);
+		setSearchResults(response.items)
+		console.log(response.items);
 	}
 
 	return (
@@ -24,6 +29,7 @@ export function PrivHeader() {
 			</div>
 			<div className="privHeader__center">
 				<SearchBar onSearch={handleHeaderSearch}/>
+				<SearchResults results={searchResults} />
 			</div>
 			<div className="privHeader__right">
 				<UserMenu />
