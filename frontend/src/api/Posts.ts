@@ -53,3 +53,15 @@ export async function getPostById(postId: string | number): Promise<Post> {
 
 	return parsePostResponse(res);
 }
+
+export async function deletePost(postId: string | number): Promise<void> {
+	const res = await fetch(`${API_BASE_URL}posts/${postId}`, {
+		method: "DELETE",
+		credentials: "include",
+	});
+
+	if (!res.ok) {
+		const errorData = await res.json().catch(() => null);
+		throw buildApiError(res, errorData);
+	}
+}
