@@ -148,6 +148,11 @@ func (s *TwoFAService) Login2FA(request dto.TwoFALogin) (string, time.Time, erro
 	}
 
 	s.redis.Del(context.Background(), key)
-
+	//solucion del error 99%
+	sessionKey := fmt.Sprintf("session:%d", userID)
+	err = s.redis.Set(context.Background(), sessionKey, strToken, time.Until(expTime)).Err()
+	if err != nil {
+		return "", time.Time{}, appErr.NewInternal(err)
+	}
 	return strToken, expTime, nil
 }

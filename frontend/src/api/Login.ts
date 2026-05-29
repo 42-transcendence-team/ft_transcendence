@@ -22,11 +22,14 @@ export type AuthMeResponse = {
 };
 
 export async function Login(identifier: string, password: string) {
+	console.log("login func 'identifier'", identifier);
+	console.log("login func 'password'", password);
 	const data = await apiRequest({
 		endpoint: "auth/login",
 		method: "POST",
 		body: { identifier: identifier.trim(), password },
 	});
+	console.log("data res ", data);
 
 	return data;
 }
@@ -60,11 +63,14 @@ export async function GetMyProfile() {
 // }
 
 
-export async function Login2FA(code: string) {
+export async function Login2FA(code: string, tempToken: string) {
 	const data = await apiRequest({
 		endpoint: "2fa/login",
 		method: "POST",
-		body: { code },
+		body: {
+			code: code,
+			tempToken: tempToken
+		},
 	});
 
 	return data;

@@ -51,6 +51,7 @@ de que ha fallado segun la estructura d ela funcon apperr NewValidation()
 func (h *AuthHandler) Register(c *gin.Context) {
 
 	var req dto.RegisterRequest
+	log.Printf("req1", req)
 
 	err := ValidationBindRequest(c, &req)
 	if err != nil {
