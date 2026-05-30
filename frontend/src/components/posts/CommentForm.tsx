@@ -1,26 +1,15 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
-import { createComment } from "../../api/Comments";
-import type { Comment } from "../../api/Comments";
+import { createComment } from "api/Comments";
+import type { Comment } from "api/Comments";
+import { validateCommentContent } from "@utils/postValidation";
+import { getCommentCreateErrorMessage } from "@utils/apiErrorMessages";
 
 type CommentFormProps = {
 	postId: string | number;
 	onCreated: (comment: Comment) => void;
 };
-
-function getErrorMessage(error: unknown): string {
-	if (
-		typeof error === "object" &&
-		error !== null &&
-		"message" in error &&
-		typeof error.message === "string"
-	) {
-		return error.message;
-	}
-
-	return "No se pudo publicar el comentario.";
-}
 
 export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 	const [content, setContent] = useState("");
@@ -30,12 +19,14 @@ export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
-		const trimmedContent = content.trim();
+		const validationError = validateCommentContent(content);
 
-		if (trimmedContent === "") {
-			setError("El comentario no puede estar vacío.");
+		if (validationError) {
+			setError(validationError);
 			return;
 		}
+
+		const trimmedContent = content.trim();
 
 		try {
 			setIsSubmitting(true);
@@ -46,7 +37,7 @@ export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 			onCreated(createdComment);
 			setContent("");
 		} catch (submitError) {
-			setError(getErrorMessage(submitError));
+			setError(getCommentCreateErrorMessage(submitError));
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -55,7 +46,7 @@ export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 	return (
 		<form className="comment-form" onSubmit={handleSubmit}>
 			<label className="comment-form__label" htmlFor="comment-content">
-				Escribe un comentario
+				Write a comment
 			</label>
 
 			<textarea
@@ -63,7 +54,7 @@ export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 				className="comment-form__textarea"
 				value={content}
 				onChange={(event) => setContent(event.target.value)}
-				placeholder="Añade un comentario..."
+				placeholder="Add a comment."
 				rows={4}
 			/>
 
@@ -75,7 +66,7 @@ export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 					type="submit"
 					disabled={isSubmitting}
 				>
-					{isSubmitting ? "Publicando..." : "Comentar"}
+					{isSubmitting ? "Posting..." : "Comment"}
 				</button>
 			</div>
 		</form>

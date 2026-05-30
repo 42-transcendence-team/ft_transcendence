@@ -1,18 +1,26 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { getAuthenticatedUser } from "../api/Login";
-import { deletePost, getPostById } from "../api/Posts";
-import type { Post } from "../api/Posts";
+import { getAuthenticatedUser } from "api/Login";
+import { deletePost, getPostById } from "api/Posts";
+import type { Post } from "api/Posts";
 import {
 	deleteComment,
 	getCommentsByPostId,
-} from "../api/Comments";
-import type { Comment } from "../api/Comments";
+} from "api/Comments";
+import type { Comment } from "api/Comments";
 
 import { PostDetail } from "@components/posts/PostDetail";
 import { CommentForm } from "@components/posts/CommentForm";
 import { CommentList } from "@components/posts/CommentList";
+
+import {
+	getApiErrorStatus,
+	getCommentDeleteErrorMessage,
+	getGenericApiErrorMessage,
+	getPostDeleteErrorMessage,
+	getPostLoadErrorMessage,
+} from "@utils/apiErrorMessages";
 
 type AuthenticatedUserResponse = {
 	user?: {
@@ -21,42 +29,6 @@ type AuthenticatedUserResponse = {
 		email: string;
 	};
 };
-
-function getApiStatus(error: unknown): number | null {
-	if (
-		typeof error === "object" &&
-		error !== null &&
-		"status" in error &&
-		typeof error.status === "number"
-	) {
-		return error.status;
-	}
-
-	return null;
-}
-
-function getErrorMessage(error: unknown): string {
-	const status = getApiStatus(error);
-
-	if (status === 403) {
-		return "No tienes permisos para realizar esta acción.";
-	}
-
-	if (status === 404) {
-		return "Este contenido no existe o ya ha sido eliminado.";
-	}
-
-	if (
-		typeof error === "object" &&
-		error !== null &&
-		"message" in error &&
-		typeof error.message === "string"
-	) {
-		return error.message;
-	}
-
-	return "Ha ocurrido un error.";
-}
 
 function isValidPostId(postId: string | undefined): postId is string {
 	if (!postId) {
@@ -88,7 +60,7 @@ export const PostDetailPage = () => {
 
 		const loadPostData = async () => {
 			if (!isValidPostId(postId)) {
-				setError("Post no válido.");
+				setError("Invalid post ID.");
 				setIsLoading(false);
 				return;
 			}
@@ -98,30 +70,31 @@ export const PostDetailPage = () => {
 				setError(null);
 				setNotFound(false);
 
-				const [postData, commentsData, userData] = await Promise.all([
+				const [authResponse, postData, commentsData] = await Promise.all([
+					getAuthenticatedUser() as Promise<AuthenticatedUserResponse>,
 					getPostById(postId),
 					getCommentsByPostId(postId),
-					getAuthenticatedUser(),
 				]);
 
-				if (!ignore) {
-					const authData = userData as AuthenticatedUserResponse;
-
-					setPost(postData);
-					setComments(commentsData);
-					setCurrentUserId(authData.user?.id ?? null);
+				if (ignore) {
+					return;
 				}
+
+				setCurrentUserId(authResponse.user?.id ?? null);
+				setPost(postData);
+				setComments(commentsData);
 			} catch (loadError) {
 				if (ignore) {
 					return;
 				}
 
-				if (getApiStatus(loadError) === 404) {
+				if (getApiErrorStatus(loadError) === 404) {
 					setNotFound(true);
+					setError(null);
 					return;
 				}
 
-				setError(getErrorMessage(loadError));
+				setError(getPostLoadErrorMessage(loadError));
 			} finally {
 				if (!ignore) {
 					setIsLoading(false);
@@ -141,11 +114,6 @@ export const PostDetailPage = () => {
 			return;
 		}
 
-		const confirmed = window.confirm("¿Seguro que quieres borrar este post?");
-		if (!confirmed) {
-			return;
-		}
-
 		try {
 			setIsDeletingPost(true);
 			setDeletePostError(null);
@@ -154,19 +122,24 @@ export const PostDetailPage = () => {
 
 			navigate("/app");
 		} catch (deleteError) {
-			if (getApiStatus(deleteError) === 404) {
+			if (getApiErrorStatus(deleteError) === 404) {
 				setNotFound(true);
+				setPost(null);
 				return;
 			}
 
-			setDeletePostError(getErrorMessage(deleteError));
+			setDeletePostError(getPostDeleteErrorMessage(deleteError));
 		} finally {
 			setIsDeletingPost(false);
 		}
 	};
 
-	const handleCommentCreated = (comment: Comment) => {
-		setComments((currentComments) => [...currentComments, comment]);
+	const handleCommentCreated = (createdComment: Comment) => {
+		setComments((currentComments) => [
+			...currentComments,
+			createdComment,
+		]);
+		setCommentError(null);
 	};
 
 	const handleCommentDelete = async (commentId: number) => {
@@ -180,15 +153,15 @@ export const PostDetailPage = () => {
 				currentComments.filter((comment) => comment.id !== commentId),
 			);
 		} catch (deleteError) {
-			if (getApiStatus(deleteError) === 404) {
+			if (getApiErrorStatus(deleteError) === 404) {
 				setComments((currentComments) =>
 					currentComments.filter((comment) => comment.id !== commentId),
 				);
-				setCommentError("El comentario ya no existe.");
+				setCommentError("This comment no longer exists.");
 				return;
 			}
 
-			setCommentError(getErrorMessage(deleteError));
+			setCommentError(getCommentDeleteErrorMessage(deleteError));
 		} finally {
 			setDeletingCommentId(null);
 		}
@@ -197,7 +170,7 @@ export const PostDetailPage = () => {
 	if (isLoading) {
 		return (
 			<section className="post-detail-page">
-				<p className="post-detail-page__loading">Cargando post...</p>
+				<p className="post-detail-page__loading">Loading post...</p>
 			</section>
 		);
 	}
@@ -205,10 +178,10 @@ export const PostDetailPage = () => {
 	if (notFound) {
 		return (
 			<section className="post-detail-page post-detail-page__not-found">
-				<h1>Post no encontrado</h1>
-				<p>Este post no existe o ha sido eliminado.</p>
+				<h1>Post not found</h1>
+				<p>This post does not exist or has been deleted.</p>
 				<Link className="post-detail-page__back-link" to="/app">
-					Volver al inicio
+					Back to home
 				</Link>
 			</section>
 		);
@@ -217,9 +190,11 @@ export const PostDetailPage = () => {
 	if (error) {
 		return (
 			<section className="post-detail-page">
-				<p className="post-detail-page__error">{error}</p>
+				<p className="post-detail-page__error">
+					{error || getGenericApiErrorMessage(error)}
+				</p>
 				<Link className="post-detail-page__back-link" to="/app">
-					Volver al inicio
+					Back to home
 				</Link>
 			</section>
 		);
@@ -228,10 +203,10 @@ export const PostDetailPage = () => {
 	if (!post || !postId) {
 		return (
 			<section className="post-detail-page post-detail-page__not-found">
-				<h1>Post no encontrado</h1>
-				<p>Este post no existe o ha sido eliminado.</p>
+				<h1>Post not found</h1>
+				<p>This post does not exist or has been deleted.</p>
 				<Link className="post-detail-page__back-link" to="/app">
-					Volver al inicio
+					Back to home
 				</Link>
 			</section>
 		);
@@ -251,7 +226,7 @@ export const PostDetailPage = () => {
 				/>
 
 				<section className="comments">
-					<h2 className="comments__title">Comentarios</h2>
+					<h2 className="comments__title">Comments</h2>
 
 					<CommentForm
 						postId={postId}

@@ -1,4 +1,4 @@
-import { API_BASE_URL, buildApiError } from "./ApiRequest";
+import { API_BASE_URL, buildApiError } from "api/ApiRequest";
 
 export type PostAuthor = {
 	id: number;
@@ -25,6 +25,11 @@ async function parsePostResponse(res: Response): Promise<Post> {
 	return json.data;
 }
 
+async function throwPostApiError(res: Response): Promise<never> {
+	const errorData = await res.json().catch(() => null);
+	throw buildApiError(res, errorData);
+}
+
 export async function createPost(formData: FormData): Promise<Post> {
 	const res = await fetch(`${API_BASE_URL}posts`, {
 		method: "POST",
@@ -33,8 +38,7 @@ export async function createPost(formData: FormData): Promise<Post> {
 	});
 
 	if (!res.ok) {
-		const errorData = await res.json().catch(() => null);
-		throw buildApiError(res, errorData);
+		await throwPostApiError(res);
 	}
 
 	return parsePostResponse(res);
@@ -47,8 +51,7 @@ export async function getPostById(postId: string | number): Promise<Post> {
 	});
 
 	if (!res.ok) {
-		const errorData = await res.json().catch(() => null);
-		throw buildApiError(res, errorData);
+		await throwPostApiError(res);
 	}
 
 	return parsePostResponse(res);
@@ -61,7 +64,6 @@ export async function deletePost(postId: string | number): Promise<void> {
 	});
 
 	if (!res.ok) {
-		const errorData = await res.json().catch(() => null);
-		throw buildApiError(res, errorData);
+		await throwPostApiError(res);
 	}
 }

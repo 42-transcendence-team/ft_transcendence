@@ -1,5 +1,5 @@
-import { API_BASE_URL, buildApiError } from "./ApiRequest";
-import type { PostAuthor } from "./Posts";
+import { API_BASE_URL, buildApiError } from "api/ApiRequest";
+import type { PostAuthor } from "api/Posts";
 
 export type Comment = {
 	id: number;
@@ -30,6 +30,11 @@ async function parseCommentsResponse(res: Response): Promise<Comment[]> {
 	return json.data;
 }
 
+async function throwCommentApiError(res: Response): Promise<never> {
+	const errorData = await res.json().catch(() => null);
+	throw buildApiError(res, errorData);
+}
+
 export async function getCommentsByPostId(
 	postId: string | number,
 ): Promise<Comment[]> {
@@ -39,8 +44,7 @@ export async function getCommentsByPostId(
 	});
 
 	if (!res.ok) {
-		const errorData = await res.json().catch(() => null);
-		throw buildApiError(res, errorData);
+		await throwCommentApiError(res);
 	}
 
 	return parseCommentsResponse(res);
@@ -60,23 +64,19 @@ export async function createComment(
 	});
 
 	if (!res.ok) {
-		const errorData = await res.json().catch(() => null);
-		throw buildApiError(res, errorData);
+		await throwCommentApiError(res);
 	}
 
 	return parseCommentResponse(res);
 }
 
-export async function deleteComment(
-	commentId: string | number,
-): Promise<void> {
+export async function deleteComment(commentId: string | number): Promise<void> {
 	const res = await fetch(`${API_BASE_URL}comments/${commentId}`, {
 		method: "DELETE",
 		credentials: "include",
 	});
 
 	if (!res.ok) {
-		const errorData = await res.json().catch(() => null);
-		throw buildApiError(res, errorData);
+		await throwCommentApiError(res);
 	}
 }
