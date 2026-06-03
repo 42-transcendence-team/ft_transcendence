@@ -8,6 +8,10 @@ import (
 	"backend/internal/repository"
 	"backend/internal/store"
 	"backend/internal/utils"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -151,4 +155,84 @@ func (s *UserService) GetUserByLogin(login string) (*models.User, error) {
 		return nil, appErr.NewUnauthorized("user_not_found")
 	}
 	return user, nil
+}
+
+func (s *AuthService) Build42AuthURL() string {
+	return fmt.Sprintf(
+		"https://api.intra.42.fr/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code",
+		url.QueryEscape(s.cfg.OAuth42ClientID),
+		url.QueryEscape(s.cfg.OAuth42RedirectURI),
+	)
+}
+
+func (s *AuthService) Exchange42Code(code string) (string, error) {
+	data := url.Values{}
+	data.Set("grant_type", "authorization_code")
+	data.Set("client_id", s.cfg.OAuth42ClientID)
+	data.Set("client_secret", s.cfg.OAuth42ClientSecret)
+	data.Set("code", code)
+	data.Set("redirect_uri", s.cfg.OAuth42RedirectURI)
+
+	resp, err := http.PostForm("https://api.intra.42.fr/oauth/token", data)
+	if err != nil {
+		return "", appErr.NewInternal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusBadRequest {
+		return "", appErr.NewBadRequest("invalid oauth code")
+	}
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		return "", appErr.NewUnauthorized("invalid 42 client credentials")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", appErr.NewInternal(
+			fmt.Errorf("42 oauth unexpected status: %d", resp.StatusCode),
+		)
+	}
+
+	var token dto.TokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&token); err != nil {
+		return "", appErr.NewInternal(err)
+	}
+
+	return token.AccessToken, nil
+}
+
+func (s *AuthService) Validate42Token(token string) (*dto.User42, error) {
+	req, err := http.NewRequest("GET", "https://api.intra.42.fr/v2/me", nil)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, appErr.NewUnauthorized("invalid 42 access token")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, appErr.NewInternal(
+			fmt.Errorf("42 token validation unexpected status: %d", resp.StatusCode),
+		)
+	}
+
+	var user dto.User42
+	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	return &user, nil
+}
+
+func (s *AuthService) Login42(user42 *dto.User42) (*models.User, error) {
+	return s.userRepo.FindByOAuth(user42.ID)
 }

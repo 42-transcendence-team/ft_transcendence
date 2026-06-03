@@ -43,3 +43,15 @@ type LoginResult struct {
 	ExpTime     time.Time
 	Requires2FA bool
 }
+
+type TokenResponse struct {
+	AccessToken string `json:"access_token"`
+}
+
+type User42 struct {
+	ID      int    `json:"id"`
+	Login   string `json:"login"`
+	Email   string `json:"email"`
+	Name    string `json:"first_name"`
+	Surname string `json:"last_name"`
+}

@@ -20,6 +20,8 @@ type User struct {
 	Active2FA bool    `gorm:"not null; default:false"`                                        // Si el usuario tiene 2FA activado o no
 	Secret2FA *string `gorm:"null"`                                                           // Clave secreta que se genera al activar la 2FA
 	Role      string  `gorm:"not null"`                                                       // Rol del usuario (Ej: 42, bh, normie...)
+	OAuth     string  `gorm:"not null; default:'local'"`                                      // Proveedor de autenticacion OAuth
+	OAuthID   *int    `gorm:"null"`                                                           // ID del usuario en el proveedor de autenticacion OAuth
 
 	Name     string    `gorm:"not null"` // Nombre de usuario
 	Surname  string    `gorm:"not null"` // Apellido de usuario

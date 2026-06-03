@@ -323,3 +323,45 @@ func (h *AuthHandler) SetTempToken(c *gin.Context, tempToken string, exp time.Ti
 func (h *AuthHandler) ClearTempToken(c *gin.Context) {
 	h.SetTempToken(c, "", time.Unix(0, 0))
 }
+
+// Redirige al usuario a la URL de autenticacion de 42, que se genera con la funcion Build42AuthURL()
+func (h *AuthHandler) Login42(c *gin.Context) {
+	authURL := h.AuthService.Build42AuthURL()
+	c.Redirect(http.StatusFound, authURL)
+}
+
+func (h *AuthHandler) Login42Callback(c *gin.Context) {
+	code := c.Query("code")
+	if code == "" {
+		c.Error(appErr.NewBadRequest("code query parameter is required"))
+		c.Abort()
+		return
+	}
+
+	token, err := h.AuthService.Exchange42Code(code)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	user42, err := h.AuthService.Validate42Token(token)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	user, err := h.AuthService.Login42(user42)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "42 login successful", "access_token": token, "user42": user42, "user": gin.H{
+		"id":    user.ID,
+		"login": user.Login,
+		"email": user.Email,
+	}})
+}

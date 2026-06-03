@@ -4,6 +4,11 @@ import "../styles/pages/_authPages.scss"
 import { NavLink } from "react-router-dom"
 
 export const Login = () => {
+
+	const handle42Login = () => {
+		window.location.href = "https://localhost/api/v1/auth/42/login";
+	};
+
 	return (
 		<section className="auth-page">
 			<div className="auth-card">
@@ -19,6 +24,9 @@ export const Login = () => {
 				</p>
 
 				<LoginForm />
+				<button className="auth-card__button" onClick={handle42Login}>
+					Login with 42
+				</button>
 			</div>
 		</section>
 	)
