@@ -105,6 +105,13 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 }
 
 func (h *PostHandler) GetPostByID(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
 	paramStr := c.Param("id")
 
 	id64, err := strconv.ParseUint(paramStr, 10, 32)
@@ -116,7 +123,7 @@ func (h *PostHandler) GetPostByID(c *gin.Context) {
 
 	postID := uint(id64)
 
-	post, err := h.PostService.GetPostByID(postID)
+	post, err := h.PostService.GetPostByID(postID, userID)
 	if err != nil {
 		c.Error(err)
 		c.Abort()

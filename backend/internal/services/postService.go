@@ -20,12 +20,17 @@ import (
 const maxPostContentLength = 5000
 
 type PostService struct {
-	postRepo *repository.PostRepository
+	postRepo     *repository.PostRepository
+	postLikeRepo *repository.PostLikeRepository
 }
 
-func NewPostService(postRepo *repository.PostRepository) *PostService {
+func NewPostService(
+	postRepo *repository.PostRepository,
+	postLikeRepo *repository.PostLikeRepository,
+) *PostService {
 	return &PostService{
-		postRepo: postRepo,
+		postRepo:     postRepo,
+		postLikeRepo: postLikeRepo,
 	}
 }
 
@@ -68,11 +73,11 @@ func (s *PostService) CreatePost(input dto.CreatePostInput) (*dto.PostResponse, 
 		return nil, appErr.NewInternal(err)
 	}
 
-	response := dto.NewPostResponse(*createdPost)
+	response := dto.NewPostResponse(*createdPost, 0, false)
 	return &response, nil
 }
 
-func (s *PostService) GetPostByID(postID uint) (*dto.PostResponse, error) {
+func (s *PostService) GetPostByID(postID uint, currentUserID uint) (*dto.PostResponse, error) {
 	post, err := s.postRepo.FindByID(postID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -81,7 +86,17 @@ func (s *PostService) GetPostByID(postID uint) (*dto.PostResponse, error) {
 		return nil, appErr.NewInternal(err)
 	}
 
-	response := dto.NewPostResponse(*post)
+	likeCount, err := s.postLikeRepo.CountByPostID(postID)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	likedByCurrentUser, err := s.postLikeRepo.ExistsByPostAndUser(postID, currentUserID)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	response := dto.NewPostResponse(*post, likeCount, likedByCurrentUser)
 	return &response, nil
 }
 

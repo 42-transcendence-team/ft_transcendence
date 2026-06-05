@@ -25,6 +25,7 @@ func (srv *HTTPServer) Router() {
 	friendRepo := repository.NewFriendRepository(srv.Db)
 	postRepo := repository.NewPostRepository(srv.Db)
 	commentRepo := repository.NewCommentRepository(srv.Db)
+	postLikeRepo := repository.NewPostLikeRepository(srv.Db)
 
 	imageStorage := storage.NewImageStorage("uploads")
 
@@ -32,8 +33,9 @@ func (srv *HTTPServer) Router() {
 	userService := services.NewUserService(userRepo)
 	twoFAService := services.New2FAService(userRepo, authService)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
-	postService := services.NewPostService(postRepo)
+	postService := services.NewPostService(postRepo, postLikeRepo)
 	commentService := services.NewCommentService(commentRepo, postRepo)
+	postLikeService := services.NewPostLikeService(postRepo, postLikeRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis)
@@ -41,6 +43,7 @@ func (srv *HTTPServer) Router() {
 	friendHandler := handlers.NewFriendHandler(friendService)
 	postHandler := handlers.NewPostHandler(postService, imageStorage)
 	commentHandler := handlers.NewCommentHandler(commentService)
+	postLikeHandler := handlers.NewPostLikeHandler(postLikeService)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -71,6 +74,7 @@ func (srv *HTTPServer) Router() {
 		routes.UserRoutes(protected, userHandler)
 		routes.PostRoutes(protected, postHandler)
 		routes.CommentRoutes(protected, commentHandler)
+		routes.PostLikeRoutes(protected, postLikeHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 

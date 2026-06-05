@@ -14,5 +14,6 @@ func Migrate(db *gorm.DB) error {
 		&models.Friendship{},
 		&models.Post{},
 		&models.Comment{},
+		&models.PostLike{},
 	)
 }
