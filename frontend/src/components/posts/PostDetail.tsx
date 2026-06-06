@@ -1,4 +1,6 @@
-import type { Post } from "../../api/Posts";
+import { LikeButton } from "@components/posts/LikeButton";
+
+import type { Post, PostLikeState } from "api/Posts";
 
 type PostDetailProps = {
 	post: Post;
@@ -6,6 +8,7 @@ type PostDetailProps = {
 	isDeleting: boolean;
 	onDelete: () => void;
 	deleteError: string | null;
+	onLikeChange: (likeState: PostLikeState) => void;
 };
 
 function getPostImageSrc(imagePath: string): string {
@@ -29,29 +32,37 @@ export const PostDetail = ({
 	isDeleting,
 	onDelete,
 	deleteError,
+	onLikeChange,
 }: PostDetailProps) => {
 	return (
 		<article className="post-detail">
 			<header className="post-detail__header">
-				<div>
+				<div className="post-detail__author-block">
 					<p className="post-detail__author">@{post.author.login}</p>
 					<time className="post-detail__date" dateTime={post.createdAt}>
 						{formatPostDate(post.createdAt)}
 					</time>
 				</div>
 
-				{isOwner && (
-					<div className="post-detail__actions">
+				<div className="post-detail__actions">
+					<LikeButton
+						postId={post.id}
+						likeCount={post.likeCount}
+						likedByCurrentUser={post.likedByCurrentUser}
+						onChange={onLikeChange}
+					/>
+
+					{isOwner && (
 						<button
 							className="post-detail__delete-button"
 							type="button"
 							onClick={onDelete}
 							disabled={isDeleting}
 						>
-							{isDeleting ? "Eliminando..." : "Eliminar post"}
+							{isDeleting ? "Deleting." : "Delete post"}
 						</button>
-					</div>
-				)}
+					)}
+				</div>
 			</header>
 
 			{post.content && (
@@ -63,7 +74,7 @@ export const PostDetail = ({
 					<img
 						className="post-detail__image"
 						src={getPostImageSrc(post.imagePath)}
-						alt="Imagen del post"
+						alt="Post image"
 					/>
 				</div>
 			)}

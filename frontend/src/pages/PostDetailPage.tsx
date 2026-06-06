@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { getAuthenticatedUser } from "api/Login";
 import { deletePost, getPostById } from "api/Posts";
-import type { Post } from "api/Posts";
+import type { Post, PostLikeState } from "api/Posts";
 import {
 	deleteComment,
 	getCommentsByPostId,
@@ -214,6 +214,20 @@ export const PostDetailPage = () => {
 
 	const isPostOwner = currentUserId === post.userId;
 
+	const handleLikeChange = (likeState: PostLikeState) => {
+		setPost((currentPost) => {
+			if (!currentPost || currentPost.id !== likeState.postId) {
+				return currentPost;
+			}
+
+			return {
+				...currentPost,
+				likeCount: likeState.likeCount,
+				likedByCurrentUser: likeState.likedByCurrentUser,
+			};
+		});
+	};
+
 	return (
 		<section className="post-detail-page">
 			<div className="post-detail-page__content">
@@ -223,6 +237,7 @@ export const PostDetailPage = () => {
 					isDeleting={isDeletingPost}
 					onDelete={handlePostDelete}
 					deleteError={deletePostError}
+					onLikeChange={handleLikeChange}
 				/>
 
 				<section className="comments">

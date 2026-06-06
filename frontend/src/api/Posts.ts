@@ -3,6 +3,7 @@ import { API_BASE_URL, buildApiError } from "api/ApiRequest";
 export type PostAuthor = {
 	id: number;
 	login: string;
+	avatarPath?: string | null;
 };
 
 export type Post = {
@@ -11,8 +12,16 @@ export type Post = {
 	author: PostAuthor;
 	content?: string | null;
 	imagePath?: string | null;
+	likeCount: number;
+	likedByCurrentUser: boolean;
 	createdAt: string;
 	updatedAt: string;
+};
+
+export type PostLikeState = {
+	postId: number;
+	likeCount: number;
+	likedByCurrentUser: boolean;
 };
 
 type PostApiResponse = {
@@ -20,8 +29,18 @@ type PostApiResponse = {
 	data: Post;
 };
 
+type PostLikeApiResponse = {
+	message?: string;
+	data: PostLikeState;
+};
+
 async function parsePostResponse(res: Response): Promise<Post> {
 	const json = (await res.json()) as PostApiResponse;
+	return json.data;
+}
+
+async function parsePostLikeResponse(res: Response): Promise<PostLikeState> {
+	const json = (await res.json()) as PostLikeApiResponse;
 	return json.data;
 }
 
@@ -66,4 +85,34 @@ export async function deletePost(postId: string | number): Promise<void> {
 	if (!res.ok) {
 		await throwPostApiError(res);
 	}
+}
+
+export async function likePost(
+	postId: string | number,
+): Promise<PostLikeState> {
+	const res = await fetch(`${API_BASE_URL}posts/${postId}/likes`, {
+		method: "POST",
+		credentials: "include",
+	});
+
+	if (!res.ok) {
+		await throwPostApiError(res);
+	}
+
+	return parsePostLikeResponse(res);
+}
+
+export async function unlikePost(
+	postId: string | number,
+): Promise<PostLikeState> {
+	const res = await fetch(`${API_BASE_URL}posts/${postId}/likes`, {
+		method: "DELETE",
+		credentials: "include",
+	});
+
+	if (!res.ok) {
+		await throwPostApiError(res);
+	}
+
+	return parsePostLikeResponse(res);
 }
