@@ -14,7 +14,6 @@ import (
 // Para añadir un endpoint hay que confeccionar la funcion en internals/handlers y
 // añadir el enpoint con un comantario encima describiendo lo que hace para el swagger
 func (srv *HTTPServer) Router() {
-
 	routes.HealthRoutes(srv.Engine)
 
 	userRepo := repository.NewUserRepository(srv.Db)

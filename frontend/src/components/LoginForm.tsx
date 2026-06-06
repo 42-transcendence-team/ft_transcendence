@@ -73,15 +73,6 @@ export const LoginForm = () => {
 			}
 
 			if (data.requires2fa) {
-				//mirar aqui 
-// 				{
-			//     "message": "2FA required",
-			//     "requires2fa": true,
-			//     "user": {
-			//         "id": 1,
-			//         "tempToken": "dff67c05215f439f0fad45f5301e860f7956b80f84a1c6ab010c7b2eed9f962b"
-			//     }
-			// }
 				setTempToken(data.user?.tempToken || null);
 				setShow2FA(true);
 				setIsSubmitting(false);
@@ -138,7 +129,6 @@ export const LoginForm = () => {
 		if (!isComplete || !tempToken) return;
 
 		try {
-			// await Login2FA(otpCode.join(""));
 			await Login2FA(otpCode.join(""), tempToken);
 			await refreshAuth();
 			await refreshUser();
@@ -147,18 +137,10 @@ export const LoginForm = () => {
 
 			const login = data.user?.login;
 			setShow2FA(false);
-
-			// if (login) {
-			// 	window.location.href = `/app/profile/${login}`;
-			// 	return;
-			// }
-			console.log("login" , login)
-			console.log("data" , data)
-			
 			if (login && login !== tempToken) {
             	window.location.href = (`/app/profile/${login}`);
+				return;
 			}
-
 			window.location.href = "/app";
 		} catch (err: any) {
 			alert(err.message);

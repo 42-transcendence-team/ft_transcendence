@@ -22,27 +22,13 @@ export type AuthMeResponse = {
 };
 
 export async function Login(identifier: string, password: string) {
-	console.log("login func 'identifier'", identifier);
-	console.log("login func 'password'", password);
 	const data = await apiRequest({
 		endpoint: "auth/login",
 		method: "POST",
 		body: { identifier: identifier.trim(), password },
 	});
-	console.log("data res ", data);
-
 	return data;
 }
-
-//todo
-// export async function Logout() {
-//     const res = await fetch(`${apiUrl}/auth/logout`, {
-//         method: "POST",
-//         credentials: "include",
-//     });
-//     return res.ok;
-// }
-
 
 export async function GetMyProfile() {
     const data = apiRequest({
