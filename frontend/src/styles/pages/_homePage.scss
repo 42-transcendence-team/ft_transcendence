@@ -1,0 +1,141 @@
+.page-wrapper {
+	display: flex;
+	width: 100%;
+	min-height: 100vh;
+	padding: 5px;
+	justify-content: center;
+	align-items: flex-start;
+	background-color: $background-page;
+}
+
+.profile-feed {
+	flex:1;
+	overflow-y: auto;
+	padding: 0 15px 10px 15px;
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	.status-text {
+		margin: 0;
+		color: $color-text-light;
+		font-size: 0.9em;
+	}
+
+	.feed-posts-container {
+		border-radius: 10px;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+
+	// // Estilo para cuando no hay posts de chatigpt (ns como se ve pero parece buena idea)
+	// .no-posts {
+	//   text-align: center;
+	//   padding: 40px;
+	//   color: $color-text-light;
+	//   font-style: italic;
+	//   background: rgba(255, 255, 255, 0.5);
+	//   border-radius: 10px;
+	// }
+	.feed-post {
+		width: 100%;
+		padding: 15px;
+		background-color: $color-post-bg;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		box-sizing: border-box;
+		margin-bottom: 4px;
+		border-bottom: 1px solid #eee;
+		border-radius: 10px;
+		&:last-child {
+			border-bottom: none;
+		}
+
+		.post-header {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+
+			.small-logo {
+				width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				background-color: #f0f0f0;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				overflow: hidden;
+
+				img {
+					width: 60%;
+					height: auto;
+				}
+			}
+
+			.post-info {
+				display: flex;
+				flex-direction: row;
+				justify-content: space-between;
+				flex-grow: 1;
+
+				.username {
+					font-weight: bold;
+					font-size: 0.9em;
+				}
+
+				.time {
+					color: $color-text-light;
+					font-size: 0.8em;
+				}
+			}
+		}
+
+		.post-message {
+			margin: 0;
+			font-size: 0.95em;
+			color: #333;
+		}
+	}
+
+	.highlighted-post {
+		border: none; 
+	}
+
+	// .photo-gallery {
+	// 	display: grid;
+	// 	grid-template-columns: repeat(4, 1fr); 
+	// 	gap: 10px;
+	// 	margin-top: 10px;
+	// 	width: 100%;
+
+	// 	// Aplicamos estilos comunes a imágenes y al cuadro de "+5"
+	// 	img, .more-photos {
+	// 		width: 100%;
+	// 		//TODO
+	// 		// 'aspect-ratio: 1 / 1' las hace cuadradas
+	// 		// 'aspect-ratio: 16 / 9' si prefieres que sean rectangulares
+	// 		aspect-ratio: 1 / 1; 
+			
+	// 		border-radius: 5px;
+	// 		object-fit: cover; // Evita que la foto se estire feo
+	// 		min-height: 80px; 
+	// 		max-height: 200px;
+	// 	}
+
+	// 	.more-photos {
+	// 		display: flex;
+	// 		justify-content: center;
+	// 		align-items: center;
+	// 		background-color: #f0f0f0;
+	// 		color: $color-text-light;
+	// 		font-weight: bold;
+	// 		font-size: 1.2rem;
+	// 		cursor: pointer;
+	// 		transition: background 0.2s;
+	// 		&:hover {
+	// 			background-color: color.adjust(#f0f0f0, $lightness: -5%);
+	// 		}
+	// 	}
+	// }
+}
