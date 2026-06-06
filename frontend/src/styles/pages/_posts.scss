@@ -117,3 +117,49 @@
 	justify-content: space-between;
 	gap: 1rem;
 }
+
+.post-detail-page--modal-route {
+	min-height: 50vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.post-detail-page__modal-route-content {
+	text-align: center;
+}
+
+.post-modal {
+	width: min(760px, calc(100vw - 3rem));
+	max-height: calc(100vh - 8rem);
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+.post-modal__state,
+.post-modal__error {
+	margin: 0;
+}
+
+.post-modal__state {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.post-modal__error {
+	color: #b91c1c;
+	font-weight: 600;
+}
+
+.post-modal__comments {
+	border-top: 1px solid #e5e7eb;
+	padding-top: 1rem;
+}
+
+.post-modal .comments__list {
+	max-height: 260px;
+	overflow-y: auto;
+	padding-right: 0.35rem;
+}
