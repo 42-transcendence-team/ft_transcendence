@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Modal } from "@components/Modal";
-import { CommentForm } from "@components/posts/CommentForm";
-import { CommentList } from "@components/posts/CommentList";
-import { PostDetail } from "@components/posts/PostDetail";
+import { PostModalRenderer } from "@components/posts/PostModalRenderer";
 import { PostImageModal } from "@components/posts/PostImageModal";
 
 import { getAuthenticatedUser } from "api/Login";
@@ -135,7 +133,7 @@ export const PostModal = ({
 
 				setCurrentUserId(authResponse.user?.id ?? null);
 				setPost(postData);
-				setComments(commentsData);
+				setComments([...commentsData].reverse());
 			} catch (error) {
 				if (ignore) {
 					return;
@@ -196,8 +194,8 @@ export const PostModal = ({
 
 	const handleCommentCreated = (createdComment: Comment) => {
 		setComments((currentComments) => [
-			...currentComments,
 			createdComment,
+			...currentComments,
 		]);
 		setCommentError(null);
 	};
@@ -251,8 +249,9 @@ export const PostModal = ({
 		<Modal
 			open={open}
 			onClose={onClose}
-			title="Post"
 			closeOnEscape={!selectedImageSrc}
+			modalClassName="post-modal-shell"
+			contentClassName="post-modal-shell__content"
 		>
 			<div className="post-modal">
 				{isLoading && <p className="post-modal__state">Loading post.</p>}
@@ -270,35 +269,21 @@ export const PostModal = ({
 
 				{post && !isLoading && !notFound && !loadError && (
 					<>
-						<PostDetail
+						<PostModalRenderer
 							post={post}
+							comments={comments}
+							currentUserId={currentUserId}
 							isOwner={isPostOwner}
-							isDeleting={isDeletingPost}
-							onDelete={handlePostDelete}
-							deleteError={deletePostError}
+							isDeletingPost={isDeletingPost}
+							deletingCommentId={deletingCommentId}
+							deletePostError={deletePostError}
+							commentError={commentError}
+							onDeletePost={handlePostDelete}
+							onCommentCreated={handleCommentCreated}
+							onDeleteComment={handleCommentDelete}
 							onLikeChange={handleLikeChange}
 							onImageClick={setSelectedImageSrc}
 						/>
-
-						<section className="comments post-modal__comments">
-							<h2 className="comments__title">Comments</h2>
-
-							<CommentForm
-								postId={post.id}
-								onCreated={handleCommentCreated}
-							/>
-
-							{commentError && (
-								<p className="comments__error">{commentError}</p>
-							)}
-
-							<CommentList
-								comments={comments}
-								currentUserId={currentUserId}
-								deletingCommentId={deletingCommentId}
-								onDelete={handleCommentDelete}
-							/>
-						</section>
 					</>
 				)}
 

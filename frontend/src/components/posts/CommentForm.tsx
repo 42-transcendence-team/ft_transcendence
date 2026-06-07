@@ -16,6 +16,8 @@ export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 	const [error, setError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
+	const canSubmit = content.trim() !== "" && !isSubmitting;
+
 	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
@@ -44,31 +46,28 @@ export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 	};
 
 	return (
-		<form className="comment-form" onSubmit={handleSubmit}>
-			<label className="comment-form__label" htmlFor="comment-content">
-				Write a comment
-			</label>
+		<form className="comment-form comment-form--compact" onSubmit={handleSubmit}>
+			<div className="comment-form__composer">
+				<textarea
+					className="comment-form__textarea"
+					value={content}
+					onChange={(event) => setContent(event.target.value)}
+					placeholder="Add a comment."
+					aria-label="Add a comment"
+					rows={1}
+				/>
 
-			<textarea
-				id="comment-content"
-				className="comment-form__textarea"
-				value={content}
-				onChange={(event) => setContent(event.target.value)}
-				placeholder="Add a comment."
-				rows={4}
-			/>
-
-			{error && <p className="comment-form__error">{error}</p>}
-
-			<div className="comment-form__actions">
 				<button
 					className="comment-form__submit"
 					type="submit"
-					disabled={isSubmitting}
+					disabled={!canSubmit}
+					aria-label="Post comment"
 				>
-					{isSubmitting ? "Posting..." : "Comment"}
+					{isSubmitting ? "Sending." : "Send"}
 				</button>
 			</div>
+
+			{error && <p className="comment-form__error">{error}</p>}
 		</form>
 	);
 };

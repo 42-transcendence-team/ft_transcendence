@@ -1,4 +1,8 @@
-import type { Comment } from "../../api/Comments";
+import { Link } from "react-router-dom";
+
+import skullLogo from "@icons/skull_logo.png";
+
+import type { Comment } from "api/Comments";
 
 type CommentItemProps = {
 	comment: Comment;
@@ -14,23 +18,55 @@ function formatCommentDate(value: string): string {
 	}).format(new Date(value));
 }
 
+function getPublicPath(path: string): string {
+	if (path.startsWith("/")) {
+		return path;
+	}
+
+	return `/${path}`;
+}
+
+function getAvatarSrc(avatarPath?: string | null): string {
+	if (!avatarPath) {
+		return skullLogo;
+	}
+
+	return getPublicPath(avatarPath);
+}
+
 export const CommentItem = ({
 	comment,
 	isOwner,
 	isDeleting,
 	onDelete,
 }: CommentItemProps) => {
+	const avatarSrc = getAvatarSrc(comment.author.avatarPath);
+
 	return (
 		<article className="comment-item">
 			<header className="comment-item__header">
-				<div>
-					<p className="comment-item__author">@{comment.author.login}</p>
-					<time
-						className="comment-item__date"
-						dateTime={comment.createdAt}
-					>
-						{formatCommentDate(comment.createdAt)}
-					</time>
+				<div className="comment-item__author-block">
+					<img
+						className="comment-item__avatar"
+						src={avatarSrc}
+						alt=""
+					/>
+
+					<div className="comment-item__meta">
+						<Link
+							className="comment-item__author"
+							to={`/app/profile/${comment.author.login}`}
+						>
+							{comment.author.login}
+						</Link>
+
+						<time
+							className="comment-item__date"
+							dateTime={comment.createdAt}
+						>
+							{formatCommentDate(comment.createdAt)}
+						</time>
+					</div>
 				</div>
 
 				{isOwner && (
@@ -40,7 +76,7 @@ export const CommentItem = ({
 						onClick={() => onDelete(comment.id)}
 						disabled={isDeleting}
 					>
-						{isDeleting ? "Eliminando..." : "Eliminar"}
+						{isDeleting ? "Deleting." : "Delete"}
 					</button>
 				)}
 			</header>

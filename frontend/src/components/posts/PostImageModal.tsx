@@ -19,7 +19,6 @@ export const PostImageModal = ({
 		<Modal
 			open={open}
 			onClose={onClose}
-			title="Image"
 			overlayClassName="post-image-modal-overlay"
 			modalClassName="post-image-modal"
 			contentClassName="post-image-modal__content"
