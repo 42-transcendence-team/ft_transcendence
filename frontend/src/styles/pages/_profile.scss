@@ -120,15 +120,15 @@ body {
 		flex-direction: column;
 	}
 
-	// // Estilo para cuando no hay posts de chatigpt (ns como se ve pero parece buena idea)
-	// .no-posts {
-	//   text-align: center;
-	//   padding: 40px;
-	//   color: $color-text-light;
-	//   font-style: italic;
-	//   background: rgba(255, 255, 255, 0.5);
-	//   border-radius: 10px;
-	// }
+	.no-posts {
+	  text-align: center;
+	  padding: 40px;
+	  color: $color-text-light;
+	  font-style: italic;
+	  background: rgba(255, 255, 255, 0.5);
+	  border-radius: 10px;
+	}
+
 	.feed-post {
 		width: 100%;
 		padding: 15px;
@@ -230,6 +230,42 @@ body {
 			}
 		}
 	}
+}
+
+.post-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.like-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+
+  svg {
+    font-size: 20px;
+    color: #536471;
+    transition: color 0.2s ease;
+  }
+
+  .liked {
+    color: #f91880;
+  }
+
+  &:hover {
+    svg {
+      color: #f91880;
+    }
+  }
+}
+
+.likes-count {
+  font-size: 14px;
+  color: #536471;
 }
 
 //para q en telefono nbo se vea diminuto

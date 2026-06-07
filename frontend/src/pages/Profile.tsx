@@ -14,7 +14,8 @@ const postsData = [//testing de datos
     username: "lore",
     time: "Ahora mismo",
     message: " TODO BORRAR",
-    isHighlighted: false
+    isHighlighted: false,
+    likes: 10
   },
   {
     id: 2,
@@ -22,26 +23,30 @@ const postsData = [//testing de datos
     time: "2 min",
     message: "Listo pal roneitoooo",
     images: [photo1, photo2, photo3, photo3],
-    isHighlighted: true
+    isHighlighted: true,
+    likes: 10
   },
   {
     id: 3,
     username: "lore",
     time: "Ahora mismo",
     message: " TODO BORRAR",
-    isHighlighted: false
+    isHighlighted: false,
+    likes: 10
   },{
     id: 4,
     username: "lore",
     time: "Ahora mismo",
     message: " TODO BORRAR",
-    isHighlighted: false
+    isHighlighted: false,
+    likes: 10
   },{
     id: 5,
     username: "lore",
     time: "Ahora mismo",
     message: " TODO BORRAR",
-    isHighlighted: false
+    isHighlighted: false,
+    likes: 10
   },
 ];
 
