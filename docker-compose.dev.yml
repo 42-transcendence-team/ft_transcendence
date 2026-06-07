@@ -156,6 +156,8 @@ services:
             - "--storage.tsdb.path=/prometheus"
         networks:
             - monitoring
+        environment:
+            - GF_LOG_LEVEL=warn
 
     grafana:
         build:
@@ -168,6 +170,8 @@ services:
             - prometheus
         networks:
             - monitoring
+        environment:
+            - GF_LOG_LEVEL=warn
 
     # 
     node-exporter:

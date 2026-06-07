@@ -98,6 +98,7 @@ export const Profile = () => {
                   message={post.message}
                   images={post.images}
                   isHighlighted={post.isHighlighted}
+                  likes={post.likes}
                 />
               ))
             ) : (
