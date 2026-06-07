@@ -163,3 +163,26 @@
 	overflow-y: auto;
 	padding-right: 0.35rem;
 }
+
+.post-image-modal-overlay {
+	z-index: 1100;
+}
+
+.post-image-modal {
+	width: min(1200px, calc(100vw - 2rem));
+	max-height: calc(100vh - 2rem);
+}
+
+.post-image-modal__content {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+}
+
+.post-image-modal__image {
+	display: block;
+	max-width: 100%;
+	max-height: calc(100vh - 8rem);
+	object-fit: contain;
+}

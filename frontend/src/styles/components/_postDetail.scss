@@ -134,3 +134,17 @@
 	margin: 0;
 	font-size: 0.8rem;
 }
+
+.post-detail__image-button {
+	display: block;
+	width: 100%;
+	border: 0;
+	padding: 0;
+	background: transparent;
+	cursor: zoom-in;
+}
+
+.post-detail__image-button .post-detail__image {
+	display: block;
+	width: 100%;
+}

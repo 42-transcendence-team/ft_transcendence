@@ -9,6 +9,7 @@ type PostDetailProps = {
 	onDelete: () => void;
 	deleteError: string | null;
 	onLikeChange: (likeState: PostLikeState) => void;
+	onImageClick?: (imageSrc: string) => void;
 };
 
 function getPostImageSrc(imagePath: string): string {
@@ -33,6 +34,7 @@ export const PostDetail = ({
 	onDelete,
 	deleteError,
 	onLikeChange,
+	onImageClick,
 }: PostDetailProps) => {
 	return (
 		<article className="post-detail">
@@ -71,11 +73,26 @@ export const PostDetail = ({
 
 			{post.imagePath && (
 				<div className="post-detail__image-wrapper">
-					<img
-						className="post-detail__image"
-						src={getPostImageSrc(post.imagePath)}
-						alt="Post image"
-					/>
+					{onImageClick ? (
+						<button
+							className="post-detail__image-button"
+							type="button"
+							onClick={() => onImageClick(getPostImageSrc(post.imagePath!))}
+							aria-label="Open post image"
+						>
+							<img
+								className="post-detail__image"
+								src={getPostImageSrc(post.imagePath)}
+								alt="Post image"
+							/>
+						</button>
+					) : (
+						<img
+							className="post-detail__image"
+							src={getPostImageSrc(post.imagePath)}
+							alt="Post image"
+						/>
+					)}
 				</div>
 			)}
 

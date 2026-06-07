@@ -1,23 +1,23 @@
 import { useEffect, useState } from "react";
 
 import { Modal } from "@components/Modal";
-import { PostDetail } from "@components/posts/PostDetail";
 import { CommentForm } from "@components/posts/CommentForm";
 import { CommentList } from "@components/posts/CommentList";
+import { PostDetail } from "@components/posts/PostDetail";
+import { PostImageModal } from "@components/posts/PostImageModal";
 
 import { getAuthenticatedUser } from "api/Login";
-import { deletePost, getPostById } from "api/Posts";
-import type { Post, PostLikeState } from "api/Posts";
 import {
 	deleteComment,
 	getCommentsByPostId,
 } from "api/Comments";
 import type { Comment } from "api/Comments";
+import { deletePost, getPostById } from "api/Posts";
+import type { Post, PostLikeState } from "api/Posts";
 
 import {
 	getApiErrorStatus,
 	getCommentDeleteErrorMessage,
-	getGenericApiErrorMessage,
 	getPostDeleteErrorMessage,
 	getPostLoadErrorMessage,
 } from "@utils/apiErrorMessages";
@@ -67,34 +67,58 @@ export const PostModal = ({
 
 	const [isLoading, setIsLoading] = useState(false);
 	const [isDeletingPost, setIsDeletingPost] = useState(false);
-	const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
+	const [deletingCommentId, setDeletingCommentId] = useState<number | null>(
+		null,
+	);
 
-	const [error, setError] = useState<string | null>(null);
+	const [loadError, setLoadError] = useState<string | null>(null);
 	const [deletePostError, setDeletePostError] = useState<string | null>(null);
 	const [commentError, setCommentError] = useState<string | null>(null);
 	const [notFound, setNotFound] = useState(false);
 
+	const [selectedImageSrc, setSelectedImageSrc] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (!open) {
+			setSelectedImageSrc(null);
+		}
+	}, [open]);
+
+	useEffect(() => {
+		setSelectedImageSrc(null);
+	}, [normalizedPostId]);
+
 	useEffect(() => {
 		let ignore = false;
 
+		const resetState = () => {
+			setPost(null);
+			setComments([]);
+			setCurrentUserId(null);
+			setIsLoading(false);
+			setIsDeletingPost(false);
+			setDeletingCommentId(null);
+			setLoadError(null);
+			setDeletePostError(null);
+			setCommentError(null);
+			setNotFound(false);
+		};
+
 		const loadPostData = async () => {
 			if (!open) {
+				resetState();
 				return;
 			}
 
 			if (!isValidPostId(normalizedPostId)) {
-				setPost(null);
-				setComments([]);
-				setCurrentUserId(null);
-				setNotFound(false);
-				setError("Invalid post ID.");
-				setIsLoading(false);
+				resetState();
+				setLoadError("Invalid post ID.");
 				return;
 			}
 
 			try {
 				setIsLoading(true);
-				setError(null);
+				setLoadError(null);
 				setDeletePostError(null);
 				setCommentError(null);
 				setNotFound(false);
@@ -112,7 +136,7 @@ export const PostModal = ({
 				setCurrentUserId(authResponse.user?.id ?? null);
 				setPost(postData);
 				setComments(commentsData);
-			} catch (loadError) {
+			} catch (error) {
 				if (ignore) {
 					return;
 				}
@@ -120,13 +144,12 @@ export const PostModal = ({
 				setPost(null);
 				setComments([]);
 
-				if (getApiErrorStatus(loadError) === 404) {
+				if (getApiErrorStatus(error) === 404) {
 					setNotFound(true);
-					setError(null);
 					return;
 				}
 
-				setError(getPostLoadErrorMessage(loadError));
+				setLoadError(getPostLoadErrorMessage(error));
 			} finally {
 				if (!ignore) {
 					setIsLoading(false);
@@ -158,15 +181,14 @@ export const PostModal = ({
 			}
 
 			onClose();
-		} catch (deleteError) {
-			if (getApiErrorStatus(deleteError) === 404) {
-				setNotFound(true);
+		} catch (error) {
+			if (getApiErrorStatus(error) === 404) {
 				setPost(null);
-				setDeletePostError(null);
+				setNotFound(true);
 				return;
 			}
 
-			setDeletePostError(getPostDeleteErrorMessage(deleteError));
+			setDeletePostError(getPostDeleteErrorMessage(error));
 		} finally {
 			setIsDeletingPost(false);
 		}
@@ -194,8 +216,8 @@ export const PostModal = ({
 			setComments((currentComments) =>
 				currentComments.filter((comment) => comment.id !== commentId),
 			);
-		} catch (deleteError) {
-			if (getApiErrorStatus(deleteError) === 404) {
+		} catch (error) {
+			if (getApiErrorStatus(error) === 404) {
 				setComments((currentComments) =>
 					currentComments.filter((comment) => comment.id !== commentId),
 				);
@@ -203,7 +225,7 @@ export const PostModal = ({
 				return;
 			}
 
-			setCommentError(getCommentDeleteErrorMessage(deleteError));
+			setCommentError(getCommentDeleteErrorMessage(error));
 		} finally {
 			setDeletingCommentId(null);
 		}
@@ -226,11 +248,14 @@ export const PostModal = ({
 	const isPostOwner = Boolean(post && currentUserId === post.userId);
 
 	return (
-		<Modal open={open} onClose={onClose} title="Post">
+		<Modal
+			open={open}
+			onClose={onClose}
+			title="Post"
+			closeOnEscape={!selectedImageSrc}
+		>
 			<div className="post-modal">
-				{isLoading && (
-					<p className="post-modal__state">Loading post.</p>
-				)}
+				{isLoading && <p className="post-modal__state">Loading post.</p>}
 
 				{notFound && !isLoading && (
 					<div className="post-modal__state">
@@ -239,13 +264,11 @@ export const PostModal = ({
 					</div>
 				)}
 
-				{error && !isLoading && (
-					<p className="post-modal__error">
-						{error || getGenericApiErrorMessage(error)}
-					</p>
+				{loadError && !isLoading && (
+					<p className="post-modal__error">{loadError}</p>
 				)}
 
-				{post && !isLoading && !notFound && !error && (
+				{post && !isLoading && !notFound && !loadError && (
 					<>
 						<PostDetail
 							post={post}
@@ -254,13 +277,14 @@ export const PostModal = ({
 							onDelete={handlePostDelete}
 							deleteError={deletePostError}
 							onLikeChange={handleLikeChange}
+							onImageClick={setSelectedImageSrc}
 						/>
 
 						<section className="comments post-modal__comments">
 							<h2 className="comments__title">Comments</h2>
 
 							<CommentForm
-								postId={String(post.id)}
+								postId={post.id}
 								onCreated={handleCommentCreated}
 							/>
 
@@ -277,6 +301,12 @@ export const PostModal = ({
 						</section>
 					</>
 				)}
+
+				<PostImageModal
+					open={Boolean(selectedImageSrc)}
+					imageSrc={selectedImageSrc}
+					onClose={() => setSelectedImageSrc(null)}
+				/>
 			</div>
 		</Modal>
 	);
