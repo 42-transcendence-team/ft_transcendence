@@ -135,14 +135,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		rediskey := fmt.Sprintf("2fa_token:%s", result.TempToken)
 		timeExp := time.Until(result.ExpTime)
 		if timeExp < 0 {
-			log.Printf("authHandler: Expired session %v", err)
-			c.AbortWithStatusJSON(401, gin.H{"Error": "Expired session"})
+			c.Error(appErr.NewUnauthorized("Expired session"))
+			c.Abort()
 			return
 		}
 		err := h.Redis.Set(ctx, rediskey, result.User.ID, timeExp).Err()
 		if err != nil {
-			log.Printf("authHandler: Redis error %v", err)
-			c.AbortWithStatusJSON(500, gin.H{"Error": "Server error (redis error)"})
+			c.Error(appErr.NewInternal(fmt.Errorf("authHandler redis 2fa error: %w", err)))
+			c.Abort()
 			return
 		}
 		h.SetTempToken(c, result.TempToken, result.ExpTime)
@@ -164,17 +164,24 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	h.setCookie(c, strToken, expTime)
 	timeExp := time.Until(expTime)
 	if timeExp < 0 {
-		log.Printf("authHandler: Expired session %v", err)
-		c.AbortWithStatusJSON(400, gin.H{"Error": "Expired session"})
+		c.Error(appErr.NewBadRequest("Expired session"))
+		c.Abort()
 		return
 	}
 	// ctx := c.Request.Context()
 	sessionKey := fmt.Sprintf("session:%d", user.ID)
 	err = h.Redis.Set(ctx, sessionKey, strToken, timeExp).Err()
 	if err != nil {
-		log.Printf("Error: registration redis session")
+		c.Error(appErr.NewInternal(fmt.Errorf("error registration redis session: %w", err)))
+		c.Abort()
+		return
 	}
 	h.Redis.SAdd(ctx, "online_users", user.ID)
+	if err != nil {
+		c.Error(appErr.NewInternal(fmt.Errorf("error adding user to online list: %w", err)))
+		c.Abort()
+		return
+	}
 	// TODO: hay q ver como se mandan los msg al front y que necesita
 	c.JSON(200, gin.H{
 		"message":     "user login success",
@@ -193,7 +200,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) Logout(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		log.Println("Logout: userID not found in context")
+		c.Error(appErr.NewUnauthorized("user session context not found"))
+		c.Abort()
+		return
 	}
 
 	ctx := c.Request.Context()
@@ -201,16 +210,19 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		sessionKey := fmt.Sprintf("session:%v", userID)
 		err := h.Redis.Del(ctx, sessionKey).Err() //borramos la session
 		if err != nil {
-			log.Printf("Error redis session deleted: %v", err)
+			c.Error(appErr.NewInternal(fmt.Errorf("error deleting redis session: %w", err)))
+			c.Abort()
+			return
 		}
 		errSrem := h.Redis.SRem(ctx, "online_users", userID).Err() //lo borramos de la lista de online_user
 		if errSrem != nil {
-			log.Printf("Error deleting online user in redis: %v", errSrem)
+			c.Error(appErr.NewInternal(fmt.Errorf("error deleting online user in redis: %w", errSrem)))
+			c.Abort()
+			return
 		}
 	}
 	expTime := time.Unix(0, 0)
 	h.setCookie(c, "", expTime) //matamos la cokie
-	log.Printf("session borrada")
 	// TODO: hay q ver como se mandan los msg al front y que necesita
 	c.JSON(200, gin.H{"message": "user logout success"})
 
