@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -271,6 +270,7 @@ func (s *AuthService) PreRegister42User(user42 *dto.User42) ([]byte, error) {
 }
 
 func (s *AuthService) Register42User(user42 *dto.Register42User, id42 *int) (*models.User, error) {
+	// TODO - Revisar como se estan guardando los datos (Ahora no guarda contraseña ni cumpleaños)
 	user := models.User{
 		Login:   user42.Login,
 		Email:   &user42.Email,
@@ -279,7 +279,6 @@ func (s *AuthService) Register42User(user42 *dto.Register42User, id42 *int) (*mo
 		OAuth:   "42",
 		OAuthID: id42,
 	}
-	log.Printf("Intentando registrar usuario 42: %+v", user)
 	err := s.userRepo.Create(&user)
 	if err != nil {
 		if s.userRepo.IsDuplicatedKey(err) {
@@ -291,13 +290,35 @@ func (s *AuthService) Register42User(user42 *dto.Register42User, id42 *int) (*mo
 }
 
 func (s *AuthService) Login42User(user *models.User) (dto.LoginResult, error) {
-	// if user.Active2FA {
-	// 	return dto.LoginResult{
-	// 		User:        user,
-	// 		TempToken:   "",
-	// 		ExpTime:     time.Now().Add(time.Hour),
-	// 		Requires2FA: true,
-	// 	}, nil
-	// }
-	return dto.LoginResult{}, nil
+	if user.Active2FA {
+		tempToken, err := utils.CreateTempJwtToken()
+		if err != nil {
+			return dto.LoginResult{}, appErr.NewInternal(err)
+		}
+
+		store.GlobalTempStore.Set(tempToken, store.TempTokenData{
+			UserID: user.ID,
+			Expiry: time.Now().Add(time.Duration(s.cfg.Expiration2FA) * time.Second),
+		})
+
+		return dto.LoginResult{
+			User:        user,
+			TempToken:   tempToken,
+			Requires2FA: true,
+			ExpTime:     time.Now().Add(time.Duration(s.cfg.Expiration2FA) * time.Second),
+		}, nil
+	}
+
+	strToken, expTime, err := utils.CreateJwtToken(user, s.cfg)
+	if err != nil {
+		return dto.LoginResult{}, err
+	}
+
+	return dto.LoginResult{
+		Token:       strToken,
+		TempToken:   "",
+		User:        user,
+		ExpTime:     expTime,
+		Requires2FA: false,
+	}, nil
 }

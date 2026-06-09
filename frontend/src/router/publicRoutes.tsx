@@ -8,6 +8,7 @@ import { PublicLayout } from "layouts/publicLayout"
 import { ForgotPassword } from "@pages/ForgotPassword";
 import { ResetPassword } from "@pages/ResetPassword";
 import Register42 from "@pages/Register42";
+import { Login2fa } from "@pages/Login2fa";
 
 
 export const PublicRoutes = {
@@ -21,6 +22,7 @@ export const PublicRoutes = {
 		{ path: "privacy-policy", element: <PrivacyPolicy /> },
 		{ path: "forgot-password", element: <ForgotPassword /> },
         { path: "reset-password/:token", element: <ResetPassword /> },
-		{ path: "42register", element: <Register42 /> }
+		{ path: "42register", element: <Register42 /> },
+		{ path: "2fa", element: <Login2fa /> }
 	],
 };

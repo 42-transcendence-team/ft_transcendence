@@ -4,7 +4,7 @@ import "../styles/pages/_authPages.scss"
 import { NavLink } from "react-router-dom"
 
 export const Login = () => {
-
+	// TODO - Revisar si se puede sacar del form el modal de 2FA y simplemente revisar si existe la cookie de tempToken para verificarlo
 	const handle42Login = () => {
 		window.location.href = "https://localhost/api/v1/auth/42/login";
 	};

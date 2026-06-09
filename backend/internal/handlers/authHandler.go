@@ -52,7 +52,6 @@ de que ha fallado segun la estructura d ela funcon apperr NewValidation()
 func (h *AuthHandler) Register(c *gin.Context) {
 
 	var req dto.RegisterRequest
-	log.Printf("req1", req)
 
 	err := ValidationBindRequest(c, &req)
 	if err != nil {
@@ -393,10 +392,46 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "42 login successful", "access_token": token,
-		"user42": user42,
-		"user":   user,
-	})
+	final, err := h.AuthService.Login42User(user)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	ctx := c.Request.Context()
+	if final.Requires2FA {
+		rediskey := fmt.Sprintf("2fa_token:%s", final.TempToken)
+		timeExp := time.Until(final.ExpTime)
+		if timeExp < 0 {
+			log.Printf("authHandler: Expired session %v", err)
+			c.AbortWithStatusJSON(401, gin.H{"Error": "Expired session"})
+			return
+		}
+		err := h.Redis.Set(ctx, rediskey, final.User.ID, timeExp).Err()
+		if err != nil {
+			log.Printf("authHandler: Redis error %v", err)
+			c.AbortWithStatusJSON(500, gin.H{"Error": "Server error (redis error)"})
+			return
+		}
+		h.SetTempToken(c, final.TempToken, final.ExpTime)
+		c.Redirect(
+			http.StatusFound,
+			"https://localhost/2fa",
+		)
+		return
+	}
+	h.setCookie(c, final.Token, final.ExpTime)
+	h.ClearTempToken(c)
+	sessionKey := fmt.Sprintf("session:%d", user.ID)
+	err = h.Redis.Set(ctx, sessionKey, final.Token, time.Until(final.ExpTime)).Err()
+	if err != nil {
+		log.Printf("Error: 42 login redis session")
+	}
+	h.Redis.SAdd(ctx, "online_users", user.ID)
+	c.Redirect(
+		http.StatusFound,
+		"https://localhost/app",
+	)
 }
 
 func (h *AuthHandler) Get42UserInfo(c *gin.Context) {
