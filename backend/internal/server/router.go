@@ -14,7 +14,6 @@ import (
 // Para añadir un endpoint hay que confeccionar la funcion en internals/handlers y
 // añadir el enpoint con un comantario encima describiendo lo que hace para el swagger
 func (srv *HTTPServer) Router() {
-
 	routes.HealthRoutes(srv.Engine)
 
 	userRepo := repository.NewUserRepository(srv.Db)
@@ -22,7 +21,7 @@ func (srv *HTTPServer) Router() {
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
-	twoFAService := services.New2FAService(userRepo, authService)
+	twoFAService := services.New2FAService(userRepo, authService, srv.Redis)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)

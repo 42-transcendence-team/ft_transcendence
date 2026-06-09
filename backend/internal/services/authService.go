@@ -20,16 +20,14 @@ import (
 )
 
 type AuthService struct {
-	userRepo  *repository.UserRepository
-	cfg       *config.Config
-	tempStore *store.TempStore
+	userRepo *repository.UserRepository
+	cfg      *config.Config
 }
 
 func NewAuthService(userRepo *repository.UserRepository, cfg *config.Config) *AuthService {
 	return &AuthService{
-		userRepo:  userRepo,
-		cfg:       cfg,
-		tempStore: store.NewTempStore(),
+		userRepo: userRepo,
+		cfg:      cfg,
 	}
 }
 
@@ -126,6 +124,7 @@ func (s *AuthService) Login(input dto.LoginInput) (dto.LoginResult, error) {
 			User:        user,
 			TempToken:   tempToken,
 			Requires2FA: true,
+			ExpTime:     time.Now().Add(time.Duration(s.cfg.Expiration2FA) * time.Second),
 		}, nil
 	}
 

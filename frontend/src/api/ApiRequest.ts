@@ -16,9 +16,7 @@ export async function apiRequest(props: ApiRequestProps): Promise<any> {
         credentials: includeCredentials ? "include" : "same-origin",
         body: body ? JSON.stringify(body) : undefined,
     };
-
     const res = await fetch(`${API_BASE_URL}${endpoint}`, config);
-	
     if (!res.ok) {
 		const errorData = await res.json().catch(() => null);
         throw buildApiError(res, errorData);
