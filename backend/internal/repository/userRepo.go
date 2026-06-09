@@ -192,7 +192,7 @@ func (r *UserRepository) FindById(userID uint) (*models.User, error) {
 func (r *UserRepository) FindByOAuth(OAuthID int) (*models.User, error) {
 	var user models.User
 
-	err := r.db.Where("oauth_id = ?", OAuthID).First(&user).Error
+	err := r.db.Where("o_auth_id = ?", OAuthID).First(&user).Error
 	if err != nil {
 		return nil, err
 	}

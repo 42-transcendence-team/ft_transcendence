@@ -1,6 +1,7 @@
 type FormFieldProps = {
 	id: string
 	label?: string
+	name?: string
 	type: string
 	value: string
 	onChange: (value: string) => void

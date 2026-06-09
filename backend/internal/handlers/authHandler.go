@@ -5,6 +5,7 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -345,23 +346,139 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 		return
 	}
 
-	user42, err := h.AuthService.Validate42Token(token)
+	user42, err := h.AuthService.Get42User(token)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	user, err := h.AuthService.Login42(user42)
+	user, err := h.AuthService.Search42User(user42)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "42 login successful", "access_token": token, "user42": user42, "user": gin.H{
-		"id":    user.ID,
-		"login": user.Login,
-		"email": user.Email,
-	}})
+	if user == nil {
+		newUser, err := h.AuthService.PreRegister42User(user42)
+		if err != nil {
+			c.Error(err)
+			c.Abort()
+			return
+		}
+
+		timeExp := time.Duration(5 * time.Minute)
+		err = h.Redis.Set(c, "42_register:"+token, newUser, timeExp).Err()
+		if err != nil {
+			c.Error(err)
+			c.Abort()
+			return
+		}
+
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "42_token",
+			Value:    token,
+			Expires:  time.Now().Add(timeExp),
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		})
+
+		c.Redirect(
+			http.StatusFound,
+			"https://localhost/42register",
+		)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "42 login successful", "access_token": token,
+		"user42": user42,
+		"user":   user,
+	})
+}
+
+func (h *AuthHandler) Get42UserInfo(c *gin.Context) {
+	token, err := c.Cookie("42_token")
+	if err != nil {
+		c.Error(appErr.NewBadRequest("42_token cookie is required"))
+		c.Abort()
+		return
+	}
+
+	data, err := h.Redis.Get(c, "42_register:"+token).Result()
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+
+	var user dto.Register42User
+
+	if err := json.Unmarshal([]byte(data), &user); err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
+func (h *AuthHandler) Register42(c *gin.Context) {
+	token, err := c.Cookie("42_token")
+	if err != nil {
+		c.Error(appErr.NewBadRequest("42_token cookie is required"))
+		c.Abort()
+		return
+	}
+
+	data, err := h.Redis.Get(c, "42_register:"+token).Result()
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+
+	var redisUser dto.User42
+
+	err = json.Unmarshal([]byte(data), &redisUser)
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+
+	log.Printf("Datos obtenidos para registro 42: %v", redisUser)
+
+	var regUser dto.Register42User
+
+	err = ValidationBindRequest(c, &regUser)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	var newUser dto.New42User
+	// user, err := h.AuthService.Register42User(&regUser)
+	// if err != nil {
+	// 	c.Error(err)
+	// 	c.Abort()
+	// 	return
+	// }
+
+	log.Printf("Usuario registrado con 42: %v", regUser)
+
+	// h.Redis.Del(c, "42_register:"+token)
+
+	// strToken, expTime, err := h.AuthService.GenerateJWT(user)
+	// if err != nil {
+	// 	c.Error(err)
+	// 	c.Abort()
+	// 	return
+	// }
+
+	// h.setCookie(c, strToken, expTime)
+
+	c.JSON(http.StatusOK, gin.H{"message": "42 registration successful", "user": regUser})
 }

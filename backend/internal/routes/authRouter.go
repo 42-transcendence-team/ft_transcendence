@@ -14,6 +14,8 @@ func AuthRoutes(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {
 
 	api.GET("auth/42/login", authHandler.Login42)
 	api.GET("auth/42/callback", authHandler.Login42Callback)
+	api.GET("auth/42/userInfo", authHandler.Get42UserInfo)
+	api.POST("auth/42/register", authHandler.Register42)
 }
 
 func AuthRoutesPrivate(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {

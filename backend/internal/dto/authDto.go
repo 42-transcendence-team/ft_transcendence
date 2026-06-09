@@ -48,8 +48,23 @@ type TokenResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
+type Register42User struct {
+	Login      string `json:"login"`
+	LoginError string `json:"loginError,omitempty"`
+	Email      string `json:"email"`
+	Name       string `json:"first_name"`
+	Surname    string `json:"last_name"`
+}
+
 type User42 struct {
-	ID      int    `json:"id"`
+	ID42    int    `json:"id"`
+	Login   string `json:"login"`
+	Email   string `json:"email"`
+	Name    string `json:"first_name"`
+	Surname string `json:"last_name"`
+}
+
+type New42User struct {
 	Login   string `json:"login"`
 	Email   string `json:"email"`
 	Name    string `json:"first_name"`

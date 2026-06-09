@@ -9,10 +9,13 @@ import (
 	"backend/internal/store"
 	"backend/internal/utils"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type AuthService struct {
@@ -201,7 +204,7 @@ func (s *AuthService) Exchange42Code(code string) (string, error) {
 	return token.AccessToken, nil
 }
 
-func (s *AuthService) Validate42Token(token string) (*dto.User42, error) {
+func (s *AuthService) Get42User(token string) (*dto.User42, error) {
 	req, err := http.NewRequest("GET", "https://api.intra.42.fr/v2/me", nil)
 	if err != nil {
 		return nil, appErr.NewInternal(err)
@@ -233,6 +236,40 @@ func (s *AuthService) Validate42Token(token string) (*dto.User42, error) {
 	return &user, nil
 }
 
-func (s *AuthService) Login42(user42 *dto.User42) (*models.User, error) {
-	return s.userRepo.FindByOAuth(user42.ID)
+func (s *AuthService) Search42User(user42 *dto.User42) (*models.User, error) {
+	user, err := s.userRepo.FindByOAuth(user42.ID42)
+	if err == nil {
+		return user, nil
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, appErr.NewInternal(err)
+	}
+
+	return nil, nil
 }
+
+func (s *AuthService) PreRegister42User(user42 *dto.User42) ([]byte, error) {
+	newUser := dto.User42{}
+	_, err := s.userRepo.FindByLoginOrEmail(user42.Login)
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, appErr.NewInternal(err)
+	}
+
+	newUser.ID42 = user42.ID42
+	newUser.Login = user42.Login
+	newUser.Email = user42.Email
+	newUser.Name = user42.Name
+	newUser.Surname = user42.Surname
+
+	jsonUser, err := json.Marshal(newUser)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	return jsonUser, nil
+}
+
+// func (s *AuthService) Register42User(user42 *dto.Register42User) (*models.User, error) {
+
+// }
