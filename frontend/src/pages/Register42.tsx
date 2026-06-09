@@ -11,11 +11,9 @@ type FormFields = {
     email: string
     password: string
     confirmPassword: string
-    name: string
-    surname: string
+    first_name: string
+    last_name: string
     birthday: string
-    termsAndConditions: boolean
-    privacyPolicy: boolean
 }
 
 type FormErrors = Record<keyof Omit<FormFields, "termsAndConditions" | "privacyPolicy">, string>
@@ -25,11 +23,9 @@ const INITIAL_FORM_STATE: FormFields = {
     email: "",
     password: "",
     confirmPassword: "",
-    name: "",
-    surname: "",
+    first_name: "",
+    last_name: "",
     birthday: "",
-    termsAndConditions: true,
-    privacyPolicy: true
 }
 
 const INITIAL_ERRORS: FormErrors = {
@@ -37,8 +33,8 @@ const INITIAL_ERRORS: FormErrors = {
     email: "",
     password: "",
     confirmPassword: "",
-    name: "",
-    surname: "",
+    first_name: "",
+    last_name: "",
     birthday: ""
 }
 
@@ -87,7 +83,7 @@ export default function Register42() {
             newErrors.confirmPassword = "Passwords do not match."
         }
 
-        ;(["name", "surname"] as const).forEach((field) => {
+        ;(["first_name", "last_name"] as const).forEach((field) => {
             const val = formData[field].trim()
             if (!val) {
                 newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`
@@ -162,8 +158,8 @@ export default function Register42() {
 					...prev,
 					login: data.login ?? "",
 					email: data.email ?? "",
-					name: data.first_name ?? "",
-					surname: data.last_name ?? "",
+					first_name: data.first_name ?? "",
+					last_name: data.last_name ?? "",
 				}))
 			})
 			.catch(() => {
@@ -181,8 +177,8 @@ export default function Register42() {
     ]
 
     const personalFields = [
-        { id: "name", label: "Name", type: "text", placeholder: "Name" },
-        { id: "surname", label: "Surname", type: "text", placeholder: "Surname" },
+        { id: "first_name", label: "First Name", type: "text", placeholder: "First Name" },
+        { id: "last_name", label: "Last Name", type: "text", placeholder: "Last Name" },
         { id: "birthday", label: "Birthday", type: "date", placeholder: "" },
     ]
 

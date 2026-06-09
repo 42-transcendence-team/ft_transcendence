@@ -413,7 +413,7 @@ func (h *AuthHandler) Get42UserInfo(c *gin.Context) {
 		return
 	}
 
-	var user dto.Register42User
+	var user dto.Redis42User
 
 	if err := json.Unmarshal([]byte(data), &user); err != nil {
 		c.Error(appErr.NewInternal(err))
@@ -432,6 +432,16 @@ func (h *AuthHandler) Register42(c *gin.Context) {
 		return
 	}
 
+	var regUser dto.Register42User
+
+	err = ValidationBindRequest(c, &regUser)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	log.Printf("Datos de Frontend: %v", regUser)
+
 	data, err := h.Redis.Get(c, "42_register:"+token).Result()
 	if err != nil {
 		c.Error(appErr.NewInternal(err))
@@ -448,27 +458,16 @@ func (h *AuthHandler) Register42(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Datos obtenidos para registro 42: %v", redisUser)
+	log.Printf("Datos de Redis: %v", redisUser)
 
-	var regUser dto.Register42User
-
-	err = ValidationBindRequest(c, &regUser)
+	user, err := h.AuthService.Register42User(&regUser, &redisUser.ID42)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	var newUser dto.New42User
-	// user, err := h.AuthService.Register42User(&regUser)
-	// if err != nil {
-	// 	c.Error(err)
-	// 	c.Abort()
-	// 	return
-	// }
-
-	log.Printf("Usuario registrado con 42: %v", regUser)
-
+	// TODO - Crear token de sesion y redirigir al perfil/home
 	// h.Redis.Del(c, "42_register:"+token)
 
 	// strToken, expTime, err := h.AuthService.GenerateJWT(user)
@@ -480,5 +479,5 @@ func (h *AuthHandler) Register42(c *gin.Context) {
 
 	// h.setCookie(c, strToken, expTime)
 
-	c.JSON(http.StatusOK, gin.H{"message": "42 registration successful", "user": regUser})
+	c.JSON(http.StatusOK, gin.H{"message": "42 registration successful", "user": user})
 }

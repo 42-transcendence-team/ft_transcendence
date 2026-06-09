@@ -5,11 +5,9 @@ export type RegisterPayload = {
 	email: string
 	password: string
 	confirmPassword: string
-	name: string
-	surname: string
+	first_name: string
+	last_name: string
 	birthday: string
-	termsAndConditions: boolean
-	privacyPolicy: boolean
 }
 
 export type RegisterResponse = {
@@ -40,8 +38,6 @@ export async function get42UserInfo(): Promise<User42Data> {
 		endpoint: `auth/42/userInfo`,
 		method: "GET",
 	})
-
-	console.log("42 user info:", data)
 
 	return data
 }

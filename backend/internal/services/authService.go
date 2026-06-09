@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -270,6 +271,34 @@ func (s *AuthService) PreRegister42User(user42 *dto.User42) ([]byte, error) {
 	return jsonUser, nil
 }
 
-// func (s *AuthService) Register42User(user42 *dto.Register42User) (*models.User, error) {
+func (s *AuthService) Register42User(user42 *dto.Register42User, id42 *int) (*models.User, error) {
+	user := models.User{
+		Login:   user42.Login,
+		Email:   &user42.Email,
+		Name:    user42.Name,
+		Surname: user42.Surname,
+		OAuth:   "42",
+		OAuthID: id42,
+	}
+	log.Printf("Intentando registrar usuario 42: %+v", user)
+	err := s.userRepo.Create(&user)
+	if err != nil {
+		if s.userRepo.IsDuplicatedKey(err) {
+			return nil, appErr.NewConflict("user_already_exists")
+		}
+		return nil, appErr.NewInternal(err)
+	}
+	return &user, nil
+}
 
-// }
+func (s *AuthService) Login42User(user *models.User) (dto.LoginResult, error) {
+	// if user.Active2FA {
+	// 	return dto.LoginResult{
+	// 		User:        user,
+	// 		TempToken:   "",
+	// 		ExpTime:     time.Now().Add(time.Hour),
+	// 		Requires2FA: true,
+	// 	}, nil
+	// }
+	return dto.LoginResult{}, nil
+}

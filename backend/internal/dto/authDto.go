@@ -48,12 +48,22 @@ type TokenResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
-type Register42User struct {
+type Redis42User struct {
 	Login      string `json:"login"`
 	LoginError string `json:"loginError,omitempty"`
 	Email      string `json:"email"`
 	Name       string `json:"first_name"`
 	Surname    string `json:"last_name"`
+}
+
+type Register42User struct {
+	Login           string `json:"login"`
+	Email           string `json:"email"`
+	Name            string `json:"first_name"`
+	Surname         string `json:"last_name"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirmPassword"`
+	Birthday        string `json:"birthday"`
 }
 
 type User42 struct {
