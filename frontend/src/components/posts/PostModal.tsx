@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Modal } from "@components/Modal";
 import { PostModalRenderer } from "@components/posts/PostModalRenderer";
 import { PostImageModal } from "@components/posts/PostImageModal";
+import { getPostVariant } from "@utils/postVariant";
 
 import { getAuthenticatedUser } from "api/Login";
 import {
@@ -245,12 +246,16 @@ export const PostModal = ({
 
 	const isPostOwner = Boolean(post && currentUserId === post.userId);
 
+	const modalClassName = post
+	? `post-modal-shell post-modal-shell--${getPostVariant(post)}`
+	: "post-modal-shell";
+
 	return (
 		<Modal
 			open={open}
 			onClose={onClose}
 			closeOnEscape={!selectedImageSrc}
-			modalClassName="post-modal-shell"
+			modalClassName={modalClassName}
 			contentClassName="post-modal-shell__content"
 		>
 			<div className="post-modal">

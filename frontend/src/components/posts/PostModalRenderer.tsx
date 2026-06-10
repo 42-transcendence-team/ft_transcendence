@@ -68,6 +68,7 @@ export const PostModalRenderer = ({
 	const variant = getPostVariant(post);
 	const imageSrc = post.imagePath ? getPublicPath(post.imagePath) : null;
 	const avatarSrc = getAvatarSrc(post.author.avatarPath);
+	const hasText = Boolean(post.content?.trim());
 
 	return (
 		<article
@@ -138,19 +139,21 @@ export const PostModalRenderer = ({
 				</header>
 
 				<div className="post-modal-renderer__body-scroll">
-					{post.content?.trim() && (
+					{hasText && (
 						<p className="post-modal-renderer__content">
 							{post.content}
 						</p>
 					)}
-
+					
 					{deletePostError && (
 						<p className="post-modal-renderer__error">
 							{deletePostError}
 						</p>
 					)}
-
-					<div className="post-modal-renderer__divider" aria-hidden="true" />
+					
+					{hasText && (
+						<div className="post-modal-renderer__divider" aria-hidden="true" />
+					)}
 				
 					<section className="post-modal-renderer__comments" aria-label="Comments">
 						<CommentList
