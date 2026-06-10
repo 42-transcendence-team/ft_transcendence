@@ -55,7 +55,7 @@ export async function Login2FA(code: string, tempToken: string) {
 		method: "POST",
 		body: {
 			code: code,
-			tempToken: tempToken
+			tempToken: tempToken // TODO - Revisar para que es esto en back
 		},
 	});
 
@@ -67,5 +67,17 @@ export async function getAuthenticatedUser() {
 		endpoint: "auth/me",
 	});
 	
+	return data;
+}
+
+export async function Login2FA42(code: string) {
+	const data = await apiRequest({	
+		endpoint: "2fa/login",
+		method: "POST",
+		body: {
+			code: code,
+		},
+	});
+
 	return data;
 }

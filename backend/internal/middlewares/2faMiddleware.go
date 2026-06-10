@@ -19,6 +19,7 @@ func TwoFAMiddleware(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
+		// TODO - Quitar GlobalTempStore y usar Redis para token temporal 2FA
 		data, ok := store.GlobalTempStore.Get(tempToken)
 		if !ok {
 			c.Error(appErr.NewUnauthorized("invalid or expired temp token"))
