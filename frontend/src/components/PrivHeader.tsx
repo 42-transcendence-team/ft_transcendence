@@ -3,21 +3,15 @@ import { Link } from "react-router-dom";
 
 import "../styles/components/_privHeader.scss"
 import logo from "../assets/icons/24_logo.png"
-import { SearchBar } from "./advancedSearch/SearchBar.tsx";
 import { UserMenu } from "./UserMenu";
-import { searchUsers, type UserSearch } from "../api/userSearch.tsx";
-import { useState } from 'react';
-import { SearchResults } from "./advancedSearch/SearchResults.tsx";
+import { SearchBar } from "./advancedSearch/SearchBar";
 
-export function PrivHeader() {
+type PrivHeaderProps = {
+  onSearch: (query: string) => void;
+}
 
-	const [searchResults, setSearchResults]	= useState<UserSearch[]>([]);
 
-	const handleHeaderSearch = async (query: string) => {
-		const response = await searchUsers(query);
-		setSearchResults(response.items)
-		console.log(response.items);
-	}
+export function PrivHeader({ onSearch }: PrivHeaderProps) {
 
 	return (
 		<header className="privHeader privateLayout__header">
@@ -28,8 +22,7 @@ export function PrivHeader() {
 				</Link>
 			</div>
 			<div className="privHeader__center">
-				<SearchBar onSearch={handleHeaderSearch}/>
-				<SearchResults results={searchResults} />
+				<SearchBar onSearch={onSearch} />
 			</div>
 			<div className="privHeader__right">
 				<UserMenu />

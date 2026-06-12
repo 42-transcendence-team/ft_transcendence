@@ -7,7 +7,7 @@ type SearchBarProps = {
 }
 
 export const SearchBar = ({ onSearch }: SearchBarProps) => {
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState<string>('')
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement> ) => {
     setSearchQuery(event.target.value);
@@ -18,6 +18,7 @@ export const SearchBar = ({ onSearch }: SearchBarProps) => {
     if (cleanQuery === "")
       return
     onSearch(cleanQuery)
+    setSearchQuery("")
   }
 
   return (
