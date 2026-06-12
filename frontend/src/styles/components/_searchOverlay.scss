@@ -1,0 +1,14 @@
+.searchOverlay {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 400px;
+
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+
+  z-index: 20;
+}

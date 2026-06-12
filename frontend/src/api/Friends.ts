@@ -65,3 +65,15 @@ export async function listFriendsRequest() {
 
     return data;
 }
+
+export async function sendFriendRequest(userId: number) {
+  const data = await apiRequest({
+    endpoint: "friends/requests",
+    method: "POST",
+    body: {
+      receiver_id: userId,
+    },
+  });
+
+  return data;
+}

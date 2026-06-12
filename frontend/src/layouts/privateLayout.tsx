@@ -10,35 +10,49 @@ export function PrivateLayout() {
   const {
     searchResults,
     hasSearched,
+	isLoading,
+  	error,
     handleSearch,
-  } = useAdvancedSearch();
+	handleSendFriendRequest,
+  	} = useAdvancedSearch();
 	return (
-	<div className="privateLayout">
-		<aside className="privateLayout__leftPanel">
-			LEFT PANEL
-		</aside>
+		<div className="privateLayout">
+			<aside className="privateLayout__leftPanel">
+				LEFT PANEL
+			</aside>
 
-		<PrivHeader onSearch={handleSearch} />
+			<PrivHeader onSearch={handleSearch} />
 
-		<main className="privateLayout__content">
-			<div className="privateLayout__contentFrame">
-			<div className="privateLayout__contentInner">
-				{hasSearched && (
-				<SearchResults results={searchResults} />
-				)}
+			<main className="privateLayout__content">
+				<div className="privateLayout__contentFrame">
+				<div className="privateLayout__contentInner">
+					{isLoading && (
+						<p>Buscando...</p>
+					)}
 
-				<Outlet />
-			</div>
-			</div>
-		</main>
+					{error && (
+						<p>{error}</p>
+					)}
 
-		<footer className="privateLayout__footer">
-			<Footer />
-		</footer>
+					 {!isLoading && !error && hasSearched ? (
+						<SearchResults
+							results={searchResults}
+							onSendFriendRequest={handleSendFriendRequest}
+						/>
+						) : (
+						<Outlet />
+						)}
+				</div>
+				</div>
+			</main>
 
-		<aside className="privateLayout__rightPanel">
-			RIGHT PANEL
-		</aside>
-	</div>
+			<footer className="privateLayout__footer">
+				<Footer />
+			</footer>
+
+			<aside className="privateLayout__rightPanel">
+				RIGHT PANEL
+			</aside>
+		</div>
   );
 }
