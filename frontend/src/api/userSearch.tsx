@@ -11,6 +11,7 @@ export type UserSearch = {
     status: string;
     relation: UserRelation;
     can_send_request: boolean;
+    request_id?: number;
 };
 
 export type UserSearchResponse = {

@@ -48,7 +48,7 @@ func (s *AdvancedSearchService) SearchUsers(userID uint, filter *dto.UserFilter)
 	items := []dto.UserSearch{}
 
 	for _, user := range users {
-		relation, err := s.getUserRelation(userID, user.ID)
+		relation, requestID, err := s.getUserRelation(userID, user.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -58,6 +58,7 @@ func (s *AdvancedSearchService) SearchUsers(userID uint, filter *dto.UserFilter)
 			Login:      user.Login,
 			Relation:   relation,
 			CanSendReq: relation == "none",
+			RequestID:  requestID,
 		}
 		items = append(items, item)
 	}
@@ -97,39 +98,39 @@ func validateUserSearchFilter(filter *dto.UserFilter) error {
 	return nil
 }
 
-func (s *AdvancedSearchService) getUserRelation(currentUserID uint, otherUserID uint) (string, error) {
+func (s *AdvancedSearchService) getUserRelation(currentUserID uint, otherUserID uint) (string, *uint, error) {
 
 	block, err := s.FriendRepo.GetBlock(currentUserID, otherUserID)
 	if err != nil {
-		return "", appErr.NewInternal(err)
+		return "", nil, appErr.NewInternal(err)
 	}
 	if block != nil {
 		if block.BlockedID == currentUserID { // Me ha bloqueado el usuario ?
-			return "blocked_me", nil
+			return "blocked_me", nil, nil
 		}
 		if block.BlockerID == currentUserID { // he bloqueado al usuario ?
-			return "blocked_by_me", nil
+			return "blocked_by_me", nil, nil
 		}
 	}
 
 	// hay amistad ?
 	areFriends, err := s.FriendRepo.AreFriends(currentUserID, otherUserID)
 	if err != nil {
-		return "", appErr.NewInternal(err)
+		return "", nil, appErr.NewInternal(err)
 	} else if areFriends == true {
-		return "friends", nil
+		return "friends", nil, nil
 	}
 	// hay peticion de amistad por alguna de las dos partes ?
 	friendReq, err := s.FriendRepo.GetPendingRequestBetweenUsers(currentUserID, otherUserID)
 	if err != nil {
-		return "", appErr.NewInternal(err)
+		return "", nil, appErr.NewInternal(err)
 	} else if friendReq == nil {
-		return "none", nil
+		return "none", nil, nil
 	} else if friendReq.SenderID == currentUserID {
-		return "pending_sent", nil
+		return "pending_sent", &friendReq.ID, nil
 	} else if friendReq.ReceiverID == currentUserID {
-		return "pending_received", nil
+		return "pending_received", &friendReq.ID, nil
 	}
 
-	return "none", nil
+	return "none", nil, nil
 }

@@ -14,6 +14,8 @@ export function PrivateLayout() {
   	error,
     handleSearch,
 	handleSendFriendRequest,
+	handleAcceptFriendRequest,
+  	handleRejectFriendRequest,
   	} = useAdvancedSearch();
 	return (
 		<div className="privateLayout">
@@ -38,6 +40,8 @@ export function PrivateLayout() {
 						<SearchResults
 							results={searchResults}
 							onSendFriendRequest={handleSendFriendRequest}
+							onAcceptFriendRequest={handleAcceptFriendRequest}
+  							onRejectFriendRequest={handleRejectFriendRequest}
 						/>
 						) : (
 						<Outlet />

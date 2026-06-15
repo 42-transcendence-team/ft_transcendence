@@ -27,6 +27,7 @@ type UserSearch struct {
 	Status     string `json:"status"`
 	Relation   string `json:"relation"`
 	CanSendReq bool   `json:"can_send_request"`
+	RequestID  *uint  `json:"request_id,omitempty"`
 }
 
 type UserSearchResponse struct {
