@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "homepage": "./",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "core-js"
+    ]
+  },
   "scripts": {
     "build": "rsbuild build",
     "check": "biome check --write",
