@@ -144,6 +144,7 @@ services:
             - monitoring
 
     grafana:
+        env_file: .env
         build:
             context: ./grafana
         volumes:
@@ -162,10 +163,12 @@ services:
             - "9100"
         networks:
             - monitoring
-        command:
-          - '--path.rootfs=/host'
-        volumes:
-          - '/:/host:ro,rslave'
+    # Disabled for WSL compatibility
+    # Required for full host metrics on Linux
+        # command: 
+        #   - '--path.rootfs=/host'
+        # volumes:
+        #   - '/:/host:ro,rslave'
           
     cadvisor:
       image: gcr.io/cadvisor/cadvisor:latest

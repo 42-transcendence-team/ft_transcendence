@@ -23,6 +23,8 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB, rdb *redis.Client) *HTTPSer
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	middlewares.Register() // registra los contadores y histogramas de prometheus
+
 	r := gin.New()
 
 	// esto se deja asi si luego en prod metemos algun otro logger , sino en prod tbn se puede usar r.Use(gin.Logger())

@@ -10,14 +10,14 @@ import (
 
 var HttpRequests = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
-		Name: "http_requests_total",
+		Name: "back_http_requests_total",
 		Help: "Total number of HTTP requests",
 	},
 	[]string{"method", "path", "status"},
 )
 var HttpDuration = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
-		Name: "http_request_duration_seconds",
+		Name: "back_http_request_duration_seconds",
 		Help: "HTTP request duration in seconds",
 	},
 	[]string{"path"},
