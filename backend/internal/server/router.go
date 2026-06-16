@@ -6,7 +6,6 @@ import (
 	"backend/internal/repository"
 	routes "backend/internal/routes"
 	"backend/internal/services"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,14 +23,23 @@ func (srv *HTTPServer) Router() {
 	userService := services.NewUserService(userRepo)
 	twoFAService := services.New2FAService(userRepo, authService)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
+	blockService := services.NewBlockUserService(friendRepo, userRepo)
 
-	authHandler := handlers.NewAuthHandler(authService, srv.Conf)
-	userHandler := handlers.NewUserHandler(userService)
+	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
+	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
-	friendHandler := handlers.NewFriendHandler(friendService)
+	friendHandler := handlers.NewFriendHandler(friendService, blockService)
+
+	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
 
 	api := srv.Engine.Group("/api/v1")
 
+	getMe := api.Group("/auth")
+	getMe.Use(middlewares.GetMeMiddleware(srv.Conf))
+	{
+		getMe.GET("/me", getMeHandler.Whoami)
+	}
+	
 	// rutas publicas para usuarios no autenticados
 	publicForNoAuth := api.Group("/")
 	publicForNoAuth.Use(middlewares.RejectIfAuthMiddleware(srv.Conf))
@@ -39,6 +47,7 @@ func (srv *HTTPServer) Router() {
 		routes.AuthRoutes(publicForNoAuth, authHandler)
 	}
 
+	
 	// Esto en realidad no se como poder hacerlo bonito
 	login := api.Group("/2fa")
 	login.Use(middlewares.TwoFAMiddleware(srv.Conf))
@@ -48,7 +57,7 @@ func (srv *HTTPServer) Router() {
 
 	// rutas privadas
 	protected := api.Group("/")
-	protected.Use(middlewares.AuthMiddleware(srv.Conf))
+	protected.Use(middlewares.AuthMiddleware(srv.Conf, srv.Redis))
 	{
 
 		routes.TestRoute(protected)

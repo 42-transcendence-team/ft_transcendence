@@ -23,8 +23,8 @@ type FriendRequest struct {
 
 type Block struct {
 	ID        uint `gorm:"primaryKey"`
-	BlockerID uint `gorm:"not null;index"`
-	BlockedID uint `gorm:"not null;index"`
+	BlockerID uint `gorm:"not null;uniqueIndex:idx_blocker_blocked"`
+	BlockedID uint `gorm:"not null;uniqueIndex:idx_blocker_blocked"`
 	CreatedAt time.Time
 }
 
