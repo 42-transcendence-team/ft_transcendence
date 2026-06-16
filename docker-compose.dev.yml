@@ -21,6 +21,7 @@ services:
             - redis
             - back-front
             - db-back
+            - monitoring
 
     frontend:
         env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
@@ -161,7 +162,24 @@ services:
             - "9100"
         networks:
             - monitoring
-
+        command:
+          - '--path.rootfs=/host'
+        volumes:
+          - '/:/host:ro,rslave'
+          
+    cadvisor:
+      image: gcr.io/cadvisor/cadvisor:latest
+      container_name: cadvisor
+      restart: unless-stopped
+      expose:
+        - "8080"
+      networks:
+        - monitoring
+      volumes:
+        - /:/rootfs:ro
+        - /var/run:/var/run:ro
+        - /sys:/sys:ro
+        - /var/lib/docker:/var/lib/docker:ro
 
 volumes:
     postgres_data:

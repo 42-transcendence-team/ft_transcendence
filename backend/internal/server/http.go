@@ -4,8 +4,9 @@ import (
 	"backend/config"
 	"backend/internal/middlewares"
 	"backend/internal/store"
-	"github.com/redis/go-redis/v9"
+
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +14,7 @@ type HTTPServer struct {
 	Conf   *config.Config
 	Engine *gin.Engine
 	Db     *gorm.DB
-	Redis	*redis.Client
+	Redis  *redis.Client
 }
 
 func NewHTTPServer(conf *config.Config, db *gorm.DB, rdb *redis.Client) *HTTPServer {
@@ -32,6 +33,7 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB, rdb *redis.Client) *HTTPSer
 	r.Use(middlewares.RecoveryJSON())           // captura panic y devuelve JSON
 	r.Use(middlewares.ErrorMiddleware())        // convierte c.Errors a JSON estándar
 	r.Use(middlewares.CORS(conf.GoAllowedURLs)) // CORS para permitir peticiones desde el frontend
+	r.Use(middlewares.PrometheusMiddleware())   // middleware para métricas de prometheus
 
 	_ = r.SetTrustedProxies(nil)
 
@@ -39,7 +41,7 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB, rdb *redis.Client) *HTTPSer
 		Conf:   conf,
 		Engine: r,
 		Db:     db,
-		Redis:	rdb,
+		Redis:  rdb,
 	}
 
 	// Inicializa el TempStore global para la gestión de tokens temporales (en este caso para 2FA)

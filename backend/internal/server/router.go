@@ -8,6 +8,7 @@ import (
 	"backend/internal/services"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // El enroutador es una retaila de: Metodo -> ruta -> handler
@@ -16,6 +17,7 @@ import (
 func (srv *HTTPServer) Router() {
 
 	routes.HealthRoutes(srv.Engine)
+	srv.Engine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	userRepo := repository.NewUserRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
