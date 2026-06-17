@@ -27,19 +27,8 @@ export async function Login(identifier: string, password: string) {
 		method: "POST",
 		body: { identifier: identifier.trim(), password },
 	});
-
 	return data;
 }
-
-//todo
-// export async function Logout() {
-//     const res = await fetch(`${apiUrl}/auth/logout`, {
-//         method: "POST",
-//         credentials: "include",
-//     });
-//     return res.ok;
-// }
-
 
 export async function GetMyProfile() {
     const data = apiRequest({
@@ -60,11 +49,14 @@ export async function GetMyProfile() {
 // }
 
 
-export async function Login2FA(code: string) {
+export async function Login2FA(code: string, tempToken: string) {
 	const data = await apiRequest({
 		endpoint: "2fa/login",
 		method: "POST",
-		body: { code },
+		body: {
+			code: code,
+			tempToken: tempToken
+		},
 	});
 
 	return data;
