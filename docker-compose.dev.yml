@@ -115,6 +115,7 @@ services:
           - db-view
           - docs-view
           - monitoring
+          - port-nginx
 
     docusaurus:
         build:
@@ -162,6 +163,17 @@ services:
         networks:
             - monitoring
 
+    portainer:
+        image: portainer/portainer-ce:sts
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - portainer_data:/data
+        expose:
+            - "9443"
+            - "9000"
+        restart: unless-stopped
+        networks:
+            - port-nginx
 
 volumes:
     postgres_data:
@@ -169,7 +181,7 @@ volumes:
     redis_data:
     prometheus_data:
     grafana_data:
-
+    portainer_data:
 
 networks:
     db-view:
@@ -178,3 +190,4 @@ networks:
     redis:
     docs-view:
     monitoring:
+    port-nginx:
