@@ -20,3 +20,13 @@ type FriendsResponse struct {
 	Username string `json:"username"`
 	// AvatarURL string `json:"avatar_url"`
 }
+
+// igual que sendFrinedRequest pero para bloquear a
+type SendBlockedRequest struct {
+	BlockedID uint `json:"blocked_id" binding:"required"`
+}
+
+type BlocksResponse struct {
+	UserID   uint   `json:"user_id"`
+	Username string `json:"username"`
+}
