@@ -20,9 +20,6 @@ func AuthRoutes(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {
 
 func AuthRoutesPrivate(api *gin.RouterGroup, authHandler *handlers.AuthHandler) {
 	// Dice al front quien es el usuario authenticado (user-authenticate-> 200, unauthorized-> 401, internal-> 500) en formato JSON
-	api.GET("auth/me", authHandler.Whoami)
-	//api.POST("/logout", authHandler.Logout)//Todo borrar??? se usa???
-
 	// Logout de usuario (user-logout-> 200) en formato JSON
 	api.POST("auth/logout", authHandler.Logout)
 }

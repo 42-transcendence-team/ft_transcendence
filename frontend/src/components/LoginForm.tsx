@@ -71,7 +71,6 @@ export const LoginForm = () => {
 				setIsSubmitting(false);
 				return;
 			}
-
 			if (data.requires2fa) {
 				setTempToken(data.user?.tempToken || null);
 				setShow2FA(true);
@@ -88,17 +87,8 @@ export const LoginForm = () => {
 			}
 			setErrors({ identifier: "", password: "" });
 			setServerMessage("");
-			
-			// Refrescamos el estado global de autenticación antes de redirigir.
 			await refreshAuth();
-
-			const login = data.user?.login;
-			console.log("LOGIN USER LOGIN:", login);
-			if (login) {
-				window.location.href = `/app/profile/${login}`;
-			} else {
-				window.location.href = "/app";
-			}
+			navigate(`/app`);
 		} catch (err: any) {
 			console.log("LOGIN ERROR:", err)
 			console.log("LOGIN ERROR STATUS:", err?.status)
