@@ -1,0 +1,22 @@
+# =================== Configuración del Servidor ===================
+server.name: "kibana"
+server.host: "0.0.0.0"
+server.port: ${KIBANA_PORT}
+
+i18n.locale: "es-ES"
+
+# =================== Conexión con Elasticsearch ===================
+elasticsearch.hosts: [ "https://elasticsearch:9200" ]
+
+elasticsearch.username: "kibana_system"
+elasticsearch.password: ${KIBANA_PASSWORD}
+
+# =================== Configuración de Seguridad SSL ===================
+elasticsearch.ssl.certificateAuthorities: [ "config/certs/ca/ca.crt" ]
+
+elasticsearch.ssl.verificationMode: certificate
+
+# =================== Llaves de Encriptación xpack ===================
+xpack.security.encryptionKey: ${ENCRYPTION_KEY}
+xpack.encryptedSavedObjects.encryptionKey: ${ENCRYPTION_KEY}
+xpack.reporting.encryptionKey: ${ENCRYPTION_KEY}

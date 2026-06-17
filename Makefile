@@ -33,8 +33,9 @@ remove:
 full-remove:
 	$(DC) down --rmi all --volumes --remove-orphans
 
+# TODO - Mejorar makefile con toda la infra 
 dev:
-	$(DC) -f $(DEV) up --build
+	$(DC) -f $(DEV) up --build --no-attach grafana --no-attach elasticsearch --no-attach kibana --no-attach metricbeat --no-attach filebeat --no-attach logstash
 
 dev-demon:
 	$(DC) -f $(DEV) up --build -d

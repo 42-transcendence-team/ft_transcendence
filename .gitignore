@@ -82,3 +82,15 @@ coverage/
 
 tmp/
 temp/
+
+
+################################
+pytest
+################################
+.venv*
+__pycache__
+.pytest_cache
+
+# pnpm
+.pnpm-store/
+node_modules/
