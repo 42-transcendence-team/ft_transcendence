@@ -122,6 +122,7 @@ services:
           - docs-view
           - monitoring # TODO - Revisar las redes que son compartidas con NGINX
           - elastic
+          - port-nginx
 
     docusaurus:
         build:
@@ -303,6 +304,17 @@ services:
             condition: service_started
           kibana:
             condition: service_started
+    portainer:
+        image: portainer/portainer-ce:sts
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - portainer_data:/data
+        expose:
+            - "9443"
+            - "9000"
+        restart: unless-stopped
+        networks:
+            - port-nginx
 
 volumes:
     postgres_data:
@@ -316,8 +328,9 @@ volumes:
     filebeat_data:
     logstash_data:
     certs_data:
-
 # TODO - Revisar las redes creadas para la correcta separación y aislamiento entre contenedores
+    portainer_data:
+
 networks:
     db-view:
     db-back:
@@ -326,3 +339,4 @@ networks:
     docs-view:
     monitoring:
     elastic:
+    port-nginx:
