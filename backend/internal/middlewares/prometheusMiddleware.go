@@ -2,10 +2,12 @@ package middlewares
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 )
 
 var HttpRequests = prometheus.NewCounterVec(
@@ -26,6 +28,10 @@ var HttpDuration = prometheus.NewHistogramVec(
 func Register() {
 	prometheus.MustRegister(HttpRequests)
 	prometheus.MustRegister(HttpDuration)
+	prometheus.MustRegister(
+		collectors.NewGoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+	)
 }
 
 func PrometheusMiddleware() gin.HandlerFunc {
@@ -38,8 +44,12 @@ func PrometheusMiddleware() gin.HandlerFunc {
 
 		path := c.FullPath()
 		if path == "" {
-			path = "unknown"
+			path = c.Request.URL.Path
 		}
+		if strings.Contains(path, "/api/v1/users/") {
+			path = "/api/v1/users/:id"
+		}
+		// TODO - Agregar paths dinamicos como Posts/:id
 
 		HttpRequests.WithLabelValues(
 			c.Request.Method,

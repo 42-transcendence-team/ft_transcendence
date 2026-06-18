@@ -157,6 +157,7 @@ services:
             context: ./grafana
         volumes:
             - grafana_data:/var/lib/grafana
+            - ./grafana/dashboards:/etc/grafana/provisioning/dashboards/json
         expose:
             - "3000"
         depends_on:
