@@ -1,4 +1,4 @@
-import { API_BASE_URL, buildApiError } from "api/ApiRequest";
+import { apiRequest } from "api/ApiRequest";
 import type { PostAuthor } from "api/Posts";
 
 export type Comment = {
@@ -11,72 +11,58 @@ export type Comment = {
 	updatedAt: string;
 };
 
+/*
+ * La creación de un comentario devuelve el nuevo recurso
+ * dentro de la propiedad data.
+ */
 type CommentApiResponse = {
 	message?: string;
 	data: Comment;
 };
 
+/*
+ * El listado de comentarios devuelve un array dentro de data.
+ */
 type CommentsApiResponse = {
 	data: Comment[];
 };
 
-async function parseCommentResponse(res: Response): Promise<Comment> {
-	const json = (await res.json()) as CommentApiResponse;
-	return json.data;
-}
-
-async function parseCommentsResponse(res: Response): Promise<Comment[]> {
-	const json = (await res.json()) as CommentsApiResponse;
-	return json.data;
-}
-
-async function throwCommentApiError(res: Response): Promise<never> {
-	const errorData = await res.json().catch(() => null);
-	throw buildApiError(res, errorData);
-}
-
 export async function getCommentsByPostId(
 	postId: string | number,
 ): Promise<Comment[]> {
-	const res = await fetch(`${API_BASE_URL}posts/${postId}/comments`, {
+	const response = await apiRequest<CommentsApiResponse>({
+		endpoint: `posts/${postId}/comments`,
 		method: "GET",
-		credentials: "include",
 	});
 
-	if (!res.ok) {
-		await throwCommentApiError(res);
-	}
-
-	return parseCommentsResponse(res);
+	return response.data;
 }
 
 export async function createComment(
 	postId: string | number,
 	content: string,
 ): Promise<Comment> {
-	const res = await fetch(`${API_BASE_URL}posts/${postId}/comments`, {
+	/*
+	 * apiRequest serializa este objeto como JSON y añade
+	 * automáticamente el Content-Type correspondiente.
+	 */
+	const response = await apiRequest<CommentApiResponse>({
+		endpoint: `posts/${postId}/comments`,
 		method: "POST",
-		credentials: "include",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({ content }),
+		body: { content },
 	});
 
-	if (!res.ok) {
-		await throwCommentApiError(res);
-	}
-
-	return parseCommentResponse(res);
+	return response.data;
 }
 
-export async function deleteComment(commentId: string | number): Promise<void> {
-	const res = await fetch(`${API_BASE_URL}comments/${commentId}`, {
+export async function deleteComment(
+	commentId: string | number,
+): Promise<void> {
+	/*
+	 * El borrado puede finalizar correctamente sin devolver JSON.
+	 */
+	await apiRequest<void>({
+		endpoint: `comments/${commentId}`,
 		method: "DELETE",
-		credentials: "include",
 	});
-
-	if (!res.ok) {
-		await throwCommentApiError(res);
-	}
 }

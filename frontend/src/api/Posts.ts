@@ -1,4 +1,4 @@
-import { API_BASE_URL, buildApiError } from "api/ApiRequest";
+import { apiRequest } from "api/ApiRequest";
 
 export type PostAuthor = {
 	id: number;
@@ -24,95 +24,80 @@ export type PostLikeState = {
 	likedByCurrentUser: boolean;
 };
 
+/*
+ * El backend envuelve el post creado o consultado
+ * dentro de la propiedad data.
+ */
 type PostApiResponse = {
 	message?: string;
 	data: Post;
 };
 
+/*
+ * Los endpoints de like devuelven el estado actualizado
+ * del like y su contador.
+ */
 type PostLikeApiResponse = {
 	message?: string;
 	data: PostLikeState;
 };
 
-async function parsePostResponse(res: Response): Promise<Post> {
-	const json = (await res.json()) as PostApiResponse;
-	return json.data;
-}
-
-async function parsePostLikeResponse(res: Response): Promise<PostLikeState> {
-	const json = (await res.json()) as PostLikeApiResponse;
-	return json.data;
-}
-
-async function throwPostApiError(res: Response): Promise<never> {
-	const errorData = await res.json().catch(() => null);
-	throw buildApiError(res, errorData);
-}
-
 export async function createPost(formData: FormData): Promise<Post> {
-	const res = await fetch(`${API_BASE_URL}posts`, {
+	/*
+	 * El post puede incluir una imagen, por lo que se envía como FormData.
+	 * apiRequest detecta este tipo de cuerpo y no lo serializa como JSON.
+	 */
+	const response = await apiRequest<PostApiResponse>({
+		endpoint: "posts",
 		method: "POST",
-		credentials: "include",
 		body: formData,
 	});
 
-	if (!res.ok) {
-		await throwPostApiError(res);
-	}
-
-	return parsePostResponse(res);
+	return response.data;
 }
 
-export async function getPostById(postId: string | number): Promise<Post> {
-	const res = await fetch(`${API_BASE_URL}posts/${postId}`, {
+export async function getPostById(
+	postId: string | number,
+): Promise<Post> {
+	const response = await apiRequest<PostApiResponse>({
+		endpoint: `posts/${postId}`,
 		method: "GET",
-		credentials: "include",
 	});
 
-	if (!res.ok) {
-		await throwPostApiError(res);
-	}
-
-	return parsePostResponse(res);
+	return response.data;
 }
 
-export async function deletePost(postId: string | number): Promise<void> {
-	const res = await fetch(`${API_BASE_URL}posts/${postId}`, {
+export async function deletePost(
+	postId: string | number,
+): Promise<void> {
+	/*
+	 * El endpoint puede responder con 204 No Content.
+	 * apiRequest admite ahora respuestas correctas sin cuerpo.
+	 */
+	await apiRequest<void>({
+		endpoint: `posts/${postId}`,
 		method: "DELETE",
-		credentials: "include",
 	});
-
-	if (!res.ok) {
-		await throwPostApiError(res);
-	}
 }
 
 export async function likePost(
 	postId: string | number,
 ): Promise<PostLikeState> {
-	const res = await fetch(`${API_BASE_URL}posts/${postId}/likes`, {
+	const response = await apiRequest<PostLikeApiResponse>({
+		endpoint: `posts/${postId}/likes`,
 		method: "POST",
-		credentials: "include",
 	});
 
-	if (!res.ok) {
-		await throwPostApiError(res);
-	}
-
-	return parsePostLikeResponse(res);
+	return response.data;
 }
 
 export async function unlikePost(
 	postId: string | number,
 ): Promise<PostLikeState> {
-	const res = await fetch(`${API_BASE_URL}posts/${postId}/likes`, {
+	const response = await apiRequest<PostLikeApiResponse>({
+		endpoint: `posts/${postId}/likes`,
 		method: "DELETE",
-		credentials: "include",
 	});
 
-	if (!res.ok) {
-		await throwPostApiError(res);
-	}
-
-	return parsePostLikeResponse(res);
+	return response.data;
 }
