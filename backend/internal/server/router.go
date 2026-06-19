@@ -6,6 +6,7 @@ import (
 	"backend/internal/repository"
 	routes "backend/internal/routes"
 	"backend/internal/services"
+	"backend/internal/websocket"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,11 +16,16 @@ import (
 func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 
+	hub := websocket.NewHub()
+	go hub.Run()
+
 	userRepo := repository.NewUserRepository(srv.Db)
+	chatRepo := repository.NewChatRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
+	chatService := services.NewChatService(chatRepo, userRepo)
 	twoFAService := services.New2FAService(userRepo, authService, srv.Redis)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 	blockService := services.NewBlockUserService(friendRepo, userRepo)
@@ -27,6 +33,7 @@ func (srv *HTTPServer) Router() {
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
+	chatHandler := handlers.NewChatHandler(hub, chatService)
 	friendHandler := handlers.NewFriendHandler(friendService, blockService)
 
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
@@ -59,10 +66,11 @@ func (srv *HTTPServer) Router() {
 	protected.Use(middlewares.AuthMiddleware(srv.Conf, srv.Redis))
 	{
 
-		routes.TestRoute(protected)
+		//routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
 		routes.FriendsRoutes(protected, friendHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
+		routes.ChatRoutes(protected, chatHandler)
 		routes.UserRoutes(protected, userHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}

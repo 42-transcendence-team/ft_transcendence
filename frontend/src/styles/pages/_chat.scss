@@ -1,0 +1,94 @@
+@use "sass:color";
+
+@use "../abstracts/variables" as *;
+
+.chat {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	max-width: 600px;
+	margin: 0 auto;
+	border: 1px solid #ccc;
+	border-radius: 10px;
+	overflow: hidden;
+
+	&__messages {
+		flex: 1;
+		padding: 1rem;
+		overflow-y: auto;
+		background-color: $blue-background-light;
+
+		&::-webkit-scrollbar {
+			width: 8px;
+		}
+
+		&::-webkit-scrollbar-thumb {
+			background-color: #ccc;
+			border-radius: 4px;
+		}
+	}
+
+	&__message {
+		max-width: 70%;
+		margin-bottom: 0.5rem;
+		padding: 0.75rem 1rem;
+		border-radius: 12px;
+		background-color: #f1f1f1;
+		align-self: flex-start;
+
+		&-own {
+			align-self: flex-end;
+			margin-left: auto;
+			background-color: $green-background-light;
+			color: #fff;
+		}
+
+		&-header {
+			display: flex;
+			justify-content: space-between;
+			margin-bottom: 0.5rem;
+			font-size: 0.8rem;
+			opacity: 0.8;
+		}
+
+		&__content {
+			font-size: 1rem;
+		}
+	}
+
+	&__input {
+		display: flex;
+		padding: 0.5rem;
+		border-top: 1px solid #ccc;
+
+		input {
+			flex: 1;
+			padding: 0.5rem;
+			font-size: 1rem;
+			border-radius: 5px;
+			border: 1px solid #ccc;
+			outline: none;
+
+			&::placeholder {
+				color: #999;
+			}
+		}
+
+		button {
+			margin-left: 0.5rem;
+			padding: 0.5rem 1rem;
+			font-size: 1rem;
+			color: #fff;
+			background-color: $color-status-dot;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+
+			&[disabled] {
+				background-color: color.scale($color-status-dot, $lightness: -20%);
+				cursor: not-allowed;
+			}
+		}
+	}
+}

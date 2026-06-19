@@ -24,7 +24,15 @@ export const UserMenu = () => {
 			console.log("logout ERROR", error);
 		}
 	};
+	const handleSettings = async () => {
+		navigate("settings");
+		console.log("setting button");
+	};
 
+	const handleProfile = () => {
+		navigate('profile/a')
+		console.log('profile button')
+	}
 	return (
 		<div className="userMenu">
 			<button
@@ -36,11 +44,11 @@ export const UserMenu = () => {
 			</button>
 			{isOpen && (
 				<div className="userMenu__dropdown">
-					<button className="userMenu__item" type="button">
+					<button className="userMenu__item" type="button" onClick={handleProfile}>
 						<FiUser className="userMenu__item-icon" />
 						<span>Perfil</span>
 					</button>
-					<button className="userMenu__item" type="button">
+					<button className="userMenu__item" type="button" onClick={handleSettings}>
 						<FiSettings className="userMenu__item-icon" />
 						<span>Configuración</span>
 					</button>

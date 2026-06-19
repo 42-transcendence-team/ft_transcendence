@@ -72,7 +72,7 @@ func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 			"receiverID": newReqFriend.ReceiverID,
 			"status":     newReqFriend.Status,
 		},
-	})
+	})//websokcet
 }
 
 func (h *FriendHandler) ListOutgoingRequests(c *gin.Context) {
@@ -135,7 +135,7 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 			"senderID": req.SenderID,
 			"userID":   req.ReceiverID,
 		},
-	})
+	})//websocket
 }
 
 func (h *FriendHandler) RejectFriendRequest(c *gin.Context) {
@@ -166,7 +166,7 @@ func (h *FriendHandler) RejectFriendRequest(c *gin.Context) {
 			"senderID": req.SenderID,
 			"userID":   req.ReceiverID,
 		},
-	})
+	})//websocket?
 }
 
 func (h *FriendHandler) DeleteFriend(c *gin.Context) {
