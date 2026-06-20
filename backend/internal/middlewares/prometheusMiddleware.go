@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/collectors"
 )
 
 var HttpRequests = prometheus.NewCounterVec(
@@ -28,10 +27,11 @@ var HttpDuration = prometheus.NewHistogramVec(
 func Register() {
 	prometheus.MustRegister(HttpRequests)
 	prometheus.MustRegister(HttpDuration)
-	prometheus.MustRegister(
-		collectors.NewGoCollector(),
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-	)
+	// TODO- Revisar porque si esta en WSL funciona con esto descomentado, en Linux comentado
+	// prometheus.MustRegister(
+	// 	collectors.NewGoCollector(),
+	// 	collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+	// )
 }
 
 func PrometheusMiddleware() gin.HandlerFunc {
