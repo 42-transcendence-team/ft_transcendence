@@ -28,23 +28,27 @@ export function PrivateLayout() {
 			<main className="privateLayout__content">
 				<div className="privateLayout__contentFrame">
 				<div className="privateLayout__contentInner">
-					{isLoading && (
-						<p>Buscando...</p>
-					)}
+					{hasSearched ? (
+						<>
+							{isLoading && (
+							<p>Buscando...</p>
+							)}
 
-					{error && (
-						<p>{error}</p>
-					)}
+							{error && (
+							<p>{error}</p>
+							)}
 
-					 {!isLoading && !error && hasSearched ? (
-						<SearchResults
-							results={searchResults}
-							onSendFriendRequest={handleSendFriendRequest}
-							onAcceptFriendRequest={handleAcceptFriendRequest}
-  							onRejectFriendRequest={handleRejectFriendRequest}
-						/>
+							{!isLoading && !error && (
+							<SearchResults
+								results={searchResults}
+								onSendFriendRequest={handleSendFriendRequest}
+								onAcceptFriendRequest={handleAcceptFriendRequest}
+								onRejectFriendRequest={handleRejectFriendRequest}
+							/>
+							)}
+						</>
 						) : (
-						<Outlet />
+							<Outlet />
 						)}
 				</div>
 				</div>

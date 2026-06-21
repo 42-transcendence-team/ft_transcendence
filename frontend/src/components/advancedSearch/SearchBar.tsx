@@ -21,11 +21,18 @@ export const SearchBar = ({ onSearch }: SearchBarProps) => {
     setSearchQuery("")
   }
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleButtonClick();
+    }
+  };
+
   return (
     <div className="searchBar">
       <input 
         value={searchQuery}
         onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
         className="searchBar__input" 
         type="text" 
         placeholder="Buscar..." 

@@ -22,10 +22,40 @@ export type UserSearchResponse = {
   has_next: boolean;
 };
 
-export async function searchUsers(query: string): Promise<UserSearchResponse> {
-    const data = await apiRequest({
-		endpoint: `users/search?q=${query}`,
-	});
+export type SearchUsersParams = {
+  query: string;
+  page?: number;
+  limit?: number;
+  sort?: string;
+  relations?: UserRelation[];
+};
 
-	return data;
+export async function searchUsers(
+  params: SearchUsersParams
+): Promise<UserSearchResponse> {
+  const queryParams = new URLSearchParams();
+
+  queryParams.set("q", params.query);
+
+  if (params.page) {
+    queryParams.set("page", String(params.page));
+  }
+
+  if (params.limit) {
+    queryParams.set("limit", String(params.limit));
+  }
+
+  if (params.sort) {
+    queryParams.set("sort", params.sort);
+  }
+
+  if (params.relations && params.relations.length > 0) {
+    queryParams.set("relations", params.relations.join(","));
+  }
+
+  const data = await apiRequest({
+    endpoint: `users/search?${queryParams.toString()}`,
+  });
+
+  return data;
 }

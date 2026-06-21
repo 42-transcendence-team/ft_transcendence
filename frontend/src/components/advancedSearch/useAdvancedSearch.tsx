@@ -11,13 +11,17 @@ export function useAdvancedSearch() {
   const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentQuery, setCurrentQuery] = useState("");
 
   const handleSearch = async (query: string) => {
     try {
       setIsLoading(true);
       setError(null);
+      setCurrentQuery(query);
 
-      const response = await searchUsers(query);
+      const response = await searchUsers({
+        query,
+      });
 
       setSearchResults(response.items);
       setHasSearched(true);
@@ -97,6 +101,7 @@ export function useAdvancedSearch() {
     hasSearched,
     isLoading,
     error,
+    currentQuery,
     handleSearch,
     handleSendFriendRequest,
     handleAcceptFriendRequest,
