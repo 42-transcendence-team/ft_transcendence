@@ -1,3 +1,4 @@
+import { FiTrash2 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 import skullLogo from "@icons/skull_logo.png";
@@ -75,8 +76,18 @@ export const CommentItem = ({
 						type="button"
 						onClick={() => onDelete(comment.id)}
 						disabled={isDeleting}
+						aria-label={
+							isDeleting
+								? "Deleting comment"
+								: "Delete comment"
+						}
+						title={
+							isDeleting
+								? "Deleting comment"
+								: "Delete comment"
+						}
 					>
-						{isDeleting ? "Deleting." : "Delete"}
+						<FiTrash2 size={16} aria-hidden="true" />
 					</button>
 				)}
 			</header>

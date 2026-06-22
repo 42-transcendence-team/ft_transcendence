@@ -1,3 +1,4 @@
+import { FiTrash2 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 import skullLogo from "@icons/skull_logo.png";
@@ -137,8 +138,18 @@ export const PostModalRenderer = ({
 								type="button"
 								onClick={onDeletePost}
 								disabled={isDeletingPost}
+								aria-label={
+									isDeletingPost
+										? "Deleting post"
+										: "Delete post"
+								}
+								title={
+									isDeletingPost
+										? "Deleting post"
+										: "Delete post"
+								}
 							>
-								{isDeletingPost ? "Deleting." : "Delete"}
+								<FiTrash2 size={18} aria-hidden="true" />
 							</button>
 						)}
 					</div>

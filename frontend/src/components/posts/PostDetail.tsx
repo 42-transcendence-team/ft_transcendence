@@ -1,3 +1,5 @@
+import { FiTrash2 } from "react-icons/fi";
+
 import { ReactionButtons } from "@components/posts/ReactionButtons";
 
 import type { Post, PostReactionState } from "api/Posts";
@@ -66,8 +68,18 @@ export const PostDetail = ({
 							type="button"
 							onClick={onDelete}
 							disabled={isDeleting}
+							aria-label={
+								isDeleting
+									? "Deleting post"
+									: "Delete post"
+							}
+							title={
+								isDeleting
+									? "Deleting post"
+									: "Delete post"
+							}
 						>
-							{isDeleting ? "Deleting." : "Delete post"}
+							<FiTrash2 size={18} aria-hidden="true" />
 						</button>
 					)}
 				</div>
