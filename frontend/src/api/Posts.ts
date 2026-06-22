@@ -12,16 +12,22 @@ export type Post = {
 	author: PostAuthor;
 	content?: string | null;
 	imagePath?: string | null;
+
 	likeCount: number;
+	dislikeCount: number;
 	likedByCurrentUser: boolean;
+	dislikedByCurrentUser: boolean;
+
 	createdAt: string;
 	updatedAt: string;
 };
 
-export type PostLikeState = {
+export type PostReactionState = {
 	postId: number;
 	likeCount: number;
+	dislikeCount: number;
 	likedByCurrentUser: boolean;
+	dislikedByCurrentUser: boolean;
 };
 
 /*
@@ -34,12 +40,12 @@ type PostApiResponse = {
 };
 
 /*
- * Los endpoints de like devuelven el estado actualizado
- * del like y su contador.
+ * Los endpoints de reacción devuelven los contadores
+ * y la reacción actualizada del usuario autenticado.
  */
-type PostLikeApiResponse = {
+type PostReactionApiResponse = {
 	message?: string;
-	data: PostLikeState;
+	data: PostReactionState;
 };
 
 export async function createPost(formData: FormData): Promise<Post> {
@@ -72,7 +78,6 @@ export async function deletePost(
 ): Promise<void> {
 	/*
 	 * El endpoint puede responder con 204 No Content.
-	 * apiRequest admite ahora respuestas correctas sin cuerpo.
 	 */
 	await apiRequest<void>({
 		endpoint: `posts/${postId}`,
@@ -82,8 +87,8 @@ export async function deletePost(
 
 export async function likePost(
 	postId: string | number,
-): Promise<PostLikeState> {
-	const response = await apiRequest<PostLikeApiResponse>({
+): Promise<PostReactionState> {
+	const response = await apiRequest<PostReactionApiResponse>({
 		endpoint: `posts/${postId}/likes`,
 		method: "POST",
 	});
@@ -93,9 +98,31 @@ export async function likePost(
 
 export async function unlikePost(
 	postId: string | number,
-): Promise<PostLikeState> {
-	const response = await apiRequest<PostLikeApiResponse>({
+): Promise<PostReactionState> {
+	const response = await apiRequest<PostReactionApiResponse>({
 		endpoint: `posts/${postId}/likes`,
+		method: "DELETE",
+	});
+
+	return response.data;
+}
+
+export async function dislikePost(
+	postId: string | number,
+): Promise<PostReactionState> {
+	const response = await apiRequest<PostReactionApiResponse>({
+		endpoint: `posts/${postId}/dislikes`,
+		method: "POST",
+	});
+
+	return response.data;
+}
+
+export async function undislikePost(
+	postId: string | number,
+): Promise<PostReactionState> {
+	const response = await apiRequest<PostReactionApiResponse>({
+		endpoint: `posts/${postId}/dislikes`,
 		method: "DELETE",
 	});
 

@@ -119,25 +119,42 @@
 	}
 }
 
-.like-button {
+.reaction-buttons {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-end;
 	gap: 0.25rem;
 
+	&__controls {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+	}
+
 	&__control {
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 0.35rem;
+		min-width: 3rem;
 		padding: 0.35rem 0.65rem;
 		border: 1px solid currentColor;
 		border-radius: 999px;
 		background: transparent;
+		font: inherit;
 		cursor: pointer;
 
 		&:disabled {
 			cursor: wait;
 			opacity: 0.65;
+		}
+
+		&--like {
+			color: #2563eb;
+		}
+
+		&--dislike {
+			color: #dc2626;
 		}
 
 		&--active {
@@ -146,16 +163,25 @@
 	}
 
 	&__icon {
-		font-size: 1.1rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1rem;
 		line-height: 1;
+
+		svg {
+			display: block;
+		}
 	}
 
 	&__count {
 		font-size: 0.9rem;
+		line-height: 1;
 	}
 
 	&__error {
 		margin: 0;
 		font-size: 0.8rem;
+		color: #b91c1c;
 	}
 }

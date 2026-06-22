@@ -73,7 +73,13 @@ func (s *PostService) CreatePost(input dto.CreatePostInput) (*dto.PostResponse, 
 		return nil, appErr.NewInternal(err)
 	}
 
-	response := dto.NewPostResponse(*createdPost, 0, false)
+	response := dto.NewPostResponse(
+		*createdPost,
+		0,
+		0,
+		false,
+		false,
+	)
 	return &response, nil
 }
 
@@ -86,17 +92,42 @@ func (s *PostService) GetPostByID(postID uint, currentUserID uint) (*dto.PostRes
 		return nil, appErr.NewInternal(err)
 	}
 
-	likeCount, err := s.postLikeRepo.CountByPostID(postID)
+	likeCount, err := s.postLikeRepo.CountByPostIDAndReaction(
+		postID,
+		models.PostReactionLike,
+	)
 	if err != nil {
 		return nil, appErr.NewInternal(err)
 	}
 
-	likedByCurrentUser, err := s.postLikeRepo.ExistsByPostAndUser(postID, currentUserID)
+	dislikeCount, err := s.postLikeRepo.CountByPostIDAndReaction(
+		postID,
+		models.PostReactionDislike,
+	)
 	if err != nil {
 		return nil, appErr.NewInternal(err)
 	}
 
-	response := dto.NewPostResponse(*post, likeCount, likedByCurrentUser)
+	currentReaction, exists, err :=
+		s.postLikeRepo.GetReactionByPostAndUser(postID, currentUserID)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	likedByCurrentUser :=
+		exists && currentReaction == models.PostReactionLike
+
+	dislikedByCurrentUser :=
+		exists && currentReaction == models.PostReactionDislike
+
+	response := dto.NewPostResponse(
+		*post,
+		likeCount,
+		dislikeCount,
+		likedByCurrentUser,
+		dislikedByCurrentUser,
+	)
+
 	return &response, nil
 }
 

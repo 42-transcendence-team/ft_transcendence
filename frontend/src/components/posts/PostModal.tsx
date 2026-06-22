@@ -12,7 +12,7 @@ import {
 } from "api/Comments";
 import type { Comment } from "api/Comments";
 import { deletePost, getPostById } from "api/Posts";
-import type { Post, PostLikeState } from "api/Posts";
+import type { Post, PostReactionState } from "api/Posts";
 
 import {
 	getApiErrorStatus,
@@ -230,16 +230,25 @@ export const PostModal = ({
 		}
 	};
 
-	const handleLikeChange = (likeState: PostLikeState) => {
+	const handleReactionChange = (
+		reactionState: PostReactionState,
+	) => {
 		setPost((currentPost) => {
-			if (!currentPost || currentPost.id !== likeState.postId) {
+			if (
+				!currentPost ||
+				currentPost.id !== reactionState.postId
+			) {
 				return currentPost;
 			}
 
 			return {
 				...currentPost,
-				likeCount: likeState.likeCount,
-				likedByCurrentUser: likeState.likedByCurrentUser,
+				likeCount: reactionState.likeCount,
+				dislikeCount: reactionState.dislikeCount,
+				likedByCurrentUser:
+					reactionState.likedByCurrentUser,
+				dislikedByCurrentUser:
+					reactionState.dislikedByCurrentUser,
 			};
 		});
 	};
@@ -286,7 +295,7 @@ export const PostModal = ({
 							onDeletePost={handlePostDelete}
 							onCommentCreated={handleCommentCreated}
 							onDeleteComment={handleCommentDelete}
-							onLikeChange={handleLikeChange}
+							onReactionChange={handleReactionChange}
 							onImageClick={setSelectedImageSrc}
 						/>
 					</>

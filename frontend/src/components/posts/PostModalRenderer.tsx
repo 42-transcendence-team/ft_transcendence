@@ -2,12 +2,12 @@ import { Link } from "react-router-dom";
 
 import skullLogo from "@icons/skull_logo.png";
 
-import { LikeButton } from "@components/posts/LikeButton";
+import { ReactionButtons } from "@components/posts/ReactionButtons";
 import { CommentForm } from "@components/posts/CommentForm";
 import { CommentList } from "@components/posts/CommentList";
 
 import type { Comment } from "api/Comments";
-import type { Post, PostLikeState } from "api/Posts";
+import type { Post, PostReactionState } from "api/Posts";
 
 import { getPostVariant } from "@utils/postVariant";
 
@@ -23,7 +23,9 @@ type PostModalRendererProps = {
 	onDeletePost: () => void;
 	onCommentCreated: (comment: Comment) => void;
 	onDeleteComment: (commentId: number) => void;
-	onLikeChange: (likeState: PostLikeState) => void;
+	onReactionChange: (
+		reactionState: PostReactionState,
+	) => void;
 	onImageClick: (imageSrc: string) => void;
 };
 
@@ -62,7 +64,7 @@ export const PostModalRenderer = ({
 	onDeletePost,
 	onCommentCreated,
 	onDeleteComment,
-	onLikeChange,
+	onReactionChange,
 	onImageClick,
 }: PostModalRendererProps) => {
 	const variant = getPostVariant(post);
@@ -118,11 +120,15 @@ export const PostModalRenderer = ({
 					</div>
 
 					<div className="post-modal-renderer__actions">
-						<LikeButton
+						<ReactionButtons
 							postId={post.id}
 							likeCount={post.likeCount}
+							dislikeCount={post.dislikeCount}
 							likedByCurrentUser={post.likedByCurrentUser}
-							onChange={onLikeChange}
+							dislikedByCurrentUser={
+								post.dislikedByCurrentUser
+							}
+							onChange={onReactionChange}
 						/>
 
 						{isOwner && (

@@ -1,6 +1,6 @@
-import { LikeButton } from "@components/posts/LikeButton";
+import { ReactionButtons } from "@components/posts/ReactionButtons";
 
-import type { Post, PostLikeState } from "api/Posts";
+import type { Post, PostReactionState } from "api/Posts";
 
 type PostDetailProps = {
 	post: Post;
@@ -8,7 +8,9 @@ type PostDetailProps = {
 	isDeleting: boolean;
 	onDelete: () => void;
 	deleteError: string | null;
-	onLikeChange: (likeState: PostLikeState) => void;
+	onReactionChange: (
+		reactionState: PostReactionState,
+	) => void;
 	onImageClick?: (imageSrc: string) => void;
 };
 
@@ -33,7 +35,7 @@ export const PostDetail = ({
 	isDeleting,
 	onDelete,
 	deleteError,
-	onLikeChange,
+	onReactionChange,
 	onImageClick,
 }: PostDetailProps) => {
 	return (
@@ -47,11 +49,15 @@ export const PostDetail = ({
 				</div>
 
 				<div className="post-detail__actions">
-					<LikeButton
+					<ReactionButtons
 						postId={post.id}
 						likeCount={post.likeCount}
+						dislikeCount={post.dislikeCount}
 						likedByCurrentUser={post.likedByCurrentUser}
-						onChange={onLikeChange}
+						dislikedByCurrentUser={
+							post.dislikedByCurrentUser
+						}
+						onChange={onReactionChange}
 					/>
 
 					{isOwner && (
