@@ -6,6 +6,8 @@ import (
 	"backend/internal/server"
 	"fmt"
 	"log"
+
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -31,12 +33,19 @@ func main() {
 		log.Fatalf("[BOOT][DB] Migrate failed: %v", err)
 	}
 
-	srv := server.NewHTTPServer(conf, gormDB, redisClient)
+	var zapLogger *zap.Logger
+	zapLogger, err = zap.NewDevelopment()
+	if err != nil {
+		log.Fatalf("[BOOT][LOGGER] zap init failed: %v", err)
+	}
+	defer zapLogger.Sync() // flushes buffer, if any
+	log.Println("[BOOT][LOGGER] zap logger initialized")
+
+	srv := server.NewHTTPServer(conf, gormDB, redisClient, zapLogger)
 	log.Printf("[BOOT] starting server on %s:%d", srv.Conf.GoServiceHost, srv.Conf.GoServicePort)
 	addr := fmt.Sprintf("%s:%d", srv.Conf.GoServiceHost, srv.Conf.GoServicePort)
 	if err := srv.Engine.Run(addr); err != nil {
 		log.Fatalf("[BOOT] server stopped with error: %v", err)
 	}
-
 
 }

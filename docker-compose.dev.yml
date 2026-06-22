@@ -17,6 +17,7 @@ services:
         # Falta hacer el healthcheck para el backend, para que el frontend dependa de el.
         volumes:
           - ./backend:/app
+          - api-logs:/var/log/api:ro
         environment:
           - GIN_MODE=debug
         networks:
@@ -254,22 +255,13 @@ services:
         networks:
           - elastic
         mem_limit: ${KB_MEM_LIMIT}
-        healthcheck:
-          test:
-            [
-              "CMD-SHELL",
-              "curl -s http://localhost:5601/api/status | grep -q '\"state\":\"green\"'",
-            ]
-          interval: 10s
-          timeout: 5s
-          retries: 5
-          start_period: 60s
 
     # Puede dar error por permisos de usuario, en ese caso hacer en terminal "sudo chown root:root ./elastic/metricbeat/metricbeat.yml"
     metricbeat:
         image: docker.elastic.co/beats/metricbeat:${STACK_VERSION}
         env_file: .env
         user: root
+        restart: on-failure:5
         volumes:
           - metricbeat_data:/usr/share/metricbeat/data
           - certs_data:/usr/share/metricbeat/certs
@@ -291,6 +283,7 @@ services:
         image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
         env_file: .env
         user: root
+        restart: on-failure:5
         volumes:
           - filebeat_data:/usr/share/filebeat/data
           - certs_data:/usr/share/filebeat/certs
@@ -298,6 +291,7 @@ services:
           - ./elastic/filebeat/ingest_data:/usr/share/filebeat/ingest_data:ro
           - /var/run/docker.sock:/var/run/docker.sock:ro
           - /var/lib/docker/containers:/var/lib/docker/containers:ro
+          - api-logs:/usr/share/filebeat/ingest_data:ro
         networks:
           - elastic
         command: ["filebeat", "-e", "--strict.perms=false"]
@@ -310,6 +304,8 @@ services:
     logstash:
         image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
         env_file: .env
+        expose:
+          - 5044
         group_add:
           - 0 
         volumes:
@@ -353,6 +349,7 @@ volumes:
     certs_data:
 # TODO - Revisar las redes creadas para la correcta separación y aislamiento entre contenedores
     portainer_data:
+    api-logs:
 
 networks:
     db-view:

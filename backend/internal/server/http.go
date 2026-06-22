@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -17,7 +18,7 @@ type HTTPServer struct {
 	Redis  *redis.Client
 }
 
-func NewHTTPServer(conf *config.Config, db *gorm.DB, rdb *redis.Client) *HTTPServer {
+func NewHTTPServer(conf *config.Config, db *gorm.DB, rdb *redis.Client, zapLogger *zap.Logger) *HTTPServer {
 
 	if conf.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -28,9 +29,10 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB, rdb *redis.Client) *HTTPSer
 	r := gin.New()
 
 	// esto se deja asi si luego en prod metemos algun otro logger , sino en prod tbn se puede usar r.Use(gin.Logger())
-	if conf.Env == "local" {
-		r.Use(gin.Logger())
-	}
+	// if conf.Env == "local" {
+	// 	r.Use(gin.Logger())
+	// }
+	r.Use(middlewares.ELKLoggerMiddleware(zapLogger))
 
 	r.Use(middlewares.RecoveryJSON())           // captura panic y devuelve JSON
 	r.Use(middlewares.ErrorMiddleware())        // convierte c.Errors a JSON estándar

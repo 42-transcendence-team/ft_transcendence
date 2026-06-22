@@ -17,9 +17,5 @@ setup.kibana:
   username: ${ELASTIC_USER}
   password: ${ELASTIC_PASSWORD}
 
-output.elasticsearch:
-  hosts: ["https://elasticsearch:9200"]
-  username: ${ELASTIC_USER}
-  password: ${ELASTIC_PASSWORD}
-  ssl.enabled: true
-  ssl.certificate_authorities: "/usr/share/filebeat/certs/ca/ca.crt"
+output.logstash:
+  hosts: ["logstash:5044"]
