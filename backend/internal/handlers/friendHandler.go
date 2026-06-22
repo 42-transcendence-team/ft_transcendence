@@ -7,17 +7,21 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	ws "backend/internal/websocket"
+	//"github.com/gorilla/websocket"
 )
 
 type FriendHandler struct {
 	FriendRequestService *services.FriendRequestService
 	BlockUserService     *services.BlockUserService
+	hub				  *ws.Hub
 }
 
-func NewFriendHandler(friendService *services.FriendRequestService, blockService *services.BlockUserService) *FriendHandler {
+func NewFriendHandler(friendService *services.FriendRequestService, blockService *services.BlockUserService, hub *ws.Hub) *FriendHandler {
 	return &FriendHandler{
 		FriendRequestService: friendService,
 		BlockUserService:     blockService,
+		hub: hub,
 	}
 }
 

@@ -9,6 +9,7 @@ interface ChatContextType {
 	joinRoom: any;
 	rooms : any;
 	addChat : any;
+	user:any;
 }
 
 const chatContext = createContext<ChatContextType | undefined>(undefined);
@@ -163,6 +164,7 @@ const useHandleRooms = (user, websocket) => {
 			});
 		};
 		if (ws.readyState === WebSocket.OPEN) {
+			console.log('websocket ya abierto, uniendo a las salas')
 			joinAllRooms();
 		}
 		ws.addEventListener("open", joinAllRooms);
@@ -191,11 +193,12 @@ export function ChatProvider({ children, activeChat, user } : {children : React.
 	const {rooms, addChat} = useHandleRooms(user, websocket)
 
 	useEffect (() => {
-		if (!messages || !messages.type || messages.type != 'messages' || !messages.room_id)
+		if (!messages || !messages.type || messages.type != 'message' || !messages.room_id)
 			return;
 		if (messages.room_id != activeChat){
 			getUnreadMessages(messages.room_id)
 		}
+		console.log(messages.room_id, activeChat)
 		if (messages.room_id == activeChat) {
 			updateChat(activeChat)
 		}
@@ -208,7 +211,7 @@ export function ChatProvider({ children, activeChat, user } : {children : React.
 	},[activeChat])
 
 	return (
-		<chatContext.Provider value={ { messagesByRoom, joinRoom, sendMessage, rooms, addChat } }>
+		<chatContext.Provider value={ { messagesByRoom, joinRoom, sendMessage, rooms, addChat, user} }>
 			{children}
 		</chatContext.Provider>
 	);

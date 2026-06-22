@@ -33,10 +33,10 @@ func (srv *HTTPServer) Router() {
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
-	chatHandler := handlers.NewChatHandler(hub, chatService)
-	friendHandler := handlers.NewFriendHandler(friendService, blockService)
-
+	chatHandler := handlers.NewChatHandler(hub, chatService)//hub
+	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub)//hub
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
+	notificationsHandler := handlers.NewNotificationsHandler(friendService, chatService)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -72,6 +72,7 @@ func (srv *HTTPServer) Router() {
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
 		routes.ChatRoutes(protected, chatHandler)
 		routes.UserRoutes(protected, userHandler)
+		routes.NotificationRoutes(protected, notificationsHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 

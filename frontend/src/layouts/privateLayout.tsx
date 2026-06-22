@@ -30,7 +30,7 @@ export function PrivateLayout() {
 	return (
 		<div className="privateLayout">
 			<WebSocketProvider user={data.user}>
-				<NotificationProvider activeChat={activeChat} >
+				<NotificationProvider activeChat={activeChat} user={data.user}> 
 					<ChatProvider activeChat={activeChat} user={data.user}>
 						<header>
 							<PrivHeader />
