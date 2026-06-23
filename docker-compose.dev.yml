@@ -177,10 +177,10 @@ services:
             - monitoring
     # Disabled for WSL compatibility
     # Required for full host metrics on Linux
-        command: 
-          - '--path.rootfs=/host'
-        volumes:
-          - '/:/host:ro,rslave'
+        # command: 
+        #   - '--path.rootfs=/host'
+        # volumes:
+        #   - '/:/host:ro,rslave'
           
     cadvisor:
       image: gcr.io/cadvisor/cadvisor:latest
