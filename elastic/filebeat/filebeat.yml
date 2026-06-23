@@ -1,21 +1,24 @@
 filebeat.inputs:
   - type: filestream
-    id: default-filestream
+    id: go-backend-filestream
+    enabled: true
     paths:
       - /usr/share/filebeat/ingest_data/*.log
-
-filebeat.autodiscover:
-  providers:
-    - type: docker
-      hints.enabled: true
+    
+    #parsers:
+    #  - ndjson:
+    #      keys_under_root: true
+    #      overwrite_keys: true
 
 processors:
-  - add_docker_metadata: ~
+  - add_host_metadata: ~
+  - add_cloud_metadata: ~
 
 setup.kibana:
-  host: "http://kibana:5601"
+  host: "https://kibana:5601"
   username: ${ELASTIC_USER}
   password: ${ELASTIC_PASSWORD}
+  ssl.verification_mode: "none" 
 
 output.logstash:
   hosts: ["logstash:5044"]

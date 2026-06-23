@@ -17,7 +17,8 @@ services:
         # Falta hacer el healthcheck para el backend, para que el frontend dependa de el.
         volumes:
           - ./backend:/app
-          - api-logs:/var/log/api:ro
+          - ./elastic/filebeat/ingest_data:/var/log/api
+        #   - api-logs:/var/log/api
         environment:
           - GIN_MODE=debug
         networks:
@@ -25,6 +26,7 @@ services:
             - back-front
             - db-back
             - monitoring
+            - api-logs
 
     frontend:
         env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
@@ -291,14 +293,17 @@ services:
           - ./elastic/filebeat/ingest_data:/usr/share/filebeat/ingest_data:ro
           - /var/run/docker.sock:/var/run/docker.sock:ro
           - /var/lib/docker/containers:/var/lib/docker/containers:ro
-          - api-logs:/usr/share/filebeat/ingest_data:ro
+        #   - api-logs:/usr/share/filebeat/ingest_data:ro
         networks:
           - elastic
+          - api-logs
         command: ["filebeat", "-e", "--strict.perms=false"]
         depends_on:
           elasticsearch:
             condition: service_started
           kibana:
+            condition: service_started
+          logstash:
             condition: service_started
         
     logstash:
@@ -315,6 +320,7 @@ services:
           - ./elastic/logstash/ingest_data:/usr/share/logstash/ingest_data:ro
         networks:
           - elastic
+          - api-logs
         environment:
           - xpack.monitoring.enabled=false
           - ELASTIC_HOSTS=https://elasticsearch:9200
@@ -349,7 +355,7 @@ volumes:
     certs_data:
 # TODO - Revisar las redes creadas para la correcta separación y aislamiento entre contenedores
     portainer_data:
-    api-logs:
+    # api-logs:
 
 networks:
     db-view:
@@ -360,3 +366,4 @@ networks:
     monitoring:
     elastic:
     port-nginx:
+    api-logs:
