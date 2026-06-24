@@ -29,6 +29,8 @@ func InitLogger() {
 		Compress:   true,
 	})
 
+	consoleWriter := zapcore.AddSync(os.Stdout)
+
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
@@ -37,6 +39,13 @@ func InitLogger() {
 		fileWriter,
 		zap.DebugLevel,
 	)
+	consoleCore := zapcore.NewCore(
+		zapcore.NewConsoleEncoder(encoderConfig),
+		consoleWriter,
+		zap.DebugLevel,
+	)
+
+	core = zapcore.NewTee(core, consoleCore)
 
 	Log = zap.New(core, zap.AddCaller())
 }
@@ -46,6 +55,11 @@ func GinZapLogger() gin.HandlerFunc {
 		start := time.Now()
 		path := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
+
+		if path == "/metrics" {
+			c.Next()
+			return
+		}
 
 		c.Next()
 
