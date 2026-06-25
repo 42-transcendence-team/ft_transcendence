@@ -38,6 +38,7 @@ const getNotifications = async () => {
 		console.log(e)
 	}
 }
+
 export function NotificationProvider({ children, activeChat, user} : {children: React.ReactNode, activeChat : number | null, user : any } ) {
 	const [notifications, setNotifications] = useState<any>([])
 	

@@ -29,7 +29,7 @@ function useHandleWebsocket(user:any) {
 
             ws.onmessage = (event) => {
 				const msg = JSON.parse(event.data);
-				
+				console.log(msg)
 				setMessages(msg)
 			}
 
@@ -50,7 +50,6 @@ function useHandleWebsocket(user:any) {
     }, [user?.id]);
 	return { websocket, messages }
 }
-//// messagesByRoom}
 
 export function WebSocketProvider({ children, user }: { children: React.ReactNode; user: any }) {
 	const { websocket, messages} = useHandleWebsocket(user)

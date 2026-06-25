@@ -1,7 +1,7 @@
 import content from "@reset";
 import { apiRequest } from "api/ApiRequest";
 import { useWebSocket } from "./webSocketContext";
-import { useContext, useRef, createContext, useCallback, useEffect, useState } from "react";
+import { useContext, createContext, useCallback, useEffect, useState } from "react";
 
 interface ChatContextType {
 	sendMessage: (roomId: number, content: string) => void;
@@ -70,9 +70,9 @@ const useMessagesByRoom=(messages:any) => {
 		if (messages && messages.type) {
 			const {room_id} = messages
 			if (messages.type == 'join'){
-				setMessagesByRoom((prevHistory) => {
+				setMessagesByRoom((prev) => {
 					return {
-						...prevHistory,
+						...prev,
 						[room_id]: [...messages.messages]
 					};
 				});
@@ -95,8 +95,7 @@ const updateChat = async (id: number | null) => {
 			method: "PUT",
 			body: {room_id: id}
 		});
-		console.log('last read actualizado', id)
-		return data
+		console.log('last read actualizado de la sala ', id)
 	}catch(e){
 		console.log(e, 'no chat actualizado')
 	}
@@ -164,7 +163,6 @@ const useHandleRooms = (user, websocket) => {
 			});
 		};
 		if (ws.readyState === WebSocket.OPEN) {
-			console.log('websocket ya abierto, uniendo a las salas')
 			joinAllRooms();
 		}
 		ws.addEventListener("open", joinAllRooms);
@@ -183,9 +181,8 @@ const useHandleRooms = (user, websocket) => {
 
 	return { addChat, rooms}
 }
-//enviar por ws un mensaje tipo add_chat para que el usuario al que se le envia el mensaje reciba la notificacion de que tiene un nuevo chat, y se una a la sala.v
-//cuandor se vuelve a conectar el websocket el chat no se recarga, implementar
-export function ChatProvider({ children, activeChat, user } : {children : React.ReactNode, activeChat: number | null , user : any } ) {
+
+export function ChatProvider({ children, activeChat, user } : {children : React.ReactNode, activeChat: number | null , user : any }) {
 	const { websocket, messages } = useWebSocket();
 	const messagesByRoom = useMessagesByRoom(messages);
 	const sendMessage = useSendMessage(user, websocket);
@@ -198,7 +195,6 @@ export function ChatProvider({ children, activeChat, user } : {children : React.
 		if (messages.room_id != activeChat){
 			getUnreadMessages(messages.room_id)
 		}
-		console.log(messages.room_id, activeChat)
 		if (messages.room_id == activeChat) {
 			updateChat(activeChat)
 		}

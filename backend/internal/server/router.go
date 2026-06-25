@@ -33,6 +33,7 @@ func (srv *HTTPServer) Router() {
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
+	//func (h *Hub) sendNotification(userID uint, message[] byte) {
 	chatHandler := handlers.NewChatHandler(hub, chatService)//hub
 	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub)//hub
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)

@@ -6,10 +6,10 @@ type Hub struct {
 	Clients map[*Client]bool // Mapa de clientes conectados
 	ClientsConnected map[uint]*Client// Mapa de clientes conectados
 	Rooms   map[uint]*Room   // Mapa de salas de chat y sus clientes
-
 	Register   chan *Client // Canal para registrar nuevos clientes
 	Unregister chan *Client // Canal para desregistrar clientes
 
+	
 	Mu sync.RWMutex // Mutex para proteger el acceso a los mapas
 }
 
@@ -38,6 +38,7 @@ func (h *Hub) Run() {
 						}
 					}
 					delete(h.Clients, client)
+					delete(h.ClientsConnected, client.UserID)
 					close(client.SendChan)
 				}
 			}
@@ -56,4 +57,27 @@ func (h *Hub) CreateRoom(id uint, name string, private bool) *Room {
 	h.Rooms[id] = room
 	go room.Run()
 	return room
+}
+/*
+h.hub.SendNotification(req.Users, m)
+*/
+
+func (h *Hub) SendNotificationToUsers(userID []uint, message []byte) {
+	h.Mu.RLock()
+ 	defer h.Mu.RUnlock()
+	
+	for _, id := range userID {
+		if client, ok := h.ClientsConnected[id]; ok {
+			client.SendChan <- message
+		}
+	}
+}
+
+func (h *Hub) SendNotificationToUser(userID uint, message[] byte) {
+	h.Mu.RLock()
+	defer h.Mu.RUnlock()
+
+	if client, ok := h.ClientsConnected[userID]; ok {
+		client.SendChan <- message
+	}
 }

@@ -1,5 +1,4 @@
 import "../styles/components/_privateLayout.scss"
-import { apiRequest } from "../api/ApiRequest"
 import { Outlet, useLoaderData } from "react-router-dom";
 import { Footer } from "@components/Footer";
 import { PrivHeader } from "@components/PrivHeader";

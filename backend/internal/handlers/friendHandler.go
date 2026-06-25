@@ -4,11 +4,11 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
+	"encoding/json"
 	"strconv"
+	ws "backend/internal/websocket"
 
 	"github.com/gin-gonic/gin"
-	ws "backend/internal/websocket"
-	//"github.com/gorilla/websocket"
 )
 
 type FriendHandler struct {
@@ -48,6 +48,7 @@ func (h *FriendHandler) ListFriends(c *gin.Context) {
 }
 */
 
+//func (h *Hub) sendNotification(userID uint, message[] byte) {
 func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 
 	var req dto.SendFriendRequest
@@ -67,7 +68,19 @@ func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
+	/*
+	type Notification_message struct {
+		Type string `json:"type"`;
+		Content string `json:"content"`;
+	}
+	*/
+	message, _ :=json.Marshal(dto.NotificationMessage{
+		Type : "notification",
+		Content : "new friend request",
+	})
+	
+	h.hub.SendNotificationToUser(req.ReceiverID, []byte(message))//TODO: enviar noti con datos de la peticion de amistad
+	
 	c.JSON(201, gin.H{
 		"message": "friend request sent successfully",
 		"data": gin.H{
@@ -76,7 +89,7 @@ func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 			"receiverID": newReqFriend.ReceiverID,
 			"status":     newReqFriend.Status,
 		},
-	})//websokcet
+	})
 }
 
 func (h *FriendHandler) ListOutgoingRequests(c *gin.Context) {
@@ -133,13 +146,18 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 		return
 	}
 
+	m, _ :=json.Marshal(dto.NotificationMessage{
+		Type : "notification",
+		Content : "friend request accepted",
+	})
+	h.hub.SendNotificationToUser(req.SenderID, []byte(m))//TODO: enviar datos
 	c.JSON(200, gin.H{
 		"request-accepted": gin.H{
 			"id":       req.ID,
 			"senderID": req.SenderID,
 			"userID":   req.ReceiverID,
 		},
-	})//websocket
+	})
 }
 
 func (h *FriendHandler) RejectFriendRequest(c *gin.Context) {
@@ -170,7 +188,7 @@ func (h *FriendHandler) RejectFriendRequest(c *gin.Context) {
 			"senderID": req.SenderID,
 			"userID":   req.ReceiverID,
 		},
-	})//websocket?
+	})
 }
 
 func (h *FriendHandler) DeleteFriend(c *gin.Context) {
