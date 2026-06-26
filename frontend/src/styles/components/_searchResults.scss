@@ -106,3 +106,12 @@
   text-align: center;
   padding: 1rem;
 }
+
+.searchResults__count {
+    max-width: 700px;
+    margin: 0 auto 20px;
+
+    color: #555;
+    font-size: .9rem;
+    font-weight: 600;
+}

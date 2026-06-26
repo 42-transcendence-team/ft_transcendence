@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { searchUsers, type UserSearch } from "../../api/userSearch.tsx";
+import {
+  searchUsers,
+  type UserSearch,
+  type UserRelation,
+  type UserSearchSort,
+} from "../../api/userSearch.tsx";
 import {
   sendFriendRequest,
   acceptFriendRequest,
@@ -11,27 +16,53 @@ export function useAdvancedSearch() {
   const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentQuery, setCurrentQuery] = useState("");
+  const [currentQuery, setCurrentQuery] = useState<string>("");
+  const [relations, setRelations] = useState<UserRelation[]>([]);
+  const [sort, setSort] = useState<UserSearchSort>("username_asc");
+  const [totalResults, setTotalResults] = useState(0);
 
-  const handleSearch = async (query: string) => {
+  const executeSearch = async (
+    query: string,
+    searchRelations: UserRelation[],
+    searchSort: UserSearchSort
+  ) => {
     try {
       setIsLoading(true);
       setError(null);
-      setCurrentQuery(query);
 
       const response = await searchUsers({
         query,
+        relations: searchRelations,
+        sort: searchSort,
       });
 
       setSearchResults(response.items);
       setHasSearched(true);
+      setTotalResults(response.total);
     } catch (err) {
       setError("No se pudo hacer la búsqueda");
       setSearchResults([]);
       setHasSearched(true);
+      setTotalResults(0);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSearch = async (query: string) => {
+    setCurrentQuery(query);
+
+    await executeSearch(query, relations, sort);
+  };
+
+  const handleRelationsChange = async (newRelations: UserRelation[]) => {
+    setRelations(newRelations);
+
+    if (currentQuery.trim() === "") {
+      return;
+    }
+
+    await executeSearch(currentQuery, newRelations, sort);
   };
 
   const handleSendFriendRequest = async (userId: number) => {
@@ -96,15 +127,37 @@ export function useAdvancedSearch() {
     }
   };
 
+  const handleSortChange = async (
+    newSort: UserSearchSort
+  ) => {
+
+    setSort(newSort);
+
+    if (currentQuery.trim() === "") {
+      return;
+    }
+
+    await executeSearch(
+      currentQuery,
+      relations,
+      newSort
+    );
+  };
+
   return {
     searchResults,
     hasSearched,
     isLoading,
     error,
     currentQuery,
+    relations,
+    handleRelationsChange,
     handleSearch,
     handleSendFriendRequest,
     handleAcceptFriendRequest,
     handleRejectFriendRequest,
+    sort,
+    handleSortChange,
+    totalResults,
   };
 }

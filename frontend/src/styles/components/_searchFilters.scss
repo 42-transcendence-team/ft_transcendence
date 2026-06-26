@@ -1,0 +1,87 @@
+@use "../abstracts/variables" as *;
+
+.searchFilters {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 20px;
+
+  background-color: $light-gray-common-components;
+  border-radius: 16px;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+
+  box-sizing: border-box;
+}
+
+.searchFilters__title {
+  margin: 0;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #222;
+}
+
+.searchFilters__sectionTitle {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #222;
+}
+
+.searchFilters__chips {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all .2s ease;
+}
+
+.searchFilters__chip {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  background-color: #eeeeee;
+  color: #333;
+
+  cursor: pointer;
+
+  font-size:1rem;
+
+  transition: 0.2s;
+}
+
+.searchFilters__chip:hover {
+    transform: translateY(-2px);
+}
+
+.searchFilters__chip--active {
+  background-color: $dark-purple-background-light;
+  color: $dark-purple-main-text-light;
+  transform: scale(.97);
+}
+
+
+.searchFilters__select {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  background-color: #eeeeee;
+  color: #333;
+
+  cursor: pointer;
+}

@@ -3,6 +3,7 @@ import { Footer } from "@components/Footer";
 import { PrivHeader } from "@components/PrivHeader";
 import { SearchResults } from "@components/advancedSearch/SearchResults";
 import { useAdvancedSearch } from "@components/advancedSearch/useAdvancedSearch";
+import { SearchFilters } from "@components/advancedSearch/SearchFilters";
 
 import "../styles/components/_privateLayout.scss";
 
@@ -16,11 +17,21 @@ export function PrivateLayout() {
 	handleSendFriendRequest,
 	handleAcceptFriendRequest,
   	handleRejectFriendRequest,
+	relations,
+	handleRelationsChange,
+	sort,
+	handleSortChange,
+	totalResults,
   	} = useAdvancedSearch();
 	return (
 		<div className="privateLayout">
 			<aside className="privateLayout__leftPanel">
-				LEFT PANEL
+				<SearchFilters
+					selectedRelations={relations}
+					onRelationsChange={handleRelationsChange}
+					selectedSort={sort}
+  					onSortChange={handleSortChange}
+				/>
 			</aside>
 
 			<PrivHeader onSearch={handleSearch} />
@@ -39,12 +50,17 @@ export function PrivateLayout() {
 							)}
 
 							{!isLoading && !error && (
-							<SearchResults
-								results={searchResults}
-								onSendFriendRequest={handleSendFriendRequest}
-								onAcceptFriendRequest={handleAcceptFriendRequest}
-								onRejectFriendRequest={handleRejectFriendRequest}
-							/>
+								<>
+									<p className="searchResults__count">
+										{totalResults} usuarios encontrados
+									</p>
+									<SearchResults
+										results={searchResults}
+										onSendFriendRequest={handleSendFriendRequest}
+										onAcceptFriendRequest={handleAcceptFriendRequest}
+										onRejectFriendRequest={handleRejectFriendRequest}
+									/>
+								</>
 							)}
 						</>
 						) : (

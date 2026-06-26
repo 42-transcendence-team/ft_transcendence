@@ -4,6 +4,8 @@ import { apiRequest } from "./ApiRequest";
 export type UserRelation = "friends" | "pending_sent" | "pending_received" 
     | "blocked_by_me" | "blocked_me" | "none";
 
+export type UserSearchSort ="username_asc" | "username_desc" | "newest" | "oldest";
+
 export type UserSearch = {
     id: number;
     login: string;
@@ -26,7 +28,7 @@ export type SearchUsersParams = {
   query: string;
   page?: number;
   limit?: number;
-  sort?: string;
+  sort?: UserSearchSort;
   relations?: UserRelation[];
 };
 
