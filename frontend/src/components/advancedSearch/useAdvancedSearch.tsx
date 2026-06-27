@@ -16,15 +16,22 @@ export function useAdvancedSearch() {
   const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
   const [currentQuery, setCurrentQuery] = useState<string>("");
   const [relations, setRelations] = useState<UserRelation[]>([]);
   const [sort, setSort] = useState<UserSearchSort>("username_asc");
-  const [totalResults, setTotalResults] = useState(0);
+
+  const [totalResults, setTotalResults] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+
+  const limit = 5;
 
   const executeSearch = async (
     query: string,
     searchRelations: UserRelation[],
-    searchSort: UserSearchSort
+    searchSort: UserSearchSort,
+    searchPage: number
   ) => {
     try {
       setIsLoading(true);
@@ -34,16 +41,21 @@ export function useAdvancedSearch() {
         query,
         relations: searchRelations,
         sort: searchSort,
+        page: searchPage,
+        limit,
       });
 
       setSearchResults(response.items);
-      setHasSearched(true);
+      setPage(response.page);
       setTotalResults(response.total);
+      setTotalPages(Math.max(1, Math.ceil(response.total / response.limit)));
+      setHasSearched(true);
     } catch (err) {
       setError("No se pudo hacer la búsqueda");
       setSearchResults([]);
-      setHasSearched(true);
       setTotalResults(0);
+      setTotalPages(1);
+      setHasSearched(true);
     } finally {
       setIsLoading(false);
     }
@@ -51,8 +63,7 @@ export function useAdvancedSearch() {
 
   const handleSearch = async (query: string) => {
     setCurrentQuery(query);
-
-    await executeSearch(query, relations, sort);
+    await executeSearch(query, relations, sort, 1);
   };
 
   const handleRelationsChange = async (newRelations: UserRelation[]) => {
@@ -62,7 +73,33 @@ export function useAdvancedSearch() {
       return;
     }
 
-    await executeSearch(currentQuery, newRelations, sort);
+    await executeSearch(currentQuery, newRelations, sort, 1);
+  };
+
+  const handleSortChange = async (newSort: UserSearchSort) => {
+    setSort(newSort);
+
+    if (currentQuery.trim() === "") {
+      return;
+    }
+
+    await executeSearch(currentQuery, relations, newSort, 1);
+  };
+
+  const handleNextPage = async () => {
+    if (isLoading || page >= totalPages || currentQuery.trim() === "") {
+      return;
+    }
+
+    await executeSearch(currentQuery, relations, sort, page + 1);
+  };
+
+  const handlePreviousPage = async () => {
+    if (isLoading || page <= 1 || currentQuery.trim() === "") {
+      return;
+    }
+
+    await executeSearch(currentQuery, relations, sort, page - 1);
   };
 
   const handleSendFriendRequest = async (userId: number) => {
@@ -127,37 +164,28 @@ export function useAdvancedSearch() {
     }
   };
 
-  const handleSortChange = async (
-    newSort: UserSearchSort
-  ) => {
-
-    setSort(newSort);
-
-    if (currentQuery.trim() === "") {
-      return;
-    }
-
-    await executeSearch(
-      currentQuery,
-      relations,
-      newSort
-    );
-  };
-
   return {
     searchResults,
     hasSearched,
     isLoading,
     error,
+
     currentQuery,
     relations,
-    handleRelationsChange,
+    sort,
+
+    totalResults,
+    page,
+    totalPages,
+
     handleSearch,
+    handleRelationsChange,
+    handleSortChange,
+    handleNextPage,
+    handlePreviousPage,
+
     handleSendFriendRequest,
     handleAcceptFriendRequest,
     handleRejectFriendRequest,
-    sort,
-    handleSortChange,
-    totalResults,
   };
 }

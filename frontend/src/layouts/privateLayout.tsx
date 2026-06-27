@@ -4,6 +4,7 @@ import { PrivHeader } from "@components/PrivHeader";
 import { SearchResults } from "@components/advancedSearch/SearchResults";
 import { useAdvancedSearch } from "@components/advancedSearch/useAdvancedSearch";
 import { SearchFilters } from "@components/advancedSearch/SearchFilters";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 import "../styles/components/_privateLayout.scss";
 
@@ -22,6 +23,10 @@ export function PrivateLayout() {
 	sort,
 	handleSortChange,
 	totalResults,
+	page,
+	totalPages,
+	handleNextPage,
+	handlePreviousPage,	
   	} = useAdvancedSearch();
 	return (
 		<div className="privateLayout">
@@ -60,6 +65,27 @@ export function PrivateLayout() {
 										onAcceptFriendRequest={handleAcceptFriendRequest}
 										onRejectFriendRequest={handleRejectFriendRequest}
 									/>
+									<div className="searchResults__pagination">
+										<button
+											type="button"
+											onClick={handlePreviousPage}
+											disabled={page <= 1}
+										>
+											<FiChevronLeft />
+										</button>
+
+										<span>
+											{page} - {totalPages}
+										</span>
+
+										<button
+											type="button"
+											onClick={handleNextPage}
+											disabled={page >= totalPages}
+										>
+											<FiChevronRight />
+										</button>
+									</div>
 								</>
 							)}
 						</>
