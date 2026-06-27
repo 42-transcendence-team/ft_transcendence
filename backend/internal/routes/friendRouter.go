@@ -2,6 +2,7 @@ package routes
 
 import (
 	"backend/internal/handlers"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -53,18 +54,20 @@ func FriendsRoutes(api *gin.RouterGroup, friendHandler *handlers.FriendHandler) 
 			requests.PATCH("/:requestId/accept", friendHandler.AcceptFriendRequest)
 			// Rechazar peticion de amistad
 			requests.PATCH("/:requestId/reject", friendHandler.RejectFriendRequest)
-
 		}
-
+		
+		blocks := friends.Group("/blocks")
+		{
+			//lsita de usuarios
+			blocks.GET("", friendHandler.ListBlocks)
+			//bloquear usuario, necesita payload con id
+			blocks.POST("", friendHandler.BlockUser)
+			//debloquear usuario
+			blocks.DELETE("/:userId", friendHandler.UnblockUser)
+			//es necesario un blocks.GET("/:userId"")??
+		}
 		// Borrar amigo
 		// TODO: cuando me borrro a mi mismo me d aun 404 arreglar
 		friends.DELETE("/:userId", friendHandler.DeleteFriend)
-
-		// Bloquear usuario
-		// friends.POST("/blocks", friendHandler.BlockUser)
-		// Desbloquear usuario
-		// friends.DELETE("/blocks/:userId", friendHandler.UnblockUser)
-		// Lista de usuarios bloqueados
-		//
 	}
 }

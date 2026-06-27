@@ -6,7 +6,6 @@ import (
 	"backend/internal/repository"
 	routes "backend/internal/routes"
 	"backend/internal/services"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,7 +13,6 @@ import (
 // Para añadir un endpoint hay que confeccionar la funcion en internals/handlers y
 // añadir el enpoint con un comantario encima describiendo lo que hace para el swagger
 func (srv *HTTPServer) Router() {
-
 	routes.HealthRoutes(srv.Engine)
 
 	userRepo := repository.NewUserRepository(srv.Db)
@@ -22,18 +20,26 @@ func (srv *HTTPServer) Router() {
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
-	twoFAService := services.New2FAService(userRepo, authService)
+	twoFAService := services.New2FAService(userRepo, authService, srv.Redis)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 	advancedSearchService := services.NewAdvancedSearch(userRepo, friendRepo)
+	blockService := services.NewBlockUserService(friendRepo, userRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis, advancedSearchService)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
-	friendHandler := handlers.NewFriendHandler(friendService)
+	friendHandler := handlers.NewFriendHandler(friendService, blockService)
+
+	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
 
 	api := srv.Engine.Group("/api/v1")
 
-	// rutas publicas
+	getMe := api.Group("/auth")
+	getMe.Use(middlewares.GetMeMiddleware(srv.Conf))
+	{
+		getMe.GET("/me", getMeHandler.Whoami)
+	}
+
 	// rutas publicas para usuarios no autenticados
 	publicForNoAuth := api.Group("/")
 	publicForNoAuth.Use(middlewares.RejectIfAuthMiddleware(srv.Conf))

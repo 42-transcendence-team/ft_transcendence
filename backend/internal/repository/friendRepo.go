@@ -298,3 +298,78 @@ func (r *FriendRepository) DeleteFriendship(userID1 uint, userID2 uint) error {
 
 	return nil
 }
+
+/*
+err := r.db.Model(&models.Block{}).Where(
+		"(blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)",
+		userID1, userID2,
+		userID2, userID1,
+	).Count(&count).Error
+*/
+/*
+var requests []models.Friendship
+
+	err := r.db.Where("user1_id = ? OR user2_id = ?", userID, userID).
+		Find(&requests).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return requests, nil
+*/
+func (r *FriendRepository) ListBlocks(userID uint) ([]models.Block, error) {
+	requests := make([]models.Block, 0)
+
+	err := r.db.Where("blocker_id = ?", userID).
+		Find(&requests).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return requests, nil
+}
+
+/*
+type Block struct {
+	ID        uint `gorm:"primaryKey"`
+	BlockerID uint `gorm:"not null;index"`
+	BlockedID uint `gorm:"not null;index"`
+	CreatedAt time.Time
+}
+*/
+
+func (r *FriendRepository) CreateBlock(BlockerID uint, BlockedID uint) error {
+	
+	block := models.Block{
+		BlockerID: BlockerID,
+		BlockedID: BlockedID,
+	}
+
+	res := r.db.Where(models.Block{BlockerID: BlockerID, BlockedID: BlockedID}).FirstOrCreate(&block)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return gorm.ErrDuplicatedKey
+	}
+
+	return nil
+}
+
+func (r *FriendRepository) DeleteBlock(BlockerID uint, BlockedID uint) error {
+
+	result := r.db.
+		Where("blocker_id = ? AND blocked_id = ?", BlockerID, BlockedID).
+		Delete(&models.Block{})
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
