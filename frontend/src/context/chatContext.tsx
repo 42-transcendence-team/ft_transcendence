@@ -107,18 +107,37 @@ Private bool   `json:"private" default:"false"`
 Users   []uint `json:"users"`
 }
 * */
-const useHandleRooms = (user, websocket) => {
+const useHandleRooms = (user, websocket, messages) => {
 	const [rooms, setRooms] = useState<any>([])
 
+
+	useEffect(() => {
+		if (!messages?.type?.includes('notification'))
+			return;
+		
+		const fetchRooms = async () => {
+			try {
+				const data = await apiRequest({
+					endpoint: "chat/rooms",
+					method: "GET",
+				});
+				setRooms(data.map(r => r.ID))
+			} catch (e) {
+				console.log(e);
+			}
+		};
+		fetchRooms();
+
+	}, [messages])
+
 	const addChat = async () => {
-		const user_id = prompt('id del usuario al que quieres enviar mensaje');
-		const user_id_number = parseInt(user_id, 10);
+		const user_id = parseInt(prompt('id del usuario al que quieres enviar mensaje'),10);
 	
 		try {	
 			const data = await apiRequest({
 				endpoint: "chat/rooms",
 				method: "POST",
-				body: { name: `Room ${Math.floor(Math.random() * 1000)}`, private : true, users : [user_id_number] },
+				body: { name: `Room ${Math.floor(Math.random() * 1000)}`, private : true, users : [user_id] },
 			});
 			console.log("Chat room created successfully");
 			setRooms((prevRooms) => {
@@ -187,22 +206,23 @@ export function ChatProvider({ children, activeChat, user } : {children : React.
 	const messagesByRoom = useMessagesByRoom(messages);
 	const sendMessage = useSendMessage(user, websocket);
 	const joinRoom = useJoinRoom(websocket, messagesByRoom);
-	const {rooms, addChat} = useHandleRooms(user, websocket)
+	const {rooms, addChat} = useHandleRooms(user, websocket, messages)
 
 	useEffect (() => {
 		if (!messages || !messages.type || messages.type != 'message' || !messages.room_id)
 			return;
+		//switch
 		if (messages.room_id != activeChat){
-			getUnreadMessages(messages.room_id)
+			getUnreadMessages(messages.room_id)//esto en notificationprovider
 		}
 		if (messages.room_id == activeChat) {
-			updateChat(activeChat)
+			updateChat(activeChat)//esto en notificationprovider
 		}
 	}, [messages])
 	
 	useEffect(() => {
 		if (activeChat){
-			updateChat(activeChat)
+			updateChat(activeChat)//noti provider
 		}
 	},[activeChat])
 

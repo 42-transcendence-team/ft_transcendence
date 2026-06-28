@@ -47,12 +47,12 @@ func (h *NotificationsHandler) GetNotifications(c *gin.Context) {
 		unreadCount := h.ChatService.GetMessageNotRead(room.ID, userID)
 		messagesNotReadByRoom[room.ID] = unreadCount
 	}
-	
+	//likes,posts
 	response := gin.H{
 		"incoming_requests": incomingRequests,
 		"unread_messages":   messagesNotReadByRoom,
-
 	}
+
 	log.Printf("noti %v", response)
 	c.JSON(200, response)
 }

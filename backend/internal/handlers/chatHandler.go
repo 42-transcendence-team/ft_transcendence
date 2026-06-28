@@ -124,7 +124,7 @@ func (h *ChatHandler) CreateRoom(c *gin.Context) {
 	h.hub.CreateRoom(room.ID, room.Name, room.Private)
 	m, _:= json.Marshal(dto.NotificationMessage{
 		Type : "notification",
-		Content : "You have been added to a new chat room",
+		Content : strconv.FormatUint(uint64(room.ID), 10),
 	})
 	h.hub.SendNotificationToUsers(req.Users, m)
 	c.JSON(http.StatusOK, room)

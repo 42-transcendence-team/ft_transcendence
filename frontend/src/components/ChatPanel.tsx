@@ -10,21 +10,9 @@ interface ChatPanelProps {
 export function ChatPanel(props: ChatPanelProps) {
 
 	const { rooms, addChat } = useChat();
-	const sendFriendRequest = () => {
-		const n = prompt("Enter the user id you want to send a friend request to: ");
-
-		const n_number = parseInt(n );
-		apiRequest( {
-			endpoint: 'friends/requests',
-			method: 'POST',
-			body: {
-				receiver_id : n_number
-			}
-		})
-	}
+	
     return (
 		<>
-		<button onClick={sendFriendRequest}>friend request</button>
         <aside className="chatPanel">
             {rooms.map(roomId => (
                 <button 
