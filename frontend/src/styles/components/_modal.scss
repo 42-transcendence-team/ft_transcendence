@@ -220,6 +220,7 @@ $post-modal-close-shadow: 0 2px 8px rgba(15, 23, 42, 0.24);
 	&.modal {
 		position: relative;
 		overflow: hidden;
+		background-color: transparent;
 
 		@include post-modal-size(
 			min(80vw, 1280px),
@@ -285,6 +286,7 @@ $post-modal-close-shadow: 0 2px 8px rgba(15, 23, 42, 0.24);
 		max-height: 94vh !important;
 		padding: 0.75rem !important;
 		overflow: visible;
+		background-color: transparent;
 
 		@include post-modal-floating-header(0.35rem, 0.35rem);
 		@include post-modal-close-button(
