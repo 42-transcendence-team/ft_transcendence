@@ -10,16 +10,57 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func PostRoutes(api *gin.RouterGroup, postHandler *handlers.PostHandler) {
+func PostRoutes(
+	api *gin.RouterGroup,
+	postHandler *handlers.PostHandler,
+	commentHandler *handlers.CommentHandler,
+	postLikeHandler *handlers.PostLikeHandler,
+) {
 	posts := api.Group("/posts")
 	{
 		// Crea un post con texto, imagen o ambos.
 		posts.POST("", postHandler.CreatePost)
 
-		// Obtiene un post concreto por ID.
-		posts.GET("/:id", postHandler.GetPostByID)
+		post := posts.Group("/:id")
+		{
+			// Obtiene un post concreto por ID.
+			post.GET("", postHandler.GetPostByID)
 
-		// Borra un post propio.
-		posts.DELETE("/:id", postHandler.DeletePost)
+			// Borra un post propio.
+			post.DELETE("", postHandler.DeletePost)
+
+			postComments := post.Group("/comments")
+			{
+				// Lista los comentarios de un post.
+				postComments.GET("", commentHandler.ListCommentsByPostID)
+
+				// Crea un comentario en un post.
+				postComments.POST("", commentHandler.CreateComment)
+			}
+
+			likes := post.Group("/likes")
+			{
+				// Crea un like o sustituye un dislike existente.
+				likes.POST("", postLikeHandler.LikePost)
+
+				// Elimina el like del usuario autenticado.
+				likes.DELETE("", postLikeHandler.UnlikePost)
+			}
+
+			dislikes := post.Group("/dislikes")
+			{
+				// Crea un dislike o sustituye un like existente.
+				dislikes.POST("", postLikeHandler.DislikePost)
+
+				// Elimina el dislike del usuario autenticado.
+				dislikes.DELETE("", postLikeHandler.UndislikePost)
+			}
+		}
+	}
+
+	comments := api.Group("/comments")
+	{
+		// Borra un comentario propio.
+		comments.DELETE("/:id", commentHandler.DeleteComment)
 	}
 }

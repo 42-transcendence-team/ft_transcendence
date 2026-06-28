@@ -77,9 +77,12 @@ func (srv *HTTPServer) Router() {
 		routes.FriendsRoutes(protected, friendHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
 		routes.UserRoutes(protected, userHandler)
-		routes.PostRoutes(protected, postHandler)
-		routes.CommentRoutes(protected, commentHandler)
-		routes.PostLikeRoutes(protected, postLikeHandler)
+		routes.PostRoutes(
+			protected,
+			postHandler,
+			commentHandler,
+			postLikeHandler,
+		)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 
