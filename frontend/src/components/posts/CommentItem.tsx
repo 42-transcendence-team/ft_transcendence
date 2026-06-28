@@ -9,7 +9,7 @@ type CommentItemProps = {
 	comment: Comment;
 	isOwner: boolean;
 	isDeleting: boolean;
-	onDelete: (commentId: number) => void;
+	onRequestDelete: (commentId: number) => void;
 };
 
 function formatCommentDate(value: string): string {
@@ -39,7 +39,7 @@ export const CommentItem = ({
 	comment,
 	isOwner,
 	isDeleting,
-	onDelete,
+	onRequestDelete,
 }: CommentItemProps) => {
 	const avatarSrc = getAvatarSrc(comment.author.avatarPath);
 
@@ -74,7 +74,7 @@ export const CommentItem = ({
 					<button
 						className="comment-item__delete-button"
 						type="button"
-						onClick={() => onDelete(comment.id)}
+						onClick={() => onRequestDelete(comment.id)}
 						disabled={isDeleting}
 						aria-label={
 							isDeleting

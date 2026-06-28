@@ -4,6 +4,7 @@ import { Modal } from "@components/Modal";
 import { PostModalRenderer } from "@components/posts/PostModalRenderer";
 import { PostImageModal } from "@components/posts/PostImageModal";
 import { getPostVariant } from "@utils/postVariant";
+import { ConfirmModal } from "@components/ConfirmModal";
 
 import { getAuthenticatedUser } from "api/Login";
 import {
@@ -35,6 +36,11 @@ type PostModalProps = {
 	onClose: () => void;
 	onDeleted?: () => void;
 };
+
+type PendingDeletion =
+	| { type: "post" }
+	| { type: "comment"; commentId: number }
+	| null;
 
 function normalizePostId(postId: string | number | null): string | null {
 	if (postId === null) {
@@ -77,14 +83,19 @@ export const PostModal = ({
 
 	const [selectedImageSrc, setSelectedImageSrc] = useState<string | null>(null);
 
+	// Guarda si se quiere borrar el post o un comentario antes de pedir confirmación.
+	const [pendingDeletion, setPendingDeletion] = useState<PendingDeletion>(null);
+
 	useEffect(() => {
 		if (!open) {
 			setSelectedImageSrc(null);
+			setPendingDeletion(null);
 		}
 	}, [open]);
 
 	useEffect(() => {
 		setSelectedImageSrc(null);
+		setPendingDeletion(null);
 	}, [normalizedPostId]);
 
 	useEffect(() => {
@@ -101,6 +112,7 @@ export const PostModal = ({
 			setDeletePostError(null);
 			setCommentError(null);
 			setNotFound(false);
+			setPendingDeletion(null);
 		};
 
 		const loadPostData = async () => {
@@ -230,6 +242,39 @@ export const PostModal = ({
 		}
 	};
 
+	const requestPostDeletion = () => {
+		if (!isDeletingPost) {
+			setPendingDeletion({ type: "post" });
+		}
+	};
+
+	const requestCommentDeletion = (commentId: number) => {
+		if (deletingCommentId === null) {
+			setPendingDeletion({
+				type: "comment",
+				commentId,
+			});
+		}
+	};
+
+	const closeDeleteConfirmation = () => {
+		setPendingDeletion(null);
+	};
+
+	const handleConfirmDeletion = async () => {
+		if (!pendingDeletion) {
+			return;
+		}
+
+		if (pendingDeletion.type === "post") {
+			await handlePostDelete();
+		} else {
+			await handleCommentDelete(pendingDeletion.commentId);
+		}
+
+		setPendingDeletion(null);
+	};
+
 	const handleReactionChange = (
 		reactionState: PostReactionState,
 	) => {
@@ -259,30 +304,54 @@ export const PostModal = ({
 	? `post-modal-shell post-modal-shell--${getPostVariant(post)}`
 	: "post-modal-shell";
 
+	const isPostDeletion = pendingDeletion?.type === "post";
+
+	const confirmationTitle = isPostDeletion
+		? "Delete post?"
+		: "Delete comment?";
+
+	const confirmationMessage = isPostDeletion
+		? "This action cannot be undone. Are you sure you want to delete this post?"
+		: "This action cannot be undone. Are you sure you want to delete this comment?";
+
+	const confirmationLabel = isPostDeletion
+		? "Delete post"
+		: "Delete comment";
+
+	const isConfirmingDeletion =
+		pendingDeletion?.type === "post"
+			? isDeletingPost
+			: pendingDeletion?.type === "comment"
+				? deletingCommentId === pendingDeletion.commentId
+				: false;
+
 	return (
-		<Modal
-			open={open}
-			onClose={onClose}
-			closeOnEscape={!selectedImageSrc}
-			modalClassName={modalClassName}
-			contentClassName="post-modal-shell__content"
-		>
-			<div className="post-modal">
-				{isLoading && <p className="post-modal__state">Loading post.</p>}
+		<>
+			<Modal
+				open={open}
+				onClose={onClose}
+				// Escape solo debe cerrar la modal que se encuentra en primer plano.
+				closeOnEscape={!selectedImageSrc && !pendingDeletion}
+				modalClassName={modalClassName}
+				contentClassName="post-modal-shell__content"
+			>
+				<div className="post-modal">
+					{isLoading && (
+						<p className="post-modal__state">Loading post.</p>
+					)}
 
-				{notFound && !isLoading && (
-					<div className="post-modal__state">
-						<h2>Post not found</h2>
-						<p>This post does not exist or has been deleted.</p>
-					</div>
-				)}
+					{notFound && !isLoading && (
+						<div className="post-modal__state">
+							<h2>Post not found</h2>
+							<p>This post does not exist or has been deleted.</p>
+						</div>
+					)}
 
-				{loadError && !isLoading && (
-					<p className="post-modal__error">{loadError}</p>
-				)}
+					{loadError && !isLoading && (
+						<p className="post-modal__error">{loadError}</p>
+					)}
 
-				{post && !isLoading && !notFound && !loadError && (
-					<>
+					{post && !isLoading && !notFound && !loadError && (
 						<PostModalRenderer
 							post={post}
 							comments={comments}
@@ -292,21 +361,33 @@ export const PostModal = ({
 							deletingCommentId={deletingCommentId}
 							deletePostError={deletePostError}
 							commentError={commentError}
-							onDeletePost={handlePostDelete}
+							onRequestDeletePost={requestPostDeletion}
 							onCommentCreated={handleCommentCreated}
-							onDeleteComment={handleCommentDelete}
+							onRequestDeleteComment={requestCommentDeletion}
 							onReactionChange={handleReactionChange}
 							onImageClick={setSelectedImageSrc}
 						/>
-					</>
-				)}
+					)}
 
-				<PostImageModal
-					open={Boolean(selectedImageSrc)}
-					imageSrc={selectedImageSrc}
-					onClose={() => setSelectedImageSrc(null)}
-				/>
-			</div>
-		</Modal>
+					<PostImageModal
+						open={Boolean(selectedImageSrc)}
+						imageSrc={selectedImageSrc}
+						onClose={() => setSelectedImageSrc(null)}
+					/>
+				</div>
+			</Modal>
+
+			<ConfirmModal
+				open={Boolean(pendingDeletion)}
+				title={confirmationTitle}
+				message={confirmationMessage}
+				confirmLabel={confirmationLabel}
+				confirmingLabel="Deleting..."
+				cancelLabel="Cancel"
+				isConfirming={isConfirmingDeletion}
+				onConfirm={handleConfirmDeletion}
+				onClose={closeDeleteConfirmation}
+			/>
+		</>
 	);
 };

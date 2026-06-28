@@ -21,9 +21,9 @@ type PostModalRendererProps = {
 	deletingCommentId: number | null;
 	deletePostError: string | null;
 	commentError: string | null;
-	onDeletePost: () => void;
+	onRequestDeletePost: () => void;
 	onCommentCreated: (comment: Comment) => void;
-	onDeleteComment: (commentId: number) => void;
+	onRequestDeleteComment: (commentId: number) => void;
 	onReactionChange: (
 		reactionState: PostReactionState,
 	) => void;
@@ -62,9 +62,9 @@ export const PostModalRenderer = ({
 	deletingCommentId,
 	deletePostError,
 	commentError,
-	onDeletePost,
+	onRequestDeletePost,
 	onCommentCreated,
-	onDeleteComment,
+	onRequestDeleteComment,
 	onReactionChange,
 	onImageClick,
 }: PostModalRendererProps) => {
@@ -136,7 +136,7 @@ export const PostModalRenderer = ({
 							<button
 								className="post-modal-renderer__delete-button"
 								type="button"
-								onClick={onDeletePost}
+								onClick={onRequestDeletePost}
 								disabled={isDeletingPost}
 								aria-label={
 									isDeletingPost
@@ -177,7 +177,7 @@ export const PostModalRenderer = ({
 							comments={comments}
 							currentUserId={currentUserId}
 							deletingCommentId={deletingCommentId}
-							onDelete={onDeleteComment}
+							onRequestDelete={onRequestDeleteComment}
 						/>
 
 						{commentError && (

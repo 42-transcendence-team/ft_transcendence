@@ -5,19 +5,19 @@ type CommentListProps = {
 	comments: Comment[];
 	currentUserId: number | null;
 	deletingCommentId: number | null;
-	onDelete: (commentId: number) => void;
+	onRequestDelete: (commentId: number) => void;
 };
 
 export const CommentList = ({
 	comments,
 	currentUserId,
 	deletingCommentId,
-	onDelete,
+	onRequestDelete,
 }: CommentListProps) => {
 	if (comments.length === 0) {
 		return (
 			<p className="comments__empty">
-				Todavía no hay comentarios.
+				There are no comments yet.
 			</p>
 		);
 	}
@@ -30,7 +30,7 @@ export const CommentList = ({
 					comment={comment}
 					isOwner={currentUserId === comment.userId}
 					isDeleting={deletingCommentId === comment.id}
-					onDelete={onDelete}
+					onRequestDelete={onRequestDelete}
 				/>
 			))}
 		</div>

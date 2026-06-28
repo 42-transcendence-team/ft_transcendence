@@ -85,14 +85,24 @@
 		border: none;
 		border-radius: 6px;
 		cursor: pointer;
-		transition: background-color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			opacity 0.2s ease;
+
+		&:disabled {
+			cursor: not-allowed;
+			opacity: 0.65;
+		}
 
 		&--enable {
 			background-color: #21d021;
 			color: white;
 
-			&:hover {
-				background-color: color.scale(#21d021, $lightness: -15%);
+			&:hover:not(:disabled) {
+				background-color: color.scale(
+					#21d021,
+					$lightness: -15%
+				);
 			}
 		}
 
@@ -100,10 +110,49 @@
 			background-color: $red-background-light;
 			color: white;
 
-			&:hover {
-				background-color: color.scale($red-background-light, $lightness: -15%);
+			&:hover:not(:disabled) {
+				background-color: color.scale(
+					$red-background-light,
+					$lightness: -15%
+				);
 			}
 		}
+
+		&--cancel {
+			background-color: color.scale(
+				$light-gray-common-components,
+				$lightness: -10%
+			);
+			color: $main-text-light;
+
+			&:hover:not(:disabled) {
+				background-color: color.scale(
+					$light-gray-common-components,
+					$lightness: -18%
+				);
+			}
+		}
+	}
+}
+
+.confirm-modal-overlay {
+	// La confirmación debe mostrarse por encima de las modales de post e imagen.
+	z-index: 1200;
+}
+
+.confirm-modal {
+	&.modal {
+		width: min(90vw, 420px);
+		max-width: 420px;
+	}
+
+	&__content {
+		margin-bottom: 0;
+	}
+
+	&__message {
+		margin: 0 0 1.25rem;
+		line-height: 1.5;
 	}
 }
 
