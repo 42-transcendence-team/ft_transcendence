@@ -1,3 +1,5 @@
+import { validateImageFile } from "@utils/imageValidation";
+
 export const MAX_POST_CONTENT_LENGTH = 5000;
 export const MAX_COMMENT_CONTENT_LENGTH = 1000;
 export const MAX_POST_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -6,18 +8,17 @@ export const ALLOWED_POST_IMAGE_TYPES = [
 	"image/jpeg",
 	"image/png",
 	"image/webp",
-];
+] as const;
 
 export function validatePostImage(image: File): string | null {
-	if (!ALLOWED_POST_IMAGE_TYPES.includes(image.type)) {
-		return "The image must be a PNG, JPG, JPEG or WebP file.";
-	}
-
-	if (image.size > MAX_POST_IMAGE_SIZE) {
-		return "The image cannot be larger than 5 MB.";
-	}
-
-	return null;
+	return validateImageFile(image, {
+		allowedTypes: ALLOWED_POST_IMAGE_TYPES,
+		maxSize: MAX_POST_IMAGE_SIZE,
+		invalidTypeMessage:
+			"The image must be a PNG, JPG, JPEG or WebP file.",
+		maxSizeMessage:
+			"The image cannot be larger than 5 MB.",
+	});
 }
 
 export function validatePostDraft(
@@ -41,7 +42,9 @@ export function validatePostDraft(
 	return null;
 }
 
-export function validateCommentContent(content: string): string | null {
+export function validateCommentContent(
+	content: string,
+): string | null {
 	const trimmedContent = content.trim();
 
 	if (trimmedContent === "") {

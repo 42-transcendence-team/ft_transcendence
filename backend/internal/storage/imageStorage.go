@@ -1,9 +1,10 @@
 package storage
 
 import (
-	"backend/internal/errors"
+	appErr "backend/internal/errors"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -18,72 +19,117 @@ type ImageStorage struct {
 	BasePath string
 }
 
+type SaveImageOptions struct {
+	Directory string
+	MaxSize   int64
+}
+
 func NewImageStorage(basePath string) *ImageStorage {
 	return &ImageStorage{
 		BasePath: basePath,
 	}
 }
 
-func (s *ImageStorage) SavePostImage(file *multipart.FileHeader) (string, error) {
+// SavePostImage mantiene intacto el contrato usado actualmente por los posts.
+func (s *ImageStorage) SavePostImage(
+	file *multipart.FileHeader,
+) (string, error) {
+	return s.SaveImage(file, SaveImageOptions{
+		Directory: "posts",
+		MaxSize:   maxPostImageSize,
+	})
+}
+
+// SaveImage concentra el guardado común para que otras funcionalidades
+// puedan definir su propio directorio y límite de tamaño.
+func (s *ImageStorage) SaveImage(
+	file *multipart.FileHeader,
+	options SaveImageOptions,
+) (string, error) {
 	if file == nil {
-		return "", errors.NewValidation(map[string]string{
+		return "", appErr.NewValidation(map[string]string{
 			"image": "required",
 		})
 	}
 
-	if file.Size > maxPostImageSize {
-		return "", errors.NewValidation(map[string]string{
+	if options.MaxSize <= 0 {
+		return "", appErr.NewInternal(
+			fmt.Errorf("image max size must be greater than zero"),
+		)
+	}
+
+	if !isSafeDirectoryName(options.Directory) {
+		return "", appErr.NewInternal(
+			fmt.Errorf("invalid image directory"),
+		)
+	}
+
+	if file.Size > options.MaxSize {
+		return "", appErr.NewValidation(map[string]string{
 			"image": "max_size",
 		})
 	}
 
 	src, err := file.Open()
 	if err != nil {
-		return "", errors.NewInternal(err)
+		return "", appErr.NewInternal(err)
 	}
 	defer src.Close()
 
 	mimeType, err := detectMimeType(src)
 	if err != nil {
-		return "", errors.NewInternal(err)
+		return "", appErr.NewInternal(err)
 	}
 
 	ext, ok := allowedImageExtension(mimeType)
 	if !ok {
-		return "", errors.NewValidation(map[string]string{
+		return "", appErr.NewValidation(map[string]string{
 			"image": "invalid_type",
 		})
 	}
 
 	if _, err := src.Seek(0, io.SeekStart); err != nil {
-		return "", errors.NewInternal(err)
+		return "", appErr.NewInternal(err)
 	}
 
 	fileName, err := randomFileName(ext)
 	if err != nil {
-		return "", errors.NewInternal(err)
+		return "", appErr.NewInternal(err)
 	}
 
-	postUploadDir := filepath.Join(s.BasePath, "posts")
+	uploadDir := filepath.Join(
+		s.BasePath,
+		options.Directory,
+	)
 
-	if err := os.MkdirAll(postUploadDir, 0755); err != nil {
-		return "", errors.NewInternal(err)
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		return "", appErr.NewInternal(err)
 	}
 
-	dstPath := filepath.Join(postUploadDir, fileName)
+	dstPath := filepath.Join(uploadDir, fileName)
 
-	dst, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	dst, err := os.OpenFile(
+		dstPath,
+		os.O_WRONLY|os.O_CREATE|os.O_EXCL,
+		0644,
+	)
 	if err != nil {
-		return "", errors.NewInternal(err)
+		return "", appErr.NewInternal(err)
 	}
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, src); err != nil {
 		_ = os.Remove(dstPath)
-		return "", errors.NewInternal(err)
+		return "", appErr.NewInternal(err)
 	}
 
-	relativePath := filepath.ToSlash(filepath.Join(s.BasePath, "posts", fileName))
+	relativePath := filepath.ToSlash(
+		filepath.Join(
+			s.BasePath,
+			options.Directory,
+			fileName,
+		),
+	)
 
 	return relativePath, nil
 }
@@ -96,7 +142,10 @@ func (s *ImageStorage) Delete(relativePath string) error {
 		return nil
 	}
 
-	if !strings.HasPrefix(cleanPath, cleanBasePath+string(os.PathSeparator)) {
+	if !strings.HasPrefix(
+		cleanPath,
+		cleanBasePath+string(os.PathSeparator),
+	) {
 		return nil
 	}
 
@@ -106,6 +155,29 @@ func (s *ImageStorage) Delete(relativePath string) error {
 	}
 
 	return nil
+}
+
+func isSafeDirectoryName(directory string) bool {
+	if directory == "" ||
+		directory == "." ||
+		directory == ".." {
+		return false
+	}
+
+	if directory != strings.TrimSpace(directory) {
+		return false
+	}
+
+	if filepath.IsAbs(directory) {
+		return false
+	}
+
+	// Solo aceptamos un nombre de directorio, no rutas completas.
+	if strings.ContainsAny(directory, `/\`) {
+		return false
+	}
+
+	return filepath.Clean(directory) == directory
 }
 
 func detectMimeType(file multipart.File) (string, error) {

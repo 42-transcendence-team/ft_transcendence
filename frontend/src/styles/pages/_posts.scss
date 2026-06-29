@@ -144,22 +144,6 @@ $post-radius: 18px;
 		font: inherit;
 	}
 
-	&__file {
-		font: inherit;
-	}
-
-	&__preview {
-		img {
-			display: block;
-			width: 100%;
-			max-height: 420px;
-			object-fit: contain;
-			border: 1px solid $post-border;
-			border-radius: 14px;
-			background: $post-soft-bg;
-		}
-	}
-
 	&__error {
 		@include post-error-message;
 	}
