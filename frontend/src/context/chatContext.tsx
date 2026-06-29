@@ -32,7 +32,6 @@ interface MessagesState {
     [roomId: number]: any[]; 
 }
 
-
 const useJoinRoom = (websocket: any, messagesByRoom:any) => {
 	return useCallback((roomId : number) => {
 		if (messagesByRoom[roomId]){
@@ -47,20 +46,6 @@ const useJoinRoom = (websocket: any, messagesByRoom:any) => {
 	 		)
 		}
 	}, [messagesByRoom])
-}
-
-
-const getUnreadMessages = async (roomId : number | null) => {
-	try {
-		const data = await apiRequest({
-			endpoint: `chat/unread/${roomId}`,
-			method: "GET",
-		});
-		console.log('mesajes no leido desde', roomId, data)
-		return data
-	}catch(e){
-		console.log(e)
-	}
 }
 
 const useMessagesByRoom=(messages:any) => {
@@ -88,18 +73,6 @@ const useMessagesByRoom=(messages:any) => {
 	return messagesByRoom
 }
 
-const updateChat = async (id: number | null) => {
-	try {
-		const data = await apiRequest({
-			endpoint: `chat/enter`,
-			method: "PUT",
-			body: {room_id: id}
-		});
-		console.log('last read actualizado de la sala ', id)
-	}catch(e){
-		console.log(e, 'no chat actualizado')
-	}
-}
 /*
 *CreateRoomRequest struct {
 Name    string `json:"name"`
@@ -107,33 +80,21 @@ Private bool   `json:"private" default:"false"`
 Users   []uint `json:"users"`
 }
 * */
+
 const useHandleRooms = (user, websocket, messages) => {
 	const [rooms, setRooms] = useState<any>([])
 
 
 	useEffect(() => {
-		if (!messages?.type?.includes('notification'))
+		if (messages?.type != 'CREATE_ROOM')
 			return;
-		
-		const fetchRooms = async () => {
-			try {
-				const data = await apiRequest({
-					endpoint: "chat/rooms",
-					method: "GET",
-				});
-				setRooms(data.map(r => r.ID))
-			} catch (e) {
-				console.log(e);
-			}
-		};
-		fetchRooms();
-
+		setRooms((prev) => {return ([...prev, messages.payload.room_id])})
 	}, [messages])
 
 	const addChat = async () => {
 		const user_id = parseInt(prompt('id del usuario al que quieres enviar mensaje'),10);
 	
-		try {	
+		try {
 			const data = await apiRequest({
 				endpoint: "chat/rooms",
 				method: "POST",
@@ -146,7 +107,6 @@ const useHandleRooms = (user, websocket, messages) => {
 				}
 				return prevRooms;
        	 	});
-			//anadir al context algo para guardar la nueva sala de chat
 		} catch (error) {
 			console.error("Error creating chat room:", error);
 		}
@@ -189,14 +149,14 @@ const useHandleRooms = (user, websocket, messages) => {
 			ws.removeEventListener("open", joinAllRooms);
 		};
 	}, [rooms, websocket.current]);
-	
-	useEffect(() => {
-		if (rooms.length > 0) {
-			rooms.forEach(room => {
-				getUnreadMessages(room)
-			})
-		}
-	},[rooms]) 
+	//creo que esto no hace falta
+	// useEffect(() => {
+	// 	if (rooms.length > 0) {
+	// 		rooms.forEach(room => {
+	// 			getUnreadMessages(room)
+	// 		})
+	// 	}
+	// },[rooms]) 
 
 	return { addChat, rooms}
 }
@@ -207,24 +167,6 @@ export function ChatProvider({ children, activeChat, user } : {children : React.
 	const sendMessage = useSendMessage(user, websocket);
 	const joinRoom = useJoinRoom(websocket, messagesByRoom);
 	const {rooms, addChat} = useHandleRooms(user, websocket, messages)
-
-	useEffect (() => {
-		if (!messages || !messages.type || messages.type != 'message' || !messages.room_id)
-			return;
-		//switch
-		if (messages.room_id != activeChat){
-			getUnreadMessages(messages.room_id)//esto en notificationprovider
-		}
-		if (messages.room_id == activeChat) {
-			updateChat(activeChat)//esto en notificationprovider
-		}
-	}, [messages])
-	
-	useEffect(() => {
-		if (activeChat){
-			updateChat(activeChat)//noti provider
-		}
-	},[activeChat])
 
 	return (
 		<chatContext.Provider value={ { messagesByRoom, joinRoom, sendMessage, rooms, addChat, user} }>
@@ -239,4 +181,3 @@ export const useChat = () => {
 		throw new Error("useChat debe usarse dentro de un ChatProvider");
     return context;
 };
-

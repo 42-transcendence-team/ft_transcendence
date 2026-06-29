@@ -121,12 +121,24 @@ func (h *ChatHandler) CreateRoom(c *gin.Context) {
 		return
 	}
 
-	h.hub.CreateRoom(room.ID, room.Name, room.Private)
-	m, _:= json.Marshal(dto.NotificationMessage{
-		Type : "notification",
-		Content : strconv.FormatUint(uint64(room.ID), 10),
+	payload, perr := json.Marshal(dto.RoomPayload{
+		RoomID: room.ID,
 	})
-	h.hub.SendNotificationToUsers(req.Users, m)
+	if (perr != nil){
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	message, merr := json.Marshal(dto.NotificationMessage{
+		Type: "CREATE_ROOM",
+		Payload: payload,
+	})
+	if (merr != nil){
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	h.hub.SendNotificationToUsers(req.Users, message)
 	c.JSON(http.StatusOK, room)
 }
 

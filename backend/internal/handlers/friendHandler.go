@@ -49,6 +49,17 @@ func (h *FriendHandler) ListFriends(c *gin.Context) {
 */
 
 //func (h *Hub) sendNotification(userID uint, message[] byte) {
+/*
+	type FriendRequestPayload struct {
+	SenderID   string `json:"actor_id"`
+	ReceiverID string `json:"request_id"`
+	}
+
+	type NotificationMessage struct {
+	Type    string          `json:"type"`
+	Payload json.RawMessage `json:"payload"`
+	}
+*/
 func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 
 	var req dto.SendFriendRequest
@@ -68,18 +79,21 @@ func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	/*
-	type Notification_message struct {
-		Type string `json:"type"`;
-		Content string `json:"content"`;
+	payload, err:= json.Marshal(dto.FriendRequestPayload{
+		SenderID: userID,
+		ReceiverID: req.ReceiverID,
+	})
+	if (err != nil){
+		c.Error(err)
+		c.Abort()
+		return
 	}
-	*/
 	message, _ :=json.Marshal(dto.NotificationMessage{
-		Type : "notification",
-		Content : "new friend request",
+		Type : "FRIEND_REQUEST",
+		Payload: payload,
 	})
 	
-	h.hub.SendNotificationToUser(req.ReceiverID, []byte(message))//TODO: enviar noti con datos de la peticion de amistad
+	h.hub.SendNotificationToUser(req.ReceiverID, []byte(message))
 	
 	c.JSON(201, gin.H{
 		"message": "friend request sent successfully",
@@ -145,12 +159,25 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
-	m, _ :=json.Marshal(dto.NotificationMessage{
-		Type : "notification",
-		Content : "friend request accepted",
+	payload, perr := json.Marshal(dto.FriendRequestAcceptedPayload{
+		SenderID: userID,
+		ReceiverID: reqID,
 	})
-	h.hub.SendNotificationToUser(req.SenderID, []byte(m))//TODO: enviar datos
+	if (perr != nil){
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	message, merr :=json.Marshal(dto.NotificationMessage{
+		Type : "FRIEND_REQUEST_ACCEPTED",
+		Payload: payload,
+	})
+	if (merr != nil){
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	h.hub.SendNotificationToUser(req.SenderID, []byte(message))
 	c.JSON(200, gin.H{
 		"request-accepted": gin.H{
 			"id":       req.ID,

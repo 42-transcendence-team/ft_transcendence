@@ -29,7 +29,7 @@ function useHandleWebsocket(user:any) {
 
             ws.onmessage = (event) => {
 				const msg = JSON.parse(event.data);
-				console.log(msg)
+				//console.log(msg)
 				setMessages(msg)
 			}
 

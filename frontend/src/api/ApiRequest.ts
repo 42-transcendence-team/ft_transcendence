@@ -19,12 +19,17 @@ export async function apiRequest(props: ApiRequestProps): Promise<any> {
     const res = await fetch(`${API_BASE_URL}${endpoint}`, config);
 	
     if (endpoint == "auth/me") {
-        const data = await res.json();
-        if (data.authenticated) {
-            return data;
+		let data
+		try {
+			data = await res.json();
+		}catch {
+			data = null
+		}
+		if (data && data.authenticated) {
+         	return data;
         }
-        const errorData = data.catch(() => null)
-        throw buildApiError(res, errorData);
+        //const errorData = data.catch(() => null)
+        throw buildApiError(res, data);
     }
 
     if (!res.ok) {
