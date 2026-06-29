@@ -104,7 +104,7 @@ func (r *UserRepository) buildAdvancedSearchQuery(userID uint, filter dto.UserFi
 			case "blocked_by_me":
 				conditions = append(conditions, `
 				EXISTS (
-					SELECT 1 FROM block	b
+					SELECT 1 FROM blocks	b
 					WHERE
 						b.blocker_id = ?
 						AND b.blocked_id = users.id
