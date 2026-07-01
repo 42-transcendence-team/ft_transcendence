@@ -1,10 +1,11 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { NavLink, useNavigate } from "react-router-dom"
 import { register42User } from "../api/Register"
 import { FormField } from "../components/FormField"
-import { calculateAge } from "../components/RegisterForm"
+import { calculateAge } from "../utils/calculateAge"
 import { get42UserInfo } from "../api/Register"
 import { useEffect } from "react"
+import logo from "../assets/icons/24_logo.png"
 
 type FormFields = {
     login: string
@@ -111,7 +112,7 @@ export default function Register42() {
         return Object.values(newErrors).every((err) => err === "")
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault()
         setServerMessage("")
 
@@ -183,53 +184,63 @@ export default function Register42() {
     ]
 
     return (
-        <form className="auth-form" onSubmit={handleSubmit}>
-            <h1>Register 42</h1>
-            
-            <h3 className="auth-form__section-title">ACCOUNT DATA</h3>
-            <div className="auth-form__group">
-                {accountFields.map((field) => (
-                    <FormField
-                        key={field.id}
-                        id={field.id}
-                        name={field.id}
-                        label={field.label}
-                        type={field.type}
-                        value={formData[field.id as keyof FormFields] as string}
-                        onChange={(value) => {
-							setFormData(prev => ({ ...prev, [field.id]: value }))
-						}}
-                        error={errors[field.id as keyof FormErrors]}
-                        placeholder={field.placeholder}
-                    />
-                ))}
+        <div className="auth-card">
+            <div className="auth-card__header">
+				<NavLink to="/login" className="auth-card__homeLink">
+					<img className="auth-card__logo" src={logo} alt="Twenty Four logo" />
+					<h1 className="auth-card__title">Twenty Four</h1>
+				</NavLink>
             </div>
+            <form className="auth-form" onSubmit={handleSubmit}>
+                <h3 className="auth-form__section-title">ACCOUNT DATA</h3>
+                <div className="auth-form__group">
+                    {accountFields.map((field) => (
+                        <FormField
+                            key={field.id}
+                            id={field.id}
+                            name={field.id}
+                            label={field.label}
+                            type={field.type}
+                            className="form-field"
+                            value={formData[field.id as keyof FormFields] as string}
+                            onChange={(value) => {
+                                setFormData(prev => ({ ...prev, [field.id]: value }))
+                            }}
+                            error={errors[field.id as keyof FormErrors]}
+                            placeholder={field.placeholder}
+                        />
+                    ))}
+                </div>
 
-            <h3 className="auth-form__section-title">PERSONAL DATA</h3>
-            <div className="auth-form__group">
-                {personalFields.map((field) => (
-                    <FormField
-                        key={field.id}
-                        id={field.id}
-                        name={field.id}
-                        label={field.label}
-                        type={field.type}
-                        value={formData[field.id as keyof FormFields] as string}
-                        onChange={(value) => {
-							setFormData(prev => ({ ...prev, [field.id]: value }))
-						}}
-                        error={errors[field.id as keyof FormErrors]}
-                        placeholder={field.placeholder}
-                    />
-                ))}
-            </div>
+                <h3 className="auth-form__section-title">PERSONAL DATA</h3>
+                <div className="auth-form__group auth-form__group--personal">
+                    {personalFields.map((field) => (
+                        <FormField
+                            key={field.id}
+                            id={field.id}
+                            name={field.id}
+                            label={field.label}
+                            type={field.type}
+                            className="form-field"
+                            value={formData[field.id as keyof FormFields] as string}
+                            onChange={(value) => {
+                                setFormData(prev => ({ ...prev, [field.id]: value }))
+                            }}
+                            error={errors[field.id as keyof FormErrors]}
+                            placeholder={field.placeholder}
+                        />
+                    ))}
+                </div>
 
-			<p>Al countinuar, aceptas los Términos y Condiciones y la Política de Privacidad.</p>
-            <button className="auth-form__submit" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Registering..." : "Create Now"}
-            </button>
+                <p className="auth-form__info">
+                    Al countinuar, aceptas los <NavLink to="/terms">Terminos y Condiciones</NavLink> y la <NavLink to="/privacy-policy">Política de Privacidad</NavLink>.
+                </p>
+                <button className="auth-form__submit" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Registering..." : "Create Now"}
+                </button>
 
-            {serverMessage && <p className="auth-form__server-message">{serverMessage}</p>}
-        </form>
+                {serverMessage && <p className="auth-form__server-message">{serverMessage}</p>}
+            </form>
+        </div>
     )
 }

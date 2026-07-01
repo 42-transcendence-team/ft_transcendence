@@ -215,55 +215,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 }
 
-/*End of logout*/
-
-/*Whoami*/
-
-// <<<<<<< HEAD
-// =======
-// 	userIDValue, exists := c.Get("userID")
-// 	if !exists {
-// 		c.Error(appErr.NewUnauthorized("Unauthorized user"))
-// 		c.Abort()
-// 		return
-// 	}
-
-// 	userID, ok := userIDValue.(uint)
-// 	if !ok {
-// 		c.Error(appErr.NewInternal(errors.New("invalid userID type in context")))
-// 		c.Abort()
-// 		return
-// 	}
-
-// 	user, err := h.AuthService.GetUserById(userID)
-// 	if err != nil {
-// 		c.Error(err)
-// 		c.Abort()
-// 		return
-// 	}
-// 	ctx := c.Request.Context()
-// 	isOnline, _ := h.Redis.SIsMember(ctx, "online_users", user.ID).Result()
-
-// 	visitKey := fmt.Sprintf("visits:%d", user.ID)
-// 	visits, _ := h.Redis.Get(ctx, visitKey).Int() //al hacerlo asi no incrementamos el num de visitas
-// 	// TODO: hay q ver como se mandan los msg al front y que necesita saber
-// 	c.JSON(200, gin.H{
-// 		"authenticated": true,
-// 		"user": gin.H{
-// 			"id":       user.ID,
-// 			"login":    user.Login,
-// 			"email":    user.Email,
-// 			"name":     user.Name,
-// 			"surname":  user.Surname,
-// 			"isOnline": isOnline, // redis
-// 			"visits":   visits,   // redis
-// 		},
-// 	})
-// }
-// >>>>>>> main
-
-/*End of whoami*/
-
 func (h *AuthHandler) setCookie(c *gin.Context, strToken string, exp time.Time) {
 
 	var secure bool
@@ -332,6 +283,23 @@ func (h *AuthHandler) Login42(c *gin.Context) {
 }
 
 func (h *AuthHandler) Login42Callback(c *gin.Context) {
+	oauthError := c.Query("error")
+	if oauthError != "" {
+		description := c.Query("error_description")
+
+		log.Printf(
+			"42 OAuth rejected: %s (%s)",
+			oauthError,
+			description,
+		)
+
+		c.Redirect(
+			http.StatusFound,
+			"https://localhost/login?oauth_error=access_denied",
+		)
+		return
+	}
+
 	code := c.Query("code")
 	if code == "" {
 		c.Error(appErr.NewBadRequest("code query parameter is required"))
@@ -502,6 +470,8 @@ func (h *AuthHandler) Register42(c *gin.Context) {
 		c.Abort()
 		return
 	}
+
+	log.Printf("Datos de usuario registrado: %v", user)
 
 	// TODO - Crear token de sesion y redirigir al perfil/home
 	// h.Redis.Del(c, "42_register:"+token)

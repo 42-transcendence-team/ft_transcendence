@@ -1,16 +1,46 @@
+import { Modal } from "@components/Modal"
 import logo from "../assets/icons/24_logo.png"
 import { LoginForm } from "../components/LoginForm"
 import "../styles/pages/_authPages.scss"
-import { NavLink } from "react-router-dom"
+import { NavLink, useSearchParams } from "react-router-dom"
+import { useEffect, useState } from "react";
+
 
 export const Login = () => {
-	// TODO - Revisar si se puede sacar del form el modal de 2FA y simplemente revisar si existe la cookie de tempToken para verificarlo
+	const [searchParams, setSearchParams] = useSearchParams();
+	const [oauthError, setOauthError] = useState<string | null>(null);
+
+	useEffect(() => {
+		const error = searchParams.get("oauth_error");
+
+		if (error) {
+			setOauthError(error);
+			setSearchParams({});
+		}
+	}, [searchParams, setSearchParams]);
+
 	const handle42Login = () => {
 		window.location.href = "https://localhost/api/v1/auth/42/login";
 	};
 
+	const handleModalClose = () => {
+		setOauthError(null);
+	};
+
 	return (
-		<section className="auth-page">
+		<>
+			{oauthError && (
+				<Modal
+					open={true}
+					title="Login Failed"
+					onClose={handleModalClose}
+				>
+					<p>
+						Login with 42 failed: {oauthError}
+					</p>
+				</Modal>
+			)}
+
 			<div className="auth-card">
 				<div className="auth-card__header">
 					<NavLink to="/login" className="auth-card__homeLink">
@@ -24,10 +54,12 @@ export const Login = () => {
 				</p>
 
 				<LoginForm />
-				<button className="auth-card__button" onClick={handle42Login}>
-					Login with 42
-				</button>
+				<h3 className="auth-form__divider">OR</h3>
+					<button className="auth-card__button" onClick={handle42Login}>
+						Login with 42
+					</button>
+
 			</div>
-		</section>
-	)
-}
+		</>
+	);
+};

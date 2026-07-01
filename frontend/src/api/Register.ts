@@ -10,13 +10,23 @@ export type RegisterPayload = {
 	birthday: string
 }
 
+export type RegisterPay = {
+	login: string
+	email: string
+	password: string
+	confirmPassword: string
+	name: string
+	surname: string
+	birthday: string
+}
+
 export type RegisterResponse = {
 	message?: string
 	error?: string
 	[key: string]: unknown
 }
 
-export async function registerUser(payload: RegisterPayload): Promise<RegisterResponse> {
+export async function registerUser(payload: RegisterPay): Promise<RegisterResponse> {
 	const data = await apiRequest({
 		endpoint: "auth/register",
 		method: "POST",

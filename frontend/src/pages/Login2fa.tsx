@@ -2,7 +2,7 @@ import { Footer2FA, OtpInput } from "@components/TwoFactorUI"
 import "../styles/pages/_authPages.scss"
 import { useState } from "react"
 import { Modal } from "@components/Modal"
-import { Login2FA42, getAuthenticatedUser } from "api/Login"
+import { Login2FA, getAuthenticatedUser } from "api/Login"
 import { useAuth as useUserAuth } from "context/AuthContext"
 import { useAuth as useRouterAuth } from "@components/auth-router/AuthContext"
 
@@ -19,7 +19,7 @@ export const Login2fa = () => {
 		if (!isComplete) return;
 
 		try {
-			await Login2FA42(otpCode.join(""));
+			await Login2FA(otpCode.join(""));
 			await refreshAuth();
 			await refreshUser();
 			const data = await getAuthenticatedUser();

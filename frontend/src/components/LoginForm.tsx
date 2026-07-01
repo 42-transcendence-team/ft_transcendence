@@ -32,7 +32,6 @@ export const LoginForm = () => {
 	const [serverMessage, setServerMessage] = useState("")
 	const { refreshUser } = useUserAuth();
 	const [show2FA, setShow2FA] = useState(false);
-	const [tempToken, setTempToken] = useState<string | null>(null);
 	const [otpCode, setOtpCode] = useState<string[]>(Array(6).fill(""));
 	const isComplete = otpCode.every((d) => d !== "" && /\d/.test(d));
 
@@ -72,7 +71,6 @@ export const LoginForm = () => {
 				return;
 			}
 			if (data.requires2fa) {
-				setTempToken(data.user?.tempToken || null);
 				setShow2FA(true);
 				setIsSubmitting(false);
 				return;
@@ -116,10 +114,10 @@ export const LoginForm = () => {
 	};
 
 	const handleVerify2FA = async () => {
-		if (!isComplete || !tempToken) return;
+		if (!isComplete) return;
 
 		try {
-			await Login2FA(otpCode.join(""), tempToken);
+			await Login2FA(otpCode.join(""));
 			await refreshAuth();
 			await refreshUser();
 			const data = await getAuthenticatedUser();
@@ -127,7 +125,7 @@ export const LoginForm = () => {
 
 			const login = data.user?.login;
 			setShow2FA(false);
-			if (login && login !== tempToken) {
+			if (login) {
             	window.location.href = (`/app/profile/${login}`);
 				return;
 			}
@@ -176,6 +174,9 @@ export const LoginForm = () => {
 						/>
 					))}
 				</div>
+				<p className="auth-form__switch">
+					Don&apos;t have an account yet? <NavLink to="/register">Register</NavLink>
+				</p>
 				
 				<button className="auth-form__submit" type="submit" disabled={isSubmitting}>
 					{isSubmitting ? "Logging in..." : "Login"}
@@ -183,9 +184,6 @@ export const LoginForm = () => {
 				
 				{serverMessage && <p className="auth-form__server-message">{serverMessage}</p>}
 				
-				<p className="auth-form__switch">
-					Don&apos;t have an account yet? <NavLink to="/register">Register</NavLink>
-				</p>
 			</form>
 				
 			<Modal

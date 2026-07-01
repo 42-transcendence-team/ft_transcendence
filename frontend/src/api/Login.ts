@@ -6,7 +6,6 @@ export type LoginResponse = {
 		id: number;
 		login: string;
 		email: string;
-		tempToken: string;
 	};
 	message?: string;
 	errors?: Record<string, string>;
@@ -49,13 +48,12 @@ export async function GetMyProfile() {
 // }
 
 
-export async function Login2FA(code: string, tempToken: string) {
+export async function Login2FA(code: string) {
 	const data = await apiRequest({
 		endpoint: "2fa/login",
 		method: "POST",
 		body: {
 			code: code,
-			tempToken: tempToken // TODO - Revisar para que es esto en back
 		},
 	});
 
@@ -67,17 +65,5 @@ export async function getAuthenticatedUser() {
 		endpoint: "auth/me",
 	});
 	
-	return data;
-}
-
-export async function Login2FA42(code: string) {
-	const data = await apiRequest({	
-		endpoint: "2fa/login",
-		method: "POST",
-		body: {
-			code: code,
-		},
-	});
-
 	return data;
 }

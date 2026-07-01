@@ -38,7 +38,7 @@ func (srv *HTTPServer) Router() {
 	{
 		getMe.GET("/me", getMeHandler.Whoami)
 	}
-	
+
 	// rutas publicas para usuarios no autenticados
 	publicForNoAuth := api.Group("/")
 	publicForNoAuth.Use(middlewares.RejectIfAuthMiddleware(srv.Conf))
@@ -46,10 +46,9 @@ func (srv *HTTPServer) Router() {
 		routes.AuthRoutes(publicForNoAuth, authHandler)
 	}
 
-	
 	// Esto en realidad no se como poder hacerlo bonito
 	login := api.Group("/2fa")
-	login.Use(middlewares.TwoFAMiddleware(srv.Conf))
+	login.Use(middlewares.TwoFAMiddleware(srv.Conf, srv.Redis))
 	{
 		login.POST("/login", twoFAHandler.Login2FA)
 	}
