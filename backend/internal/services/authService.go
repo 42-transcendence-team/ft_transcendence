@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -141,14 +140,6 @@ func (s *AuthService) GetUserById(userID uint) (*models.User, error) {
 	return user, err
 }
 
-func (s *UserService) GetUserByLogin(login string) (*models.User, error) {
-	user, err := s.UserRepo.FindByLoginOrEmail(login)
-	if err != nil {
-		return nil, appErr.NewUnauthorized("user_not_found")
-	}
-	return user, nil
-}
-
 func (s *AuthService) Build42AuthURL() string {
 	return fmt.Sprintf(
 		"https://api.intra.42.fr/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code",
@@ -259,18 +250,34 @@ func (s *AuthService) PreRegister42User(user42 *dto.User42) ([]byte, error) {
 	return jsonUser, nil
 }
 
-func (s *AuthService) Register42User(user42 *dto.Register42User, id42 *int) (*models.User, error) {
-	// TODO - Revisar como se estan guardando los datos (Ahora no guarda contraseña ni cumpleaños)
-	user := models.User{
-		Login:   user42.Login,
-		Email:   &user42.Email,
-		Name:    user42.Name,
-		Surname: user42.Surname,
-		OAuth:   "42",
-		OAuthID: id42,
+func (s *AuthService) Register42User(user42 *dto.Register42User, id42 *int, birthday time.Time) (*models.User, error) {
+	err := IsValidAge(birthday)
+	if err != nil {
+		return nil, err
 	}
-	log.Printf("Datos de usuario a registrar: %v", user)
-	err := s.userRepo.Create(&user)
+	if !utils.IsStrongPassword(user42.Password) {
+		return nil, appErr.NewValidation(map[string]string{
+			"password": "weak_password",
+		})
+	}
+
+	user42.Password, err = utils.HashPassword(user42.Password)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	user := models.User{
+		Login:    user42.Login,
+		Email:    &user42.Email,
+		Name:     user42.Name,
+		Surname:  user42.Surname,
+		Password: user42.Password,
+		Birthday: birthday,
+		OAuth:    "42",
+		OAuthID:  id42,
+	}
+
+	err = s.userRepo.Create(&user)
 	if err != nil {
 		if s.userRepo.IsDuplicatedKey(err) {
 			return nil, appErr.NewConflict("user_already_exists")

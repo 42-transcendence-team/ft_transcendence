@@ -1,3 +1,5 @@
+import "@styles/_settingsSection.scss";
+
 import { useState } from "react"
 import { FormField } from "./FormField"
 import { Login } from "api/Login"
@@ -76,6 +78,7 @@ export const LoginForm = ({ onSuccess, onRequires2FA }: any) => {
 				onChange={setIdentifier}
 				error={errors.identifier}
 				className="form-field"
+				placeholder="Username or Email"
 			/>
 
 			<FormField
@@ -86,6 +89,7 @@ export const LoginForm = ({ onSuccess, onRequires2FA }: any) => {
 				onChange={setPassword}
 				error={errors.password}
 				className="form-field"
+				placeholder="Password"
 			/>
 
 			<button type="submit" disabled={isSubmitting} className="auth-form__submit">

@@ -151,7 +151,7 @@ export const RegisterForm = () => {
 			await registerUser(payload)
 
 			setServerMessage("User created successfully.")
-			navigate("/login")
+			navigate("/app")
 			return
 		} catch (error) {
 			console.error("Register error:", error)

@@ -5,6 +5,7 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
+	"backend/internal/utils"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -81,6 +82,28 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.Abort()
 		return
 	}
+
+	strToken, expTime, err := utils.CreateJwtToken(&user, h.cfg)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	timeExp := time.Until(expTime)
+	if timeExp < 0 {
+		log.Printf("authHandler: Expired session %v", err)
+		c.AbortWithStatusJSON(400, gin.H{"Error": "Expired session"})
+		return
+	}
+	sessionKey := fmt.Sprintf("session:%d", user.ID)
+	err = h.Redis.Set(c, sessionKey, strToken, timeExp).Err()
+	if err != nil {
+		log.Printf("Error: registration redis session")
+	}
+	h.Redis.SAdd(c, "online_users", user.ID)
+
+	h.setCookie(c, strToken, expTime)
 
 	// TODO: Hay que ver como damos la respuesta al front
 	c.JSON(201, gin.H{
@@ -438,14 +461,21 @@ func (h *AuthHandler) Register42(c *gin.Context) {
 	}
 
 	var regUser dto.Register42User
-
 	err = ValidationBindRequest(c, &regUser)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
-	log.Printf("Datos de Frontend: %v", regUser)
+
+	birthday, err := time.Parse("2006-01-02", regUser.Birthday)
+	if err != nil {
+		c.Error(appErr.NewValidation(map[string]string{
+			"birthday": "invalid_format",
+		}))
+		c.Abort()
+		return
+	}
 
 	data, err := h.Redis.Get(c, "42_register:"+token).Result()
 	if err != nil {
@@ -455,7 +485,6 @@ func (h *AuthHandler) Register42(c *gin.Context) {
 	}
 
 	var redisUser dto.User42
-
 	err = json.Unmarshal([]byte(data), &redisUser)
 	if err != nil {
 		c.Error(appErr.NewInternal(err))
@@ -463,28 +492,37 @@ func (h *AuthHandler) Register42(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Datos de Redis: %v", redisUser)
-
-	user, err := h.AuthService.Register42User(&regUser, &redisUser.ID42)
+	user, err := h.AuthService.Register42User(&regUser, &redisUser.ID42, birthday)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	log.Printf("Datos de usuario registrado: %v", user)
-
 	// TODO - Crear token de sesion y redirigir al perfil/home
-	// h.Redis.Del(c, "42_register:"+token)
+	h.Redis.Del(c, "42_register:"+token)
+	c.SetCookie("42_token", "", -1, "/", "localhost", false, true)
 
-	// strToken, expTime, err := h.AuthService.GenerateJWT(user)
-	// if err != nil {
-	// 	c.Error(err)
-	// 	c.Abort()
-	// 	return
-	// }
+	strToken, expTime, err := utils.CreateJwtToken(user, h.cfg)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
 
-	// h.setCookie(c, strToken, expTime)
+	timeExp := time.Until(expTime)
+	if timeExp < 0 {
+		log.Printf("authHandler: Expired session %v", err)
+		c.AbortWithStatusJSON(400, gin.H{"Error": "Expired session"})
+		return
+	}
+	sessionKey := fmt.Sprintf("session:%d", user.ID)
+	err = h.Redis.Set(c, sessionKey, strToken, timeExp).Err()
+	if err != nil {
+		log.Printf("Error: registration redis session")
+	}
+	h.Redis.SAdd(c, "online_users", user.ID)
 
+	h.setCookie(c, strToken, expTime)
 	c.JSON(http.StatusOK, gin.H{"message": "42 registration successful", "user": user})
 }

@@ -37,12 +37,11 @@ export const Login = () => {
 		setOauthError(null);
 	};
 
-		const navigate = useNavigate();
+	const navigate = useNavigate();
 	const { refreshAuth } = useRouterAuth();
 	const { refreshUser } = useUserAuth();
 
 	const [show2FA, setShow2FA] = useState(false);
-	const [pendingLogin, setPendingLogin] = useState<any>(null);
 	const [otpCode, setOtpCode] = useState<string[]>(Array(6).fill(""));
 
 	const handleSuccess = async (data: any) => {
@@ -56,8 +55,7 @@ export const Login = () => {
 		}
 	};
 
-	const handleRequires2FA = (data: any) => {
-		setPendingLogin(data);
+	const handleRequires2FA = () => {
 		setShow2FA(true);
 	};
 

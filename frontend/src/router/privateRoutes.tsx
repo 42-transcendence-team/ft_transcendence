@@ -25,6 +25,6 @@ export const PrivateRoutes = {
 		{ index: true, element: <HomePage /> },
 		{ path: "profile/:username", element: <Profile /> },
 		{ path: "settings", element: <Settings />, loader: settingsLoader },
-    { path: "friends/:username", element: <Friends /> },
+    	{ path: "friends/:username", element: <Friends /> },
 	],
 };
