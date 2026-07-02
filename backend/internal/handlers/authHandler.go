@@ -384,10 +384,11 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 		h.SetTempToken(c, final.TempToken, final.ExpTime)
 		c.Redirect(
 			http.StatusFound,
-			"https://localhost/2fa",
+			"https://localhost/login?requires_2fa=true&temp_token="+final.TempToken,
 		)
 		return
 	}
+
 	h.setCookie(c, final.Token, final.ExpTime)
 	h.ClearTempToken(c)
 	sessionKey := fmt.Sprintf("session:%d", user.ID)
