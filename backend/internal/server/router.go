@@ -39,6 +39,7 @@ func (srv *HTTPServer) Router() {
 	chatHandler := handlers.NewChatHandler(hub, chatService)
 	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub)
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
+	notificationsHandler := handlers.NewNotificationsHandler(friendService, websocketService, chatService)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -74,6 +75,7 @@ func (srv *HTTPServer) Router() {
 		routes.WebsocketRoutes(protected, websocketHandler)
 		routes.ChatRoutes(protected, chatHandler)
 		routes.UserRoutes(protected, userHandler)
+		routes.NotificationRoutes(protected, notificationsHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 
