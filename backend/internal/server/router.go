@@ -20,12 +20,14 @@ func (srv *HTTPServer) Router() {
 	go hub.Run()
 
 	userRepo := repository.NewUserRepository(srv.Db)
-	websocket := repository.NewWebsocketRepository(srv.Db)
+	websocketRepo := repository.NewWebsocketRepository(srv.Db)
+	chatRepo := repository.NewChatRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
-	websocketService := services.NewWebsocketService(websocket, userRepo)
+	websocketService := services.NewWebsocketService(websocketRepo, userRepo)
+	chatService := services.NewChatService(chatRepo, userRepo)
 	twoFAService := services.New2FAService(userRepo, authService, srv.Redis)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 	blockService := services.NewBlockUserService(friendRepo, userRepo)
@@ -34,6 +36,7 @@ func (srv *HTTPServer) Router() {
 	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService)
+	chatHandler := handlers.NewChatHandler(hub, chatService)
 	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub)
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
 
@@ -64,12 +67,12 @@ func (srv *HTTPServer) Router() {
 	protected := api.Group("/")
 	protected.Use(middlewares.AuthMiddleware(srv.Conf, srv.Redis))
 	{
-
-		//routes.TestRoute(protected)
+		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
 		routes.FriendsRoutes(protected, friendHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
-		routes.WebsocketRoutes(protected,websocketHandler)
+		routes.WebsocketRoutes(protected, websocketHandler)
+		routes.ChatRoutes(protected, chatHandler)
 		routes.UserRoutes(protected, userHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}

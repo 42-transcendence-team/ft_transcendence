@@ -13,6 +13,7 @@ import (
 	ws "backend/internal/websocket"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"backend/internal/models"
 )
 
 type WebsocketHandler struct {
@@ -46,6 +47,7 @@ func (h *WebsocketHandler) HandleWebSocket(ctx *gin.Context) {
 	}
 
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	log.Printf("err %v", err)
 	if err != nil {
 		ctx.Error(appErr.NewInternal(errors.New("failed to upgrade to websocket")))
 		ctx.Abort()
@@ -119,6 +121,24 @@ func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
 		return
 	}
 
+	payload, perr := json.Marshal(dto.RoomPayload{
+		RoomID: room.ID,
+	})
+	if (perr != nil){
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	message, merr := json.Marshal(dto.NotificationMessage{
+		Type: "CREATE_ROOM",
+		Payload: payload,
+	})
+	if (merr != nil){
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	h.hub.SendMessagesToUsers(req.Users, message)
 	c.JSON(http.StatusOK, room)
 }
 
@@ -153,6 +173,8 @@ func (h *WebsocketHandler) HandleMessage(c ws.ClientConn, msg *dto.IncomingMessa
 			h.JoinRoom(c, msg)
 		case "leave_room":
 			h.LeaveRoom(c, msg)
+		case "message":
+			h.SendMessage(c, msg)
 		default:
 			log.Printf("Unknown message type: %s", msg.Type)
 	}
@@ -162,7 +184,7 @@ func (h *WebsocketHandler) JoinRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
 	h.hub.Mu.RLock()
 	room, ok := h.hub.Rooms[msg.RoomID]
 	h.hub.Mu.RUnlock()
-
+	
 	if !ok {
 		dbRoom, err := h.websocketService.GetRoomByID(msg.RoomID)
 		if err != nil {
@@ -202,7 +224,6 @@ func (h *WebsocketHandler) JoinRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
 		dtoMessages[index] = messageDTO
 		index++
 	}
-	
 	resp := dto.Messages{
 		RoomID: room.ID,
 		Type: "join",
@@ -221,4 +242,43 @@ func (h *WebsocketHandler) LeaveRoom(c ws.ClientConn, msg *dto.IncomingMessage) 
 		return
 	}
 	c.LeaveRoom(room)
+}
+
+func (h *WebsocketHandler) SendMessage(c ws.ClientConn, msg *dto.IncomingMessage) {
+	timestamp := time.Now().In(utils.Madrid)
+
+	tmp_msg :=  &models.ChatMessage{
+		RoomID:    msg.RoomID,
+		UserID:    c.GetUserID(),
+		Username:  c.GetUsername(),
+		Content:   msg.Message,
+		Timestamp: &timestamp,
+	}
+	errDB := h.websocketService.SaveMessage(tmp_msg)
+	if errDB != nil {
+		newErr := appErr.NewInternal(errors.New("failed to create message"))
+		data, _ := json.Marshal(newErr)
+		c.Send(data)
+		return
+	}
+	message := dto.Message{
+		MessageID: tmp_msg.ID,
+		Type:      "message",
+		RoomID:    msg.RoomID,
+		UserID:    c.GetUserID(),
+		Username:  c.GetUsername(),
+		Content:   msg.Message,
+		Timestamp: timestamp.Format("2006-01-02 15:04:05"),
+	}
+
+	log.Printf("mensage despues de meterlo en db %v", message)
+	data, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("Error marshaling message: %v", err)
+		return
+	}
+
+	if err := c.SendMessage(msg.RoomID, data); err != nil {
+		log.Printf("Error sending message to room %d: %v", msg.RoomID, err)
+	}
 }

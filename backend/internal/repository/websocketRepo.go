@@ -51,3 +51,7 @@ func (r *WebsocketRepository) GetRoomByID(roomID uint) (*models.ChatRoom, error)
 	err := r.db.First(&room, roomID).Error
 	return &room, err
 }
+
+func (r *ChatRepository) CreateChatMessage(message *models.ChatMessage) error {
+	return r.db.Create(message).Error
+}
