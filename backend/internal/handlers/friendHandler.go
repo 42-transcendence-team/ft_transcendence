@@ -5,19 +5,21 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"strconv"
-
+	ws "backend/internal/websocket"
 	"github.com/gin-gonic/gin"
 )
 
 type FriendHandler struct {
 	FriendRequestService *services.FriendRequestService
 	BlockUserService     *services.BlockUserService
+	hub				  *ws.Hub
 }
 
-func NewFriendHandler(friendService *services.FriendRequestService, blockService *services.BlockUserService) *FriendHandler {
+func NewFriendHandler(friendService *services.FriendRequestService, blockService *services.BlockUserService, hub *ws.Hub) *FriendHandler {
 	return &FriendHandler{
 		FriendRequestService: friendService,
 		BlockUserService:     blockService,
+		hub: hub,
 	}
 }
 
@@ -38,12 +40,6 @@ func (h *FriendHandler) ListFriends(c *gin.Context) {
 	})
 }
 
-/*
-{
-	"receiver_id": 1
-}
-*/
-
 func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 
 	var req dto.SendFriendRequest
@@ -63,7 +59,7 @@ func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
+	
 	c.JSON(201, gin.H{
 		"message": "friend request sent successfully",
 		"data": gin.H{
@@ -128,7 +124,7 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
+	
 	c.JSON(200, gin.H{
 		"request-accepted": gin.H{
 			"id":       req.ID,

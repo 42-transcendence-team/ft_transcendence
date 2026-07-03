@@ -188,3 +188,20 @@ func (r *UserRepository) FindById(userID uint) (*models.User, error) {
 
 	return &user, err
 }
+
+// FUNCIONES PARA CHATSERVICE
+
+func (r *UserRepository) GetUserID(userID uint) (*dto.ChatUserInfo, error) {
+	var user dto.ChatUserInfo
+
+	err := r.db.Model(&models.User{}).
+		Select("id", "login").
+		Where("id = ?", userID).
+		First(&user).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
