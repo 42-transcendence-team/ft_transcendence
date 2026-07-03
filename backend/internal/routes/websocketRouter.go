@@ -6,7 +6,7 @@ import (
 )
 
 func WebsocketRoutes(api *gin.RouterGroup, websocketHandler *handlers.WebsocketHandler) {
-	websocketGroup := api.Group("/chat")
+	websocketGroup := api.Group("/websocket")
 	{
 		websocketGroup.GET("/ws", websocketHandler.HandleWebSocket)
 		websocketGroup.GET("/me", websocketHandler.GetMe)

@@ -7,7 +7,7 @@ interface WebSocketContextType {
 
 const WebSocketContext =  createContext<WebSocketContextType | undefined>(undefined)
 
-const webSocketURL = "wss://localhost/api/v1/chat/ws"
+const webSocketURL = "wss://localhost/api/v1/websocket/ws"
 
 
 function useHandleWebsocket(user:any) {
