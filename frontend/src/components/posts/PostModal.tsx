@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Modal } from "@components/Modal";
 import { PostModalRenderer } from "@components/posts/PostModalRenderer";
@@ -35,6 +35,7 @@ type PostModalProps = {
 	postId: string | number | null;
 	onClose: () => void;
 	onDeleted?: () => void;
+	onNotFound?: () => void;
 };
 
 type PendingDeletion =
@@ -63,6 +64,7 @@ export const PostModal = ({
 	postId,
 	onClose,
 	onDeleted,
+	onNotFound,
 }: PostModalProps) => {
 	const normalizedPostId = normalizePostId(postId);
 
@@ -85,6 +87,20 @@ export const PostModal = ({
 
 	// Guarda si se quiere borrar el post o un comentario antes de pedir confirmación.
 	const [pendingDeletion, setPendingDeletion] = useState<PendingDeletion>(null);
+
+	const reportPostNotFound = useCallback(() => {
+		setPost(null);
+		setComments([]);
+
+		// En una ruta directa, el padre sustituye la vista completa por el 404.
+		// En otros usos de PostModal, se conserva el mensaje interno de la modal.
+		if (onNotFound) {
+			onNotFound();
+			return;
+		}
+
+		setNotFound(true);
+	}, [onNotFound]);
 
 	useEffect(() => {
 		if (!open) {
@@ -123,7 +139,7 @@ export const PostModal = ({
 
 			if (!isValidPostId(normalizedPostId)) {
 				resetState();
-				setLoadError("Invalid post ID.");
+				reportPostNotFound();
 				return;
 			}
 
@@ -155,10 +171,12 @@ export const PostModal = ({
 				setPost(null);
 				setComments([]);
 
-				if (getApiErrorStatus(error) === 404) {
-					setNotFound(true);
-					return;
-				}
+			const status = getApiErrorStatus(error);
+
+			if (status === 400 || status === 404) {
+				reportPostNotFound();
+				return;
+			}
 
 				setLoadError(getPostLoadErrorMessage(error));
 			} finally {
@@ -173,7 +191,7 @@ export const PostModal = ({
 		return () => {
 			ignore = true;
 		};
-	}, [open, normalizedPostId]);
+	}, [open, normalizedPostId, reportPostNotFound]);
 
 	const handlePostDelete = async () => {
 		if (!post || isDeletingPost) {
@@ -194,8 +212,7 @@ export const PostModal = ({
 			onClose();
 		} catch (error) {
 			if (getApiErrorStatus(error) === 404) {
-				setPost(null);
-				setNotFound(true);
+				reportPostNotFound();
 				return;
 			}
 
