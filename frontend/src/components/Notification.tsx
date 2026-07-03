@@ -1,62 +1,105 @@
-import { useNotification } from "context/NotificationsContext";
+import {useNotification} from '../context/NotificationsContext';
+import "../styles/components/_notification.scss"
 
-/*
- *	response := gin.H{
-		"incoming_requests": incomingRequests,
-		"unread_messages":   messagesNotReadByRoom,
-	}
-* */
-//{incoming_requests: null, unread_messages: {…}}
-//unread_messages: {1: 0, 2: 1, 3: 0}
+//TODO CAMBIAR Y HACER BIEN, HECHO 100% CON IA
 
-export function Notification() {
-  const { notifications } = useNotification();
+const NotificationItem: React.FC<{ 
+  notification: Notification; 
+  onMarkAsRead: (id: string | number) => void;
+}> = ({ notification, onMarkAsRead }) => {
+  
+  const getNotificationContent = (notif: Notification) => {
+    switch (notif.type) {
+      case 'FRIEND_REQUEST':
+        return (
+          <div className="notification-friend-request">
+            <span className="notification-icon">👤</span>
+            <div className="notification-content">
+              <strong>{notif.payload.username || 'Alguien'}</strong>
+              <span> te ha enviado una solicitud de amistad</span>
+            </div>
+          </div>
+        );
+      
+      case 'FRIEND_REQUEST_ACCEPTED':
+        return (
+          <div className="notification-friend-accepted">
+            <span className="notification-icon">✅</span>
+            <div className="notification-content">
+              <strong>{notif.payload.username || 'Alguien'}</strong>
+              <span> ha aceptado tu solicitud de amistad</span>
+            </div>
+          </div>
+        );
+      
+      case 'UNREAD_MESSAGES':
+        return (
+          <div className="notification-unread-messages">
+            <span className="notification-icon">💬</span>
+            <div className="notification-content">
+              <span>Tienes </span>
+              <strong>{notif.payload.unread_count || 0}</strong>
+              <span> mensajes sin leer en el chat</span>
+              {notif.payload.room_id && (
+                <span > {notif.payload.room_id}</span>
+              )}
+            </div>
+          </div>
+        );
+      
+      default:
+        return (
+          <div className="notification-default">
+            <span>Nueva notificación</span>
+          </div>
+        );
+    }
+  };
 
-  const incomingRequests = notifications.filter((n) => n.type === "FRIEND_REQUEST").map((n) => n.payload);
-  const unreadMessages = notifications.filter((n) => n.type === "UNREAD_MESSAGES").map((n) => n.payload);
-  const totalUnreadRooms = unreadMessages.length;
+  const handleClick = () => {
+    onMarkAsRead(notification.id);
+  };
 
   return (
-    <div className="notification">
-      
-      <div className="notification-section">
-        <h4>Solicitudes entrantes ({incomingRequests.length}):</h4>
-
-        {incomingRequests.length === 0 ? (
-          <p>No tienes solicitudes pendientes.</p>
-        ) : (
-          <ul>
-            {incomingRequests.map((request, id) => (
-              <li key={id} className="request-item">
-                <span>
-                  <strong>{request.username}</strong> te envió una solicitud.
-                </span>
-                <span className="status-badge">Estado: {request.status}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <hr />
-
-      <div className="notification-section">
-        <h4>Mensajes no leídos por sala ({totalUnreadRooms}):</h4>
-
-        {totalUnreadRooms === 0 ? (
-          <p>No tienes mensajes nuevos.</p>
-        ) : (
-          <ul>
-            {unreadMessages.map((msg) => (
-              <li key={msg.room_id}>
-                <strong>Sala {msg.room_id}:</strong> {msg.unread_count}{" "}
-                {msg.unread_count === 1 ? "mensaje" : "mensajes"}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
+    <div 
+      className="notification-item"
+      onClick={handleClick}
+    >
+      {getNotificationContent(notification)}
+      <button 
+        className="notification-close"
+        onClick={(e) => {
+          e.stopPropagation();
+          onMarkAsRead(notification.id);
+        }}
+      >
+        ×
+      </button>
     </div>
   );
-}
+};
+
+//Componente alternativo: Notificaciones en lista simple
+export const Notification: React.FC = () => {
+  const { notifications, markAsRead } = useNotification();
+
+  if (notifications.length === 0) {
+    return (
+      <div className="simple-notification-empty">
+        <p>No hay notificaciones</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="simple-notification-list">
+      {notifications.map((notification, id) => (
+        <NotificationItem
+          key={id}
+          notification={notification}
+          onMarkAsRead={markAsRead}
+        />
+      ))}
+    </div>
+  );
+};

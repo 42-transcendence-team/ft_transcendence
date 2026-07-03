@@ -1,18 +1,11 @@
 package handlers
 
-//package handlers
 import (
 	"backend/internal/dto"
 	"backend/internal/services"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 )
-
-//import (
-//	"backend/internal/dto"
-//	appErr "backend/internal/errors"
-//	"backend/internal/services"
-//	"strconv"
 
 type NotificationsHandler struct {
 	friendService	*services.FriendRequestService
@@ -29,8 +22,6 @@ func NewNotificationsHandler(friendService *services.FriendRequestService, chatS
 //ListIncomingRequest(userID uint)([]dto.FriendRequestResponse, error)
 //func (s *ChatService)GetMessageNotRead(roomId uint, userID uint) uint {
 //func (s *ChatService) GetUserRooms(userID uint) ([]models.ChatRoom, error) {
-
-
 
 func (h *NotificationsHandler) GetNotifications(c *gin.Context) {
 	userID := c.MustGet("userID").(uint)
@@ -59,12 +50,14 @@ func (h *NotificationsHandler) GetNotifications(c *gin.Context) {
 
 	for _, room := range rooms {
 		unreadCount := h.ChatService.GetMessageNotRead(room.ID, userID)
-		//aqui intentar no hacer tantas llamadas a la base de datos
-		payload,err := json.Marshal(gin.H{
+		//TODO: aqui intentar no hacer tantas llamadas a la base de datos
+		payload,err :=
+			json.Marshal(gin.H{
 				"room_id":      room.ID,
 				"unread_count": unreadCount,
 			})
 		if err != nil {
+			//TODO: no se que poner
 		}
 		if unreadCount > 0 {
 			notificationFeed = append(notificationFeed, dto.NotificationMessage{

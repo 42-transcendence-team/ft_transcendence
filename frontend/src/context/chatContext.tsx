@@ -3,6 +3,8 @@ import { apiRequest } from "api/ApiRequest";
 import { useWebSocket } from "./webSocketContext";
 import { useContext, createContext, useCallback, useEffect, useState } from "react";
 
+//TODO: hacer bien tipado
+
 interface ChatContextType {
 	sendMessage: (roomId: number, content: string) => void;
 	messagesByRoom: any;

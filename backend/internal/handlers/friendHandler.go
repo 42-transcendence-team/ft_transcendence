@@ -79,19 +79,26 @@ func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	payload, err:= json.Marshal(dto.FriendRequestPayload{
-		SenderID: userID,
-		ReceiverID: req.ReceiverID,
-	})
-	if (err != nil){
+	payload, perr:=
+		json.Marshal(dto.FriendRequestPayload{
+			SenderID: userID,
+			ReceiverID: req.ReceiverID,
+		})
+	if (perr != nil) {
 		c.Error(err)
 		c.Abort()
 		return
 	}
-	message, _ :=json.Marshal(dto.NotificationMessage{
-		Type : "FRIEND_REQUEST",
-		Payload: payload,
-	})
+	message, merr :=
+		json.Marshal(dto.NotificationMessage{
+			Type : "FRIEND_REQUEST",
+			Payload: payload,
+		})
+	if (merr != nil) {
+		c.Error(err)
+		c.Abort()
+		return
+	}
 	
 	h.hub.SendNotificationToUser(req.ReceiverID, []byte(message))
 	
@@ -159,19 +166,21 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	payload, perr := json.Marshal(dto.FriendRequestAcceptedPayload{
-		SenderID: userID,
-		ReceiverID: reqID,
-	})
+	payload, perr :=
+		json.Marshal(dto.FriendRequestAcceptedPayload{
+			SenderID: userID,
+			ReceiverID: reqID,
+		})
 	if (perr != nil){
 		c.Error(err)
 		c.Abort()
 		return
 	}
-	message, merr :=json.Marshal(dto.NotificationMessage{
-		Type : "FRIEND_REQUEST_ACCEPTED",
-		Payload: payload,
-	})
+	message, merr :=
+		json.Marshal(dto.NotificationMessage{
+			Type : "FRIEND_REQUEST_ACCEPTED",
+			Payload: payload,
+		})
 	if (merr != nil){
 		c.Error(err)
 		c.Abort()
