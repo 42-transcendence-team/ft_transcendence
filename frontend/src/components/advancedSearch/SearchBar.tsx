@@ -1,4 +1,4 @@
-import "../../styles/components/_searchBar.scss"
+import "../../styles/components/advancedSearch/_searchBar.scss"
 import { FiSearch } from "react-icons/fi";
 import { useState } from 'react';
 

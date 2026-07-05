@@ -85,12 +85,23 @@
 		flex-shrink: 0;
 
 		button {
-			padding: 6px 10px;
-			border: 1px solid #222;
-			border-radius: 6px;
+			height: 36px;
+			padding: 0 12px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border: 1px solid $secondary-text-light;
+			border-radius: 8px;
 			background: white;
+			color: $main-text-light;
 			cursor: pointer;
-			font-size: 0.8rem;
+			font-size: .8rem;
+			transition: .2s;
+
+			&:hover {
+				background-color: $light-purple-secondary-text-light;
+				border-color: $light-purple-border-light;
+			}
 		}
 	}
 

@@ -1,5 +1,5 @@
 import type { UserRelation, UserSearchSort, } from "../../api/userSearch";
-import "../../styles/components/_searchFilters.scss";
+import "../../styles/components/advancedSearch/_searchFilters.scss";
 import { FiUsers, FiSend, FiInbox, FiSlash, } from "react-icons/fi";
 
 type SearchFiltersProps = {

@@ -1,5 +1,5 @@
-@use '../abstracts/variables' as *;
-@use '../components/buttons' as *;
+@use '../../abstracts/variables' as *;
+@use '../../components/buttons' as *;
 
 .searchBar {
 	display: flex; // Pone el input y el botón uno al lado del otro

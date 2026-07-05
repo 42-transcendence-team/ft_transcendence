@@ -1,6 +1,8 @@
 import { type UserSearch } from "../../api/userSearch.tsx";
 import skullLogo from "../../assets/icons/skull_logo.png";
-import "../../styles/components/_searchResults.scss";
+import "../../styles/components/advancedSearch/_searchResults.scss";
+import { RelationsActionsMenu } from "@components/RelationsActionsMenu.tsx";
+import "../../styles/components/_relationsActionsMenu.scss";
 
 
 type SearchResultsProps = {
@@ -46,7 +48,7 @@ export const SearchResults = ({ results, onSendFriendRequest,  onAcceptFriendReq
           <div className="searchResults__actions">
             {user.can_send_request && (
               <button onClick={() => onSendFriendRequest(user.id)}>
-                Mandar solicitud de amistad
+                Agregar amigo
               </button>
             )}
 
@@ -77,6 +79,12 @@ export const SearchResults = ({ results, onSendFriendRequest,  onAcceptFriendReq
             {user.relation === "blocked_me" && (
               <p className="searchResults__blocked">No disponible</p>
             )}
+
+            <RelationsActionsMenu
+              relation={user.relation}
+              onRemoveFriend={() => console.log("eliminar", user.id)}
+              onBlockUser={() => console.log("bloquear", user.id)}
+            />
           </div>
         </div>
       ))}
