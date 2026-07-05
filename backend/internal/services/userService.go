@@ -6,11 +6,13 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 	"backend/internal/utils"
+	"errors"
 	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pquerna/otp/totp"
+	"gorm.io/gorm"
 )
 
 var validate = validator.New()
@@ -32,6 +34,67 @@ func (s *UserService) Filter(filter dto.UserFilter) ([]models.User, error) {
 
 func (s *UserService) GetSettings(userID uint) (*dto.UserResponse, error) {
 	return s.UserRepo.GetUserData(userID)
+}
+
+func (s *UserService) UpdateAvatar(
+	userID uint,
+	newAvatarPath string,
+) (*string, error) {
+	user, err := s.UserRepo.FindById(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("user_not_found")
+		}
+
+		return nil, appErr.NewInternal(err)
+	}
+
+	previousAvatarPath := user.AvatarPath
+
+	rows, err := s.UserRepo.UpdateAvatarPath(
+		userID,
+		&newAvatarPath,
+	)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	if rows == 0 {
+		return nil, appErr.NewNotFound("user_not_found")
+	}
+
+	return previousAvatarPath, nil
+}
+
+func (s *UserService) DeleteAvatar(
+	userID uint,
+) (*string, error) {
+	user, err := s.UserRepo.FindById(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("user_not_found")
+		}
+
+		return nil, appErr.NewInternal(err)
+	}
+
+	// El borrado es idempotente: si no hay avatar, no hacemos nada.
+	if user.AvatarPath == nil {
+		return nil, nil
+	}
+
+	previousAvatarPath := user.AvatarPath
+
+	rows, err := s.UserRepo.UpdateAvatarPath(userID, nil)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	if rows == 0 {
+		return nil, appErr.NewNotFound("user_not_found")
+	}
+
+	return previousAvatarPath, nil
 }
 
 func (s *UserService) require2FA(user *models.User, code *string) error {

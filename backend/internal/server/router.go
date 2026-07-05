@@ -38,7 +38,11 @@ func (srv *HTTPServer) Router() {
 	postLikeService := services.NewPostLikeService(postRepo, postLikeRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
-	userHandler := handlers.NewUserHandler(userService, srv.Redis)
+	userHandler := handlers.NewUserHandler(
+		userService,
+		srv.Redis,
+		imageStorage,
+	)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 	friendHandler := handlers.NewFriendHandler(friendService, blockService)
 	postHandler := handlers.NewPostHandler(postService, imageStorage)

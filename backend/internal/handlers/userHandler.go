@@ -4,7 +4,10 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
+	"backend/internal/storage"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -13,14 +16,20 @@ import (
 )
 
 type UserHandler struct {
-	UserService *services.UserService
-	Redis       *redis.Client
+	UserService  *services.UserService
+	Redis        *redis.Client
+	ImageStorage *storage.ImageStorage
 }
 
-func NewUserHandler(userService *services.UserService, redisClient *redis.Client) *UserHandler {
+func NewUserHandler(
+	userService *services.UserService,
+	redisClient *redis.Client,
+	imageStorage *storage.ImageStorage,
+) *UserHandler {
 	return &UserHandler{
-		UserService: userService,
-		Redis:       redisClient,
+		UserService:  userService,
+		Redis:        redisClient,
+		ImageStorage: imageStorage,
 	}
 }
 
@@ -202,6 +211,99 @@ func (h *UserHandler) UpdatePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User modified successfully"})
 }
 
+func (h *UserHandler) UpdateAvatar(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	file, err := c.FormFile("image")
+	if err != nil {
+		if errors.Is(err, http.ErrMissingFile) {
+			c.Error(appErr.NewValidation(map[string]string{
+				"image": "required",
+			}))
+		} else {
+			c.Error(appErr.NewBadRequest("invalid_image_upload"))
+		}
+
+		c.Abort()
+		return
+	}
+
+	newAvatarPath, err := h.ImageStorage.SaveAvatarImage(file)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	previousAvatarPath, err := h.UserService.UpdateAvatar(
+		userID,
+		newAvatarPath,
+	)
+	if err != nil {
+		// Si PostgreSQL no se actualiza, retiramos el archivo recién creado.
+		_ = h.ImageStorage.Delete(newAvatarPath)
+
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	/*
+		La base de datos ya apunta al avatar nuevo. El borrado del archivo
+		anterior es una limpieza secundaria y no debe hacer creer al cliente
+		que la actualización completa ha fallado.
+	*/
+	if previousAvatarPath != nil {
+		if err := h.ImageStorage.Delete(*previousAvatarPath); err != nil {
+			log.Printf(
+				"could not delete previous avatar %q: %v",
+				*previousAvatarPath,
+				err,
+			)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "avatar updated",
+		"data": gin.H{
+			"avatarPath": newAvatarPath,
+		},
+	})
+}
+
+func (h *UserHandler) DeleteAvatar(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	previousAvatarPath, err := h.UserService.DeleteAvatar(userID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	if previousAvatarPath != nil {
+		if err := h.ImageStorage.Delete(*previousAvatarPath); err != nil {
+			log.Printf(
+				"could not delete avatar %q: %v",
+				*previousAvatarPath,
+				err,
+			)
+		}
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	// /users/profile/pepe -> pepe
 	loginParam := c.Param("login")
@@ -247,11 +349,12 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
 		"user": gin.H{
-			"id":      user.ID,
-			"login":   user.Login,
-			"email":   user.Email,
-			"name":    user.Name,
-			"surname": user.Surname,
+			"id":         user.ID,
+			"login":      user.Login,
+			"email":      user.Email,
+			"name":       user.Name,
+			"surname":    user.Surname,
+			"avatarPath": user.AvatarPath,
 		},
 	})
 }

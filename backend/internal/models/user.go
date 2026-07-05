@@ -21,9 +21,10 @@ type User struct {
 	Secret2FA *string `gorm:"null"`                                                           // Clave secreta que se genera al activar la 2FA
 	Role      string  `gorm:"not null"`                                                       // Rol del usuario (Ej: 42, bh, normie...)
 
-	Name     string    `gorm:"not null"` // Nombre de usuario
-	Surname  string    `gorm:"not null"` // Apellido de usuario
-	Birthday time.Time `gorm:"not null"` // Fecha de cunmpleaños del usuario
+	Name       string    `gorm:"not null"` // Nombre de usuario
+	Surname    string    `gorm:"not null"` // Apellido de usuario
+	Birthday   time.Time `gorm:"not null"` // Fecha de cunmpleaños del usuario
+	AvatarPath *string   `gorm:"type:varchar(255)" json:"avatarPath,omitempty"`
 
 	Status uint   // En el caso de que este online que estado quiere mostrar (Ej: 0 = offline, 1 = online, 2 = ausente...)
 	State  string // Estado del usuario like WhatsApp (Ej: "En una reunión", "Cago en todo", ...)

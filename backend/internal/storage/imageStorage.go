@@ -13,7 +13,10 @@ import (
 	"strings"
 )
 
-const maxPostImageSize int64 = 5 << 20 // 5 MB
+const (
+	maxPostImageSize   int64 = 5 << 20 // 5 MB
+	maxAvatarImageSize int64 = 5 << 20 // 5 MB
+)
 
 type ImageStorage struct {
 	BasePath string
@@ -37,6 +40,16 @@ func (s *ImageStorage) SavePostImage(
 	return s.SaveImage(file, SaveImageOptions{
 		Directory: "posts",
 		MaxSize:   maxPostImageSize,
+	})
+}
+
+// SaveAvatarImage guarda imágenes de perfil dentro del directorio de avatares.
+func (s *ImageStorage) SaveAvatarImage(
+	file *multipart.FileHeader,
+) (string, error) {
+	return s.SaveImage(file, SaveImageOptions{
+		Directory: "avatars",
+		MaxSize:   maxAvatarImageSize,
 	})
 }
 

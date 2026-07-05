@@ -138,6 +138,18 @@ func (r *UserRepository) UpdateActive2FA(request dto.User2FAStatus) (int64, erro
 	return result.RowsAffected, result.Error
 }
 
+func (r *UserRepository) UpdateAvatarPath(
+	userID uint,
+	avatarPath *string,
+) (int64, error) {
+	result := r.db.
+		Model(&models.User{}).
+		Where("id = ?", userID).
+		Update("avatar_path", avatarPath)
+
+	return result.RowsAffected, result.Error
+}
+
 func (r *UserRepository) Remove2FA(request dto.UserRemove2FA) (int64, error) {
 	result := r.db.Model(&models.User{}).
 		Where("id = ?", request.Id).
