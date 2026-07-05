@@ -56,6 +56,8 @@ func (s *AdvancedSearchService) SearchUsers(userID uint, filter *dto.UserFilter)
 		item := dto.UserSearch{
 			ID:         user.ID,
 			Login:      user.Login,
+			Name:       user.Name,
+			Surname:    user.Surname,
 			Relation:   relation,
 			CanSendReq: relation == "none",
 			RequestID:  requestID,

@@ -9,6 +9,8 @@ export type UserSearchSort ="username_asc" | "username_desc" | "newest" | "oldes
 export type UserSearch = {
     id: number;
     login: string;
+    name: string;
+    surname: string;
     avatar_url: string;
     status: string;
     relation: UserRelation;

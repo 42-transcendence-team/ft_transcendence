@@ -33,7 +33,12 @@ export const SearchResults = ({ results, onSendFriendRequest,  onAcceptFriendReq
             </div>
 
             <div className="searchResults__userInfo">
-              <p className="searchResults__login">{user.login}</p>
+              <p className="searchResults__fullName">
+                {user.name} {user.surname}
+              </p>
+              <p className="searchResults__login">
+                  @{user.login}
+              </p>
               <p className="searchResults__status">{user.status}</p>
             </div>
           </div>

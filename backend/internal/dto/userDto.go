@@ -23,6 +23,8 @@ type UserFilter struct {
 type UserSearch struct {
 	ID         uint   `json:"id"`
 	Login      string `json:"login"`
+	Name       string `json:"name"`
+	Surname    string `json:"surname"`
 	AvatarURL  string `json:"avatar_url"`
 	Status     string `json:"status"`
 	Relation   string `json:"relation"`
