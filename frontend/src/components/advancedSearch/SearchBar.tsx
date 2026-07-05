@@ -15,8 +15,7 @@ export const SearchBar = ({ onSearch }: SearchBarProps) => {
   
   const handleButtonClick = () => {
     const cleanQuery = searchQuery.trim()
-    if (cleanQuery === "")
-      return
+
     onSearch(cleanQuery)
     setSearchQuery("")
   }
