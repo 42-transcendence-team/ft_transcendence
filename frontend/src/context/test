@@ -104,7 +104,10 @@ export function useHandleWebsocket(user: AuthUser | null) {
 		};
 	}, [user?.id]);
 
-	return { send, subscribe };
+	return {
+		send,
+		subscribe,
+	};
 }
 
 export function WebSocketProvider({ children, user }: { children: React.ReactNode; user: AuthUser | null }) {
@@ -124,3 +127,4 @@ export const useWebSocket = () => {
 		throw new Error("useWebContext debe usarse dentro de un WebSocketProvider");
     return context;
 }
+

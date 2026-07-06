@@ -50,7 +50,6 @@ de que ha fallado segun la estructura d ela funcon apperr NewValidation()
 func (h *AuthHandler) Register(c *gin.Context) {
 
 	var req dto.RegisterRequest
-	log.Printf("req1", req)
 
 	err := ValidationBindRequest(c, &req)
 	if err != nil {
@@ -214,56 +213,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "user logout success"})
 
 }
-
-/*End of logout*/
-
-/*Whoami*/
-
-
-// <<<<<<< HEAD
-// =======
-// 	userIDValue, exists := c.Get("userID")
-// 	if !exists {
-// 		c.Error(appErr.NewUnauthorized("Unauthorized user"))
-// 		c.Abort()
-// 		return
-// 	}
-
-// 	userID, ok := userIDValue.(uint)
-// 	if !ok {
-// 		c.Error(appErr.NewInternal(errors.New("invalid userID type in context")))
-// 		c.Abort()
-// 		return
-// 	}
-
-// 	user, err := h.AuthService.GetUserById(userID)
-// 	if err != nil {
-// 		c.Error(err)
-// 		c.Abort()
-// 		return
-// 	}
-// 	ctx := c.Request.Context()
-// 	isOnline, _ := h.Redis.SIsMember(ctx, "online_users", user.ID).Result()
-
-// 	visitKey := fmt.Sprintf("visits:%d", user.ID)
-// 	visits, _ := h.Redis.Get(ctx, visitKey).Int() //al hacerlo asi no incrementamos el num de visitas
-// 	// TODO: hay q ver como se mandan los msg al front y que necesita saber
-// 	c.JSON(200, gin.H{
-// 		"authenticated": true,
-// 		"user": gin.H{
-// 			"id":       user.ID,
-// 			"login":    user.Login,
-// 			"email":    user.Email,
-// 			"name":     user.Name,
-// 			"surname":  user.Surname,
-// 			"isOnline": isOnline, // redis
-// 			"visits":   visits,   // redis
-// 		},
-// 	})
-// }
-// >>>>>>> main
-
-/*End of whoami*/
 
 func (h *AuthHandler) setCookie(c *gin.Context, strToken string, exp time.Time) {
 

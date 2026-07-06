@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"log"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	ws "backend/internal/websocket"
+	"log"
 	"strconv"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,7 +22,8 @@ func NewChatHandler(hub *ws.Hub, chatService *services.ChatService) *ChatHandler
 type UpdateLastTimeOpenedChatRequest struct {
 	RoomID uint `json:"room_id" binding:"required"`
 }
-//func (h *ChatHandler) HandleWebSocket(ctx *gin.Context)
+
+// func (h *ChatHandler) HandleWebSocket(ctx *gin.Context)
 func (h *ChatHandler) UpdateLastTimeOpenedChat(c *gin.Context) {
 	var req UpdateLastTimeOpenedChatRequest
 
@@ -33,7 +35,7 @@ func (h *ChatHandler) UpdateLastTimeOpenedChat(c *gin.Context) {
 	}
 	userID := c.MustGet("userID").(uint)
 	erro := h.chatService.UpdateLastTimeOpenChat(userID, req.RoomID)
-	if (erro != nil) {
+	if erro != nil {
 		c.Error(err)
 		c.Abort()
 		return
@@ -43,7 +45,6 @@ func (h *ChatHandler) UpdateLastTimeOpenedChat(c *gin.Context) {
 }
 
 func (h *ChatHandler) GetMessages(c *gin.Context) {
-
 	paramStr := c.Param("roomId")
 
 	id64, err := strconv.ParseUint(paramStr, 10, 32)
@@ -55,9 +56,9 @@ func (h *ChatHandler) GetMessages(c *gin.Context) {
 
 	roomId := uint(id64)
 	userID := c.MustGet("userID").(uint)
-	
+
 	req := h.chatService.GetMessageNotRead(roomId, userID)
-	
+
 	log.Printf("get messages: %d %d", roomId, userID)
 
 	c.JSON(200, gin.H{"messages_count": req})

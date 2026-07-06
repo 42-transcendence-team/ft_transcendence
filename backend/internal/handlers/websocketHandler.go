@@ -1,23 +1,24 @@
 package handlers
 
 import (
+	"backend/internal/dto"
+	appErr "backend/internal/errors"
+	"backend/internal/models"
+	"backend/internal/services"
+	"backend/internal/utils"
+	ws "backend/internal/websocket"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
 	"time"
-	"backend/internal/dto"
-	appErr "backend/internal/errors"
-	"backend/internal/services"
-	"backend/internal/utils"
-	ws "backend/internal/websocket"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"backend/internal/models"
 )
 
 type WebsocketHandler struct {
-	hub         *ws.Hub
+	hub              *ws.Hub
 	websocketService *services.WebsocketService
 }
 
@@ -88,7 +89,7 @@ func (h *WebsocketHandler) GetMe(c *gin.Context) {
 }
 
 func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
-//a lo mejor aqui hay que comprobar que son amigos
+	//a lo mejor aqui hay que comprobar que son amigos
 	userIDValue, exists := c.Get("userID")
 	if !exists {
 		c.Error(appErr.NewUnauthorized("User ID not found in context"))
@@ -124,16 +125,16 @@ func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
 	payload, perr := json.Marshal(dto.RoomPayload{
 		RoomID: room.ID,
 	})
-	if (perr != nil){
+	if perr != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 	message, merr := json.Marshal(dto.NotificationMessage{
-		Type: "CREATE_ROOM",
+		Type:    "CREATE_ROOM",
 		Payload: payload,
 	})
-	if (merr != nil){
+	if merr != nil {
 		c.Error(err)
 		c.Abort()
 		return
@@ -169,14 +170,14 @@ func (h *WebsocketHandler) ListRooms(c *gin.Context) {
 
 func (h *WebsocketHandler) HandleMessage(c ws.ClientConn, msg *dto.IncomingMessage) {
 	switch msg.Type {
-		case "join_room":
-			h.JoinRoom(c, msg)
-		case "leave_room":
-			h.LeaveRoom(c, msg)
-		case "message":
-			h.SendMessage(c, msg)
-		default:
-			log.Printf("Unknown message type: %s", msg.Type)
+	case "join_room":
+		h.JoinRoom(c, msg)
+	case "leave_room":
+		h.LeaveRoom(c, msg)
+	case "message":
+		h.SendMessage(c, msg)
+	default:
+		log.Printf("Unknown message type: %s", msg.Type)
 	}
 }
 
@@ -184,7 +185,7 @@ func (h *WebsocketHandler) JoinRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
 	h.hub.Mu.RLock()
 	room, ok := h.hub.Rooms[msg.RoomID]
 	h.hub.Mu.RUnlock()
-	
+
 	if !ok {
 		dbRoom, err := h.websocketService.GetRoomByID(msg.RoomID)
 		if err != nil {
@@ -210,10 +211,11 @@ func (h *WebsocketHandler) JoinRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
 		log.Printf("Error loading room messages: %v", err)
 		return
 	}
+	log.Printf("mensajes: %v", msgs)
 
 	dtoMessages := make([]dto.Msg, len(msgs))
 
-	index := 0;
+	index := 0
 	for _, msg := range msgs {
 		messageDTO := dto.Msg{
 			MessageID: msg.ID,
@@ -226,12 +228,12 @@ func (h *WebsocketHandler) JoinRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
 	}
 	resp := dto.Messages{
 		RoomID: room.ID,
-		Type: "join",
-		Msgs: dtoMessages,
+		Type:   "message",
+		Msgs:   dtoMessages,
 	}
 
 	data, err := json.Marshal(resp)
-	
+
 	c.Send(data)
 }
 
@@ -247,7 +249,7 @@ func (h *WebsocketHandler) LeaveRoom(c ws.ClientConn, msg *dto.IncomingMessage) 
 func (h *WebsocketHandler) SendMessage(c ws.ClientConn, msg *dto.IncomingMessage) {
 	timestamp := time.Now().In(utils.Madrid)
 
-	tmp_msg :=  &models.ChatMessage{
+	tmp_msg := &models.ChatMessage{
 		RoomID:    msg.RoomID,
 		UserID:    c.GetUserID(),
 		Username:  c.GetUsername(),

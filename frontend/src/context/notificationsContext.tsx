@@ -1,9 +1,18 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+	createContext,
+	useContext,
+	useEffect,
+	useState,
+	useCallback,
+} from "react";
 import { apiRequest } from "../api/ApiRequest";
 import { useWebSocket } from "./webSocketContext";
 
-export type NotificationType = 'FRIEND_REQUEST' | 'UNREAD_MESSAGES' | 'FRIEND_REQUEST_ACCEPTED';
-//posts, likes, typing, status
+export type NotificationType =
+	| "FRIEND_REQUEST"
+	| "UNREAD_MESSAGES"
+	| "FRIEND_REQUEST_ACCEPTED";
+
 export interface NotificationPayload {
 	id?: number | string;
 	username?: string;
@@ -22,208 +31,188 @@ export interface Notification {
 
 interface NotificationContextType {
 	notifications: Notification[];
-	//setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
 	clearRoomNotifications: (roomId: number | string) => void;
 	markAsRead: (notificationId: string | number) => void;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<
+	NotificationContextType | undefined
+>(undefined);
 
-const getNotifications = async (updateNotifications: (data: Notification[]) => void) => {
+const getNotifications = async (
+	update: (data: Notification[]) => void
+) => {
 	try {
 		const data = await apiRequest({
-			endpoint: 'notifications',
-			method: 'GET',
+			endpoint: "notifications",
+			method: "GET",
 		});
 
-		if (data && Array.isArray(data)) {
-			updateNotifications(data);
-		} else if (data) {
-			const notifications = data.notifications || data.data || [];
-			if (Array.isArray(notifications)) {
-				updateNotifications(notifications);
-			} else {
-				updateNotifications([]);
-			}
-		} else {
-			updateNotifications([]);
+		if (Array.isArray(data)) {
+			update(data);
+			return;
 		}
-	} catch (error) {
-		updateNotifications([]);
+
+		const notifications = data?.notifications || data?.data || [];
+		update(Array.isArray(notifications) ? notifications : []);
+	} catch {
+		update([]);
 	}
 };
 
-export const useHandleNotification = (user: any, messages: any, activeChat: number | null) => {
+export const useHandleNotification = (
+	user: any,
+	subscribe: any,
+	activeChat: number | null
+) => {
 	const [notifications, setNotifications] = useState<Notification[]>([]);
-	//const previousActiveChat = useRef<number | null>(null);
 
 	useEffect(() => {
 		if (!user?.id) {
 			setNotifications([]);
 			return;
 		}
+
 		getNotifications(setNotifications);
 	}, [user?.id]);
 
-	useEffect(() => {
-		updateChat(activeChat);
+	const updateChat = useCallback(async (id: number | null) => {
+		if (!id) return;
 
-		setNotifications((prev) => {
-			const currentNotis = Array.isArray(prev) ? prev : [];
-
-			const filtered = currentNotis.filter(
-				n => !(n.type === 'UNREAD_MESSAGES' && n.payload?.room_id === activeChat)
-			);
-
-			return filtered;
+		await apiRequest({
+			endpoint: "chat/enter",
+			method: "PUT",
+			body: { room_id: id },
 		});
-		//previousActiveChat.current = activeChat;
-	}, [activeChat]);
+	}, []);
 
 	useEffect(() => {
-		if (!messages?.type || messages.type !== 'message' || !messages.room_id) {
-			return;
-		}
+		return subscribe("UNREAD_MESSAGES", (msg: any) => {
+			const roomId = msg.room_id;
 
-		const roomId = messages.room_id;
+			setNotifications((prev) => {
+				if (roomId === activeChat) {
+					updateChat(roomId);
+					return prev;
+				}
 
-		// if (activeChat == messages.room_id)  
-		// 	updateChat(roomId);
+				const idx = prev.findIndex(
+					(n) =>
+						n.type === "UNREAD_MESSAGES" &&
+						n.payload?.room_id === roomId
+				);
 
-		setNotifications((prevNotis) => {
-			const currentNotis = Array.isArray(prevNotis) ? prevNotis : [];
+				if (idx !== -1) {
+					const updated = [...prev];
+					const current = updated[idx];
+					const count = current.payload?.unread_count || 0;
 
-			if (roomId === activeChat) {
-				updateChat(roomId);//no deberia dar problemas
-				return currentNotis;
-			}
-			//esto no incrementa el contador de notificaciones si ya existe una notificación
-			//consular si dejar o no
-			const existingIndex = currentNotis.findIndex(
-				n => n.type === 'UNREAD_MESSAGES' && n.payload?.room_id === roomId
-			);
+					updated[idx] = {
+						...current,
+						payload: {
+							...current.payload,
+							unread_count: count + 1,
+							room_id: roomId,
+						},
+					};
 
-			if (existingIndex !== -1) {
-				const updatedNotis = [...currentNotis];
-				const existing = updatedNotis[existingIndex];
-				const currentCount = existing.payload?.unread_count || 0;
+					return updated;
+				}
 
-				updatedNotis[existingIndex] = {
-					...existing,
-					payload: {
-						...existing.payload,
-						unread_count: currentCount + 1,
-						room_id: roomId
-					}
-				};
-
-				return updatedNotis;
-			} else {
 				return [
 					{
-						id: `unread_room_${roomId}_${Date.now()}`,
-						type: 'UNREAD_MESSAGES',
+						id: `unread_${roomId}_${Date.now()}`,
+						type: "UNREAD_MESSAGES",
 						payload: {
 							room_id: roomId,
 							unread_count: 1,
-							created_at: new Date().toISOString()
-						}
+						},
+						createdAt: new Date().toISOString(),
 					},
-					...currentNotis
+					...prev,
 				];
-			}
+			});
 		});
-	}, [messages]);
+	}, [subscribe, activeChat, updateChat]);
 
 	useEffect(() => {
-		if (!messages?.type || !messages?.payload) {
-			return;
-		}
+		return subscribe("FRIEND_REQUEST", (msg: any) => {
+			setNotifications((prev) => {
+				const exists = prev.some(
+					(n) =>
+						n.type === "FRIEND_REQUEST" &&
+						n.payload?.id === msg.payload?.id
+				);
 
-		switch (messages.type) {
-			case 'FRIEND_REQUEST':
-				setNotifications((prevNotis) => {
-					const currentNotis = Array.isArray(prevNotis) ? prevNotis : [];
+				if (exists) return prev;
 
-					const exists = currentNotis.some(
-						n => n.type === 'FRIEND_REQUEST' && n.payload?.id === messages.payload.id
-					);//esto no creo que haga falta porque el back ya lo comprueba
-
-					if (exists)
-						return currentNotis;
-
-					return [
-						{
-							id: messages.payload.id || `friend_req_${Date.now()}`,
-							type: 'FRIEND_REQUEST',
-							payload: messages.payload,
-							createdAt: new Date().toISOString()
-						},
-						...currentNotis
-					];
-				});
-			break;
-
-			case 'FRIEND_REQUEST_ACCEPTED':
-				setNotifications((prevNotis) => {
-					const currentNotis = Array.isArray(prevNotis) ? prevNotis : [];
-					return currentNotis.filter(
-						n => !(n.type === 'FRIEND_REQUEST' && n.payload?.id === messages.payload?.id)
-					);
-				});
-			break;
-
-			default:
-			break;
-		}
-	}, [messages]);
-
-	const markAsRead = useCallback((notificationId: string | number) => {
-		setNotifications((prevNotis) => {
-			const currentNotis = Array.isArray(prevNotis) ? prevNotis : [];
-			return currentNotis.filter(n => n.id !== notificationId);
+				return [
+					{
+						id: msg.payload?.id || `friend_${Date.now()}`,
+						type: "FRIEND_REQUEST",
+						payload: msg.payload,
+						createdAt: new Date().toISOString(),
+					},
+					...prev,
+				];
+			});
 		});
+	}, [subscribe]);
+
+	useEffect(() => {
+		return subscribe("FRIEND_REQUEST_ACCEPTED", (msg: any) => {
+			setNotifications((prev) =>
+				prev.filter(
+					(n) =>
+						!(
+							n.type === "FRIEND_REQUEST" &&
+							n.payload?.id === msg.payload?.id
+						)
+				)
+			);
+		});
+	}, [subscribe]);
+
+	const markAsRead = useCallback((id: string | number) => {
+		setNotifications((prev) =>
+			prev.filter((n) => n.id !== id)
+		);
 	}, []);
 
 	const clearRoomNotifications = useCallback((roomId: number | string) => {
-		setNotifications((prevNotis) => {
-			const currentNotis = Array.isArray(prevNotis) ? prevNotis : [];
-			return currentNotis.filter(
-				n => !(n.type === 'UNREAD_MESSAGES' && n.payload?.room_id === roomId)
-			);
-		});
+		setNotifications((prev) =>
+			prev.filter(
+				(n) =>
+					!(
+						n.type === "UNREAD_MESSAGES" &&
+						n.payload?.room_id === roomId
+					)
+			)
+		);
 	}, []);
 
 	return {
-		notifications: Array.isArray(notifications) ? notifications : [],
-		//setNotifications,
+		notifications,
+		markAsRead,
 		clearRoomNotifications,
-		markAsRead
 	};
 };
 
-const updateChat = async (id: number | null) => {
-	if (!id)
-		return;
+export function NotificationProvider({ children, activeChat, user }:
+{ children: React.ReactNode; activeChat: number | null; user: any }) {
+	const { subscribe } = useWebSocket();
 
-	try {
-		await apiRequest({
-			endpoint: 'chat/enter',
-			method: "PUT",
-			body: { room_id: id }
-		});
-	} catch (error) {
-	}
-};
-
-export function NotificationProvider({children,activeChat,user}: {children: React.ReactNode; activeChat: number | null; user: any;}) {
-	const { messages } = useWebSocket();
-	const { notifications, /*setNotifications,*/ clearRoomNotifications, markAsRead } = useHandleNotification(user, messages, activeChat);
-
-	const value = { notifications, /*setNotifications,*/ clearRoomNotifications, markAsRead };
+	const { notifications, markAsRead, clearRoomNotifications } =
+		useHandleNotification(user, subscribe, activeChat);
 
 	return (
-		<NotificationContext.Provider value={value}>
+		<NotificationContext.Provider
+			value={{
+				notifications,
+				markAsRead,
+				clearRoomNotifications,
+			}}
+		>
 			{children}
 		</NotificationContext.Provider>
 	);
@@ -233,13 +222,9 @@ export const useNotification = () => {
 	const context = useContext(NotificationContext);
 
 	if (!context) {
-		console.warn('useNotification debe usarse dentro de un NotificationProvider');
-		return {
-			notifications: [],
-			setNotifications: () => {},
-			clearRoomNotifications: () => {},
-			markAsRead: () => {}
-		};
+		throw new Error(
+			"useNotification debe usarse dentro de NotificationProvider"
+		);
 	}
 
 	return context;

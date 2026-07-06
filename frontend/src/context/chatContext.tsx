@@ -1,177 +1,197 @@
-import content from "@reset";
 import { apiRequest } from "api/ApiRequest";
+import { createContext, useContext, useCallback, useEffect, useState } from "react";
 import { useWebSocket } from "./webSocketContext";
-import { useContext, createContext, useCallback, useEffect, useState } from "react";
 
-//TODO: hacer bien tipado
+interface User {
+	id: string;
+	login: string;
+}
+
+type RoomId = number;
+
+type Message = {
+	message_id: number;
+	content: string;
+	username: string;
+	timestamp: string;
+};
+
+type IncomingMessage = Message & {
+	room_id: RoomId;
+};
+
+interface MessagesState {
+	[roomId: number]: Message[];
+}
 
 interface ChatContextType {
 	sendMessage: (roomId: number, content: string) => void;
-	messagesByRoom: any;
-	joinRoom: any;
-	rooms : any;
-	addChat : any;
-	user:any;
+	loadRoom: (roomId: number) => Promise<void>;
+	messagesByRoom: MessagesState;
+	rooms: RoomId[];
+	addChat: () => void;
+	user: User;
 }
+
+type RoomDTO = {
+	ID: number;
+};
 
 const chatContext = createContext<ChatContextType | undefined>(undefined);
 
-const useSendMessage = (user : any, wsRef : any) => {
-	 return useCallback((roomId: number, content: string) => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({
-                type: "message",
-                username: user?.login,
-                user_id: user?.id,
-                room_id: roomId,
-                content: content
-            }));
-        }
-    }, [user]);
-}
-
-interface MessagesState {
-    [roomId: number]: any[]; 
-}
-
-const useJoinRoom = (websocket: any, messagesByRoom:any) => {
-	return useCallback((roomId : number) => {
-		if (messagesByRoom[roomId]){
-			console.log('mensajes ya cacheados ')
-			return
-		}
-		if (websocket.current?.readyState === WebSocket.OPEN) {
-	 		websocket.current.send(
-	 			JSON.stringify(
-	 				{ type: "join_room", room_id: roomId }
-	 			)
-	 		)
-		}
-	}, [messagesByRoom])
-}
-
-const useMessagesByRoom=(messages:any) => {
-	const [messagesByRoom, setMessagesByRoom] = useState<MessagesState>({})
-	
-	useEffect(() => {
-		if (messages && messages.type) {
-			const {room_id} = messages
-			if (messages.type == 'join'){
-				setMessagesByRoom((prev) => {
-					return {
-						...prev,
-						[room_id]: [...messages.messages]
-					};
-				});
-			} else if (messages.type == 'message') {
-				setMessagesByRoom( (prev) => {
-					const messagesOfRoom = prev[room_id] || []
-				const newMsg = {message_id: messages.message_id, content: messages.content, username: messages.username, timestamp: messages.timestamp}
-					return {...prev, [room_id]: [...messagesOfRoom, newMsg]}
-				})
-			}
-	}}, [messages])
-
-	return messagesByRoom
-}
-
-/*
-*CreateRoomRequest struct {
-Name    string `json:"name"`
-Private bool   `json:"private" default:"false"`
-Users   []uint `json:"users"`
-}
-* */
-
-const useHandleRooms = (user, websocket, messages) => {
-	const [rooms, setRooms] = useState<any>([])
-
-
-	useEffect(() => {
-		if (messages?.type != 'CREATE_ROOM')
-			return;
-		setRooms((prev) => {return ([...prev, messages.payload.room_id])})
-	}, [messages])
-
-	const addChat = async () => {
-		const user_id = parseInt(prompt('id del usuario al que quieres enviar mensaje'),10);
-	
-		try {
-			const data = await apiRequest({
-				endpoint: "websocket/rooms",
-				method: "POST",
-				body: { name: `Room ${Math.floor(Math.random() * 1000)}`, private : true, users : [user_id] },
+const useSendMessage = (user: User, send: any) => {
+	return useCallback(
+		(roomId: number, content: string) => {
+			send({
+				type: "message",
+				username: user.login,
+				user_id: user.id,
+				room_id: roomId,
+				content,
 			});
-			console.log("Chat room created successfully");
-			setRooms((prevRooms) => {
-				if (!prevRooms.includes(data.ID)) {
-					return [...prevRooms, data.ID];
-				}
-				return prevRooms;
-       	 	});
-		} catch (error) {
-			console.error("Error creating chat room:", error);
-		}
-	}
-	
+		},
+		[user.id, user.login, send]
+	);
+};
+
+const useMessagesByRoom = (subscribe: any) => {
+	const [messagesByRoom, setMessagesByRoom] = useState<MessagesState>({});
+
+	console.log("hook mounted");
+
 	useEffect(() => {
+		console.log("subscribe registered");
+
+		return subscribe("message", (msg: any) => {
+			console.log("WS MESSAGE RECEIVED", msg);
+
+			setMessagesByRoom(prev => {
+				console.log("setting state");
+
+				const roomId = Number(msg.room_id);
+				const prevMsgs = prev[roomId] || [];
+
+				return {
+					...prev,
+					[roomId]: [...prevMsgs, msg],
+				};
+			});
+		});
+	}, [subscribe]);
+
+	return { messagesByRoom, setMessagesByRoom };
+};
+
+const useHandleRooms = (user: User, send: any) => {
+	const [rooms, setRooms] = useState<RoomId[]>([]);
+
+	useEffect(() => {
+		if (!user?.id) return;
+
 		const fetchRooms = async () => {
-			try {
-				const data = await apiRequest({
-					endpoint: "websocket/rooms",
-					method: "GET",
-				});
-				setRooms(data.map(r => r.ID))
-			} catch (e) {
-				console.log(e);
-			}
+			const data: RoomDTO[] = await apiRequest({
+				endpoint: "websocket/rooms",
+				method: "GET",
+			});
+
+			setRooms(data.map((r) => r.ID));
 		};
+
 		fetchRooms();
 	}, [user?.id]);
 
+	const addChat = async () => {
+		if (!user?.id) {
+			console.error("No user ID available");
+			return;
+		}
+
+		const data: RoomDTO = await apiRequest({
+			endpoint: "websocket/rooms",
+			method: "POST",
+			body: {
+				name: `Room ${Math.floor(Math.random() * 1000)}`,
+				private: true,
+				users: [user.id],
+			},
+		});
+
+		setRooms((prev) =>
+			prev.includes(data.ID) ? prev : [...prev, data.ID]
+		);
+
+		send({
+			type: "join_room",
+			room_id: data.ID,
+		});
+	};
+
+	return { rooms, addChat };
+};
+
+const useLoadRoom = (
+	setMessagesByRoom: React.Dispatch<React.SetStateAction<MessagesState>>,
+	send: any
+) => {
+	return useCallback(async (roomId: number) => {
+		send({
+			type: "join_room",
+			room_id: roomId,
+		});
+
+		const data: IncomingMessage[] = await apiRequest({
+			endpoint: `websocket/rooms/${roomId}/messages`,
+			method: "GET",
+		});
+
+		setMessagesByRoom(prev => ({
+			...prev,
+			[roomId]: data.map(m => ({
+				message_id: m.message_id,
+				content: m.content,
+				username: m.username,
+				timestamp: m.timestamp,
+			})),
+		}));
+	}, [send]);
+};
+
+export function ChatProvider({ children, user }: { children: React.ReactNode; user: any }) {
+	const { send, subscribe } = useWebSocket();
+
+	const { messagesByRoom, setMessagesByRoom } =
+		useMessagesByRoom(subscribe);
+
+	const sendMessage = useSendMessage(user, send);
+	const { rooms, addChat } = useHandleRooms(user, send);
+
+	const loadRoom = useLoadRoom(setMessagesByRoom, send);
 
 	useEffect(() => {
-		if (!websocket.current || rooms.length === 0)
-			return;
-		
-		const ws = websocket.current;
+		console.log("messagesByRoom:", messagesByRoom);
+	}, [messagesByRoom]);
 
-		const joinAllRooms = () => {
-			rooms.forEach(room => {
-				ws.send(
-					JSON.stringify({ type: "join_room", room_id: room})
-				);
-			});
-		};
-		if (ws.readyState === WebSocket.OPEN) {
-			joinAllRooms();
-		}
-		ws.addEventListener("open", joinAllRooms);
-		return () => {
-			ws.removeEventListener("open", joinAllRooms);
-		};
-	}, [rooms, websocket.current]);
-
-	return { addChat, rooms}
-}
-
-export function ChatProvider({ children, user } : {children : React.ReactNode, user : any }) {
-	const { websocket, messages } = useWebSocket();
-	const messagesByRoom = useMessagesByRoom(messages);
-	const sendMessage = useSendMessage(user, websocket);
-	const joinRoom = useJoinRoom(websocket, messagesByRoom);
-	const { rooms, addChat } = useHandleRooms(user, websocket, messages)
-
+	console.log("ChatProvider MOUNT");
+	
 	return (
-		<chatContext.Provider value={ { messagesByRoom, joinRoom, sendMessage, rooms, addChat, user } }>
-			{ children }
+		<chatContext.Provider
+			value={{
+				messagesByRoom,
+				sendMessage,
+				rooms,
+				addChat,
+				user,
+				loadRoom,
+			}}
+		>
+			{children}
 		</chatContext.Provider>
 	);
 }
 
 export const useChat = () => {
-    const context = useContext(chatContext);
-    if (!context)
+	const context = useContext(chatContext);
+	if (!context)
 		throw new Error("useChat debe usarse dentro de un ChatProvider");
-    return context;
+	return context;
 };
