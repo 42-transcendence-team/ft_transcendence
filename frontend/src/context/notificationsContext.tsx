@@ -1,12 +1,8 @@
-import {
-	createContext,
-	useContext,
-	useEffect,
-	useState,
-	useCallback,
-} from "react";
+import { createContext, useContext, useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../api/ApiRequest";
 import { useWebSocket } from "./webSocketContext";
+
+// TODO - Darle una gran vuelta, esta hecho con chtGPT y no ha habido revision para que se furulase front
 
 export type NotificationType =
 	| "FRIEND_REQUEST"
@@ -35,13 +31,9 @@ interface NotificationContextType {
 	markAsRead: (notificationId: string | number) => void;
 }
 
-const NotificationContext = createContext<
-	NotificationContextType | undefined
->(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-const getNotifications = async (
-	update: (data: Notification[]) => void
-) => {
+const getNotifications = async (update: (data: Notification[]) => void) => {
 	try {
 		const data = await apiRequest({
 			endpoint: "notifications",
@@ -60,11 +52,7 @@ const getNotifications = async (
 	}
 };
 
-export const useHandleNotification = (
-	user: any,
-	subscribe: any,
-	activeChat: number | null
-) => {
+export const useHandleNotification = ( user: any, subscribe: any, activeChat: number | null ) => {
 	const [notifications, setNotifications] = useState<Notification[]>([]);
 
 	useEffect(() => {
@@ -139,9 +127,7 @@ export const useHandleNotification = (
 		return subscribe("FRIEND_REQUEST", (msg: any) => {
 			setNotifications((prev) => {
 				const exists = prev.some(
-					(n) =>
-						n.type === "FRIEND_REQUEST" &&
-						n.payload?.id === msg.payload?.id
+					(n) => n.type === "FRIEND_REQUEST" && n.payload?.id === msg.payload?.id
 				);
 
 				if (exists) return prev;
@@ -163,11 +149,7 @@ export const useHandleNotification = (
 		return subscribe("FRIEND_REQUEST_ACCEPTED", (msg: any) => {
 			setNotifications((prev) =>
 				prev.filter(
-					(n) =>
-						!(
-							n.type === "FRIEND_REQUEST" &&
-							n.payload?.id === msg.payload?.id
-						)
+					(n) => !( n.type === "FRIEND_REQUEST" && n.payload?.id === msg.payload?.id )
 				)
 			);
 		});
@@ -182,11 +164,7 @@ export const useHandleNotification = (
 	const clearRoomNotifications = useCallback((roomId: number | string) => {
 		setNotifications((prev) =>
 			prev.filter(
-				(n) =>
-					!(
-						n.type === "UNREAD_MESSAGES" &&
-						n.payload?.room_id === roomId
-					)
+				(n) => !( n.type === "UNREAD_MESSAGES" && n.payload?.room_id === roomId )
 			)
 		);
 	}, []);
