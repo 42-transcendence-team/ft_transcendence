@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import '../styles/pages/_profile.scss';
 import skullLogo from '../assets/icons/skull_logo.png';
@@ -6,6 +7,7 @@ import photo2 from '../assets/img/choni2.png';
 import photo3 from '../assets/img/choni3.png';
 import {Post} from '../components/Post'
 import {Button1} from '../components/Button1'
+import { AvatarEditorModal } from '../components/users/AvatarEditorModal';
 
 //Todo cambiar los datos y q lleguen de la bd este seria un esquima de datos mas o menos
 const postsData = [//testing de datos
@@ -46,12 +48,19 @@ const postsData = [//testing de datos
 ];
 
 export const Profile = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
+  const [isAvatarEditorOpen, setIsAvatarEditorOpen] = useState(false);
 
   if (loading)
     return <div className="loading-screen">Cargando el roneito...</div>;
   if (!user)
     return <div className="error-screen">No se ha podido cargar tu sesión.</div>;
+
+  const hasCustomAvatar = Boolean(user.avatarPath);
+
+  const avatarSource = hasCustomAvatar
+	  ? `/${user.avatarPath}`
+	  : skullLogo;
 
   return (
     <div className='page-wrapper'>
@@ -60,11 +69,36 @@ export const Profile = () => {
 
         {/* 2. Sección de Información de Cabecera */}
         <div className='profile-header-info'>
-          <div className='profile-logo'>
-            <img src={skullLogo} alt="Skull Icon" className='skull-icon' />
-            {/* punto verde */}
-            <div className={`status-dot ${user.isOnline ? 'online' : 'offline'}`}></div>
-          </div>
+			<button
+			  className='profile-logo profile-logo--editable'
+			  type='button'
+			  aria-label='Edit profile image'
+			  onClick={() => setIsAvatarEditorOpen(true)}
+			>
+			  <img
+			    src={avatarSource}
+			    alt={`${user.login} profile`}
+			    className={[
+			      'profile-avatar',
+			      hasCustomAvatar ? '' : 'profile-avatar--fallback',
+			    ]
+			      .filter(Boolean)
+			      .join(' ')}
+			  />
+
+			  <span
+			    className='profile-logo__edit-overlay'
+			    aria-hidden='true'
+			  >
+			    <i className='fas fa-camera'></i>
+			  </span>
+			  {/* punto verde */}
+			  <div
+			    className={`status-dot ${
+			      user.isOnline ? 'online' : 'offline'
+			    }`}
+			  ></div>
+			</button>
 
           <div className='user-details'>
             <div className='visitas'>
@@ -101,6 +135,13 @@ export const Profile = () => {
           </div>
         </div>
       </div>
+
+	  <AvatarEditorModal
+	      open={isAvatarEditorOpen}
+	      currentAvatarPath={user.avatarPath ?? null}
+	      onClose={() => setIsAvatarEditorOpen(false)}
+	      onUpdated={refreshUser}
+      />
     </div>
   );
 };
