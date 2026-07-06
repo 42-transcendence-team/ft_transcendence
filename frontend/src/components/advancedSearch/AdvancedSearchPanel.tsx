@@ -26,6 +26,9 @@ export function AdvancedSearchPanel({ search }: AdvancedSearchPanelProps) {
         onSendFriendRequest={search.handleSendFriendRequest}
         onAcceptFriendRequest={search.handleAcceptFriendRequest}
         onRejectFriendRequest={search.handleRejectFriendRequest}
+        onRemoveFriend={search.handleRemoveFriend}
+        onBlockUser={search.handleBlockUser}
+        onUnblockUser={search.handleUnblockUser}
       />
 
       <SearchPagination

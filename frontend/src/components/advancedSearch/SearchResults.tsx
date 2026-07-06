@@ -10,10 +10,13 @@ type SearchResultsProps = {
   onSendFriendRequest: (userId: number) => void;
   onAcceptFriendRequest: (requestId: number) => void;
   onRejectFriendRequest: (requestId: number) => void;
+  onRemoveFriend: (userId: number) => void;
+  onBlockUser: (userId: number) => void;
+  onUnblockUser: (userId: number) => void;
 };
 
 export const SearchResults = ({ results, onSendFriendRequest,  onAcceptFriendRequest,
-  onRejectFriendRequest, }: SearchResultsProps) => {
+  onRejectFriendRequest, onRemoveFriend, onBlockUser, onUnblockUser,}: SearchResultsProps) => {
   if (results.length <= 0) {
     return (
       <p>
@@ -73,7 +76,9 @@ export const SearchResults = ({ results, onSendFriendRequest,  onAcceptFriendReq
             )}
 
             {user.relation === "blocked_by_me" && (
-              <button>Desbloquear</button>
+              <button onClick={() => onUnblockUser(user.id)}>
+                Desbloquear
+              </button>
             )}
 
             {user.relation === "blocked_me" && (
@@ -82,8 +87,8 @@ export const SearchResults = ({ results, onSendFriendRequest,  onAcceptFriendReq
 
             <RelationsActionsMenu
               relation={user.relation}
-              onRemoveFriend={() => console.log("eliminar", user.id)}
-              onBlockUser={() => console.log("bloquear", user.id)}
+              onRemoveFriend={() => onRemoveFriend(user.id)}
+              onBlockUser={() => onBlockUser(user.id)}
             />
           </div>
         </div>

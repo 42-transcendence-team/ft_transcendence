@@ -77,3 +77,33 @@ export async function sendFriendRequest(userId: number) {
 
   return data;
 }
+
+export async function removeFriend(userId: number) {
+    const data = await apiRequest({
+        endpoint: `friends/${userId}`,
+        method: "DELETE",
+    });
+
+  return data
+};
+
+export async function blockUser(userId: number) {
+  const data = await apiRequest({
+    endpoint: "friends/blocks",
+    method: "POST",
+    body: {
+      blocked_id: userId,
+    }
+  });
+
+  return data;
+}
+
+export async function unblockUser(userId: number) {
+  const data = await apiRequest({
+    endpoint: `friends/blocks/${userId}`,
+    method: "DELETE",
+  });
+
+  return data;
+}

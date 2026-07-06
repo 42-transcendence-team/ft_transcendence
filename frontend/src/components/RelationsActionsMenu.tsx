@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FiMoreHorizontal } from "react-icons/fi";
 import type { UserRelation } from "../api/userSearch";
 import "../styles/components/_relationsActionsMenu.scss"; 
@@ -14,7 +14,8 @@ export function RelationsActionsMenu({
   onRemoveFriend,
   onBlockUser,
 }: RelationsActionsMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement | null>(null)
 
   const canRemoveFriend = relation === "friends" && onRemoveFriend;
   const canBlockUser =
@@ -24,12 +25,32 @@ export function RelationsActionsMenu({
 
   const hasActions = canRemoveFriend || canBlockUser;
 
+  
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    function handleClickOutside(event: PointerEvent) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    
+    document.addEventListener("pointerdown", handleClickOutside);
+    
+    return () => {
+      document.removeEventListener("pointerdown", handleClickOutside);
+    };
+  }, [isOpen]);
+  
   if (!hasActions) {
     return null;
   }
-
+  
   return (
-    <div className="relationsActionsMenu">
+    <div className="relationsActionsMenu" ref={menuRef}>
       <button
         type="button"
         className="relationsActionsMenu__trigger"

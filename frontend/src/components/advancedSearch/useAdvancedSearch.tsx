@@ -9,6 +9,9 @@ import {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
+  removeFriend,
+  blockUser,
+  unblockUser,
 } from "../../api/Friends";
 
 export function useAdvancedSearch() {
@@ -164,6 +167,68 @@ export function useAdvancedSearch() {
     }
   };
 
+  const handleRemoveFriend = async (userId: number) => {
+    try {
+      await removeFriend(userId);
+
+      setSearchResults((currentResults) =>
+        currentResults.map((user) =>
+          user.id === userId
+            ? {
+                ...user,
+                relation: "none",
+                can_send_request: true,
+              }
+            : user
+        )
+      );
+    } catch (error) {
+      console.log("ERROR REMOVE FRIEND", error);
+    }
+  };
+
+  const handleBlockUser = async (userId: number) => {
+    try {
+      await blockUser(userId);
+
+      setSearchResults((currentResults) =>
+        currentResults.map((user) =>
+          user.id === userId
+            ? {
+                ...user,
+                relation: "blocked_by_me",
+                can_send_request: false,
+                request_id: undefined,
+              }
+            : user
+        )
+      );
+    } catch (error) {
+      console.log("ERROR BLOCK USER", error);
+    }
+  };
+
+  async function handleUnblockUser(userId: number) {
+    try {
+      await unblockUser(userId);
+
+      setSearchResults((currentResults) =>
+        currentResults.map((user) =>
+          user.id === userId
+            ? {
+                ...user,
+                relation: "none",
+                can_send_request: true,
+                request_id: undefined,
+              }
+            : user
+        )
+      );
+    } catch (error) {
+      console.log("ERROR UNBLOCK USER", error);
+    }
+  }
+
   return {
     searchResults,
     hasSearched,
@@ -187,5 +252,8 @@ export function useAdvancedSearch() {
     handleSendFriendRequest,
     handleAcceptFriendRequest,
     handleRejectFriendRequest,
+    handleRemoveFriend,
+    handleBlockUser,
+    handleUnblockUser,
   };
 }
