@@ -32,7 +32,13 @@ export async function apiRequest(props: ApiRequestProps): Promise<any> {
         throw buildApiError(res, errorData);
     }
 
-    return res.json();
+    const text = await res.text();
+
+    if (!text) {
+    return null;
+    }
+
+    return JSON.parse(text);
 }
 
 export type ApiError = {
