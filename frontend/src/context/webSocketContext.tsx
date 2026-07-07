@@ -57,8 +57,11 @@ export function useHandleWebsocket(user: AuthUser | null) {
 			};
 
 			ws.onmessage = (event) => {
+				console.log("WebSocket mensaje recibido:", event.data);
 				const message = JSON.parse(event.data);
 				const { type } = message;
+				console.log("WebSocket mensaje tipo:", type);
+				console.log("WebSocket mensaje completo:", message);
 
 				const typeListeners = listeners.current.get(type);
 
