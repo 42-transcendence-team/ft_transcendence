@@ -4,10 +4,12 @@ import { useState } from "react";
 import { Logout } from "api/Logout";
 import { useAuth } from "@components/auth-router/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+import { useLoaderData } from "react-router-dom";
 
 export const UserMenu = () => {
 	const [isOpen, setIsOpen] = useState(false);
+
+	const user = useLoaderData()
 
 	const { refreshAuth } = useAuth();
 
@@ -30,7 +32,7 @@ export const UserMenu = () => {
 	};
 
 	const handleProfile = () => {
-		navigate('profile/a')
+		navigate(`profile/${user.user.login}`)
 		console.log('profile button')
 	}
 	return (

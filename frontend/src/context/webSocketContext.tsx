@@ -9,7 +9,6 @@ const WebSocketContext =  createContext<WebSocketContextType | undefined>(undefi
 
 const webSocketURL = "wss://localhost/api/v1/websocket/ws"
 
-
 function useHandleWebsocket(user:any) {
     const websocket = useRef<WebSocket | null>(null);
 	const [messages, setMessages] = useState<any>({});

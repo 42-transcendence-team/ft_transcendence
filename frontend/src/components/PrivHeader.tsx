@@ -5,12 +5,15 @@ import "../styles/components/_privHeader.scss"
 import logo from "../assets/icons/24_logo.png"
 import { SearchBar } from "./SearchBar.tsx";
 import { UserMenu } from "./UserMenu";
+import { useLoaderData } from "react-router-dom";
 
 export function PrivHeader() {
+	const user = useLoaderData()
+	
 	return (
 		<header className="privHeader privateLayout__header">
 			<div className="privHeader__left">
-				<Link to="/app/profile/a" className="privHeader__logo">
+				<Link to={`/app/profile/${user.user.login}`} className="privHeader__logo">
 					<img src={logo} alt="logo" className="privHeader__logo-img" />
 					<span className="privHeader__logo-text">Twenty Four</span>
 				</Link>
