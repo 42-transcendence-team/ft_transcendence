@@ -1,0 +1,21 @@
+.game-view {
+	height: 100%;
+	width: 100%;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	padding: 1rem;
+	box-sizing: border-box;
+}
+
+.game-view__content {
+	width: 100%;
+	max-width: 1280px;
+	aspect-ratio: 16 / 9;
+
+	max-height: 100%;
+
+	display: flex;
+}

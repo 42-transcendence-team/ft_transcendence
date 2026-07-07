@@ -18,6 +18,11 @@ export function PrivHeader() {
 			<div className="privHeader__center">
 				<SearchBar />
 			</div>
+			<div>
+				<Link to="/app/games" className="privHeader__games-link">
+					Games
+				</Link>
+			</div>
 			<div className="privHeader__right">
 				<UserMenu />
 			</div>
