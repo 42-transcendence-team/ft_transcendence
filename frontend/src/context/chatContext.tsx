@@ -40,8 +40,8 @@ const chatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children, user }: { children: React.ReactNode; user: AuthUser | null }) {
     const { send, subscribe } = useWebSocket();
     
-    const [messagesByRoom, setMessagesByRoom] = useState<MessagesState>({});
-    const [rooms, setRooms] = useState<number[]>([]);
+    const [ messagesByRoom, setMessagesByRoom ] = useState<MessagesState>({});
+    const [ rooms, setRooms ] = useState<number[]>([]);
 
     const sendMessage = useCallback((roomId: number, content: string) => {
         if (!user) return;
@@ -63,7 +63,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 	}, [messagesByRoom, send]);
 
     const addChat = async () => {
-        const input = prompt("ID del usuario al que quieres enviar mensaje");
+        const input = prompt("ID del usuario al que quieres enviar mensaje"); // TODO - Poner esto bonico
         if (!input) return;
         const user_id = parseInt(input, 10);
         if (isNaN(user_id)) return;
