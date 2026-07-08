@@ -12,31 +12,42 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
     const { messagesByRoom, sendMessage, user, joinRoom } = useChat();
     const messagesRef = useRef<HTMLDivElement>(null);
     const isAtBottomRef = useRef(true);
+    const lastMessageFromMeRef = useRef(false);
 
     useEffect(() => {
         if (id) joinRoom(id);
     }, [id, joinRoom]);
 
-    const handleScroll = () => {
+   const handleScroll = () => {
         const el = messagesRef.current;
         if (!el) return;
-
-        isAtBottomRef.current =
-            el.scrollHeight - el.scrollTop - el.clientHeight < 50;
+        const offset = 100;
+        
+        isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight <= offset;
     };
 
     useEffect(() => {
         const el = messagesRef.current;
         if (!el) return;
 
-        if (isAtBottomRef.current) {
-            el.scrollTo({ top: el.scrollHeight });
-        }
+        const timeoutId = setTimeout(() => {
+            if (isAtBottomRef.current || lastMessageFromMeRef.current) {
+                el.scrollTo({
+                    top: el.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+            lastMessageFromMeRef.current = false;
+        }, 30);
+
+        return () => clearTimeout(timeoutId);
     }, [messagesByRoom, id]);
 
     const handleSend = (formData: FormData) => {
         const val = formData.get("input") as string;
         if (!val?.trim()) return;
+
+        lastMessageFromMeRef.current = true;
 
         sendMessage(id, val);
 

@@ -56,11 +56,9 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 
     const joinRoom = useCallback((roomId: number) => {
 		if (messagesByRoom[roomId] && messagesByRoom[roomId].length > 0) {
-			console.log("Mensajes ya cacheados y válidos para la sala:", roomId);
 			return;
 		}
 		
-		console.log("Solicitando historial al servidor para la sala:", roomId);
 		send({ type: "join_room", room_id: roomId });
 	}, [messagesByRoom, send]);
 
@@ -105,26 +103,34 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
     useEffect(() => {
         if (!user) return;
 
-        const unsubscribeJoin = subscribe("join", (message: any) => {
-            const { room_id, messages } = message;
-            setMessagesByRoom((prev) => ({
-                ...prev,
-                [room_id]: messages || []
-            }));
-        });
-
         const unsubscribeMessage = subscribe("message", (message: any) => {
-            const { room_id, message_id, content, username, timestamp } = message;
-            
-            setMessagesByRoom((prev) => {
-                const currentRoomMessages = prev[room_id] || [];
-                const newMsg: ChatMessage = { message_id, content, username, timestamp };
-                return {
-                    ...prev,
-                    [room_id]: [...currentRoomMessages, newMsg]
-                };
-            });
-        });
+			const { room_id } = message;
+			if (!room_id) return;
+
+			if (message.messages && Array.isArray(message.messages)) {
+				setMessagesByRoom((prev) => ({
+					...prev,
+					[room_id]: message.messages
+				}));
+				return;
+			}
+
+			if (message.content) {
+				const { message_id, content, username, timestamp } = message;
+				const newMsg: ChatMessage = { message_id, content, username, timestamp };
+
+				setMessagesByRoom((prev) => {
+					const currentRoomMessages = prev[room_id] || [];
+					const exists = currentRoomMessages.some(m => m.message_id === message_id);
+					if (exists) return prev;
+
+					return {
+						...prev,
+						[room_id]: [...currentRoomMessages, newMsg]
+					};
+				});
+			}
+		});
 
         const unsubscribeCreateRoom = subscribe("CREATE_ROOM", (message: any) => {
             const roomId = message.payload?.room_id;
@@ -134,7 +140,6 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
         });
 
         return () => {
-            unsubscribeJoin();
             unsubscribeMessage();
             unsubscribeCreateRoom();
         };
