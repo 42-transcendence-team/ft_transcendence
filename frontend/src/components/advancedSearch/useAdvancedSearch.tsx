@@ -72,25 +72,17 @@ export function useAdvancedSearch() {
   const handleRelationsChange = async (newRelations: UserRelation[]) => {
     setRelations(newRelations);
 
-    if (currentQuery.trim() === "") {
-      return;
-    }
-
     await executeSearch(currentQuery, newRelations, sort, 1);
   };
 
   const handleSortChange = async (newSort: UserSearchSort) => {
     setSort(newSort);
 
-    if (currentQuery.trim() === "") {
-      return;
-    }
-
     await executeSearch(currentQuery, relations, newSort, 1);
   };
 
   const handleNextPage = async () => {
-    if (isLoading || page >= totalPages || currentQuery.trim() === "") {
+    if (isLoading || page >= totalPages) {
       return;
     }
 
@@ -98,7 +90,7 @@ export function useAdvancedSearch() {
   };
 
   const handlePreviousPage = async () => {
-    if (isLoading || page <= 1 || currentQuery.trim() === "") {
+    if (isLoading || page <= 1) {
       return;
     }
 

@@ -7,12 +7,15 @@ type AdvancedSearchPanelProps = {
 };
 
 export function AdvancedSearchPanel({ search }: AdvancedSearchPanelProps) {
-  if (search.isLoading) {
-    return <p>Buscando...</p>;
-  }
-
   if (search.error) {
     return <p>{search.error}</p>;
+  }
+
+  const showInitialLoading =
+    search.isLoading && search.searchResults.length === 0;
+
+  if (showInitialLoading) {
+    return <p>Buscando...</p>;
   }
 
   return (
