@@ -44,6 +44,23 @@ func (r *FriendRepository) CreateFriendship(tx *gorm.DB, userID1 uint, userID2 u
 	return tx.Create(&friendship).Error
 }
 
+func (r *FriendRepository) DeletePendingRequestsBetweenUsers(userID1 uint, userID2 uint) error {
+	result := r.db.
+		Where(
+			"((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND status = ?",
+			userID1, userID2,
+			userID2, userID1,
+			models.RelationPending,
+		).
+		Delete(&models.FriendRequest{})
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
 func (r *FriendRepository) ChangeReqPendingStatus(tx *gorm.DB, newStatus models.RelationStatus, reqID uint) error {
 
 	result := tx.Model(&models.FriendRequest{}).
@@ -339,7 +356,7 @@ type Block struct {
 */
 
 func (r *FriendRepository) CreateBlock(BlockerID uint, BlockedID uint) error {
-	
+
 	block := models.Block{
 		BlockerID: BlockerID,
 		BlockedID: BlockedID,

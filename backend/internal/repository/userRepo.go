@@ -112,7 +112,6 @@ func (r *UserRepository) buildAdvancedSearchQuery(userID uint, filter dto.UserFi
 				`)
 				args = append(args, userID)
 			}
-			// TODO: me falta el case de "none"
 		}
 
 		if len(conditions) > 0 {
