@@ -15,144 +15,144 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 
   box-sizing: border-box;
-}
 
-.searchFilters__title {
-  margin: 0;
+  &__title {
+    margin: 0;
 
-  text-align: center;
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #222;
-}
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #222;
+  }
 
-.searchFilters__sectionTitle {
-  margin: 8px 0 0;
+  &__sectionTitle {
+    margin: 8px 0 0;
 
-  font-size: 0.85rem;
-  font-weight: bold;
-  color: #222;
-}
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #222;
+  }
 
-.searchFilters__chips {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+  &__chips {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 
-.searchFilters__chip,
-.searchFilters__sortTrigger {
-  width: 100%;
-  min-height: 42px;
+  &__chip,
+  &__sortTrigger {
+    width: 100%;
+    min-height: 42px;
 
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 
-  padding: 10px 12px;
+    padding: 10px 12px;
 
-  border: none;
-  border-radius: 10px;
+    border: none;
+    border-radius: 10px;
 
-  background-color: #eeeeee;
-  color: #333;
+    background-color: #eeeeee;
+    color: #333;
 
-  cursor: pointer;
+    cursor: pointer;
 
-  font-family: inherit;
-  font-size: 1rem;
+    font-family: inherit;
+    font-size: 1rem;
 
-  transition:
-    transform 0.2s ease,
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
 
-.searchFilters__chip {
-  gap: 8px;
-}
+  &__chip {
+    gap: 8px;
+  }
 
-.searchFilters__sortTrigger {
-  justify-content: space-between;
-}
+  &__sortTrigger {
+    justify-content: space-between;
+  }
 
-.searchFilters__chip:hover,
-.searchFilters__sortTrigger:hover {
-  transform: translateY(-2px);
-}
+  &__chip:hover,
+  &__sortTrigger:hover {
+    transform: translateY(-2px);
+  }
 
-.searchFilters__chip--active {
-  background-color: $dark-purple-background-light;
-  color: $dark-purple-main-text-light;
+  &__chip--active {
+    background-color: $dark-purple-background-light;
+    color: $dark-purple-main-text-light;
 
-  transform: scale(0.97);
-}
+    transform: scale(0.97);
+  }
 
-.searchFilters__sortDropdown {
-  position: relative;
-  width: 100%;
-}
+  &__sortDropdown {
+    position: relative;
+    width: 100%;
+  }
 
-.searchFilters__sortIcon {
-  transition: transform 0.2s ease;
-}
+  &__sortIcon {
+    transition: transform 0.2s ease;
 
-.searchFilters__sortIcon--open {
-  transform: rotate(180deg);
-}
+    &--open {
+      transform: rotate(180deg);
+    }
+  }
 
-.searchFilters__sortMenu {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
-  right: 0;
+  &__sortMenu {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    right: 0;
 
-  z-index: 20;
+    z-index: 20;
 
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 
-  padding: 6px;
+    padding: 6px;
 
-  background-color: #eeeeee;
-  border-radius: 10px;
+    background-color: #eeeeee;
+    border-radius: 10px;
 
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 
-  animation: searchFiltersMenuIn 0.16s ease;
-}
+    animation: searchFiltersMenuIn 0.16s ease;
 
-.searchFilters__sortMenu button {
-  width: 100%;
+    button {
+      width: 100%;
 
-  padding: 10px 12px;
+      padding: 10px 12px;
 
-  border: none;
-  border-radius: 8px;
+      border: none;
+      border-radius: 8px;
 
-  background: transparent;
-  color: #333;
+      background: transparent;
+      color: #333;
 
-  text-align: left;
+      text-align: left;
 
-  cursor: pointer;
+      cursor: pointer;
 
-  font-family: inherit;
-  font-size: 0.95rem;
+      font-family: inherit;
+      font-size: 0.95rem;
 
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
+      transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
 
-.searchFilters__sortMenu button:hover {
-  background-color: $light-purple-secondary-text-light;
-}
+      &:hover {
+        background-color: $light-purple-secondary-text-light;
+      }
+    }
+  }
 
-.searchFilters__sortOption--active {
-  background-color: $dark-purple-background-light !important;
-  color: $dark-purple-main-text-light !important;
-  font-weight: 600;
+  &__sortOption--active {
+    background-color: $dark-purple-background-light !important;
+    color: $dark-purple-main-text-light !important;
+    font-weight: 600;
+  }
 }
 
 @keyframes searchFiltersMenuIn {
