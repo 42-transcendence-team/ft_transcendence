@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import '../styles/pages/_profile.scss';
-import skullLogo from '../assets/icons/skull_logo.png';
+import {
+  UserAvatar,
+  type UserPresence,
+} from '../components/users/UserAvatar';
 import photo1 from '../assets/img/choni1.png';
 import photo2 from '../assets/img/choni2.png';
 import photo3 from '../assets/img/choni3.png';
@@ -56,11 +59,8 @@ export const Profile = () => {
   if (!user)
     return <div className="error-screen">No se ha podido cargar tu sesión.</div>;
 
-  const hasCustomAvatar = Boolean(user.avatarPath);
-
-  const avatarSource = hasCustomAvatar
-	  ? `/${user.avatarPath}`
-	  : skullLogo;
+  // Temporal hasta que exista el sistema real de presencia.
+  const profilePresence: UserPresence = 'online';
 
   return (
     <div className='page-wrapper'>
@@ -69,36 +69,17 @@ export const Profile = () => {
 
         {/* 2. Sección de Información de Cabecera */}
         <div className='profile-header-info'>
-			<button
-			  className='profile-logo profile-logo--editable'
-			  type='button'
-			  aria-label='Edit profile image'
-			  onClick={() => setIsAvatarEditorOpen(true)}
-			>
-			  <img
-			    src={avatarSource}
-			    alt={`${user.login} profile`}
-			    className={[
-			      'profile-avatar',
-			      hasCustomAvatar ? '' : 'profile-avatar--fallback',
-			    ]
-			      .filter(Boolean)
-			      .join(' ')}
-			  />
 
-			  <span
-			    className='profile-logo__edit-overlay'
-			    aria-hidden='true'
-			  >
-			    <i className='fas fa-camera'></i>
-			  </span>
-			  {/* punto verde */}
-			  <div
-			    className={`status-dot ${
-			      user.isOnline ? 'online' : 'offline'
-			    }`}
-			  ></div>
-			</button>
+          	<UserAvatar
+            	avatarPath={user.avatarPath}
+            	username={user.login}
+            	size='large'
+            	status={profilePresence}
+            	className='profile-header-avatar'
+            	ariaLabel='Edit profile image'
+            	overlay={<i className='fas fa-camera'></i>}
+            	onClick={() => setIsAvatarEditorOpen(true)}
+          	/>
 
           <div className='user-details'>
             <div className='visitas'>
