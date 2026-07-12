@@ -138,6 +138,8 @@ func (r *UserRepository) UpdateActive2FA(request dto.User2FAStatus) (int64, erro
 	return result.RowsAffected, result.Error
 }
 
+// UpdateAvatarPath actualiza la ruta del avatar del usuario.
+// Recibe nil al eliminar el avatar personalizado.
 func (r *UserRepository) UpdateAvatarPath(
 	userID uint,
 	avatarPath *string,

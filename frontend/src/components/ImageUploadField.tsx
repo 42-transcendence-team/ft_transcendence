@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 
-type ImageUploadFieldVariant = 'avatar';
+type ImageUploadFieldVariant = "avatar";
 
 type ImageUploadFieldProps = {
 	id: string;
@@ -16,6 +16,8 @@ type ImageUploadFieldProps = {
 	onError: (message: string | null) => void;
 };
 
+// Campo reutilizable para seleccionar, validar y previsualizar imágenes.
+// La validación concreta se recibe desde el componente que lo utiliza.
 export const ImageUploadField = ({
 	id,
 	label,
@@ -37,9 +39,11 @@ export const ImageUploadField = ({
 			return;
 		}
 
+		// Creamos una URL temporal para mostrar el archivo local sin subirlo.
 		const objectUrl = URL.createObjectURL(file);
 		setPreviewUrl(objectUrl);
 
+		// Liberamos la URL cuando cambia el archivo o se desmonta el componente.
 		return () => {
 			URL.revokeObjectURL(objectUrl);
 		};
@@ -60,6 +64,8 @@ export const ImageUploadField = ({
 		const validationError = validate(selectedFile);
 
 		if (validationError) {
+			// Limpiamos el input para permitir volver a seleccionar
+			// el mismo archivo después de corregir el error.
 			event.target.value = "";
 			onChange(null);
 			onError(validationError);
@@ -71,6 +77,8 @@ export const ImageUploadField = ({
 
 	const handleRemove = () => {
 		if (inputRef.current) {
+			// El estado se limpia mediante onChange, pero también debemos
+			// vaciar el input nativo para poder seleccionar el mismo archivo.
 			inputRef.current.value = "";
 		}
 
@@ -78,12 +86,13 @@ export const ImageUploadField = ({
 		onChange(null);
 	};
 
+	// La variante añade un modificador BEM únicamente visual.
 	const fieldClassName = [
-		'image-upload-field',
-		variant ? `image-upload-field--${variant}` : '',
+		"image-upload-field",
+		variant ? `image-upload-field--${variant}` : "",
 	]
 		.filter(Boolean)
-		.join(' ');
+		.join(" ");
 
 	return (
 		<div className={fieldClassName}>

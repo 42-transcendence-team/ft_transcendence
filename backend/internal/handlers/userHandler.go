@@ -211,6 +211,8 @@ func (h *UserHandler) UpdatePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User modified successfully"})
 }
 
+// UpdateAvatar guarda el nuevo avatar y actualiza su ruta en la base de datos.
+// Si la actualización falla, elimina el archivo recién creado para evitar residuos.
 func (h *UserHandler) UpdateAvatar(c *gin.Context) {
 	userID, err := getUserIDFromContext(c)
 	if err != nil {
@@ -276,6 +278,8 @@ func (h *UserHandler) UpdateAvatar(c *gin.Context) {
 	})
 }
 
+// DeleteAvatar elimina la ruta del avatar personalizado y después intenta
+// retirar el archivo almacenado. La respuesta no falla si esa limpieza secundaria falla.
 func (h *UserHandler) DeleteAvatar(c *gin.Context) {
 	userID, err := getUserIDFromContext(c)
 	if err != nil {

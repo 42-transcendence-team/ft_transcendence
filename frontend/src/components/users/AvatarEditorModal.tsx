@@ -21,6 +21,8 @@ type AvatarEditorModalProps = {
 	onUpdated: () => Promise<void>;
 };
 
+// Adapta la validación reutilizable de imágenes a las restricciones
+// concretas de los avatares.
 function validateAvatarImage(file: File): string | null {
 	return validateImageFile(file, {
 		allowedTypes: ALLOWED_AVATAR_IMAGE_TYPES,
@@ -32,6 +34,8 @@ function validateAvatarImage(file: File): string | null {
 	});
 }
 
+// Extrae el código de validación aunque la respuesta de error llegue
+// directamente en data.details o envuelta dentro de data.error.details.
 function getAvatarErrorCode(error: unknown): string | null {
 	if (
 		typeof error !== "object" ||
@@ -59,6 +63,8 @@ function getAvatarErrorCode(error: unknown): string | null {
 	);
 }
 
+// Convierte los códigos devueltos por el backend en mensajes comprensibles
+// para el usuario. Los errores desconocidos utilizan el mensaje alternativo.
 function getAvatarErrorMessage(
 	error: unknown,
 	fallbackMessage: string,
@@ -94,6 +100,9 @@ export function AvatarEditorModal({
 		useState<string | null>(null);
 	const [requestError, setRequestError] =
 		useState<string | null>(null);
+
+	// Un único estado evita ejecutar guardado y borrado al mismo tiempo
+	// y permite mostrar qué operación está en curso.
 	const [operation, setOperation] =
 		useState<"save" | "delete" | null>(null);
 
@@ -104,6 +113,8 @@ export function AvatarEditorModal({
 			return;
 		}
 
+		// Cada apertura comienza limpia para no conservar archivos,
+		// errores u operaciones de la apertura anterior.
 		setFile(null);
 		setValidationError(null);
 		setRequestError(null);
@@ -111,6 +122,7 @@ export function AvatarEditorModal({
 	}, [open]);
 
 	const handleClose = () => {
+		// Evita cerrar la modal mientras una petición sigue en curso.
 		if (!isBusy) {
 			onClose();
 		}
@@ -136,7 +148,11 @@ export function AvatarEditorModal({
 
 		try {
 			await updateAvatar(file);
+
+			// Recarga el usuario del contexto para mostrar inmediatamente
+			// la nueva ruta del avatar.
 			await onUpdated();
+
 			onClose();
 		} catch (error) {
 			setRequestError(
@@ -161,7 +177,11 @@ export function AvatarEditorModal({
 
 		try {
 			await deleteAvatar();
+
+			// Recarga el usuario para que el perfil vuelva a mostrar
+			// la imagen predeterminada.
 			await onUpdated();
+
 			onClose();
 		} catch (error) {
 			setRequestError(
@@ -186,6 +206,7 @@ export function AvatarEditorModal({
 			modalClassName="avatar-editor-modal"
 			contentClassName="avatar-editor-modal__content"
 		>
+			{/* La imagen actual se oculta cuando existe una nueva previsualización. */}
 			{!file && (
 				<div className="avatar-editor-modal__current-preview">
 					<img

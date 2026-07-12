@@ -52,6 +52,8 @@ const postsData = [//testing de datos
 
 export const Profile = () => {
   const { user, loading, refreshUser } = useAuth();
+
+  // Controla la apertura de la modal de edición del avatar.
   const [isAvatarEditorOpen, setIsAvatarEditorOpen] = useState(false);
 
   if (loading)
@@ -59,7 +61,7 @@ export const Profile = () => {
   if (!user)
     return <div className="error-screen">No se ha podido cargar tu sesión.</div>;
 
-  // Temporal hasta que exista el sistema real de presencia.
+  // Temporal hasta que exista el sistema real de presencia/status.
   const profilePresence: UserPresence = 'online';
 
   return (
@@ -69,6 +71,12 @@ export const Profile = () => {
 	
 			{/* 2. Sección de Información de Cabecera */}
 			<div className='profile__header'>
+				
+				{/* 
+					Muestra el avatar actual y abre su editor al pulsarlo.
+					UserAvatar utiliza la imagen predeterminada cuando no existe
+					un avatar personalizado o falla su carga.
+				*/}
 				<UserAvatar
 					avatarPath={user.avatarPath}
 					username={user.login}
@@ -127,7 +135,12 @@ export const Profile = () => {
 				</div>
 			</div>
 		</div>
-				
+
+		{/* 
+			Permite subir, sustituir o eliminar el avatar.
+			Tras una modificación, refreshUser actualiza los datos del usuario
+			para mostrar inmediatamente la nueva imagen.
+		*/}
 		<AvatarEditorModal
 			open={isAvatarEditorOpen}
 			currentAvatarPath={user.avatarPath ?? null}

@@ -28,6 +28,8 @@ export const Post: React.FC<PostProps> = ({
   // Queda pendiente hacer un carrusel de fotos.
   const moreImages = images.length - 3;
 
+  // Construye el bloque BEM del post y añade el modificador
+  // visual cuando la publicación está destacada.
   const postClassName = [
     'feed-post',
     isHighlighted ? 'feed-post--highlighted' : '',

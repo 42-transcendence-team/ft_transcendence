@@ -12,6 +12,10 @@ export async function updateAvatar(
 ): Promise<UpdateAvatarResponse> {
 	const formData = new FormData();
 
+	// Enviamos la imagen como multipart/form-data.
+	// El campo debe llamarse "image" porque UpdateAvatar,
+	// en backend/internal/handlers/userHandler.go,
+	// la recupera mediante c.FormFile("image").
 	formData.append("image", file);
 
 	return apiRequest<UpdateAvatarResponse>({

@@ -36,6 +36,8 @@ func (s *UserService) GetSettings(userID uint) (*dto.UserResponse, error) {
 	return s.UserRepo.GetUserData(userID)
 }
 
+// UpdateAvatar sustituye la ruta del avatar y devuelve la anterior para que
+// el handler pueda eliminar el archivo antiguo después de actualizar la base de datos.
 func (s *UserService) UpdateAvatar(
 	userID uint,
 	newAvatarPath string,
@@ -66,6 +68,8 @@ func (s *UserService) UpdateAvatar(
 	return previousAvatarPath, nil
 }
 
+// DeleteAvatar elimina la ruta del avatar personalizado y devuelve la anterior
+// para que el handler pueda borrar el archivo almacenado.
 func (s *UserService) DeleteAvatar(
 	userID uint,
 ) (*string, error) {
