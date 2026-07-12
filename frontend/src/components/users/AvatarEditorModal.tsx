@@ -210,6 +210,7 @@ export function AvatarEditorModal({
 				accept="image/jpeg,image/png,image/webp"
 				disabled={isBusy}
 				previewAlt="New profile preview"
+				variant="avatar"
 				validate={validateAvatarImage}
 				onChange={handleFileChange}
 				onError={setValidationError}

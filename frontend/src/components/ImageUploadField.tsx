@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 
+type ImageUploadFieldVariant = 'avatar';
+
 type ImageUploadFieldProps = {
 	id: string;
 	label: string;
@@ -8,6 +10,7 @@ type ImageUploadFieldProps = {
 	accept: string;
 	disabled?: boolean;
 	previewAlt: string;
+	variant?: ImageUploadFieldVariant;
 	validate: (file: File) => string | null;
 	onChange: (file: File | null) => void;
 	onError: (message: string | null) => void;
@@ -20,6 +23,7 @@ export const ImageUploadField = ({
 	accept,
 	disabled = false,
 	previewAlt,
+	variant,
 	validate,
 	onChange,
 	onError,
@@ -74,8 +78,15 @@ export const ImageUploadField = ({
 		onChange(null);
 	};
 
+	const fieldClassName = [
+		'image-upload-field',
+		variant ? `image-upload-field--${variant}` : '',
+	]
+		.filter(Boolean)
+		.join(' ');
+
 	return (
-		<div className="image-upload-field">
+		<div className={fieldClassName}>
 			<label
 				className="image-upload-field__label"
 				htmlFor={id}

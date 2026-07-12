@@ -63,66 +63,77 @@ export const Profile = () => {
   const profilePresence: UserPresence = 'online';
 
   return (
-    <div className='page-wrapper'>
-      <div className='profile-container'>
-        <div className='profile-banner'></div>
-
-        {/* 2. Sección de Información de Cabecera */}
-        <div className='profile-header-info'>
-
-          	<UserAvatar
-            	avatarPath={user.avatarPath}
-            	username={user.login}
-            	size='large'
-            	status={profilePresence}
-            	className='profile-header-avatar'
-            	ariaLabel='Edit profile image'
-            	overlay={<i className='fas fa-camera'></i>}
-            	onClick={() => setIsAvatarEditorOpen(true)}
-          	/>
-
-          <div className='user-details'>
-            <div className='visitas'>
-              <i className="fas fa-chart-line"></i>
-              {/* Dato real de visitas desde Redis */}
-              <span>Nº Visitas al perfil {user.visits || 0}</span>
-            </div>
-            {/* Mostramos el nombre real o el login desde Postgres */}
-            <h4 className='user-name'>{user.name && user.surname ? `${user.name} ${user.surname}` : user.login}</h4>
-          </div>
-          <Button1 label='Share'></Button1>
-        </div>
-
-        {/* 3. Sección del Feed */}
-        <div className='profile-feed'>
-          {/* El estado también podría venir del objeto 'user' si lo guardas en DB */}
-          <p className='status-text'>{user.status || "Sin estado disponible"}</p>
-
-          <div className='feed-posts-container'>{/*si quremos añadir contenido necesitamos el feed-posts-container */}
-            {postsData.length > 0 ? (
-              postsData.map((post) => (
-                <Post 
-                  key={post.id}
-                  username={post.username}
-                  time={post.time}
-                  message={post.message}
-                  images={post.images}
-                  isHighlighted={post.isHighlighted}
-                />
-              ))
-            ) : (
-              <div className="no-posts">Aún no hay roneos por aquí...</div>
-            )}
-          </div>
-        </div>
-      </div>
-
-	  <AvatarEditorModal
-	      open={isAvatarEditorOpen}
-	      currentAvatarPath={user.avatarPath ?? null}
-	      onClose={() => setIsAvatarEditorOpen(false)}
-	      onUpdated={refreshUser}
-      />
-    </div>
+	<div className='profile'>
+		<div className='profile__container'>
+			<div className='profile__banner'></div>
+	
+			{/* 2. Sección de Información de Cabecera */}
+			<div className='profile__header'>
+				<UserAvatar
+					avatarPath={user.avatarPath}
+					username={user.login}
+					size='large'
+					status={profilePresence}
+					className='profile__avatar'
+					ariaLabel='Edit profile image'
+					overlay={<i className='fas fa-camera'></i>}
+					onClick={() => setIsAvatarEditorOpen(true)}
+				/>
+	
+				<div className='profile__user-details'>
+					<div className='profile__visits'>
+						<i className='fas fa-chart-line profile__visits-icon'></i>
+	
+						{/* Dato real de visitas desde Redis */}
+						<span>
+							Nº Visitas al perfil {user.visits || 0}
+						</span>
+					</div>
+	
+					{/* Mostramos el nombre real o el login desde Postgres */}
+					<h4 className='profile__user-name'>
+						{user.name && user.surname
+							? `${user.name} ${user.surname}`
+							: user.login}
+					</h4>
+				</div>
+						
+				<Button1 label='Share'></Button1>
+			</div>
+						
+			{/* 3. Sección del Feed */}
+			<div className='profile__feed'>
+				<p className='profile__status'>
+					{user.status || 'Sin estado disponible'}
+				</p>
+						
+				<div className='profile__posts'>
+					{postsData.length > 0 ? (
+						postsData.map((post) => (
+							<Post
+								key={post.id}
+								username={post.username}
+								time={post.time}
+								message={post.message}
+								images={post.images}
+								isHighlighted={post.isHighlighted}
+							/>
+						))
+					) : (
+						<div className='profile__empty'>
+							Aún no hay roneos por aquí...
+						</div>
+					)}
+				</div>
+			</div>
+		</div>
+				
+		<AvatarEditorModal
+			open={isAvatarEditorOpen}
+			currentAvatarPath={user.avatarPath ?? null}
+			onClose={() => setIsAvatarEditorOpen(false)}
+			onUpdated={refreshUser}
+		/>
+	</div>
   );
 };

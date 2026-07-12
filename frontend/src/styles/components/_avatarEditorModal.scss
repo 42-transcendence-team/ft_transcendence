@@ -8,17 +8,17 @@
 		margin-bottom: 0;
 	}
 
-&__current-preview {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 180px;
-	height: 180px;
-	margin: 0 auto 1.25rem;
-	overflow: hidden;
-	border-radius: 50%;
-	background: #f0f0f0;
-}
+	&__current-preview {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 180px;
+		height: 180px;
+		margin: 0 auto 1.25rem;
+		overflow: hidden;
+		border-radius: 50%;
+		background: #f0f0f0;
+	}
 
 	&__avatar {
 		display: block;
@@ -27,13 +27,13 @@
 		border-radius: inherit;
 		object-fit: cover;
 		object-position: center;
-	}
 
-	&__avatar--fallback {
-		width: 55%;
-		height: 55%;
-		border-radius: 0;
-		object-fit: contain;
+		&--fallback {
+			width: 55%;
+			height: 55%;
+			border-radius: 0;
+			object-fit: contain;
+		}
 	}
 
 	&__error {
@@ -47,30 +47,11 @@
 		flex-wrap: wrap;
 		margin-top: 1.25rem;
 	}
-
-	.image-upload-field {
-		text-align: left;
-	}
-
-	.image-upload-field__preview {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
-
-	.image-upload-field__image {
-		width: 180px;
-		height: 180px;
-		border-radius: 50%;
-		object-fit: cover;
-		object-position: center;
-	}
 }
 
 @media (max-width: 480px) {
 	.avatar-editor-modal {
-		&__current-preview,
-		.image-upload-field__image {
+		&__current-preview {
 			width: 150px;
 			height: 150px;
 		}

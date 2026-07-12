@@ -1,11 +1,13 @@
 .image-upload-field {
+	$image-upload-field: &;
+
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
 
 	&__label {
-		font-weight: 600;
 		color: #111827;
+		font-weight: 600;
 	}
 
 	&__input {
@@ -23,17 +25,17 @@
 		display: block;
 		width: 100%;
 		max-height: 420px;
-		object-fit: contain;
 		border: 1px solid #e5e7eb;
 		border-radius: 14px;
 		background: #f8fafc;
+		object-fit: contain;
 	}
 
 	&__remove {
 		padding: 0.55rem 0.85rem;
 		border: 1px solid #cbd5e1;
 		border-radius: 999px;
-		background: #ffffff;
+		background: #fff;
 		color: #111827;
 		font: inherit;
 		font-weight: 600;
@@ -42,6 +44,30 @@
 		&:disabled {
 			cursor: not-allowed;
 			opacity: 0.6;
+		}
+	}
+
+	&--avatar {
+		text-align: left;
+
+		#{$image-upload-field}__preview {
+			align-items: center;
+		}
+
+		#{$image-upload-field}__image {
+			width: 180px;
+			height: 180px;
+			max-height: none;
+			border-radius: 50%;
+			object-fit: cover;
+			object-position: center;
+		}
+
+		@media (max-width: 480px) {
+			#{$image-upload-field}__image {
+				width: 150px;
+				height: 150px;
+			}
 		}
 	}
 }
