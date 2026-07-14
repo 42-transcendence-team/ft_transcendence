@@ -7,7 +7,6 @@ import { PrivacyPolicy } from "@pages/PrivacyPolicy";
 import { PublicLayout } from "layouts/publicLayout"
 import { ForgotPassword } from "@pages/ForgotPassword";
 import { ResetPassword } from "@pages/ResetPassword";
-import { HomePage } from "@pages/HomePage";
 
 
 export const PublicRoutes = {

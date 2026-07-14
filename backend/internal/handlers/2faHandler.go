@@ -4,6 +4,7 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
+	"log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -142,8 +143,6 @@ func (h *TwoFAHandler) Login2FA(c *gin.Context) {
 		return
 	}
 
-	request.TempToken = tempToken
-
 	err = c.ShouldBindJSON(&request)
 	if err != nil {
 		c.Error(err)
@@ -160,9 +159,11 @@ func (h *TwoFAHandler) Login2FA(c *gin.Context) {
 		return
 	}
 
+	log.Printf("token: %s life: %v", token, life)
 	// Se guarda el token definitivo y se elimina el temporal de las cookies del navegador
 	h.AuthHandler.setCookie(c, token, life)
 	h.AuthHandler.ClearTempToken(c)
 
+	log.Printf("Login2FA: User ID %d successfully logged in with 2FA, JWT token set in cookie", request.Id)
 	c.JSON(200, gin.H{"message": "2FA verified successfully", "token": token})
 }

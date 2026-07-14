@@ -19,6 +19,7 @@ services:
           - ./backend:/app
           - ./elastic/filebeat/ingest_data:/var/log/api
         #   - api-logs:/var/log/api
+          - uploads_data:/app/uploads
         environment:
           - GIN_MODE=debug
         networks:
@@ -100,6 +101,19 @@ services:
             timeout: 3s
             retries: 5
 
+    redisinsight:
+        env_file: .env
+        image: redislabs/redisinsight:latest
+        expose:
+            - "5540"
+        restart: unless-stopped
+        depends_on:
+            redis:
+                condition: service_healthy
+        networks:
+            - redis
+            - redis-view
+
     nginx:
         build:
           context: ./nginx
@@ -126,6 +140,7 @@ services:
           - docs-view
           - monitoring # TODO - Revisar las redes que son compartidas con NGINX
           - elastic
+          - redis-view
           - port-nginx
 
     docusaurus:
@@ -347,6 +362,7 @@ volumes:
     redis_data:
     prometheus_data:
     grafana_data:
+    uploads_data: # Donde se guardan las imágenes subidas a través de los posts
     elastic_data:
     kibana_data:
     metricbeat_data:
@@ -365,5 +381,6 @@ networks:
     docs-view:
     monitoring:
     elastic:
+    redis-view:
     port-nginx:
     api-logs:

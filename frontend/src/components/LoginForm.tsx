@@ -71,7 +71,6 @@ export const LoginForm = () => {
 				setIsSubmitting(false);
 				return;
 			}
-
 			if (data.requires2fa) {
 				setTempToken(data.user?.tempToken || null);
 				setShow2FA(true);
@@ -88,17 +87,8 @@ export const LoginForm = () => {
 			}
 			setErrors({ identifier: "", password: "" });
 			setServerMessage("");
-			
-			// Refrescamos el estado global de autenticación antes de redirigir.
 			await refreshAuth();
-
-			const login = data.user?.login;
-			console.log("LOGIN USER LOGIN:", login);
-			if (login) {
-				window.location.href = `/app/profile/${login}`;
-			} else {
-				window.location.href = "/app";
-			}
+			navigate(`/app`);
 		} catch (err: any) {
 			console.log("LOGIN ERROR:", err)
 			console.log("LOGIN ERROR STATUS:", err?.status)
@@ -129,19 +119,18 @@ export const LoginForm = () => {
 		if (!isComplete || !tempToken) return;
 
 		try {
-			await Login2FA(otpCode.join(""));
+			await Login2FA(otpCode.join(""), tempToken);
 			await refreshAuth();
-
+			await refreshUser();
 			const data = await getAuthenticatedUser();
 			setShow2FA(false);
 
 			const login = data.user?.login;
-
-			if (login) {
-				window.location.href = `/app/profile/${login}`;
+			setShow2FA(false);
+			if (login && login !== tempToken) {
+            	window.location.href = (`/app/profile/${login}`);
 				return;
 			}
-
 			window.location.href = "/app";
 		} catch (err: any) {
 			alert(err.message);
