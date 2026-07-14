@@ -17,6 +17,7 @@ services:
         # Falta hacer el healthcheck para el backend, para que el frontend dependa de el.
         volumes:
           - ./backend:/app
+          - uploads_data:/app/uploads
         environment:
           - GIN_MODE=debug
         networks:
@@ -336,6 +337,7 @@ volumes:
     redis_data:
     prometheus_data:
     grafana_data:
+    uploads_data: # Donde se guardan las imágenes subidas a través de los posts
     elastic_data:
     kibana_data:
     metricbeat_data:
