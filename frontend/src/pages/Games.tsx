@@ -1,29 +1,47 @@
-const games = [
+import { TicTacToe } from "games/tictactoe/ticTacToe";
+import { useNavigate } from "react-router-dom";
+
+export const games = [
 	{
-		id: 1,
-		name: "Game 1",
+		id: "tictactoe",
+		name: "Tic Tac Toe",
 		description: "This is the first game.",
+		aspectRatio: 1,
+		component: TicTacToe,
 	},
 	{
-		id: 2,
-		name: "Game 2",
+		id: "parchis",
+		name: "Parchis",
 		description: "This is the second game.",
+		aspectRatio: 4 / 3,
+		component: () => <div>Parchis Game Component</div>,
 	},
 	{
-		id: 3,
-		name: "Game 3",
+		id: "oca",
+		name: "Oca",
 		description: "This is the third game.",
+		aspectRatio: 16 / 9,
+		component: () => <div>Oca Game Component</div>,
 	},
+	{
+		id: "connectfour",
+		name: "Connect Four",
+		description: "This is the fourth game.",
+		aspectRatio: 4 / 3,
+		component: () => <div>Connect Four Game Component</div>,
+	}
 ];
 
 export const Games = () => {
+	const navigate = useNavigate();
 
-	function handleGameClick(gameId: number) {
+	function handleGameClick(gameId: string) {
 		console.log(`Game ${gameId} clicked`);
 	}
 
-	function handleJoinGame(gameId: number) {
+	function handleJoinGame(gameId: string) {
 		console.log(`Joining game ${gameId}`);
+		navigate(`/app/games/${gameId}`);
 	}
 
 	function displayGameList() {

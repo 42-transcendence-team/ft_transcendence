@@ -6,6 +6,8 @@ import (
 	"backend/internal/repository"
 	routes "backend/internal/routes"
 	"backend/internal/services"
+	"backend/internal/websocket"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,21 +17,32 @@ import (
 func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 
+	hub := websocket.NewHub()
+	go hub.Run()
+
 	userRepo := repository.NewUserRepository(srv.Db)
+	websocketRepo := repository.NewWebsocketRepository(srv.Db)
+	chatRepo := repository.NewChatRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
+	websocketService := services.NewWebsocketService(websocketRepo, userRepo)
+	chatService := services.NewChatService(chatRepo, userRepo)
 	twoFAService := services.New2FAService(userRepo, authService, srv.Redis)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 	blockService := services.NewBlockUserService(friendRepo, userRepo)
+	gameManager := services.NewGameManager()
 
+	gameHandler := handlers.NewGameHandler(gameManager, hub)
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
-	friendHandler := handlers.NewFriendHandler(friendService, blockService)
-
+	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService, gameHandler)
+	chatHandler := handlers.NewChatHandler(hub, chatService)
+	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub)
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
+	notificationsHandler := handlers.NewNotificationsHandler(friendService, websocketService, chatService)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -38,7 +51,7 @@ func (srv *HTTPServer) Router() {
 	{
 		getMe.GET("/me", getMeHandler.Whoami)
 	}
-	
+
 	// rutas publicas para usuarios no autenticados
 	publicForNoAuth := api.Group("/")
 	publicForNoAuth.Use(middlewares.RejectIfAuthMiddleware(srv.Conf))
@@ -46,7 +59,6 @@ func (srv *HTTPServer) Router() {
 		routes.AuthRoutes(publicForNoAuth, authHandler)
 	}
 
-	
 	// Esto en realidad no se como poder hacerlo bonito
 	login := api.Group("/2fa")
 	login.Use(middlewares.TwoFAMiddleware(srv.Conf))
@@ -58,12 +70,14 @@ func (srv *HTTPServer) Router() {
 	protected := api.Group("/")
 	protected.Use(middlewares.AuthMiddleware(srv.Conf, srv.Redis))
 	{
-
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
 		routes.FriendsRoutes(protected, friendHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
+		routes.WebsocketRoutes(protected, websocketHandler)
+		routes.ChatRoutes(protected, chatHandler)
 		routes.UserRoutes(protected, userHandler)
+		routes.NotificationRoutes(protected, notificationsHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 

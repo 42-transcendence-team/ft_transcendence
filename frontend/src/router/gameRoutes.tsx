@@ -1,10 +1,12 @@
+
 import { Games } from "@pages/Games";
-import { TicTacToe } from "games/tictactoe/ticTacToe";
+import GameView from "@pages/GameView";
 
 export const GameRoutes = {
 	path: "games",
 	children: [
 		{ index: true, element: <Games /> },
-		{ path: "tictactoe", element: <TicTacToe /> }
+		{ path: ":gameType", element: <GameView /> },
+		{ path: ":gameType/:gameId", element: <GameView /> },
 	],
 };

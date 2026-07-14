@@ -28,5 +28,6 @@ type User struct {
 	Status uint   // En el caso de que este online que estado quiere mostrar (Ej: 0 = offline, 1 = online, 2 = ausente...)
 	State  string // Estado del usuario like WhatsApp (Ej: "En una reunión", "Cago en todo", ...)
 
-	Friends []*User `gorm:"many2many:user_friends;"` // Relación de amigos entre usuarios (muchos a muchos)
+	Friends []*User     `gorm:"many2many:user_friends;"` // Relación de amigos entre usuarios (muchos a muchos)
+	Chats   []*ChatRoom `gorm:"many2many:user_rooms;"`   // Relación de salas de chat a las que pertenece el usuario (muchos a muchos)
 }

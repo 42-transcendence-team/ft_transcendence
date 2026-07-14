@@ -32,7 +32,7 @@ export async function Login(identifier: string, password: string) {
 
 export async function GetMyProfile() {
     const data = apiRequest({
-		endpoint: "users/me",
+		endpoint: "auth/me",
 	});
 	return data;
 }
@@ -57,6 +57,14 @@ export async function Login2FA(code: string, tempToken: string) {
 			code: code,
 			tempToken: tempToken
 		},
+	});
+
+	return data;
+}
+
+export async function userLoader() {
+	const data = await apiRequest({
+		endpoint: "auth/me",
 	});
 
 	return data;
