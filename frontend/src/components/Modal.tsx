@@ -5,8 +5,12 @@ import { useEffect, useRef, useState } from "react";
 // Props:
 // - open: boolean que controla si el modal está abierto o cerrado
 // - onClose: función que se llama para cerrar el modal
+// - onSubmit: función opcional que se ejecuta con Enter si no está deshabilitada
+// - submitDisabled: bloquea el submit con Enter
 // - title: título opcional del modal
-// - children: contenido del modal (puede ser cualquier elemento React y/o otros componentes creados por nosotros)
+// - children: contenido del modal
+// - closeOnEscape: permite desactivar el cierre con Escape si hay otra modal encima
+// - overlayClassName/modalClassName/contentClassName: clases extra opcionales para casos específicos
 
 // Para usarlo, simplemente envuelve el contenido que deseas mostrar dentro de este y controla su visibilidad con la prop "open". Por ejemplo:
 // <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="No es un título obligatorio">
@@ -23,6 +27,10 @@ type Props = {
 	submitDisabled?: boolean;
 	title?: string;
 	children?: React.ReactNode;
+	closeOnEscape?: boolean;
+	overlayClassName?: string;
+	modalClassName?: string;
+	contentClassName?: string;
 };
 
 function ModalHeader(props: { title?: string; onClose: () => void }) {
@@ -44,9 +52,34 @@ export function Modal(props: Props) {
 	const [isClosing, setIsClosing] = useState(false);
 	const modalRef = useRef<HTMLDivElement>(null);
 
+	const shouldCloseOnEscape = props.closeOnEscape ?? true;
+
+	const overlayClassName = [
+		"modal-overlay",
+		props.overlayClassName,
+		isClosing ? "modal-overlay__closing" : "",
+	]
+		.filter(Boolean)
+		.join(" ");
+
+	const modalClassName = [
+		"modal",
+		props.modalClassName,
+		isClosing ? "modal__closing" : "",
+	]
+		.filter(Boolean)
+		.join(" ");
+
+	const contentClassName = [
+		"modal__content",
+		props.contentClassName,
+	]
+		.filter(Boolean)
+		.join(" ");
+
 	useEffect(() => {
 		const handleKeyDownGlobal = (e: KeyboardEvent) => {
-			if (e.key === "Escape" && props.open)
+			if (e.key === "Escape" && props.open && shouldCloseOnEscape)
 				props.onClose();
 		};
 
@@ -65,19 +98,23 @@ export function Modal(props: Props) {
 		return () => {
 			document.removeEventListener("keydown", handleKeyDownGlobal);
 		};
-	}, [props.open, props.onClose]);
+	}, [props.open, props.onClose, shouldCloseOnEscape]);
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
 		const target = e.target as HTMLElement;
 
-		if (e.key === "Escape") {
+		if (e.key === "Escape" && shouldCloseOnEscape) {
 			e.preventDefault();
 			props.onClose();
 			return;
 		}
 
-		if (e.key === "Enter" && props.onSubmit && !props.submitDisabled &&
-			target.tagName !== "TEXTAREA") {
+		if (
+			e.key === "Enter" &&
+			props.onSubmit &&
+			!props.submitDisabled &&
+			target.tagName !== "TEXTAREA"
+		) {
 			e.preventDefault();
 			props.onSubmit();
 			return;
@@ -88,7 +125,7 @@ export function Modal(props: Props) {
 		if (e.key !== "Tab") return;
 
 		const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
-			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
 		);
 
 		if (!focusable?.length) return;
@@ -113,19 +150,19 @@ export function Modal(props: Props) {
 
 	return (
 		<div
-			className={`modal-overlay ${isClosing ? "modal-overlay__closing" : ""}`}
+			className={overlayClassName}
 			onClick={props.onClose}
 		>
 			<div
 				ref={modalRef}
-				className={`modal ${isClosing ? "modal__closing" : ""}`}
+				className={modalClassName}
 				onClick={(e) => e.stopPropagation()}
 				onKeyDown={handleKeyDown}
 				tabIndex={-1}
 			>
 				<ModalHeader title={props.title} onClose={props.onClose} />
 
-				<div className="modal__content">
+				<div className={contentClassName}>
 					{props.children}
 				</div>
 			</div>

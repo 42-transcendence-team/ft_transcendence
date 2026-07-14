@@ -12,6 +12,8 @@ services:
             redis:
                 condition: service_healthy
         # Falta hacer el healthcheck para el backend, para que el frontend dependa de el.
+        volumes:
+            - uploads_data:/app/uploads
         networks:
             - redis
             - back-front
@@ -92,6 +94,7 @@ volumes:
     postgres_data:
     pgadmin_data:
     redis_data:
+    uploads_data:
 
 
 networks:
