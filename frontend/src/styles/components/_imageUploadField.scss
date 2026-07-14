@@ -70,4 +70,26 @@
 			}
 		}
 	}
+
+	&--banner {
+		text-align: left;
+
+		#{$image-upload-field}__preview {
+			align-items: center;
+			width: 100%;
+		}
+
+		#{$image-upload-field}__image {
+			width: 100%;
+			aspect-ratio: 4 / 1;
+			max-height: none;
+			border-radius: 10px;
+			object-fit: cover;
+			object-position: center;
+		}
+
+		#{$image-upload-field}__remove {
+			align-self: flex-start;
+		}
+	}
 }

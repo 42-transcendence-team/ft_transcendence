@@ -308,6 +308,103 @@ func (h *UserHandler) DeleteAvatar(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// UpdateBanner guarda el nuevo banner y actualiza su ruta en la base de datos.
+// Si la actualización falla, elimina el archivo recién creado para evitar residuos.
+func (h *UserHandler) UpdateBanner(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	file, err := c.FormFile("image")
+	if err != nil {
+		if errors.Is(err, http.ErrMissingFile) {
+			c.Error(appErr.NewValidation(map[string]string{
+				"image": "required",
+			}))
+		} else {
+			c.Error(appErr.NewBadRequest("invalid_image_upload"))
+		}
+
+		c.Abort()
+		return
+	}
+
+	newBannerPath, err := h.ImageStorage.SaveBannerImage(file)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	previousBannerPath, err := h.UserService.UpdateBanner(
+		userID,
+		newBannerPath,
+	)
+	if err != nil {
+		// Si PostgreSQL no se actualiza, retiramos el archivo recién creado.
+		_ = h.ImageStorage.Delete(newBannerPath)
+
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	/*
+		La base de datos ya apunta al banner nuevo. El borrado del archivo
+		anterior es una limpieza secundaria y no debe hacer creer al cliente
+		que la actualización completa ha fallado.
+	*/
+	if previousBannerPath != nil {
+		if err := h.ImageStorage.Delete(*previousBannerPath); err != nil {
+			log.Printf(
+				"could not delete previous banner %q: %v",
+				*previousBannerPath,
+				err,
+			)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "banner updated",
+		"data": gin.H{
+			"bannerPath": newBannerPath,
+		},
+	})
+}
+
+// DeleteBanner elimina la ruta del banner personalizado y después intenta
+// retirar el archivo almacenado. La respuesta no falla si esa limpieza secundaria falla.
+func (h *UserHandler) DeleteBanner(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	previousBannerPath, err := h.UserService.DeleteBanner(userID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	if previousBannerPath != nil {
+		if err := h.ImageStorage.Delete(*previousBannerPath); err != nil {
+			log.Printf(
+				"could not delete banner %q: %v",
+				*previousBannerPath,
+				err,
+			)
+		}
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	// /users/profile/pepe -> pepe
 	loginParam := c.Param("login")
@@ -325,14 +422,16 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	visitKey := fmt.Sprintf("visits:%d", user.ID)
 	visits, _ := h.Redis.Incr(ctx, visitKey).Result()
 
-	c.JSON(200, gin.H{
-		"id":       user.ID,
-		"login":    user.Login,
-		"email":    user.Email,
-		"name":     user.Name,
-		"surname":  user.Surname,
-		"isOnline": isOnline,
-		"visits":   visits,
+	c.JSON(http.StatusOK, gin.H{
+		"id":         user.ID,
+		"login":      user.Login,
+		"email":      user.Email,
+		"name":       user.Name,
+		"surname":    user.Surname,
+		"avatarPath": user.AvatarPath,
+		"bannerPath": user.BannerPath,
+		"isOnline":   isOnline,
+		"visits":     visits,
 	})
 }
 
@@ -359,6 +458,7 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 			"name":       user.Name,
 			"surname":    user.Surname,
 			"avatarPath": user.AvatarPath,
+			"bannerPath": user.BannerPath,
 		},
 	})
 }

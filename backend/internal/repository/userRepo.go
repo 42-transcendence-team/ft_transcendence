@@ -152,6 +152,20 @@ func (r *UserRepository) UpdateAvatarPath(
 	return result.RowsAffected, result.Error
 }
 
+// UpdateBannerPath actualiza la ruta del banner del usuario.
+// Recibe nil al eliminar el banner personalizado.
+func (r *UserRepository) UpdateBannerPath(
+	userID uint,
+	bannerPath *string,
+) (int64, error) {
+	result := r.db.
+		Model(&models.User{}).
+		Where("id = ?", userID).
+		Update("banner_path", bannerPath)
+
+	return result.RowsAffected, result.Error
+}
+
 func (r *UserRepository) Remove2FA(request dto.UserRemove2FA) (int64, error) {
 	result := r.db.Model(&models.User{}).
 		Where("id = ?", request.Id).

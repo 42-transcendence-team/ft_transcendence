@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 
-type ImageUploadFieldVariant = "avatar";
+type ImageUploadFieldVariant = "avatar" | "banner";
 
 type ImageUploadFieldProps = {
 	id: string;
@@ -31,7 +31,8 @@ export const ImageUploadField = ({
 	onError,
 }: ImageUploadFieldProps) => {
 	const inputRef = useRef<HTMLInputElement>(null);
-	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+	const [previewUrl, setPreviewUrl] =
+		useState<string | null>(null);
 
 	useEffect(() => {
 		if (!file) {
@@ -52,7 +53,8 @@ export const ImageUploadField = ({
 	const handleFileChange = (
 		event: ChangeEvent<HTMLInputElement>,
 	) => {
-		const selectedFile = event.target.files?.[0] ?? null;
+		const selectedFile =
+			event.target.files?.[0] ?? null;
 
 		onError(null);
 
@@ -89,7 +91,9 @@ export const ImageUploadField = ({
 	// La variante añade un modificador BEM únicamente visual.
 	const fieldClassName = [
 		"image-upload-field",
-		variant ? `image-upload-field--${variant}` : "",
+		variant
+			? `image-upload-field--${variant}`
+			: "",
 	]
 		.filter(Boolean)
 		.join(" ");

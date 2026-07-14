@@ -27,6 +27,7 @@ type User struct {
 	Surname    string    `gorm:"not null"`                                      // Apellido del usuario
 	Birthday   time.Time `gorm:"not null"`                                      // Fecha de cumpleaños del usuario
 	AvatarPath *string   `gorm:"type:varchar(255)" json:"avatarPath,omitempty"` // Ruta relativa del avatar; nil si utiliza la imagen predeterminada
+	BannerPath *string   `gorm:"type:varchar(255)" json:"bannerPath,omitempty"` // Ruta relativa del banner; nil si utiliza el fondo predeterminado
 
 	Status uint   // Estado de presencia que muestra el usuario (ej.: 0 = offline, 1 = online, 2 = ausente...)
 	State  string // Mensaje de estado similar al de WhatsApp (ej.: "En una reunión", "Cago en todo", ...)

@@ -1,9 +1,9 @@
-@use '../abstracts/variables' as *;
+@use "../abstracts/variables" as *;
 
 body {
 	margin: 0;
 	background-color: $background-page;
-	font-family: sans-serif; // la funte q se elija
+	font-family: sans-serif;
 }
 
 .profile {
@@ -28,17 +28,80 @@ body {
 	}
 
 	&__banner {
+		position: relative;
+		z-index: 0;
+		isolation: isolate;
+		display: block;
+		flex: 0 0 auto;
 		width: 100%;
-		// height: 150px;
 		height: 20vw;
 		min-height: 120px;
 		max-height: 250px;
+		padding: 0;
+		overflow: hidden;
+		border: 0;
 		border-radius: 3px;
 		background-color: $color-banner;
+		font: inherit;
+		text-align: inherit;
+
+		&--interactive {
+			cursor: pointer;
+
+			&:hover,
+			&:focus-visible {
+				.profile__banner-overlay {
+					opacity: 1;
+				}
+			}
+
+			&:focus-visible {
+				outline: 3px solid #2563eb;
+				outline-offset: -3px;
+			}
+		}
+	}
+
+	&__banner-image,
+	&__banner-placeholder {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	&__banner-image {
+		object-fit: cover;
+		object-position: center;
+	}
+
+	&__banner-placeholder {
+		background-color: $color-banner;
+	}
+
+	&__banner-overlay {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.65rem;
+		background: rgba(0, 0, 0, 0.42);
+		color: #fff;
+		font-size: 1rem;
+		font-weight: 700;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+
+		i {
+			font-size: 1.35rem;
+		}
 	}
 
 	&__header {
 		position: relative;
+		z-index: 1;
 		display: flex;
 		align-items: flex-end;
 		gap: 20px;
@@ -51,7 +114,6 @@ body {
 		--user-avatar-status-border-color: #{$background-profile};
 	}
 
-	// Info del Usuario
 	&__user-details {
 		display: flex;
 		flex: 1;
@@ -100,16 +162,6 @@ body {
 		border-radius: 10px;
 	}
 
-	// Basado en este comentario
-	// // Estilo para cuando no hay posts de chatigpt (ns como se ve pero parece buena idea)
-	// .no-posts {
-	//   text-align: center;
-	//   padding: 40px;
-	//   color: $color-text-light;
-	//   font-style: italic;
-	//   background: rgba(255, 255, 255, 0.5);
-	//   border-radius: 10px;
-	// }
 	&__empty {
 		padding: 40px;
 		border-radius: 10px;
@@ -117,5 +169,19 @@ body {
 		color: $color-text-light;
 		font-style: italic;
 		text-align: center;
+	}
+}
+
+@media (max-width: 520px) {
+	.profile {
+		&__banner-overlay {
+			gap: 0.4rem;
+			font-size: 0.9rem;
+		}
+
+		&__header {
+			gap: 12px;
+			padding-inline: 10px;
+		}
 	}
 }

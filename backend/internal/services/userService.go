@@ -101,6 +101,71 @@ func (s *UserService) DeleteAvatar(
 	return previousAvatarPath, nil
 }
 
+// UpdateBanner sustituye la ruta del banner y devuelve la anterior para que
+// el handler pueda eliminar el archivo antiguo después de actualizar la base de datos.
+func (s *UserService) UpdateBanner(
+	userID uint,
+	newBannerPath string,
+) (*string, error) {
+	user, err := s.UserRepo.FindById(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("user_not_found")
+		}
+
+		return nil, appErr.NewInternal(err)
+	}
+
+	previousBannerPath := user.BannerPath
+
+	rows, err := s.UserRepo.UpdateBannerPath(
+		userID,
+		&newBannerPath,
+	)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	if rows == 0 {
+		return nil, appErr.NewNotFound("user_not_found")
+	}
+
+	return previousBannerPath, nil
+}
+
+// DeleteBanner elimina la ruta del banner personalizado y devuelve la anterior
+// para que el handler pueda borrar el archivo almacenado.
+func (s *UserService) DeleteBanner(
+	userID uint,
+) (*string, error) {
+	user, err := s.UserRepo.FindById(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("user_not_found")
+		}
+
+		return nil, appErr.NewInternal(err)
+	}
+
+	// El borrado es idempotente: si no hay banner, no hacemos nada.
+	if user.BannerPath == nil {
+		return nil, nil
+	}
+
+	previousBannerPath := user.BannerPath
+
+	rows, err := s.UserRepo.UpdateBannerPath(userID, nil)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	if rows == 0 {
+		return nil, appErr.NewNotFound("user_not_found")
+	}
+
+	return previousBannerPath, nil
+}
+
 func (s *UserService) require2FA(user *models.User, code *string) error {
 	if !user.Active2FA {
 		return nil

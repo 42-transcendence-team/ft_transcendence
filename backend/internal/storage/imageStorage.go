@@ -16,6 +16,7 @@ import (
 const (
 	maxPostImageSize   int64 = 5 << 20 // 5 MB
 	maxAvatarImageSize int64 = 5 << 20 // 5 MB
+	maxBannerImageSize int64 = 5 << 20 // 5 MB
 )
 
 // ImageStorage gestiona el almacenamiento local de imágenes a partir de un
@@ -54,6 +55,16 @@ func (s *ImageStorage) SaveAvatarImage(
 	return s.SaveImage(file, SaveImageOptions{
 		Directory: "avatars",
 		MaxSize:   maxAvatarImageSize,
+	})
+}
+
+// SaveBannerImage guarda imágenes de cabecera dentro del directorio de banners.
+func (s *ImageStorage) SaveBannerImage(
+	file *multipart.FileHeader,
+) (string, error) {
+	return s.SaveImage(file, SaveImageOptions{
+		Directory: "banners",
+		MaxSize:   maxBannerImageSize,
 	})
 }
 
