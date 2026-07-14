@@ -41,15 +41,8 @@ export type ApiError = {
 	data?: any;
 };
 
-export async function apiRequest<T = any>(
-	props: ApiRequestProps,
-): Promise<T> {
-	const {
-		endpoint,
-		body,
-		method = "GET",
-		includeCredentials = true,
-	} = props;
+export async function apiRequest<T = any>(props: ApiRequestProps): Promise<T> {
+	const {endpoint, body, method = "GET", includeCredentials = true} = props;
 
 	/*
 	 * FormData no debe serializarse como JSON.
