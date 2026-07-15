@@ -14,10 +14,10 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
     const isAtBottomRef = useRef(true);
     const lastMessageFromMeRef = useRef(false);
 
-    // useEffect(() => {
-    //     if (id)
-			// joinRoom(id);
-    // }, [id, joinRoom]);
+    useEffect(() => {
+        if (id)
+			joinRoom(id);
+    }, [id, joinRoom]);
 
    const handleScroll = () => {
         const el = messagesRef.current;

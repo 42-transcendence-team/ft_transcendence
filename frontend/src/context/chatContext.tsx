@@ -133,6 +133,18 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
         if (!user)
 			return;
 
+
+		const unsubscribeJoin = subscribe("join", (message: any) => {
+			const {room_id} = message
+			setMessagesByRoom((prev) => {
+				return {
+					...prev,
+					[room_id]: [...message.messages]
+				};
+			});
+			console.log('mensaje aqui: ', message)
+			//implementar cacheo
+		});
 		const unsubscribeMessage = subscribe("message", (message: any) => {
 			const { room_id } = message;
 			if (!room_id)
@@ -175,6 +187,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 		return () => {
 			unsubscribeMessage();
 			unsubscribeCreateRoom();
+			unsubscribeJoin();
 		};
 	}, [subscribe]);
 

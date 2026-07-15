@@ -63,12 +63,8 @@ export function useHandleWebsocket(user: AuthUser | null) {
 				const message = JSON.parse(event.data);
 				const { type } = message;
 				const typeListeners = listeners.current.get(type);
-				if (message.type === 'join') 
-					console.log('adiso')
-
+				
 				if (typeListeners) {
-					if (message.type == 'join') 
-						console.log('hola')
 					typeListeners.forEach(listener => {
 						try {
 							listener(message);
