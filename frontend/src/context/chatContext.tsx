@@ -78,6 +78,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 			return;
 		}
 		send({ type: "join_room", room_id: roomId });
+		console.log(`Joining room ${roomId}`);
 	}, [messagesByRoom, send]);
 
 	const bye = () => {
@@ -101,12 +102,12 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 				body: { name: `Room ${Math.floor(Math.random() * 1000)}`, private: true, users: [user_id] },
 			});
 
-			console.log("Chat room created successfully");
 			setRooms((prevRooms) => {
 				if (!prevRooms.includes(data.ID))
 					return [...prevRooms, data.ID];
 				return prevRooms;
 			});
+			joinRoom(data.ID)
 		} catch (error) {
 			console.error("Error creating chat room:", error);
 		}
@@ -167,6 +168,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 			const roomId = message.payload?.room_id;
 			if (roomId) {
 				setRooms((prev) => (prev.includes(roomId) ? prev : [...prev, roomId]));
+				joinRoom(roomId);
 			}
 		});
 

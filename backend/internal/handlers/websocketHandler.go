@@ -113,12 +113,9 @@ func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
 		return
 	}
 	
-	if (req.Users[0] != userIDValue.(uint)){
-log.Printf("request: %v", req.Users)
-	log.Printf("request: %v", userIDValue.(uint))
+	if (req.Users[0] != userIDValue.(uint)){//hacer que si se envia un payload con mas user verificar cada uno for
 		req.Users = append(req.Users, userIDValue.(uint))
 	}
-log.Printf("request: %v", req.Users)
 
 	room, err := h.websocketService.CreateRoom(&req)
 	if err != nil {

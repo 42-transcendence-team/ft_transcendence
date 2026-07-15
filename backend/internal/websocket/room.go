@@ -92,19 +92,35 @@ func (r *Room) Run() {
 
 			case client := <-r.destroy:
 				r.mu.Lock()
-				if _, ok := r.Clients[client]; ok {
-					delete(r.Clients, client)
-					delete(client.Rooms, r.ID)
-				}
-				empty := len(r.Clients) == 0
-
-				if empty {
+				//if _, ok := r.Clients[client]; ok {
+				//	log.Printf("hay cliente")
+				// r.Clients[client] = false
+				// delete(r.Clients, client)
+				// delete(client.Rooms, r.ID)
+				// log.Printf("xddddd %v", r.Clients)
+				//}
+				r.removeClient(r.ID, client.UserID)
+				user, _ := r.ListUsers(r.ID)
+				log.Printf("Usuarios en la sala %d: %v", r.ID, user)
+				if len(user) == 0  {
 					r.cleanup()
 					return
 				}
-				r.mu.Unlock()
+				// empty := len(r.Clients) == 0
+
+				r.mu.Unlock()//parece que esta implementacion es mejor pero consume mucho, mirar bien lo de los usuarios conectados
+				// if empty {
+				// 	r.cleanup()
+				// 	return
+				// }
 		}
 	}
+}
+
+func (r *Room) removeClient(roomID uint, userID uint) {
+    r.hub.db.Table("room_users").
+        Where("chat_room_id = ? AND user_id = ?", roomID, userID).
+        Delete(nil)
 }
 
 func (r *Room) cleanup() {
@@ -118,4 +134,17 @@ func (r *Room) cleanup() {
 	if err != nil {
 		log.Printf("Error deleting room from database: %v", err)
 	}
+}
+//query hechas 100% con IA, mirar bien anque parece que funcionan bien
+func (r *Room) ListUsers(roomID uint) ([]models.User, error) {
+	var users []models.User
+
+    err := r.hub.db.Raw(`
+        SELECT u.* 
+        FROM users u 
+        JOIN room_users ru ON ru.user_id = u.id 
+        WHERE ru.chat_room_id = ?
+    `, roomID).Scan(&users).Error
+    
+	return users, err
 }
