@@ -78,7 +78,7 @@ func (c *Client) Destroy(room *Room) {
 func (c *Client) SendMessage(roomID uint, message []byte) error {
 	room, ok := c.Hub.Rooms[roomID]
 	if !ok {
-		return fmt.Errorf("Room with ID %d doesn't exists", roomID)
+		return fmt.Errorf("send message Room with ID %d doesn't exists", roomID)
 	}
 
 	room.Broadcast <- message

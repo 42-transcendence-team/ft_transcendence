@@ -103,7 +103,6 @@ func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	log.Printf("request: %v", c.Request.Body)
 
 	var req dto.CreateRoomRequest
 	err := c.ShouldBindJSON(&req)
@@ -113,7 +112,13 @@ func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	req.Users = append(req.Users, userIDValue.(uint))
+	
+	if (req.Users[0] != userIDValue.(uint)){
+log.Printf("request: %v", req.Users)
+	log.Printf("request: %v", userIDValue.(uint))
+		req.Users = append(req.Users, userIDValue.(uint))
+	}
+log.Printf("request: %v", req.Users)
 
 	room, err := h.websocketService.CreateRoom(&req)
 	if err != nil {
@@ -242,7 +247,7 @@ func (h *WebsocketHandler) JoinRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
 func (h *WebsocketHandler) LeaveRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
 	room, ok := h.hub.Rooms[msg.RoomID]
 	if !ok {
-		log.Printf("Room with ID %d doesn't exists", msg.RoomID)
+		log.Printf("leave room Room with ID %d doesn't exists", msg.RoomID)
 		return
 	}
 	c.LeaveRoom(room)
@@ -252,7 +257,7 @@ func (h *WebsocketHandler) Destroy(c ws.ClientConn, msg *dto.IncomingMessage) {
 	room, ok := h.hub.Rooms[msg.RoomID]
 	log.Printf("room: %v", room)
 	if !ok {
-		log.Printf("Room with ID %d doesn't exists", msg.RoomID)
+		log.Printf(" destroy Room with ID %d doesn't exists", msg.RoomID)
 		return
 	}
 	c.Destroy(room)

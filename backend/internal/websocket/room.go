@@ -29,7 +29,7 @@ func NewRoom(id uint, name string, private bool, hub *Hub) *Room {
 		Clients:   make(map[*Client]bool),
 		Join:      make(chan *Client),
 		Leave:     make(chan *Client),
-		destroy:     make(chan *Client),
+		destroy:     make(chan *Client, 1),
 		Broadcast: make(chan []byte),
 		hub:       hub,
 	}
@@ -92,19 +92,17 @@ func (r *Room) Run() {
 
 			case client := <-r.destroy:
 				r.mu.Lock()
-            	if _, ok := r.Clients[client]; ok {
+				if _, ok := r.Clients[client]; ok {
 					delete(r.Clients, client)
 					delete(client.Rooms, r.ID)
-					empty := len(r.Clients) == 0
-					r.mu.Unlock()
-
-					if empty {
-						r.cleanup()
-						return
-					} 
-				} else {
-					r.mu.Unlock()
 				}
+				empty := len(r.Clients) == 0
+
+				if empty {
+					r.cleanup()
+					return
+				}
+				r.mu.Unlock()
 		}
 	}
 }
@@ -116,5 +114,8 @@ func (r *Room) cleanup() {
     close(r.destroy)
 
     r.hub.RemoveRoom(r.ID)
-    r.hub.db.Delete(&models.ChatRoom{}, r.ID)
+	err := r.hub.db.Delete(&models.ChatRoom{}, r.ID).Error
+	if err != nil {
+		log.Printf("Error deleting room from database: %v", err)
+	}
 }
