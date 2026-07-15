@@ -9,13 +9,14 @@ interface ChatModalProps {
 }
 
 export function ChatModal({ id, onClose }: ChatModalProps) {
-    const { messagesByRoom, sendMessage, user, joinRoom } = useChat();
+    const { messagesByRoom, sendMessage, user, joinRoom} = useChat();
     const messagesRef = useRef<HTMLDivElement>(null);
     const isAtBottomRef = useRef(true);
     const lastMessageFromMeRef = useRef(false);
 
     useEffect(() => {
-        if (id) joinRoom(id);
+        if (id)
+			joinRoom(id);
     }, [id, joinRoom]);
 
    const handleScroll = () => {

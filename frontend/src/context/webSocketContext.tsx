@@ -1,8 +1,9 @@
-import { createContext, useContext, useRef, useEffect, useCallback } from "react";
+import { createContext, useContext, useRef, useEffect, useState, useCallback } from "react";
 
 interface WebSocketContextType {
 	send: (message: any) => void;
 	subscribe: (type: string, handler: (message: unknown) => void) => () => void;
+	isConnected: boolean;
 }
 
 interface AuthUser {
@@ -21,6 +22,7 @@ export function useHandleWebsocket(user: AuthUser | null) {
 	const listeners = useRef(new Map<string, Set<MessageHandler>>());
 	const reconnectTimeout = useRef<number | null>(null);
 	const shouldReconnect = useRef(true);
+	const [isConnected, setIsConnected] = useState(false);
 
 	const send = useCallback((message: any): boolean => {
 		if (websocket.current?.readyState !== WebSocket.OPEN)
@@ -54,15 +56,19 @@ export function useHandleWebsocket(user: AuthUser | null) {
 
 			ws.onopen = () => {
 				console.log("WebSocket conectado");
+				setIsConnected(true);
 			};
 
 			ws.onmessage = (event) => {
 				const message = JSON.parse(event.data);
 				const { type } = message;
-
 				const typeListeners = listeners.current.get(type);
+				if (message.type === 'join') 
+					console.log('adiso')
 
 				if (typeListeners) {
+					if (message.type == 'join') 
+						console.log('hola')
 					typeListeners.forEach(listener => {
 						try {
 							listener(message);
@@ -75,6 +81,7 @@ export function useHandleWebsocket(user: AuthUser | null) {
 
 			ws.onclose = (e) => {
 				console.log("WebSocket cerrado");
+				setIsConnected(false);
 				console.log("WS close:", {
 					code: e.code,
 					reason: e.reason,
@@ -104,14 +111,14 @@ export function useHandleWebsocket(user: AuthUser | null) {
 		};
 	}, [user?.id]);
 
-	return { send, subscribe };
+	return { send, subscribe, isConnected};
 }
 
 export function WebSocketProvider({ children, user }: { children: React.ReactNode; user: AuthUser | null }) {
-	const { send, subscribe } = useHandleWebsocket(user)
+	const { send, subscribe, isConnected} = useHandleWebsocket(user)
 	
 	return (
-		<WebSocketContext.Provider value={ {send, subscribe} }>
+		<WebSocketContext.Provider value={ {send, subscribe, isConnected} }>
 			{children}
 		</WebSocketContext.Provider>
     );

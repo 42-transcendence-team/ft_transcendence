@@ -18,18 +18,18 @@ import (
 func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 
-	hub := websocket.NewHub()
+	hub := websocket.NewHub(srv.Db)
 	go hub.Run()
 
 	srv.Engine.MaxMultipartMemory = 8 << 20 // 8 MB
 	srv.Engine.Static("/uploads", "./uploads")
 
 	userRepo := repository.NewUserRepository(srv.Db)
-	websocketRepo := repository.NewWebsocketRepository(srv.Db)
 	chatRepo := repository.NewChatRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
 	postRepo := repository.NewPostRepository(srv.Db)
 	commentRepo := repository.NewCommentRepository(srv.Db)
+	websocketRepo := repository.NewWebsocketRepository(srv.Db)
 	postLikeRepo := repository.NewPostLikeRepository(srv.Db)
 
 	imageStorage := storage.NewImageStorage("uploads")

@@ -8,22 +8,33 @@ import {NotificationProvider} from "context/notificationsContext";
 import { ChatPanel } from "@components/ChatPanel";
 import { ChatModal } from "@components/ChatModal";
 import { Notification } from "@components/Notification";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {apiRequest} from "api/ApiRequest";
 
 function useHandleChat() {
 	const [activeChat, setActiveChat] = useState<number | null>(null);
 
 	const toggleChat = (id: number) => {
-		setActiveChat((prev) => (prev === id ? null : id));
+		setActiveChat((prev) => {console.log(prev);return (prev === id ? null : id)});
 	};
 
 	return { activeChat, toggleChat };
+}
+
+const sendFriendRequest = async () => {
+	await apiRequest({
+		endpoint: "friends/requests",
+		//ReceiverID uint `json:"receiver_id" binding:"required"`
+		method: "POST",
+		body: { receiver_id: parseInt(prompt("Enter the user ID to send a friend request:") || "0") },
+	})
 }
 
 export function PrivateLayout() {
 	const data = useLoaderData();
 	const {activeChat, toggleChat} = useHandleChat();
 
+	useEffect(() => {console.log(activeChat)}, [activeChat]);
 	return (
 		<div className="privateLayout">
 			<WebSocketProvider user={data.user}>
@@ -39,6 +50,7 @@ export function PrivateLayout() {
 									<Notification/>
 								</div>
 							</div>
+							<button onClick={sendFriendRequest}>send req</button>
 						</aside>
 
 						<main className="privateLayout__content">

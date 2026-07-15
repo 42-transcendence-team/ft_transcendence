@@ -46,6 +46,7 @@ type ClientConn interface {
 	SendMessage(roomID uint, message []byte) error
 	JoinRoom(*Room)
 	LeaveRoom(*Room)
+	Destroy(*Room)
 	GetUserID() uint
 	GetUsername() string
 }
@@ -68,6 +69,10 @@ func (c *Client) JoinRoom(room *Room) {
 
 func (c *Client) LeaveRoom(room *Room) {
 	room.Leave <- c
+}
+
+func (c *Client) Destroy(room *Room) {
+	room.destroy <- c
 }
 
 func (c *Client) SendMessage(roomID uint, message []byte) error {
