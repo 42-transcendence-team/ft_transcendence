@@ -1,17 +1,28 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+
+import type { ApiError } from "../api/ApiRequest";
+import {
+	getUserProfile,
+	type UserProfile,
+} from "../api/UserProfile";
+
 import "../styles/pages/_profile.scss";
 import {
 	UserAvatar,
 	type UserPresence,
 } from "../components/users/UserAvatar";
+
 import photo1 from "../assets/img/choni1.png";
 import photo2 from "../assets/img/choni2.png";
 import photo3 from "../assets/img/choni3.png";
 import { Post } from "../components/Post";
 import { Button1 } from "../components/Button1";
+import { NotFound } from "./NotFound";
 import { AvatarEditorModal } from "../components/users/AvatarEditorModal";
 import { BannerEditorModal } from "../components/users/BannerEditorModal";
+import { PostImageModal } from "../components/posts/PostImageModal";
 
 // Todo cambiar los datos y que lleguen de la BD.
 const postsData = [
@@ -53,30 +64,175 @@ const postsData = [
 	},
 ];
 
-function getBannerSource(
-	bannerPath: string,
-): string {
-	return bannerPath.startsWith("/")
-		? bannerPath
-		: `/${bannerPath}`;
+function getImageSource(imagePath: string): string {
+	return imagePath.startsWith("/")
+		? imagePath
+		: `/${imagePath}`;
+}
+
+function isApiError(error: unknown): error is ApiError {
+	return (
+		typeof error === "object" &&
+		error !== null &&
+		"status" in error &&
+		typeof error.status === "number"
+	);
 }
 
 export const Profile = () => {
-	const { user, loading, refreshUser } = useAuth();
+	const { username } = useParams<{ username: string }>();
+
+	const {
+		user: authenticatedUser,
+		loading: authLoading,
+		refreshUser,
+	} = useAuth();
+
+	const [profileUser, setProfileUser] =
+		useState<UserProfile | null>(null);
+	const [isLoadingProfile, setIsLoadingProfile] =
+		useState(true);
+	const [profileError, setProfileError] =
+		useState<string | null>(null);
+	const [profileNotFound, setProfileNotFound] =
+		useState(false);
 
 	const [isAvatarEditorOpen, setIsAvatarEditorOpen] =
 		useState(false);
 	const [isBannerEditorOpen, setIsBannerEditorOpen] =
 		useState(false);
+	const [isAvatarViewerOpen, setIsAvatarViewerOpen] =
+		useState(false);
+
+	const [avatarImageFailed, setAvatarImageFailed] =
+		useState(false);
 	const [bannerImageFailed, setBannerImageFailed] =
 		useState(false);
 
 	useEffect(() => {
-		// Cada ruta nueva debe volver a intentar cargar el banner.
-		setBannerImageFailed(false);
-	}, [user?.bannerPath]);
+		let cancelled = false;
 
-	if (loading) {
+		setProfileUser(null);
+		setProfileError(null);
+		setProfileNotFound(false);
+		setIsLoadingProfile(true);
+
+		setIsAvatarEditorOpen(false);
+		setIsBannerEditorOpen(false);
+		setIsAvatarViewerOpen(false);
+
+		setAvatarImageFailed(false);
+		setBannerImageFailed(false);
+
+		if (!username) {
+			setProfileNotFound(true);
+			setIsLoadingProfile(false);
+			return;
+		}
+
+		getUserProfile(username)
+			.then((profile) => {
+				if (!cancelled) {
+					setProfileUser(profile);
+				}
+			})
+			.catch((error: unknown) => {
+				if (cancelled) {
+					return;
+				}
+
+				if (isApiError(error) && error.status === 404) {
+					setProfileNotFound(true);
+					return;
+				}
+
+				setProfileError(
+					"The profile could not be loaded.",
+				);
+			})
+			.finally(() => {
+				if (!cancelled) {
+					setIsLoadingProfile(false);
+				}
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [username]);
+
+	/*
+	 * Los editores actualizan primero AuthContext. Cuando el perfil
+	 * abierto es el propio, sincronizamos aquí las rutas nuevas sin
+	 * tener que repetir la petición completa de perfil.
+	 */
+	useEffect(() => {
+		if (
+			!profileUser ||
+			!authenticatedUser ||
+			profileUser.login !== authenticatedUser.login
+		) {
+			return;
+		}
+
+		setProfileUser((currentProfile) => {
+			if (!currentProfile) {
+				return currentProfile;
+			}
+
+			return {
+				...currentProfile,
+				name:
+					authenticatedUser.name ??
+					currentProfile.name,
+				surname:
+					authenticatedUser.surname ??
+					currentProfile.surname,
+				avatarPath:
+					authenticatedUser.avatarPath ?? null,
+				bannerPath:
+					authenticatedUser.bannerPath ?? null,
+			};
+		});
+	}, [
+		authenticatedUser?.name,
+		authenticatedUser?.surname,
+		authenticatedUser?.avatarPath,
+		authenticatedUser?.bannerPath,
+	]);
+
+	/*
+	 * UserAvatar ya gestiona su propio fallback, pero Profile también
+	 * necesita saber si la imagen existe para no abrir un visor roto.
+	 */
+	useEffect(() => {
+		setAvatarImageFailed(false);
+
+		if (!profileUser?.avatarPath) {
+			return;
+		}
+
+		let active = true;
+		const image = new Image();
+
+		image.onerror = () => {
+			if (active) {
+				setAvatarImageFailed(true);
+			}
+		};
+
+		image.src = getImageSource(profileUser.avatarPath);
+
+		return () => {
+			active = false;
+		};
+	}, [profileUser?.avatarPath]);
+
+	useEffect(() => {
+		setBannerImageFailed(false);
+	}, [profileUser?.bannerPath]);
+
+	if (authLoading || isLoadingProfile) {
 		return (
 			<div className="loading-screen">
 				Cargando el roneito...
@@ -84,7 +240,7 @@ export const Profile = () => {
 		);
 	}
 
-	if (!user) {
+	if (!authenticatedUser) {
 		return (
 			<div className="error-screen">
 				No se ha podido cargar tu sesión.
@@ -92,61 +248,111 @@ export const Profile = () => {
 		);
 	}
 
-	// Temporal hasta que exista el sistema real de presencia/status.
-	const profilePresence: UserPresence = "online";
+	if (profileNotFound) {
+		return <NotFound />;
+	}
+
+	if (profileError || !profileUser) {
+		return (
+			<div className="error-screen">
+				{profileError ??
+					"The profile could not be loaded."}
+			</div>
+		);
+	}
+
+	const isOwnProfile =
+		authenticatedUser.login === profileUser.login;
+
+	const profilePresence: UserPresence =
+		profileUser.isOnline ? "online" : "offline";
+
+	const hasCustomAvatar =
+		Boolean(profileUser.avatarPath) &&
+		!avatarImageFailed;
 
 	const hasCustomBanner =
-		Boolean(user.bannerPath) && !bannerImageFailed;
+		Boolean(profileUser.bannerPath) &&
+		!bannerImageFailed;
+
+	const handleAvatarClick = isOwnProfile
+		? () => setIsAvatarEditorOpen(true)
+		: hasCustomAvatar
+			? () => setIsAvatarViewerOpen(true)
+			: undefined;
+
+	const avatarOverlay = isOwnProfile ? (
+		<i className="fas fa-camera" />
+	) : hasCustomAvatar ? (
+		<i className="fas fa-expand" />
+	) : undefined;
+
+	const bannerContent = (
+		<>
+			{hasCustomBanner && profileUser.bannerPath ? (
+				<img
+					className="profile__banner-image"
+					src={getImageSource(
+						profileUser.bannerPath,
+					)}
+					alt={`${profileUser.login} profile banner`}
+					onError={() =>
+						setBannerImageFailed(true)
+					}
+				/>
+			) : (
+				<span className="profile__banner-placeholder" />
+			)}
+
+			{isOwnProfile && (
+				<span
+					className="profile__banner-overlay"
+					aria-hidden="true"
+				>
+					<i className="fas fa-camera" />
+					<span>Edit banner</span>
+				</span>
+			)}
+		</>
+	);
 
 	return (
 		<div className="profile">
 			<div className="profile__container">
-				<button
-					className="profile__banner profile__banner--interactive"
-					type="button"
-					aria-label="Edit profile banner"
-					onClick={() =>
-						setIsBannerEditorOpen(true)
-					}
-				>
-					{hasCustomBanner && user.bannerPath ? (
-						<img
-							className="profile__banner-image"
-							src={getBannerSource(
-								user.bannerPath,
-							)}
-							alt={`${user.login} profile banner`}
-							onError={() =>
-								setBannerImageFailed(true)
-							}
-						/>
-					) : (
-						<span className="profile__banner-placeholder" />
-					)}
-
-					<span
-						className="profile__banner-overlay"
-						aria-hidden="true"
+				{isOwnProfile ? (
+					<button
+						className={[
+							"profile__banner",
+							"profile__banner--interactive",
+						].join(" ")}
+						type="button"
+						aria-label="Edit profile banner"
+						onClick={() =>
+							setIsBannerEditorOpen(true)
+						}
 					>
-						<i className="fas fa-camera" />
-						<span>Edit banner</span>
-					</span>
-				</button>
+						{bannerContent}
+					</button>
+				) : (
+					<div className="profile__banner">
+						{bannerContent}
+					</div>
+				)}
 
 				<div className="profile__header">
 					<UserAvatar
-						avatarPath={user.avatarPath}
-						username={user.login}
+						avatarPath={profileUser.avatarPath}
+						username={profileUser.login}
 						size="large"
 						status={profilePresence}
 						className="profile__avatar"
-						ariaLabel="Edit profile image"
-						overlay={
-							<i className="fas fa-camera" />
+						ariaLabel={
+							isOwnProfile
+								? "Edit profile image"
+								: `Open ${profileUser.login} profile image`
 						}
-						onClick={() =>
-							setIsAvatarEditorOpen(true)
-						}
+						overlay={avatarOverlay}
+						onClick={handleAvatarClick}
 					/>
 
 					<div className="profile__user-details">
@@ -155,14 +361,15 @@ export const Profile = () => {
 
 							<span>
 								Nº Visitas al perfil{" "}
-								{user.visits || 0}
+								{profileUser.visits}
 							</span>
 						</div>
 
 						<h4 className="profile__user-name">
-							{user.name && user.surname
-								? `${user.name} ${user.surname}`
-								: user.login}
+							{profileUser.name &&
+							profileUser.surname
+								? `${profileUser.name} ${profileUser.surname}`
+								: profileUser.login}
 						</h4>
 					</div>
 
@@ -171,7 +378,7 @@ export const Profile = () => {
 
 				<div className="profile__feed">
 					<p className="profile__status">
-						{user.status ||
+						{profileUser.status ||
 							"Sin estado disponible"}
 					</p>
 
@@ -191,35 +398,55 @@ export const Profile = () => {
 							))
 						) : (
 							<div className="profile__empty">
-								Aún no hay roneos por
-								aquí...
+								Aún no hay roneos por aquí...
 							</div>
 						)}
 					</div>
 				</div>
 			</div>
 
-			<AvatarEditorModal
-				open={isAvatarEditorOpen}
-				currentAvatarPath={
-					user.avatarPath ?? null
-				}
-				onClose={() =>
-					setIsAvatarEditorOpen(false)
-				}
-				onUpdated={refreshUser}
-			/>
+			{isOwnProfile && (
+				<>
+					<AvatarEditorModal
+						open={isAvatarEditorOpen}
+						currentAvatarPath={
+							profileUser.avatarPath
+						}
+						onClose={() =>
+							setIsAvatarEditorOpen(false)
+						}
+						onUpdated={refreshUser}
+					/>
 
-			<BannerEditorModal
-				open={isBannerEditorOpen}
-				currentBannerPath={
-					user.bannerPath ?? null
-				}
-				onClose={() =>
-					setIsBannerEditorOpen(false)
-				}
-				onUpdated={refreshUser}
-			/>
+					<BannerEditorModal
+						open={isBannerEditorOpen}
+						currentBannerPath={
+							profileUser.bannerPath
+						}
+						onClose={() =>
+							setIsBannerEditorOpen(false)
+						}
+						onUpdated={refreshUser}
+					/>
+				</>
+			)}
+
+			{!isOwnProfile && hasCustomAvatar && (
+				<PostImageModal
+					open={isAvatarViewerOpen}
+					imageSrc={
+						profileUser.avatarPath
+							? getImageSource(
+									profileUser.avatarPath,
+								)
+							: null
+					}
+					alt={`${profileUser.login} profile image`}
+					onClose={() =>
+						setIsAvatarViewerOpen(false)
+					}
+				/>
+			)}
 		</div>
 	);
 };

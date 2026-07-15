@@ -387,6 +387,27 @@ func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error
 	return nil
 }
 
+func (s *UserService) GetUserByLogin(
+	login string,
+) (*models.User, error) {
+	cleanLogin := strings.TrimSpace(login)
+
+	if cleanLogin == "" {
+		return nil, appErr.NewBadRequest("invalid_user_login")
+	}
+
+	user, err := s.UserRepo.FindByLogin(cleanLogin)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("user_not_found")
+		}
+
+		return nil, appErr.NewInternal(err)
+	}
+
+	return user, nil
+}
+
 func (s *UserService) GetUserByID(userID uint) (*models.User, error) {
 	user, err := s.UserRepo.FindById(userID)
 	if err != nil {

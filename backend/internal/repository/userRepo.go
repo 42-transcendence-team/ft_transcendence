@@ -193,6 +193,23 @@ func (r *UserRepository) IsDuplicatedKey(err error) bool {
 	return errors.Is(err, gorm.ErrDuplicatedKey)
 }
 
+func (r *UserRepository) FindByLogin(
+	login string,
+) (*models.User, error) {
+	var user models.User
+
+	err := r.db.
+		Where("login = ?", login).
+		First(&user).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (r *UserRepository) FindByLoginOrEmail(identifier string) (*models.User, error) {
 
 	var user models.User

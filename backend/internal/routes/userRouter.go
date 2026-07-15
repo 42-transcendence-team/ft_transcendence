@@ -17,6 +17,7 @@ func UserRoutes(
 		// UserGroup.DELETE("/", userHandler.Delete)
 		// UserGroup.PUT("/", userHandler.Modify)
 		UserGroup.GET("/me", userHandler.GetMe)
+		UserGroup.GET("/profile/:login", userHandler.GetProfile)
 
 		// cuando se borre el usuario tambien hay que borrar las tablas de relacciones entre usuarios
 		// y peticiones pendientes , bloqueos

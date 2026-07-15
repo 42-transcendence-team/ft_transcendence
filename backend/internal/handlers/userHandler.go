@@ -406,32 +406,55 @@ func (h *UserHandler) DeleteBanner(c *gin.Context) {
 }
 
 func (h *UserHandler) GetProfile(c *gin.Context) {
-	// /users/profile/pepe -> pepe
-	loginParam := c.Param("login")
+	login := c.Param("login")
 
-	user, err := h.UserService.GetUserByLogin(loginParam)
+	user, err := h.UserService.GetUserByLogin(login)
 	if err != nil {
-		c.JSON(404, gin.H{"error": "Usuario no encontrado"})
+		c.Error(err)
+		c.Abort()
 		return
 	}
 
 	ctx := c.Request.Context()
 
-	isOnline, _ := h.Redis.SIsMember(ctx, "online_users", user.ID).Result()
+	isOnline, err := h.Redis.
+		SIsMember(ctx, "online_users", user.ID).
+		Result()
+	if err != nil {
+		log.Printf(
+			"could not read online status for user %d: %v",
+			user.ID,
+			err,
+		)
+		isOnline = false
+	}
 
 	visitKey := fmt.Sprintf("visits:%d", user.ID)
-	visits, _ := h.Redis.Incr(ctx, visitKey).Result()
+
+	visits, err := h.Redis.Incr(ctx, visitKey).Result()
+	if err != nil {
+		log.Printf(
+			"could not update visits for user %d: %v",
+			user.ID,
+			err,
+		)
+		visits = 0
+	}
+
+	profile := dto.UserProfileResponse{
+		ID:         user.ID,
+		Login:      user.Login,
+		Name:       user.Name,
+		Surname:    user.Surname,
+		AvatarPath: user.AvatarPath,
+		BannerPath: user.BannerPath,
+		Status:     user.State,
+		IsOnline:   isOnline,
+		Visits:     visits,
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":         user.ID,
-		"login":      user.Login,
-		"email":      user.Email,
-		"name":       user.Name,
-		"surname":    user.Surname,
-		"avatarPath": user.AvatarPath,
-		"bannerPath": user.BannerPath,
-		"isOnline":   isOnline,
-		"visits":     visits,
+		"data": profile,
 	})
 }
 
