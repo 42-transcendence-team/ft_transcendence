@@ -6,17 +6,19 @@ import (
 	"backend/internal/services"
 	"net/http"
 	"strconv"
-
+	ws "backend/internal/websocket"
 	"github.com/gin-gonic/gin"
 )
 
 type CommentHandler struct {
 	CommentService *services.CommentService
+	hub *ws.Hub
 }
 
-func NewCommentHandler(commentService *services.CommentService) *CommentHandler {
+func NewCommentHandler(hub *ws.Hub, commentService *services.CommentService) *CommentHandler {
 	return &CommentHandler{
 		CommentService: commentService,
+		hub: hub,
 	}
 }
 
@@ -60,7 +62,7 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
+	//TODO : necesito el id del usuario al que pertenece el comentario
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "comment created",
 		"data":    comment,

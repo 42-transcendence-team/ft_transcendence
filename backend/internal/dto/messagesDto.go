@@ -18,6 +18,22 @@ type RoomPayload struct {
 	RoomID uint `json:"room_id"`
 }
 
+type PostPayload struct {
+	PostID uint `json:"post_id"`
+	UserID uint `json:"user_id"`//el que genero el post
+}
+
+type LikePayload struct {
+	PostID uint `json:"post_id"`
+	UserID uint `json:"user_id"`//el que dio like
+}
+
+type CommentPayload struct {
+	PostID  uint   `json:"post_id"`
+	UserID  uint   `json:"user_id"`//el que comento
+	Content string `json:"content"`
+}
+
 type NotificationMessage struct {
 	Type    string          `json:"type"`
 	Payload json.RawMessage `json:"payload"`
