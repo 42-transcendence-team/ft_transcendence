@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useWebSocket } from '././webSocketContext';
 import { useNavigate } from 'react-router-dom';
 
-export type GameStatus = 'IDLE' | 'LOBBY' | 'PLAYING' | 'FINISHED';
+export type GameStatus = 'MENU' |'PLAYING' | 'FINISHED' | 'JOINING' | 'WAITING' | 'LOBBY' | 'IDLE';
 
 export type GameMode = 'local' | 'online_create' | 'online_join';
 
@@ -12,15 +12,15 @@ interface Player {
     color?: string;
 }
 
-interface GameState {
+export interface GameState {
     game_id: number;
-    game_type: 'TICTACTOE' | 'CONNECT_FOUR' | 'OCA' | 'PARCHIS';
+    game_type: string;
     status: GameStatus;
     players: Player[];
     current_turn: string;
-    winner_id?: string | null;
+    winner_id?: string;
     board_state: any; 
-    last_dice_roll?: number | null;
+    last_dice_roll?: number;
 }
 
 interface GameContextType {
@@ -33,20 +33,31 @@ interface GameContextType {
     leaveGame: (gameId: string) => void;
 }
 
+const initialGameState: GameState = {
+	game_id: 0,
+	game_type: '',
+	status: 'MENU',
+	players: [],
+	current_turn: '',
+	board_state: null,
+	winner_id: undefined,
+	last_dice_roll: undefined,
+};
+
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children, user }: { children: React.ReactNode; user: any }) {
     const { send, subscribe } = useWebSocket();
-    const [ gameState, setGameState ] = useState<GameState | null>(null);
+    const [ gameState, setGameState ] = useState<GameState>(initialGameState);
     const [ gameStatus, setGameStatus ] = useState<GameStatus>('IDLE');
     const [ gameId, setGameId ] = useState<number | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         if (!user?.id) {
-            setGameState(null);
+            setGameState(initialGameState);
             setGameId(null);
-            setGameStatus('IDLE');
+            setGameStatus('MENU');
             return;
         }
 
@@ -66,16 +77,39 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
             
             const slug = game_type.toLowerCase(); 
 
+			setGameState({
+				game_id: game_id,
+				game_type: game_type,
+				status: 'PLAYING',
+				players: [],
+				current_turn: '',
+				board_state: null,
+			});
+
+			console.log('gameState after game_created:', gameState);
             setGameId(game_id);
-            setGameStatus('PLAYING');
-            console.log("setGameId y setGameStatus con valores:", game_id, gameStatus);
-            
+            setGameStatus('PLAYING');            
             navigate(`/app/games/${slug}/${game_id}`);
         });
+
+		const unsubscribeGameFinished = subscribe("game_finished", (message: any) => {
+			if (!message.payload) return;
+
+			const { game_id, winner_id } = message.payload;
+
+			if (gameId === game_id) {
+				setGameStatus('FINISHED');
+				setGameState(prevState => ({
+					...prevState,
+					winner_id: winner_id,
+				}));
+			}
+		});
 
         return () => {
             unsubscribeGameUpdate();
             unsubscribeGameCreated();
+			unsubscribeGameFinished();
         };
     }, [user?.id, subscribe]);
 
@@ -158,9 +192,9 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
                 game_id: gameId,
             },
         });
-        setGameState(null);
+        setGameState(initialGameState);
         setGameId(null);
-        setGameStatus('IDLE');
+        setGameStatus('MENU');
     }, [user, send]);
 
     return (

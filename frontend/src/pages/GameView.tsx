@@ -25,7 +25,6 @@ export default function GameView() {
     );
 }
 
-// 1. Añadimos gameId (el ID de la sala) a las props del componente
 function GameViewContent({ game, gameId }: { game: any; gameId?: string }) {
     const { leaveGame, joinGame } = useGame(); 
     const location = useLocation();

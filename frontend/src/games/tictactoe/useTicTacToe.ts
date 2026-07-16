@@ -29,7 +29,7 @@ export function useTicTacToe() {
 	const [ currentPlayer, setCurrentPlayer ] = useState<Player>("X");
 	const [ gameState, setGameState ] = useState<GameState>("menu");
 	const [ mode, setMode ] = useState<TicTacToeMode | null>(null);
-	const { createGame, joinGame, makeMove, leaveGame } = useGame();
+	const { createGame, joinGame, makeMove, leaveGame, gameState: gameGameState } = useGame();
 
 	const winner = checkWinner(board);
 	const line = getWinningLine(board);
@@ -41,6 +41,7 @@ export function useTicTacToe() {
 		setBoard(createEmptyBoard());
 		setCurrentPlayer("X");
 		setGameState("playing");
+		console.log(`gameGameState: ${gameGameState}`);
 	}
 
 	function play(row: number, col: number) {

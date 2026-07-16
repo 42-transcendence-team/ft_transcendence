@@ -82,11 +82,31 @@ func (gh *GameHandler) HandleGameMessage(c ws.ClientConn, msg *dto.IncomingMessa
 			return
 		}
 
-		broadcast := map[string]interface{}{
-			"type":  "game_update",
-			"state": engine.GetState(),
+		var broadcastBytes []byte
+
+		winner, winningLine := engine.GetWinner()
+		if winner != 0 {
+			broadcast := map[string]interface{}{
+				"type":         "game_finished",
+				"winner":       winner,
+				"winning_line": winningLine,
+			}
+			broadcastBytes, err = json.Marshal(broadcast)
+			if err != nil {
+				log.Printf("Error al serializar broadcast: %v", err)
+				return
+			}
+		} else {
+			broadcast := map[string]interface{}{
+				"type":  "game_update",
+				"state": engine.GetState(),
+			}
+			broadcastBytes, err = json.Marshal(broadcast)
+			if err != nil {
+				log.Printf("Error al serializar broadcast: %v", err)
+				return
+			}
 		}
-		broadcastBytes, _ := json.Marshal(broadcast)
 
 		var roomID64 uint
 		_, err = fmt.Sscanf(moveData.GameID, "%d", &roomID64)
