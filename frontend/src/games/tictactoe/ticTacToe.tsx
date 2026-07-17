@@ -31,7 +31,7 @@ export function TicTacToe() {
 
         ctx.clearRect(0, 0, size, size);
 
-        if (gameState === "menu") {
+        if (gameState.status === "MENU") {
             for (const button of buttons.current ?? []) {
                 button.update(mouseRef.current);
                 button.draw(ctx);
@@ -53,7 +53,7 @@ export function TicTacToe() {
             ctx.stroke();
         }
 
-        if (gameState === "finished") {
+        if (gameState.status === "FINISHED") {
             drawFinished(ctx, size, winner, isDraw);
         }
     }, [board, winner, line, gameState, isDraw]);
@@ -63,7 +63,7 @@ export function TicTacToe() {
     }, [draw]);
 
     useEffect(() => {
-        if (gameState !== "menu") return;
+        if (gameState.status !== "MENU") return;
 
         let animationFrameId: number;
         const renderLoop = () => {
@@ -86,14 +86,14 @@ export function TicTacToe() {
         const x = (e.clientX - rect.left) * scaleX;
         const y = (e.clientY - rect.top) * scaleY;
 
-        if (gameState === "menu") {
+        if (gameState.status === "MENU") {
             for (const button of buttons.current ?? []) {
                 button.click();
             }
             return;
         }
 
-        if (gameState === "finished") {
+        if (gameState.status === "FINISHED") {
             const buttonX = canvas.width / 2 - 150;
             const buttonY = canvas.height / 2 + 30;
 

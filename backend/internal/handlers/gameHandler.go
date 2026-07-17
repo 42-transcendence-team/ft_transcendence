@@ -55,6 +55,7 @@ func (gh *GameHandler) HandleGameMessage(c ws.ClientConn, msg *dto.IncomingMessa
 		data := map[string]interface{}{
 			"game_id":   newGameID,
 			"game_type": createData.GameType,
+			"status":    "PLAYING",
 		}
 
 		response := map[string]interface{}{
@@ -88,6 +89,8 @@ func (gh *GameHandler) HandleGameMessage(c ws.ClientConn, msg *dto.IncomingMessa
 		if winner != 0 {
 			broadcast := map[string]interface{}{
 				"type":         "game_finished",
+				"status":       "FINISHED",
+				"game_id":      moveData.GameID,
 				"winner":       winner,
 				"winning_line": winningLine,
 			}
@@ -98,8 +101,10 @@ func (gh *GameHandler) HandleGameMessage(c ws.ClientConn, msg *dto.IncomingMessa
 			}
 		} else {
 			broadcast := map[string]interface{}{
-				"type":  "game_update",
-				"state": engine.GetState(),
+				"type":    "game_update",
+				"status":  "PLAYING",
+				"game_id": moveData.GameID,
+				"state":   engine.GetState(),
 			}
 			broadcastBytes, err = json.Marshal(broadcast)
 			if err != nil {
@@ -146,8 +151,9 @@ func (gh *GameHandler) HandleGameMessage(c ws.ClientConn, msg *dto.IncomingMessa
 		}
 
 		broadcast := map[string]interface{}{
-			"type":  "game_update",
-			"state": engine.GetState(),
+			"type":   "game_update",
+			"state":  engine.GetState(),
+			"status": "PLAYING",
 		}
 		broadcastBytes, _ := json.Marshal(broadcast)
 

@@ -6,30 +6,27 @@ export type Player = "X" | "O";
 
 export type TicTacToeMode = "local" | "online_create" | "online_join";
 
-export type Board = [
+export type TicTacToeBoard = [
 	[Player | null, Player | null, Player | null],
 	[Player | null, Player | null, Player | null],
 	[Player | null, Player | null, Player | null]
 ];
 
-const emptyBoard: Board = [
+const emptyBoard: TicTacToeBoard = [
 	[null, null, null],
 	[null, null, null],
 	[null, null, null],
 ];
 
-type GameState = "menu" | "playing" | "finished" | "joining" | "waiting";
-
-function createEmptyBoard(): Board {
-	return emptyBoard.map(row => row.map(() => null)) as Board;
+function createEmptyBoard(): TicTacToeBoard {
+	return emptyBoard.map(row => row.map(() => null)) as TicTacToeBoard;
 }
 
 export function useTicTacToe() {
-	const [ board, setBoard ] = useState<Board>(createEmptyBoard());
-	const [ currentPlayer, setCurrentPlayer ] = useState<Player>("X");
-	const [ gameState, setGameState ] = useState<GameState>("menu");
+	const [ board, setBoard ] = useState<TicTacToeBoard>(createEmptyBoard());
+	const [ currentPlayer, setCurrentPlayer] = useState<Player>("X");
 	const [ mode, setMode ] = useState<TicTacToeMode | null>(null);
-	const { createGame, joinGame, makeMove, leaveGame, gameState: gameGameState } = useGame();
+	const { createGame, joinGame, makeMove, leaveGame, gameState, setGameStatus, returnMenu } = useGame();
 
 	const winner = checkWinner(board);
 	const line = getWinningLine(board);
@@ -40,12 +37,11 @@ export function useTicTacToe() {
 		setMode(selectedMode);
 		setBoard(createEmptyBoard());
 		setCurrentPlayer("X");
-		setGameState("playing");
-		console.log(`gameGameState: ${gameGameState}`);
+		console.log(`gameGameState: ${gameState.status}`);
 	}
 
 	function play(row: number, col: number) {
-		if (gameState !== "playing") return;
+		if (gameState?.status !== "PLAYING") return;
 		if (board[row][col]) return;
 
 		makeMove({ row, col });
@@ -60,7 +56,7 @@ export function useTicTacToe() {
 		const newDraw = newBoard.flat().every(cell => cell !== null);
 
 		if (newWinner || newDraw) {
-			setGameState("finished");
+			setGameStatus("FINISHED");
 			return;
 		}
 
@@ -69,21 +65,14 @@ export function useTicTacToe() {
 		);
 	}
 
-	function restart() {
-		setBoard(createEmptyBoard());
-		setCurrentPlayer("X");
-		setGameState("playing");
-	}
-
-
 	function reset() {
 		setBoard(createEmptyBoard());
 		setCurrentPlayer("X");
 		setMode(null);
-		setGameState("menu");
+		returnMenu();
 	}
 
 	return { board, currentPlayer, winner, line, draw, 
-		gameState, mode, play, restart, reset, startGame,
+		gameState, mode, play, reset, startGame, returnMenu
 	};
 }

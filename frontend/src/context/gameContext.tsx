@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useWebSocket } from '././webSocketContext';
 import { useNavigate } from 'react-router-dom';
 
-export type GameStatus = 'MENU' |'PLAYING' | 'FINISHED' | 'JOINING' | 'WAITING' | 'LOBBY' | 'IDLE';
+export type GameStatus = 'MENU' | 'PLAYING' | 'FINISHED' | 'JOINING' | 'WAITING' | 'LOBBY' | 'IDLE';
 
 export type GameMode = 'local' | 'online_create' | 'online_join';
 
@@ -12,20 +12,21 @@ interface Player {
     color?: string;
 }
 
-export interface GameState {
+export interface GameState <TBoard = unknown> {
     game_id: number;
     game_type: string;
     status: GameStatus;
     players: Player[];
     current_turn: string;
     winner_id?: string;
-    board_state: any; 
+    board_state: TBoard;
     last_dice_roll?: number;
 }
 
 interface GameContextType {
-    gameState: GameState | null;
-    gameStatus: GameStatus;
+    gameState: GameState;
+    setGameStatus: (status: GameStatus) => void;
+    returnMenu: () => void;
     createGame: (gameType: GameState['game_type'], mode: GameMode ) => void;
     joinGame: (gameId: string) => void;
     makeMove: (moveData: any) => void;
@@ -49,15 +50,11 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 export function GameProvider({ children, user }: { children: React.ReactNode; user: any }) {
     const { send, subscribe } = useWebSocket();
     const [ gameState, setGameState ] = useState<GameState>(initialGameState);
-    const [ gameStatus, setGameStatus ] = useState<GameStatus>('IDLE');
-    const [ gameId, setGameId ] = useState<number | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         if (!user?.id) {
             setGameState(initialGameState);
-            setGameId(null);
-            setGameStatus('MENU');
             return;
         }
 
@@ -66,8 +63,9 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
             
             const payload: GameState = message.payload;
             setGameState(payload);
-            setGameId(payload.game_id);
-            if (payload.status) setGameStatus(payload.status);
+            if (payload.status === 'FINISHED') {
+                console.log('Game finished. Winner ID:', payload.winner_id);
+            }
         });
 
         const unsubscribeGameCreated = subscribe("game_created", (message: any) => {
@@ -86,24 +84,17 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 				board_state: null,
 			});
 
-			console.log('gameState after game_created:', gameState);
-            setGameId(game_id);
-            setGameStatus('PLAYING');            
+			console.log('gameState after game_created:', gameState);       
             navigate(`/app/games/${slug}/${game_id}`);
         });
 
 		const unsubscribeGameFinished = subscribe("game_finished", (message: any) => {
-			if (!message.payload) return;
-
-			const { game_id, winner_id } = message.payload;
-
-			if (gameId === game_id) {
-				setGameStatus('FINISHED');
 				setGameState(prevState => ({
 					...prevState,
-					winner_id: winner_id,
+					status: 'FINISHED',
+                    winner_id: message.winner,
 				}));
-			}
+                console.log('gameState after game_finished:', gameState);
 		});
 
         return () => {
@@ -114,14 +105,14 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
     }, [user?.id, subscribe]);
 
     useEffect(() => {
-        if (gameStatus === 'IDLE' || !gameId || !user) return;
+       if (gameState.status === 'IDLE' || !gameState.game_id || !user) return;
 
         const handleBeforeUnload = () => {
             send({
                 type: "game",
                 payload: {
                     action: "leave",
-                    game_id: gameId,
+                    game_id: gameState.game_id,
                 },
             });
         };
@@ -131,11 +122,23 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
         return () => {
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, [gameStatus, gameId, user, send]);
+    }, [gameState.game_id, user, send]);
+
+    const setGameStatus = useCallback((status: GameStatus) => {
+        setGameState(prevState => ({
+            ...prevState,
+            status: status,
+        }));
+    }, []);
+
+    const returnMenu = useCallback(() => {
+        var gameType = gameState.game_type.toLowerCase();
+        setGameState(initialGameState);
+        navigate('/app/games/' + gameType);
+    }, [navigate]);
 
     const createGame = useCallback((gameType: GameState['game_type'], mode: GameMode) => {
         if (!user) return;
-        setGameStatus('LOBBY');
         send({
             type: "game",
             payload: {
@@ -155,32 +158,31 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
                 game_id: gameId,
             },
         });
-        setGameStatus('LOBBY');
     }, [user, send]);
 
     const makeMove = useCallback((moveData: any) => {
-        if (!user || !gameId) return;
-        console.log(`Enviando movimiento: ${JSON.stringify(moveData)} para el juego ${gameId}`);
+        if (!user || !gameState.game_id) return;
+        console.log(`Enviando movimiento: ${JSON.stringify(moveData)} para el juego ${gameState.game_id}`);
         send({
             type: "game",
             payload: {
                 action: "make_move",
-                game_id: gameId,
+                game_id: gameState.game_id,
                 payload: moveData,
             },
         });
-    }, [user, gameId, send]);
+    }, [user, gameState.game_id, send]);
 
     const rollDice = useCallback(() => {
-        if (!user || !gameId) return;
+        if (!user || !gameState.game_id) return;
         send({
             type: "game",
             payload: {
                 action: "roll_dice",
-                game_id: gameId,
+                game_id: gameState.game_id,
             },
         });
-    }, [user, gameId, send]);
+    }, [user, gameState.game_id, send]);
 
     const leaveGame = useCallback((gameId: string) => {
         if (!user) return;
@@ -193,12 +195,11 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
             },
         });
         setGameState(initialGameState);
-        setGameId(null);
-        setGameStatus('MENU');
+        setGameState(prevState => ({ ...prevState, status: 'MENU' }));
     }, [user, send]);
 
     return (
-        <GameContext.Provider value={{ gameState, gameStatus, createGame, joinGame, makeMove, rollDice, leaveGame }}>
+        <GameContext.Provider value={{ gameState, createGame, joinGame, makeMove, rollDice, leaveGame, setGameStatus, returnMenu }}>
             {children}
         </GameContext.Provider>
     );
