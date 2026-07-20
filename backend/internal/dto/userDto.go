@@ -2,6 +2,8 @@ package dto
 
 import "time"
 
+// Relation: none | friends | pending_sent | pending_received | blocked_by_me | blocked_me
+
 // Esta es la peticion para busqueda, no esta terminada
 type UserFilter struct {
 	Id      uint   `form:"id"`
@@ -11,8 +13,31 @@ type UserFilter struct {
 	Surname string `form:"surname"`
 	Role    string `form:"role"`
 
-	Limit int `form:"limit"`
-	Page  int `form:"page"`
+	Q         string   `form:"q"` // Texto a buscar
+	Relations []string `form:"relation"`
+	Sort      string   `form:"sort"`  // Como lo voy a ordenar?
+	Limit     int      `form:"limit"` // Cuantos resultados por pagina
+	Page      int      `form:"page"`  // que pagina quieres ?
+}
+
+type UserSearch struct {
+	ID         uint   `json:"id"`
+	Login      string `json:"login"`
+	Name       string `json:"name"`
+	Surname    string `json:"surname"`
+	AvatarURL  string `json:"avatar_url"`
+	Status     string `json:"status"`
+	Relation   string `json:"relation"`
+	CanSendReq bool   `json:"can_send_request"`
+	RequestID  *uint  `json:"request_id,omitempty"`
+}
+
+type UserSearchResponse struct {
+	Items   []UserSearch `json:"items"`
+	Page    int          `json:"page"`
+	Limit   int          `json:"limit"`
+	Total   int64        `json:"total"`
+	HasNext bool         `json:"has_next"`
 }
 
 // Respuesta para los datos necesarios en Settings

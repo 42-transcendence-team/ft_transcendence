@@ -2,7 +2,7 @@ package repository
 
 import (
 	"backend/internal/models"
-
+	"errors"
 	"gorm.io/gorm"
 )
 
@@ -42,6 +42,23 @@ func (r *FriendRepository) CreateFriendship(tx *gorm.DB, userID1 uint, userID2 u
 	}
 
 	return tx.Create(&friendship).Error
+}
+
+func (r *FriendRepository) DeletePendingRequestsBetweenUsers(userID1 uint, userID2 uint) error {
+	result := r.db.
+		Where(
+			"((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND status = ?",
+			userID1, userID2,
+			userID2, userID1,
+			models.RelationPending,
+		).
+		Delete(&models.FriendRequest{})
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }
 
 func (r *FriendRepository) ChangeReqPendingStatus(tx *gorm.DB, newStatus models.RelationStatus, reqID uint) error {
@@ -129,6 +146,25 @@ func (r *FriendRepository) HasPendingRequestBetweenUsers(senderID uint, receiver
 	return count > 0, nil
 }
 
+func (r *FriendRepository) GetPendingRequestBetweenUsers(senderID uint, receiverID uint) (*models.FriendRequest, error) {
+
+	var req models.FriendRequest
+
+	err := r.db.Model(&models.FriendRequest{}).Where(
+		"((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND status = ?",
+		senderID, receiverID,
+		receiverID, senderID,
+		models.RelationPending,
+	).First(&req).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return &req, nil
+}
+
 /*
 func (r *FriendRepository) IsRequestForMe(senderID uint, receiverID uint) (bool, error) {
 
@@ -178,6 +214,25 @@ func (r *FriendRepository) AreBlock(userID1 uint, userID2 uint) (bool, error) {
 	}
 
 	return count > 0, nil
+}
+
+func (r *FriendRepository) GetBlock(userID1 uint, userID2 uint) (*models.Block, error) {
+
+	var req models.Block
+
+	err := r.db.Model(&models.Block{}).Where(
+		"(blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)",
+		userID1, userID2,
+		userID2, userID1,
+	).First(&req).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return &req, nil
 }
 
 func (r *FriendRepository) ListOutgoingRequests(userID uint) ([]models.FriendRequest, error) {
@@ -301,7 +356,7 @@ type Block struct {
 */
 
 func (r *FriendRepository) CreateBlock(BlockerID uint, BlockedID uint) error {
-	
+
 	block := models.Block{
 		BlockerID: BlockerID,
 		BlockedID: BlockedID,

@@ -84,27 +84,24 @@ func (s *BlockUserService) BlockUser(blockerID uint, blockedID uint) error {
 		return appErr.NewNotFound("user not found")
 	}
 
-	derr := s.friendsRepo.DeleteFriendship(blockedID, blockerID)
-	if derr != nil {
-		if errors.Is(derr, gorm.ErrRecordNotFound) {//aunque falle al hacer block si es gorm.ErrRecordNotFound es por que no son amigos
-			err := s.friendsRepo.CreateBlock(blockerID, blockedID)//bloqueo y salgo
-			if err != nil {
-				if errors.Is(err, gorm.ErrDuplicatedKey) {
-					return appErr.NewConflict("user already bloqued")
-				}
-				return appErr.NewInternal(err)//falla al bloquear pero como no son amigos no hay problema
-			}
-			return nil
-		}
-		return appErr.NewInternal(derr)//aqui falla al quitar amistad, asi que no se hace nada
-	}
-	err := s.friendsRepo.CreateBlock(blockerID, blockedID)//aqui ya no son amigos, asi que creo bloqueo
+	err := s.friendsRepo.CreateBlock(blockerID, blockedID) //aqui ya no son amigos, asi que creo bloqueo
 	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return appErr.NewNotFound("user already bloqued")
+			return appErr.NewConflict("user already blocked")
 		}
 		return appErr.NewInternal(err)
 	}
+
+	derr := s.friendsRepo.DeleteFriendship(blockerID, blockedID)
+	if derr != nil && !errors.Is(derr, gorm.ErrRecordNotFound) {
+		return appErr.NewInternal(derr)
+	}
+
+	err = s.friendsRepo.DeletePendingRequestsBetweenUsers(blockerID, blockedID)
+	if err != nil {
+		return appErr.NewInternal(err)
+	}
+
 	return nil
 }
 
