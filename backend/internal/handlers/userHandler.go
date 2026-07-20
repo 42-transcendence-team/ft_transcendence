@@ -485,3 +485,33 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 		},
 	})
 }
+
+func (h *UserHandler) GetPresence(c *gin.Context) {
+	login := c.Param("login")
+
+	user, err := h.UserService.GetUserByLogin(login)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	isOnline, err := h.Redis.
+		SIsMember(
+			c.Request.Context(),
+			"online_users",
+			user.ID,
+		).
+		Result()
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": gin.H{
+			"isOnline": isOnline,
+		},
+	})
+}

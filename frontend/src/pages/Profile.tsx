@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 
 import type { ApiError } from "../api/ApiRequest";
 import {
+	getUserPresence,
 	getUserProfile,
 	type UserProfile,
 } from "../api/UserProfile";
@@ -109,6 +110,10 @@ export const Profile = () => {
 	const [bannerImageFailed, setBannerImageFailed] =
 		useState(false);
 
+	/*
+	 * Carga inicial del perfil indicado en la ruta.
+	 * Esta petición incrementa el contador de visitas una sola vez.
+	 */
 	useEffect(() => {
 		let cancelled = false;
 
@@ -141,7 +146,10 @@ export const Profile = () => {
 					return;
 				}
 
-				if (isApiError(error) && error.status === 404) {
+				if (
+					isApiError(error) &&
+					error.status === 404
+				) {
 					setProfileNotFound(true);
 					return;
 				}
@@ -160,6 +168,73 @@ export const Profile = () => {
 			cancelled = true;
 		};
 	}, [username]);
+
+	/*
+	 * Consulta únicamente el estado almacenado en Redis.
+	 * No vuelve a cargar el perfil completo y, por tanto,
+	 * no incrementa artificialmente el contador de visitas.
+	 */
+	useEffect(() => {
+		if (!profileUser?.login || profileNotFound) {
+			return;
+		}
+
+		const profileLogin = profileUser.login;
+
+		let cancelled = false;
+		let requestInFlight = false;
+
+		const refreshPresence = async () => {
+			if (requestInFlight) {
+				return;
+			}
+
+			requestInFlight = true;
+
+			try {
+				const isOnline =
+					await getUserPresence(profileLogin);
+
+				if (cancelled) {
+					return;
+				}
+
+				setProfileUser((currentProfile) => {
+					if (
+						!currentProfile ||
+						currentProfile.login !== profileLogin ||
+						currentProfile.isOnline === isOnline
+					) {
+						return currentProfile;
+					}
+
+					return {
+						...currentProfile,
+						isOnline,
+					};
+				});
+			} catch {
+				/*
+				 * Si falla una comprobación puntual, se conserva
+				 * el último estado conocido del usuario.
+				 */
+			} finally {
+				requestInFlight = false;
+			}
+		};
+
+		// Actualiza inmediatamente tras cargar el perfil.
+		void refreshPresence();
+
+		const intervalId = window.setInterval(() => {
+			void refreshPresence();
+		}, 30_000);
+
+		return () => {
+			cancelled = true;
+			window.clearInterval(intervalId);
+		};
+	}, [profileUser?.login, profileNotFound]);
 
 	/*
 	 * Los editores actualizan primero AuthContext. Cuando el perfil

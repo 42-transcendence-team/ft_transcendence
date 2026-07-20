@@ -26,3 +26,22 @@ export async function getUserProfile(
 
 	return response.data;
 }
+
+type UserPresenceApiResponse = {
+	data: {
+		isOnline: boolean;
+	};
+};
+
+export async function getUserPresence(
+	username: string,
+): Promise<boolean> {
+	const response =
+		await apiRequest<UserPresenceApiResponse>({
+			endpoint:
+				`users/profile/${encodeURIComponent(username)}/presence`,
+			method: "GET",
+		});
+
+	return response.data.isOnline;
+}
