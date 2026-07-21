@@ -121,18 +121,6 @@ body {
 		gap: 5px;
 	}
 
-	&__visits {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		color: $color-visitas-text;
-		font-size: 0.9em;
-	}
-
-	&__visits-icon {
-		font-size: 1.1em;
-	}
-
 	&__user-name {
 		margin: 0;
 		color: #333;

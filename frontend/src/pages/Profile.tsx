@@ -1,69 +1,24 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+
+import { getUserPresence, getUserProfile } from "../api/UserProfile";
+import type { UserProfile } from "../api/UserProfile";
+import type { ApiError } from "../api/ApiRequest";
+
 import { useAuth } from "../context/AuthContext";
 
-import type { ApiError } from "../api/ApiRequest";
-import {
-	getUserPresence,
-	getUserProfile,
-	type UserProfile,
-} from "../api/UserProfile";
+import { ProfileBanner } from "../components/profile/ProfileBanner";
+import { ProfileHeader } from "../components/profile/ProfileHeader";
+import { ProfileContent } from "../components/profile/ProfileContent";
 
-import "../styles/pages/_profile.scss";
-import {
-	UserAvatar,
-	type UserPresence,
-} from "../components/users/UserAvatar";
-
-import photo1 from "../assets/img/choni1.png";
-import photo2 from "../assets/img/choni2.png";
-import photo3 from "../assets/img/choni3.png";
-import { Post } from "../components/Post";
-import { Button1 } from "../components/Button1";
-import { NotFound } from "./NotFound";
+import type { UserPresence } from "../components/users/UserAvatar";
 import { AvatarEditorModal } from "../components/users/AvatarEditorModal";
 import { BannerEditorModal } from "../components/users/BannerEditorModal";
 import { PostImageModal } from "../components/posts/PostImageModal";
 
-// Todo cambiar los datos y que lleguen de la BD.
-const postsData = [
-	{
-		id: 1,
-		username: "lore",
-		time: "Ahora mismo",
-		message: " TODO BORRAR",
-		isHighlighted: false,
-	},
-	{
-		id: 2,
-		username: "yoni",
-		time: "2 min",
-		message: "Listo pal roneitoooo",
-		images: [photo1, photo2, photo3, photo3],
-		isHighlighted: true,
-	},
-	{
-		id: 3,
-		username: "lore",
-		time: "Ahora mismo",
-		message: " TODO BORRAR",
-		isHighlighted: false,
-	},
-	{
-		id: 4,
-		username: "lore",
-		time: "Ahora mismo",
-		message: " TODO BORRAR",
-		isHighlighted: false,
-	},
-	{
-		id: 5,
-		username: "lore",
-		time: "Ahora mismo",
-		message: " TODO BORRAR",
-		isHighlighted: false,
-	},
-];
+import { NotFound } from "./NotFound";
+
+import "../styles/pages/_profile.scss";
 
 function getImageSource(imagePath: string): string {
 	return imagePath.startsWith("/")
@@ -110,10 +65,6 @@ export const Profile = () => {
 	const [bannerImageFailed, setBannerImageFailed] =
 		useState(false);
 
-	/*
-	 * Carga inicial del perfil indicado en la ruta.
-	 * Esta petición incrementa el contador de visitas una sola vez.
-	 */
 	useEffect(() => {
 		let cancelled = false;
 
@@ -170,10 +121,9 @@ export const Profile = () => {
 	}, [username]);
 
 	/*
-	 * Consulta únicamente el estado almacenado en Redis.
-	 * No vuelve a cargar el perfil completo y, por tanto,
-	 * no incrementa artificialmente el contador de visitas.
-	 */
+	* Actualiza únicamente la presencia del usuario sin
+	* volver a cargar el perfil completo.
+	*/
 	useEffect(() => {
 		if (!profileUser?.login || profileNotFound) {
 			return;
@@ -356,128 +306,37 @@ export const Profile = () => {
 			? () => setIsAvatarViewerOpen(true)
 			: undefined;
 
-	const avatarOverlay = isOwnProfile ? (
-		<i className="fas fa-camera" />
-	) : hasCustomAvatar ? (
-		<i className="fas fa-expand" />
-	) : undefined;
-
-	const bannerContent = (
-		<>
-			{hasCustomBanner && profileUser.bannerPath ? (
-				<img
-					className="profile__banner-image"
-					src={getImageSource(
-						profileUser.bannerPath,
-					)}
-					alt={`${profileUser.login} profile banner`}
-					onError={() =>
-						setBannerImageFailed(true)
-					}
-				/>
-			) : (
-				<span className="profile__banner-placeholder" />
-			)}
-
-			{isOwnProfile && (
-				<span
-					className="profile__banner-overlay"
-					aria-hidden="true"
-				>
-					<i className="fas fa-camera" />
-					<span>Edit banner</span>
-				</span>
-			)}
-		</>
-	);
-
 	return (
 		<div className="profile">
 			<div className="profile__container">
-				{isOwnProfile ? (
-					<button
-						className={[
-							"profile__banner",
-							"profile__banner--interactive",
-						].join(" ")}
-						type="button"
-						aria-label="Edit profile banner"
-						onClick={() =>
-							setIsBannerEditorOpen(true)
-						}
-					>
-						{bannerContent}
-					</button>
-				) : (
-					<div className="profile__banner">
-						{bannerContent}
-					</div>
-				)}
+				<ProfileBanner
+					bannerPath={profileUser.bannerPath}
+					username={profileUser.login}
+					isOwnProfile={isOwnProfile}
+					hasCustomBanner={hasCustomBanner}
+					onEdit={() =>
+						setIsBannerEditorOpen(true)
+					}
+					onImageError={() =>
+						setBannerImageFailed(true)
+					}
+				/>
 
-				<div className="profile__header">
-					<UserAvatar
-						avatarPath={profileUser.avatarPath}
-						username={profileUser.login}
-						size="large"
-						status={profilePresence}
-						className="profile__avatar"
-						ariaLabel={
-							isOwnProfile
-								? "Edit profile image"
-								: `Open ${profileUser.login} profile image`
-						}
-						overlay={avatarOverlay}
-						onClick={handleAvatarClick}
-					/>
+				<ProfileHeader
+					username={profileUser.login}
+					name={profileUser.name}
+					surname={profileUser.surname}
+					avatarPath={profileUser.avatarPath}
+					presence={profilePresence}
+					isOwnProfile={isOwnProfile}
+					hasCustomAvatar={hasCustomAvatar}
+					onAvatarClick={handleAvatarClick}
+				/>
 
-					<div className="profile__user-details">
-						<div className="profile__visits">
-							<i className="fas fa-chart-line profile__visits-icon" />
-
-							<span>
-								Nº Visitas al perfil{" "}
-								{profileUser.visits}
-							</span>
-						</div>
-
-						<h4 className="profile__user-name">
-							{profileUser.name &&
-							profileUser.surname
-								? `${profileUser.name} ${profileUser.surname}`
-								: profileUser.login}
-						</h4>
-					</div>
-
-					<Button1 label="Share" />
-				</div>
-
-				<div className="profile__feed">
-					<p className="profile__status">
-						{profileUser.status ||
-							"Sin estado disponible"}
-					</p>
-
-					<div className="profile__posts">
-						{postsData.length > 0 ? (
-							postsData.map((post) => (
-								<Post
-									key={post.id}
-									username={post.username}
-									time={post.time}
-									message={post.message}
-									images={post.images}
-									isHighlighted={
-										post.isHighlighted
-									}
-								/>
-							))
-						) : (
-							<div className="profile__empty">
-								Aún no hay roneos por aquí...
-							</div>
-						)}
-					</div>
-				</div>
+				<ProfileContent
+					status={profileUser.status}
+					isOwnProfile={isOwnProfile}
+				/>
 			</div>
 
 			{isOwnProfile && (
