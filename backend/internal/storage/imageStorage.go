@@ -13,12 +13,19 @@ import (
 	"strings"
 )
 
-const maxPostImageSize int64 = 5 << 20 // 5 MB
+const (
+	maxPostImageSize   int64 = 5 << 20 // 5 MB
+	maxAvatarImageSize int64 = 5 << 20 // 5 MB
+	maxBannerImageSize int64 = 5 << 20 // 5 MB
+)
 
+// ImageStorage gestiona el almacenamiento local de imágenes a partir de un
+// directorio base común.
 type ImageStorage struct {
 	BasePath string
 }
 
+// SaveImageOptions permite adaptar el guardado común a cada tipo de imagen.
 type SaveImageOptions struct {
 	Directory string
 	MaxSize   int64
@@ -30,13 +37,34 @@ func NewImageStorage(basePath string) *ImageStorage {
 	}
 }
 
-// SavePostImage mantiene intacto el contrato usado actualmente por los posts.
+// SavePostImage mantiene intacto el contrato usado actualmente por los posts
+// y delega el almacenamiento en la implementación común.
 func (s *ImageStorage) SavePostImage(
 	file *multipart.FileHeader,
 ) (string, error) {
 	return s.SaveImage(file, SaveImageOptions{
 		Directory: "posts",
 		MaxSize:   maxPostImageSize,
+	})
+}
+
+// SaveAvatarImage guarda imágenes de perfil dentro del directorio de avatares.
+func (s *ImageStorage) SaveAvatarImage(
+	file *multipart.FileHeader,
+) (string, error) {
+	return s.SaveImage(file, SaveImageOptions{
+		Directory: "avatars",
+		MaxSize:   maxAvatarImageSize,
+	})
+}
+
+// SaveBannerImage guarda imágenes de cabecera dentro del directorio de banners.
+func (s *ImageStorage) SaveBannerImage(
+	file *multipart.FileHeader,
+) (string, error) {
+	return s.SaveImage(file, SaveImageOptions{
+		Directory: "banners",
+		MaxSize:   maxBannerImageSize,
 	})
 }
 
@@ -76,6 +104,8 @@ func (s *ImageStorage) SaveImage(
 	}
 	defer src.Close()
 
+	// El tipo se detecta a partir del contenido real y no del nombre enviado
+	// por el cliente.
 	mimeType, err := detectMimeType(src)
 	if err != nil {
 		return "", appErr.NewInternal(err)
@@ -119,6 +149,7 @@ func (s *ImageStorage) SaveImage(
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, src); err != nil {
+		// Evita conservar archivos incompletos cuando falla la escritura.
 		_ = os.Remove(dstPath)
 		return "", appErr.NewInternal(err)
 	}
@@ -134,6 +165,8 @@ func (s *ImageStorage) SaveImage(
 	return relativePath, nil
 }
 
+// Delete elimina una imagen únicamente cuando su ruta pertenece al directorio
+// base configurado. La operación es idempotente si el archivo ya no existe.
 func (s *ImageStorage) Delete(relativePath string) error {
 	cleanPath := filepath.Clean(relativePath)
 	cleanBasePath := filepath.Clean(s.BasePath)
@@ -157,6 +190,8 @@ func (s *ImageStorage) Delete(relativePath string) error {
 	return nil
 }
 
+// isSafeDirectoryName limita el destino a un único nombre de directorio y
+// evita rutas absolutas o intentos de salir del directorio base.
 func isSafeDirectoryName(directory string) bool {
 	if directory == "" ||
 		directory == "." ||
@@ -180,6 +215,8 @@ func isSafeDirectoryName(directory string) bool {
 	return filepath.Clean(directory) == directory
 }
 
+// detectMimeType identifica el formato a partir de los primeros 512 bytes,
+// siguiendo el comportamiento de http.DetectContentType.
 func detectMimeType(file multipart.File) (string, error) {
 	buffer := make([]byte, 512)
 
@@ -191,6 +228,8 @@ func detectMimeType(file multipart.File) (string, error) {
 	return http.DetectContentType(buffer[:n]), nil
 }
 
+// allowedImageExtension traduce los tipos MIME permitidos a una extensión
+// controlada por el servidor.
 func allowedImageExtension(mimeType string) (string, bool) {
 	switch mimeType {
 	case "image/jpeg":
@@ -204,6 +243,8 @@ func allowedImageExtension(mimeType string) (string, bool) {
 	}
 }
 
+// randomFileName genera un nombre impredecible para evitar colisiones y no
+// conservar el nombre original proporcionado por el cliente.
 func randomFileName(ext string) (string, error) {
 	bytes := make([]byte, 16)
 

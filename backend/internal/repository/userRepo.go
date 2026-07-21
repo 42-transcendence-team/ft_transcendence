@@ -245,6 +245,34 @@ func (r *UserRepository) UpdateActive2FA(request dto.User2FAStatus) (int64, erro
 	return result.RowsAffected, result.Error
 }
 
+// UpdateAvatarPath actualiza la ruta del avatar del usuario.
+// Recibe nil al eliminar el avatar personalizado.
+func (r *UserRepository) UpdateAvatarPath(
+	userID uint,
+	avatarPath *string,
+) (int64, error) {
+	result := r.db.
+		Model(&models.User{}).
+		Where("id = ?", userID).
+		Update("avatar_path", avatarPath)
+
+	return result.RowsAffected, result.Error
+}
+
+// UpdateBannerPath actualiza la ruta del banner del usuario.
+// Recibe nil al eliminar el banner personalizado.
+func (r *UserRepository) UpdateBannerPath(
+	userID uint,
+	bannerPath *string,
+) (int64, error) {
+	result := r.db.
+		Model(&models.User{}).
+		Where("id = ?", userID).
+		Update("banner_path", bannerPath)
+
+	return result.RowsAffected, result.Error
+}
+
 func (r *UserRepository) Remove2FA(request dto.UserRemove2FA) (int64, error) {
 	result := r.db.Model(&models.User{}).
 		Where("id = ?", request.Id).
@@ -270,6 +298,23 @@ func (r *UserRepository) Get2FASecret(userID uint) (string, error) {
 
 func (r *UserRepository) IsDuplicatedKey(err error) bool {
 	return errors.Is(err, gorm.ErrDuplicatedKey)
+}
+
+func (r *UserRepository) FindByLogin(
+	login string,
+) (*models.User, error) {
+	var user models.User
+
+	err := r.db.
+		Where("login = ?", login).
+		First(&user).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
 
 func (r *UserRepository) FindByLoginOrEmail(identifier string) (*models.User, error) {

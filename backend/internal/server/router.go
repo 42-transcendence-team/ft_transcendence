@@ -7,6 +7,7 @@ import (
 	routes "backend/internal/routes"
 	"backend/internal/services"
 	"backend/internal/storage"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,7 +39,12 @@ func (srv *HTTPServer) Router() {
 	postLikeService := services.NewPostLikeService(postRepo, postLikeRepo)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
-	userHandler := handlers.NewUserHandler(userService, srv.Redis, advancedSearchService)
+	userHandler := handlers.NewUserHandler(
+		userService,
+		srv.Redis,
+		imageStorage,
+		advancedSearchService,
+	)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 	friendHandler := handlers.NewFriendHandler(friendService, blockService)
 	postHandler := handlers.NewPostHandler(postService, imageStorage)

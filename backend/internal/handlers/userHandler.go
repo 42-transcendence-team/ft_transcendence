@@ -4,7 +4,10 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
+	"backend/internal/storage"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,13 +20,20 @@ import (
 type UserHandler struct {
 	UserService           *services.UserService
 	Redis                 *redis.Client
+	ImageStorage          *storage.ImageStorage
 	AdvancedSearchService *services.AdvancedSearchService
 }
 
-func NewUserHandler(userService *services.UserService, redisClient *redis.Client, advancedSearchService *services.AdvancedSearchService) *UserHandler {
+func NewUserHandler(
+	userService *services.UserService,
+	redisClient *redis.Client,
+	imageStorage *storage.ImageStorage,
+	advancedSearchService *services.AdvancedSearchService,
+) *UserHandler {
 	return &UserHandler{
 		UserService:           userService,
 		Redis:                 redisClient,
+		ImageStorage:          imageStorage,
 		AdvancedSearchService: advancedSearchService,
 	}
 }
@@ -287,31 +297,250 @@ func (h *UserHandler) UpdatePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User modified successfully"})
 }
 
-func (h *UserHandler) GetProfile(c *gin.Context) {
-	// /users/profile/pepe -> pepe
-	loginParam := c.Param("login")
-
-	user, err := h.UserService.GetUserByLogin(loginParam)
+// UpdateAvatar guarda el nuevo avatar y actualiza su ruta en la base de datos.
+// Si la actualización falla, elimina el archivo recién creado para evitar residuos.
+func (h *UserHandler) UpdateAvatar(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
 	if err != nil {
-		c.JSON(404, gin.H{"error": "Usuario no encontrado"})
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	file, err := c.FormFile("image")
+	if err != nil {
+		if errors.Is(err, http.ErrMissingFile) {
+			c.Error(appErr.NewValidation(map[string]string{
+				"image": "required",
+			}))
+		} else {
+			c.Error(appErr.NewBadRequest("invalid_image_upload"))
+		}
+
+		c.Abort()
+		return
+	}
+
+	newAvatarPath, err := h.ImageStorage.SaveAvatarImage(file)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	previousAvatarPath, err := h.UserService.UpdateAvatar(
+		userID,
+		newAvatarPath,
+	)
+	if err != nil {
+		// Si PostgreSQL no se actualiza, retiramos el archivo recién creado.
+		_ = h.ImageStorage.Delete(newAvatarPath)
+
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	/*
+		La base de datos ya apunta al avatar nuevo. El borrado del archivo
+		anterior es una limpieza secundaria y no debe hacer creer al cliente
+		que la actualización completa ha fallado.
+	*/
+	if previousAvatarPath != nil {
+		if err := h.ImageStorage.Delete(*previousAvatarPath); err != nil {
+			log.Printf(
+				"could not delete previous avatar %q: %v",
+				*previousAvatarPath,
+				err,
+			)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "avatar updated",
+		"data": gin.H{
+			"avatarPath": newAvatarPath,
+		},
+	})
+}
+
+// DeleteAvatar elimina la ruta del avatar personalizado y después intenta
+// retirar el archivo almacenado. La respuesta no falla si esa limpieza secundaria falla.
+func (h *UserHandler) DeleteAvatar(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	previousAvatarPath, err := h.UserService.DeleteAvatar(userID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	if previousAvatarPath != nil {
+		if err := h.ImageStorage.Delete(*previousAvatarPath); err != nil {
+			log.Printf(
+				"could not delete avatar %q: %v",
+				*previousAvatarPath,
+				err,
+			)
+		}
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+// UpdateBanner guarda el nuevo banner y actualiza su ruta en la base de datos.
+// Si la actualización falla, elimina el archivo recién creado para evitar residuos.
+func (h *UserHandler) UpdateBanner(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	file, err := c.FormFile("image")
+	if err != nil {
+		if errors.Is(err, http.ErrMissingFile) {
+			c.Error(appErr.NewValidation(map[string]string{
+				"image": "required",
+			}))
+		} else {
+			c.Error(appErr.NewBadRequest("invalid_image_upload"))
+		}
+
+		c.Abort()
+		return
+	}
+
+	newBannerPath, err := h.ImageStorage.SaveBannerImage(file)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	previousBannerPath, err := h.UserService.UpdateBanner(
+		userID,
+		newBannerPath,
+	)
+	if err != nil {
+		// Si PostgreSQL no se actualiza, retiramos el archivo recién creado.
+		_ = h.ImageStorage.Delete(newBannerPath)
+
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	/*
+		La base de datos ya apunta al banner nuevo. El borrado del archivo
+		anterior es una limpieza secundaria y no debe hacer creer al cliente
+		que la actualización completa ha fallado.
+	*/
+	if previousBannerPath != nil {
+		if err := h.ImageStorage.Delete(*previousBannerPath); err != nil {
+			log.Printf(
+				"could not delete previous banner %q: %v",
+				*previousBannerPath,
+				err,
+			)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "banner updated",
+		"data": gin.H{
+			"bannerPath": newBannerPath,
+		},
+	})
+}
+
+// DeleteBanner elimina la ruta del banner personalizado y después intenta
+// retirar el archivo almacenado. La respuesta no falla si esa limpieza secundaria falla.
+func (h *UserHandler) DeleteBanner(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	previousBannerPath, err := h.UserService.DeleteBanner(userID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	if previousBannerPath != nil {
+		if err := h.ImageStorage.Delete(*previousBannerPath); err != nil {
+			log.Printf(
+				"could not delete banner %q: %v",
+				*previousBannerPath,
+				err,
+			)
+		}
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+func (h *UserHandler) GetProfile(c *gin.Context) {
+	login := c.Param("login")
+
+	user, err := h.UserService.GetUserByLogin(login)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
 		return
 	}
 
 	ctx := c.Request.Context()
 
-	isOnline, _ := h.Redis.SIsMember(ctx, "online_users", user.ID).Result()
+	isOnline, err := h.Redis.
+		SIsMember(ctx, "online_users", user.ID).
+		Result()
+	if err != nil {
+		log.Printf(
+			"could not read online status for user %d: %v",
+			user.ID,
+			err,
+		)
+		isOnline = false
+	}
 
 	visitKey := fmt.Sprintf("visits:%d", user.ID)
-	visits, _ := h.Redis.Incr(ctx, visitKey).Result()
 
-	c.JSON(200, gin.H{
-		"id":       user.ID,
-		"login":    user.Login,
-		"email":    user.Email,
-		"name":     user.Name,
-		"surname":  user.Surname,
-		"isOnline": isOnline,
-		"visits":   visits,
+	visits, err := h.Redis.Incr(ctx, visitKey).Result()
+	if err != nil {
+		log.Printf(
+			"could not update visits for user %d: %v",
+			user.ID,
+			err,
+		)
+		visits = 0
+	}
+
+	profile := dto.UserProfileResponse{
+		ID:         user.ID,
+		Login:      user.Login,
+		Name:       user.Name,
+		Surname:    user.Surname,
+		AvatarPath: user.AvatarPath,
+		BannerPath: user.BannerPath,
+		Status:     user.State,
+		IsOnline:   isOnline,
+		Visits:     visits,
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": profile,
 	})
 }
 
@@ -332,11 +561,43 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
 		"user": gin.H{
-			"id":      user.ID,
-			"login":   user.Login,
-			"email":   user.Email,
-			"name":    user.Name,
-			"surname": user.Surname,
+			"id":         user.ID,
+			"login":      user.Login,
+			"email":      user.Email,
+			"name":       user.Name,
+			"surname":    user.Surname,
+			"avatarPath": user.AvatarPath,
+			"bannerPath": user.BannerPath,
+		},
+	})
+}
+
+func (h *UserHandler) GetPresence(c *gin.Context) {
+	login := c.Param("login")
+
+	user, err := h.UserService.GetUserByLogin(login)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	isOnline, err := h.Redis.
+		SIsMember(
+			c.Request.Context(),
+			"online_users",
+			user.ID,
+		).
+		Result()
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": gin.H{
+			"isOnline": isOnline,
 		},
 	})
 }

@@ -16,8 +16,9 @@ type CreatePostInput struct {
 }
 
 type PostAuthorResponse struct {
-	ID    uint   `json:"id"`
-	Login string `json:"login"`
+	ID         uint    `json:"id"`
+	Login      string  `json:"login"`
+	AvatarPath *string `json:"avatarPath"`
 }
 
 type PostResponse struct {
@@ -53,8 +54,9 @@ func NewPostResponse(
 		ID:     post.ID,
 		UserID: post.UserID,
 		Author: PostAuthorResponse{
-			ID:    post.User.ID,
-			Login: post.User.Login,
+			ID:         post.User.ID,
+			Login:      post.User.Login,
+			AvatarPath: post.User.AvatarPath,
 		},
 		Content:               post.Content,
 		ImagePath:             post.ImagePath,
