@@ -32,6 +32,7 @@ func (srv *HTTPServer) Router() {
 	userService := services.NewUserService(userRepo)
 	twoFAService := services.New2FAService(userRepo, authService, srv.Redis)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
+	advancedSearchService := services.NewAdvancedSearch(userRepo, friendRepo)
 	blockService := services.NewBlockUserService(friendRepo, userRepo)
 	postService := services.NewPostService(postRepo, postLikeRepo)
 	commentService := services.NewCommentService(commentRepo, postRepo)
@@ -42,6 +43,7 @@ func (srv *HTTPServer) Router() {
 		userService,
 		srv.Redis,
 		imageStorage,
+		advancedSearchService,
 	)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 	friendHandler := handlers.NewFriendHandler(friendService, blockService)
@@ -76,6 +78,7 @@ func (srv *HTTPServer) Router() {
 	protected := api.Group("/")
 	protected.Use(middlewares.AuthMiddleware(srv.Conf, srv.Redis))
 	{
+
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
 		routes.FriendsRoutes(protected, friendHandler)

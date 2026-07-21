@@ -12,7 +12,7 @@ func UserRoutes(
 ) {
 	UserGroup := api.Group("/users")
 	{
-		//todo se usan???
+		// TODO: borrar luego Para mi son utiles para probar cosas
 		UserGroup.GET("/", userHandler.Filter)
 		// UserGroup.DELETE("/", userHandler.Delete)
 		// UserGroup.PUT("/", userHandler.Modify)
@@ -33,5 +33,9 @@ func UserRoutes(
 
 		UserGroup.PATCH("/banner", userHandler.UpdateBanner)
 		UserGroup.DELETE("/banner", userHandler.DeleteBanner)
+		// Busqueda avanzada
+		// Ejemplo de query basica
+		// GET /api/users/search?q=ange&sort=username_asc&page=2&limit=10&relations=friends,pending_sent
+		UserGroup.GET("/search", userHandler.AdvancedSearch)
 	}
 }

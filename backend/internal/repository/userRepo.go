@@ -6,8 +6,8 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"errors"
-
 	"gorm.io/gorm"
+	"strings"
 )
 
 type UserRepository struct {
@@ -46,6 +46,113 @@ func (r *UserRepository) Filter(request dto.UserFilter) ([]models.User, error) {
 
 	err := query.Scopes(db.Paginate(request.Page, request.Limit)).Find(&users).Error
 	return users, err
+}
+
+func (r *UserRepository) buildAdvancedSearchQuery(userID uint, filter dto.UserFilter) *gorm.DB {
+	query := r.db.Model(&models.User{})
+
+	query = query.Where("id != ?", userID)
+
+	if filter.Q != "" {
+		search := "%" + filter.Q + "%"
+
+		query = query.Where(
+			"(login ILIKE ? OR name ILIKE ? OR surname ILIKE ?)",
+			search, search, search,
+		)
+	}
+
+	if len(filter.Relations) > 0 {
+		conditions := []string{} // guarda trozos de SQL
+		args := []interface{}{}  // guarda valores de los ?
+
+		for _, relation := range filter.Relations {
+			switch relation {
+			case "friends":
+				conditions = append(conditions, `
+					EXISTS (
+						SELECT 1 FROM friendships f
+						WHERE
+							(f.user1_id = ? AND f.user2_id = users.id)
+							OR
+							(f.user2_id = ? AND f.user1_id = users.id)
+					)
+				`)
+				args = append(args, userID, userID)
+			case "pending_sent":
+				conditions = append(conditions, `
+					EXISTS (
+						SELECT 1 FROM friend_requests fr
+						WHERE
+							fr.sender_id = ?
+							AND fr.receiver_id = users.id
+							AND fr.status = ?
+						)
+				`)
+				args = append(args, userID, models.RelationPending)
+			case "pending_received":
+				conditions = append(conditions, `
+					EXISTS (
+						SELECT 1 FROM friend_requests fr
+						WHERE
+							fr.receiver_id = ?
+							AND fr.sender_id = users.id
+							AND fr.status = ?
+						)
+					`)
+				args = append(args, userID, models.RelationPending)
+			case "blocked_by_me":
+				conditions = append(conditions, `
+				EXISTS (
+					SELECT 1 FROM blocks	b
+					WHERE
+						b.blocker_id = ?
+						AND b.blocked_id = users.id
+					)
+				`)
+				args = append(args, userID)
+			}
+		}
+
+		if len(conditions) > 0 {
+			query = query.Where(
+				"("+strings.Join(conditions, " OR ")+")",
+				args...,
+			)
+		}
+	}
+	return query
+}
+
+func (r *UserRepository) SearchUsers(userID uint, filter dto.UserFilter) ([]models.User, error) {
+	var users []models.User
+
+	query := r.buildAdvancedSearchQuery(userID, filter)
+
+	switch filter.Sort {
+	case "username_asc":
+		query = query.Order("login ASC")
+	case "username_desc":
+		query = query.Order("login DESC")
+	case "newest":
+		query = query.Order("created_at DESC")
+	case "oldest":
+		query = query.Order("created_at ASC")
+	}
+
+	err := query.Scopes(db.Paginate(filter.Page, filter.Limit)).Find(&users).Error
+
+	return users, err
+}
+
+func (r *UserRepository) CountSearchUsers(userID uint, filter dto.UserFilter) (int64, error) {
+	var count int64
+
+	query := r.buildAdvancedSearchQuery(userID, filter)
+
+	err := query.Count(&count).Error
+
+	return count, err
 }
 
 // Peticiones para modificacion de usuario (Pestaña Settings)

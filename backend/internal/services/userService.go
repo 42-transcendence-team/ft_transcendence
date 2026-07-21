@@ -25,13 +25,6 @@ func NewUserService(userRepo *repository.UserRepository) *UserService {
 	return &UserService{UserRepo: userRepo}
 }
 
-func (s *UserService) Filter(filter dto.UserFilter) ([]models.User, error) {
-	// Faltan todas las validaciones de filtrado, como accesos permitidos y denegados o tamaños maximos de input...
-	// Tambien, dependiendo de lo anterior, que datos/objeto se devuelve (Admin: todos, User: login, email, surname, ...)
-	// De momento funciona en cualquier caso y devuelve todo segun ausencia o no de filtros
-	return s.UserRepo.Filter(filter)
-}
-
 func (s *UserService) GetSettings(userID uint) (*dto.UserResponse, error) {
 	return s.UserRepo.GetUserData(userID)
 }

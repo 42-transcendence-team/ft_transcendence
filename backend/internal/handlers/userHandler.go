@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,23 +18,27 @@ import (
 )
 
 type UserHandler struct {
-	UserService  *services.UserService
-	Redis        *redis.Client
-	ImageStorage *storage.ImageStorage
+	UserService           *services.UserService
+	Redis                 *redis.Client
+	ImageStorage          *storage.ImageStorage
+	AdvancedSearchService *services.AdvancedSearchService
 }
 
 func NewUserHandler(
 	userService *services.UserService,
 	redisClient *redis.Client,
 	imageStorage *storage.ImageStorage,
+	advancedSearchService *services.AdvancedSearchService,
 ) *UserHandler {
 	return &UserHandler{
-		UserService:  userService,
-		Redis:        redisClient,
-		ImageStorage: imageStorage,
+		UserService:           userService,
+		Redis:                 redisClient,
+		ImageStorage:          imageStorage,
+		AdvancedSearchService: advancedSearchService,
 	}
 }
 
+// TODO: borrar luego esta funcion
 func (h *UserHandler) Filter(c *gin.Context) {
 	var request dto.UserFilter
 
@@ -51,6 +57,86 @@ func (h *UserHandler) Filter(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, users)
+}
+
+func (h *UserHandler) AdvancedSearch(c *gin.Context) {
+
+	userID := c.MustGet("userID").(uint)
+
+	query, err := parseSearchQuery(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	response, err := h.AdvancedSearchService.SearchUsers(userID, query)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, response)
+}
+
+func parseSearchQuery(c *gin.Context) (*dto.UserFilter, error) {
+
+	q := c.Query("q")
+	sort := c.Query("sort")
+	pageStr := c.Query("page")
+	page := 1
+	if pageStr != "" {
+		pageNb, err := strconv.Atoi(pageStr)
+		if err != nil {
+			return nil, appErr.NewValidation(map[string]string{
+				"page": "must be a valid number",
+			})
+		}
+		if pageNb < 1 {
+			return nil, appErr.NewValidation(map[string]string{
+				"page": "must be greater than 0",
+			})
+		}
+		page = pageNb
+
+	}
+
+	limitStr := c.Query("limit")
+	limit := 5
+	if limitStr != "" {
+		limitNb, err := strconv.Atoi(limitStr)
+		if err != nil {
+			return nil, appErr.NewValidation(map[string]string{
+				"limit": "must be a valid number",
+			})
+		}
+		if limitNb < 1 || limitNb > 50 {
+			return nil, appErr.NewValidation(map[string]string{
+				"limit": "must be greater than 0 && lower than 50",
+			})
+		}
+		limit = limitNb
+	}
+
+	relationsStr := c.Query("relations")
+	relations := strings.Split(relationsStr, ",")
+	cleanRelations := []string{}
+	for _, relation := range relations {
+		trimmed := strings.TrimSpace(relation)
+
+		if trimmed != "" {
+			cleanRelations = append(cleanRelations, trimmed)
+		}
+	}
+
+	return (&dto.UserFilter{
+		Q:         q,
+		Relations: relations,
+		Sort:      sort,
+		Page:      page,
+		Limit:     limit,
+	}), nil
 }
 
 func (h *UserHandler) GetSettings(c *gin.Context) {

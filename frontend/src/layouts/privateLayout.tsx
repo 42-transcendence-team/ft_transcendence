@@ -1,35 +1,45 @@
 import { Outlet } from "react-router-dom";
 import { Footer } from "@components/Footer";
 import { PrivHeader } from "@components/PrivHeader";
-import "../styles/components/_privateLayout.scss"
+import { SearchFilters } from "@components/advancedSearch/SearchFilters";
+import { useAdvancedSearch } from "@components/advancedSearch/useAdvancedSearch";
+import { AdvancedSearchPanel } from "@components/advancedSearch/AdvancedSearchPanel";
+
+import { PrivateLeftPanel } from "@components/layout/PrivateLeftPanel";
+import { PrivateRightPanel } from "@components/layout/PrivateRightPanel";
+import { PrivateMainContent } from "@components/layout/PrivateMainContent";
+
+import "../styles/components/_privateLayout.scss";
 
 export function PrivateLayout() {
-	// Layout común para todas las páginas privadas (footer, header, chat...)
-	// Es en las páginas donde se modifica el body dependiendo de que se muestre en estas.
-	// Hay que crear y modificar el header y footer dependiendo de la ruta, por ahora uso generico
-	return (
-		<div className="privateLayout">
-			<aside className="privateLayout__leftPanel">
-				LEFT PANEL
-			</aside>
+  const search = useAdvancedSearch();
 
-			<PrivHeader />
+  return (
+    <div className="privateLayout">
+      <PrivateLeftPanel>
+        <SearchFilters
+          selectedRelations={search.relations}
+          onRelationsChange={search.handleRelationsChange}
+          selectedSort={search.sort}
+          onSortChange={search.handleSortChange}
+        />
+      </PrivateLeftPanel>
 
-			<main className="privateLayout__content">
-				<div className="privateLayout__contentFrame">
-					<div className="privateLayout__contentInner">
-						<Outlet />
-					</div>
-				</div>
-			</main>
+      <PrivHeader onSearch={search.handleSearch} />
 
-			<footer className="privateLayout__footer">
-				<Footer />
-			</footer>
+      <PrivateMainContent>
+        {search.hasSearched ? (
+          <AdvancedSearchPanel search={search} />
+        ) : (
+          <Outlet />
+        )}
+      </PrivateMainContent>
 
-			<aside className="privateLayout__rightPanel">
-				RIGHT PANEL
-			</aside>
-		</div>
-	);
+      <footer className="privateLayout__footer">
+        <Footer />
+      </footer>
+
+      <PrivateRightPanel />
+    </div>
+  );
 }
