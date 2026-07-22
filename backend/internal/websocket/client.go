@@ -17,9 +17,9 @@ type Client struct {
 
 	Hub *Hub // Referencia al Hub para registrar/desregistrar clientes
 
-	UserID   uint   // ID del usuario asociado al cliente
-	Username string // Nombre de usuario del cliente
-	Rooms map[uint]*Room // Salas a las que el cliente está unido
+	UserID   uint           // ID del usuario asociado al cliente
+	Username string         // Nombre de usuario del cliente
+	Rooms    map[uint]*Room // Salas a las que el cliente está unido
 }
 
 func NewClient(conn *websocket.Conn, hub *Hub, userID uint, username string) *Client {
@@ -30,7 +30,6 @@ func NewClient(conn *websocket.Conn, hub *Hub, userID uint, username string) *Cl
 		UserID:   userID,
 		Username: username,
 		Rooms:    make(map[uint]*Room),
-		
 	}
 }
 

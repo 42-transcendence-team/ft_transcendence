@@ -22,8 +22,6 @@ func NewGameHandler(gameManager *services.GameManager, hub *ws.Hub) *GameHandler
 	}
 }
 
-// TODO - Seperar los casos del switch a funciones individuales, quitar logueos en futuro
-
 func (gh *GameHandler) HandleGameMessage(c ws.ClientConn, msg *dto.IncomingMessage) {
 	if len(msg.Payload) == 0 {
 		log.Printf("Error: El payload del juego está vacío")
@@ -36,150 +34,204 @@ func (gh *GameHandler) HandleGameMessage(c ws.ClientConn, msg *dto.IncomingMessa
 		return
 	}
 
+	log.Printf("Acción recibida: %s", actionEnvelope.Action)
+
 	switch actionEnvelope.Action {
 
 	case "create":
-		var createData dto.CreateGame
-		err := json.Unmarshal(msg.Payload, &createData)
-		if err != nil {
-			log.Printf("Error al decodificar CreateGame: %v", err)
-			return
+		gh.HandleCreateGame(c, msg)
+
+	case "make_move":
+		gh.HandleMakeMove(c, msg)
+
+	case "join":
+		gh.HandleJoinGame(c, msg)
+
+	case "leave":
+		gh.HandleLeaveGame(c, msg)
+
+	default:
+		log.Printf("Acción de juego desconocida: %s", actionEnvelope.Action)
+	}
+}
+
+func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessage) {
+	var createData dto.CreateGame
+	err := json.Unmarshal(msg.Payload, &createData)
+	if err != nil {
+		log.Printf("Error al decodificar CreateGame: %v", err)
+		return
+	}
+
+	newGameID := fmt.Sprintf("%d", time.Now().Unix())
+
+	gh.gameManager.CreateGame(newGameID, createData.GameType, createData.Mode)
+
+	state := gh.gameManager.ActiveGames[newGameID].GetState()
+
+	var roomID64 uint
+	_, err = fmt.Sscanf(newGameID, "%d", &roomID64)
+	if err != nil {
+		log.Printf("Error al convertir GameID %s a uint: %v", newGameID, err)
+		return
+	}
+	roomID := uint(roomID64)
+
+	room := gh.hub.CreateRoom(roomID, fmt.Sprintf("Game-%s", newGameID), false)
+
+	c.JoinRoom(room)
+
+	var data map[string]interface{}
+	if createData.Mode == "online" {
+		data = map[string]interface{}{
+			"game_id":   newGameID,
+			"game_type": createData.GameType,
+			"status":    "WAITING",
+			"state":     state,
 		}
-
-		newGameID := fmt.Sprintf("%d", time.Now().Unix())
-
-		gh.gameManager.CreateGame(newGameID, createData.GameType)
-
-		log.Printf("Partida %s creada", newGameID)
-
-		data := map[string]interface{}{
+	} else {
+		data = map[string]interface{}{
 			"game_id":   newGameID,
 			"game_type": createData.GameType,
 			"status":    "PLAYING",
+			"state":     state,
 		}
-
-		response := map[string]interface{}{
-			"type":    "game_created",
-			"payload": data,
-		}
-		responseBytes, _ := json.Marshal(response)
-		c.Send(responseBytes)
-
-	case "make_move":
-		var moveData dto.MakeMove
-		err := json.Unmarshal(msg.Payload, &moveData)
-		if err != nil {
-			log.Printf("Error al decodificar MakeMove: %v", err)
-			return
-		}
-
-		engine, ok := gh.gameManager.ActiveGames[moveData.GameID]
-		if !ok {
-			return
-		}
-
-		if err := engine.ProcessMove(c.GetUserID(), moveData.Payload); err != nil {
-			log.Printf("Error: %v", err)
-			return
-		}
-
-		var broadcastBytes []byte
-
-		winner, winningLine := engine.GetWinner()
-		if winner != 0 {
-			broadcast := map[string]interface{}{
-				"type":         "game_finished",
-				"status":       "FINISHED",
-				"game_id":      moveData.GameID,
-				"winner":       winner,
-				"winning_line": winningLine,
-			}
-			broadcastBytes, err = json.Marshal(broadcast)
-			if err != nil {
-				log.Printf("Error al serializar broadcast: %v", err)
-				return
-			}
-		} else {
-			broadcast := map[string]interface{}{
-				"type":    "game_update",
-				"status":  "PLAYING",
-				"game_id": moveData.GameID,
-				"state":   engine.GetState(),
-			}
-			broadcastBytes, err = json.Marshal(broadcast)
-			if err != nil {
-				log.Printf("Error al serializar broadcast: %v", err)
-				return
-			}
-		}
-
-		var roomID64 uint
-		_, err = fmt.Sscanf(moveData.GameID, "%d", &roomID64)
-		if err != nil {
-			log.Printf("Error al convertir GameID %s a uint: %v", moveData.GameID, err)
-			return
-		}
-		roomID := uint(roomID64)
-
-		gh.hub.BroadcastToRoom(roomID, broadcastBytes)
-
-	case "join":
-		var joinData dto.JoinGame
-		if err := json.Unmarshal(msg.Payload, &joinData); err != nil {
-			log.Printf("Error al decodificar JoinGame: %v", err)
-			return
-		}
-
-		log.Printf("Usuario %d se unió a la partida %s", c.GetUserID(), joinData.GameID)
-
-		var roomID64 uint
-		_, err := fmt.Sscanf(joinData.GameID, "%d", &roomID64)
-		if err != nil {
-			log.Printf("Error al convertir GameID %s a uint: %v", joinData.GameID, err)
-			return
-		}
-		roomID := uint(roomID64)
-
-		room := gh.hub.CreateRoom(roomID, fmt.Sprintf("Game-%s", joinData.GameID), false)
-
-		c.JoinRoom(room)
-
-		engine, ok := gh.gameManager.ActiveGames[joinData.GameID]
-		if !ok {
-			log.Printf("Error: Partida %s no existe en GameManager", joinData.GameID)
-			return
-		}
-
-		broadcast := map[string]interface{}{
-			"type":   "game_update",
-			"state":  engine.GetState(),
-			"status": "PLAYING",
-		}
-		broadcastBytes, _ := json.Marshal(broadcast)
-
-		gh.hub.BroadcastToRoom(roomID, broadcastBytes)
-
-	case "leave":
-		var leaveData dto.LeaveGame
-		err := json.Unmarshal(msg.Payload, &leaveData)
-		if err != nil {
-			log.Printf("Error al decodificar LeaveGame: %v", err)
-			return
-		}
-
-		log.Printf("Usuario %d abandonó la partida %s", c.GetUserID(), leaveData.GameID)
-		var roomID64 uint
-		_, err = fmt.Sscanf(leaveData.GameID, "%d", &roomID64)
-		if err != nil {
-			log.Printf("Error al convertir GameID %s a uint: %v", leaveData.GameID, err)
-			return
-		}
-		roomID := uint(roomID64)
-		room, exists := gh.hub.GetRoom(roomID)
-		if !exists {
-			log.Printf("Error: Sala %d no existe en Hub", roomID)
-			return
-		}
-		c.LeaveRoom(room)
 	}
+
+	gh.gameManager.ActiveGames[newGameID].JoinGame(c.GetUserID())
+
+	response := map[string]interface{}{
+		"type":    "game_created",
+		"payload": data,
+	}
+
+	responseBytes, _ := json.Marshal(response)
+	c.Send(responseBytes)
+}
+
+func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage) {
+	var joinData dto.JoinGame
+	err := json.Unmarshal(msg.Payload, &joinData)
+	if err != nil {
+		log.Printf("Error al decodificar JoinGame: %v", err)
+		return
+	}
+
+	var roomID64 uint
+	_, err = fmt.Sscanf(joinData.GameID, "%d", &roomID64)
+	if err != nil {
+		log.Printf("Error al convertir GameID %s a uint: %v", joinData.GameID, err)
+		return
+	}
+	roomID := uint(roomID64)
+
+	room := gh.hub.CreateRoom(roomID, fmt.Sprintf("Game-%s", joinData.GameID), false)
+
+	c.JoinRoom(room)
+
+	engine, ok := gh.gameManager.ActiveGames[joinData.GameID]
+	if !ok {
+		log.Printf("Error: Partida %s no existe en GameManager", joinData.GameID)
+		return
+	}
+
+	engine.JoinGame(c.GetUserID())
+
+	broadcast := map[string]interface{}{
+		"type":   "game_update",
+		"state":  engine.GetState(),
+		"status": "PLAYING",
+	}
+	broadcastBytes, _ := json.Marshal(broadcast)
+
+	gh.hub.BroadcastToRoom(roomID, broadcastBytes)
+}
+
+func (gh *GameHandler) HandleLeaveGame(c ws.ClientConn, msg *dto.IncomingMessage) {
+	var leaveData dto.LeaveGame
+	err := json.Unmarshal(msg.Payload, &leaveData)
+	if err != nil {
+		log.Printf("Error al decodificar LeaveGame: %v", err)
+		return
+	}
+
+	log.Printf("Usuario %d abandonó la partida %s", c.GetUserID(), leaveData.GameID)
+
+	var roomID64 uint
+	_, err = fmt.Sscanf(leaveData.GameID, "%d", &roomID64)
+	if err != nil {
+		log.Printf("Error al convertir GameID %s a uint: %v", leaveData.GameID, err)
+		return
+	}
+	roomID := uint(roomID64)
+
+	room, exists := gh.hub.GetRoom(roomID)
+	if !exists {
+		log.Printf("Error: Sala %d no existe en Hub", roomID)
+		return
+	}
+
+	c.LeaveRoom(room)
+}
+
+func (gh *GameHandler) HandleMakeMove(c ws.ClientConn, msg *dto.IncomingMessage) {
+	var moveData dto.MakeMove
+	err := json.Unmarshal(msg.Payload, &moveData)
+	if err != nil {
+		log.Printf("Error al decodificar MakeMove: %v", err)
+		return
+	}
+
+	engine, ok := gh.gameManager.ActiveGames[moveData.GameID]
+	if !ok {
+		return
+	}
+
+	if err := engine.ProcessMove(c.GetUserID(), moveData.Payload); err != nil {
+		log.Printf("Error: %v", err)
+		return
+	}
+
+	var broadcastBytes []byte
+
+	winner, winningLine := engine.GetWinner()
+	isDraw := (winner == 0) && engine.IsFull()
+
+	if winner != 0 || isDraw {
+		broadcast := map[string]interface{}{
+			"type":         "game_finished",
+			"status":       "FINISHED",
+			"game_id":      moveData.GameID,
+			"winner":       winner,
+			"winning_line": winningLine,
+			"state":        engine.GetState(),
+		}
+		broadcastBytes, err = json.Marshal(broadcast)
+		if err != nil {
+			log.Printf("Error al serializar broadcast: %v", err)
+			return
+		}
+	} else {
+		broadcast := map[string]interface{}{
+			"type":    "game_update",
+			"status":  "PLAYING",
+			"game_id": moveData.GameID,
+			"state":   engine.GetState(),
+		}
+		broadcastBytes, err = json.Marshal(broadcast)
+		if err != nil {
+			log.Printf("Error al serializar broadcast: %v", err)
+			return
+		}
+	}
+
+	var roomID64 uint
+	_, err = fmt.Sscanf(moveData.GameID, "%d", &roomID64)
+	if err != nil {
+		log.Printf("Error al convertir GameID %s a uint: %v", moveData.GameID, err)
+		return
+	}
+	roomID := uint(roomID64)
+
+	gh.hub.BroadcastToRoom(roomID, broadcastBytes)
 }

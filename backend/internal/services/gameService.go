@@ -16,10 +16,10 @@ func NewGameManager() *GameManager {
 	}
 }
 
-func (gm *GameManager) CreateGame(id string, gameType string) {
+func (gm *GameManager) CreateGame(id, gameType, mode string) {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 	if gameType == "TICTACTOE" {
-		gm.ActiveGames[id] = games.NewTicTacToe()
+		gm.ActiveGames[id] = games.NewTicTacToe(mode)
 	}
 }

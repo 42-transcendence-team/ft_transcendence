@@ -55,7 +55,7 @@ func (r *Room) Run() {
 			r.Clients[client] = true
 			client.Rooms[r.ID] = r
 			r.mu.Unlock()
-			joinMsg := client.Username + " se ha unido a la sala."
+			joinMsg := client.Username + " se ha unido a la sala " + r.Name + "."
 			msg, err := json.Marshal(joinMsg)
 			if err != nil {
 				log.Printf("Error marshaling join message: %v", err)

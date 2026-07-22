@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { checkWinner, getWinningLine } from "./rules";
 import { useGame } from "context/gameContext";
+import { type GameState } from "context/gameContext";
 
 export type Player = "X" | "O";
 
-export type TicTacToeMode = "local" | "online_create" | "online_join";
+export type TicTacToeMode = "local" | "online" | "join";
 
 export type TicTacToeBoard = [
 	[Player | null, Player | null, Player | null],
@@ -12,67 +12,68 @@ export type TicTacToeBoard = [
 	[Player | null, Player | null, Player | null]
 ];
 
-const emptyBoard: TicTacToeBoard = [
-	[null, null, null],
-	[null, null, null],
-	[null, null, null],
-];
+export interface TicTacToeGameState extends GameState {
+    board: number[][];
+    turn: number;
+    winning_line?: [number, number][];
+}
 
-function createEmptyBoard(): TicTacToeBoard {
-	return emptyBoard.map(row => row.map(() => null)) as TicTacToeBoard;
+function mapBackendToFrontendBoard(backendBoard: number[][] | null): TicTacToeBoard {
+    const empty: TicTacToeBoard = [
+        [null, null, null],
+        [null, null, null],
+        [null, null, null]
+    ];
+    if (!backendBoard) return empty;
+
+    return backendBoard.map(row => 
+        row.map(cell => {
+            if (cell === 1) return "X";
+            if (cell === 2) return "O";
+            return null;
+        })
+    ) as TicTacToeBoard;
 }
 
 export function useTicTacToe() {
-	const [ board, setBoard ] = useState<TicTacToeBoard>(createEmptyBoard());
-	const [ currentPlayer, setCurrentPlayer] = useState<Player>("X");
-	const [ mode, setMode ] = useState<TicTacToeMode | null>(null);
-	const { createGame, joinGame, makeMove, leaveGame, gameState, setGameStatus, returnMenu } = useGame();
+    const [ mode, setMode ] = useState<TicTacToeMode | null>(null);
+    const { createGame, makeMove, gameState: rawGameState, returnMenu, joinGame } = useGame();
 
-	const winner = checkWinner(board);
-	const line = getWinningLine(board);
-	const draw = !winner && board.flat().every(cell => cell !== null);
+    const gameState = rawGameState as unknown as TicTacToeGameState;
 
-	function startGame(selectedMode: TicTacToeMode) {
-		createGame("TICTACTOE", selectedMode);
-		setMode(selectedMode);
-		setBoard(createEmptyBoard());
-		setCurrentPlayer("X");
-		console.log(`gameGameState: ${gameState.status}`);
-	}
+	gameState.game_type = "TICTACTOE";
+    const backendBoard = mapBackendToFrontendBoard(gameState.board);
+    const currentTurn: Player = gameState.turn === 2 ? "O" : "X";
+    
+    const line = gameState.winning_line || null; 
 
-	function play(row: number, col: number) {
-		if (gameState?.status !== "PLAYING") return;
-		if (board[row][col]) return;
+    let winner: Player | "Empate" | null = null;
+    if (gameState.status === "FINISHED") {
+        if (gameState.winner === 1) winner = "X";
+        else if (gameState.winner === 2) winner = "O";
+        else winner = null;
+    }
 
-		makeMove({ row, col });
+    const draw = gameState.status === "FINISHED" && !gameState.winner;
 
-		const newBoard = structuredClone(board);
+    function startGame(selectedMode: TicTacToeMode) {
+        createGame("TICTACTOE", selectedMode);
+        setMode(selectedMode);
+    }
 
-		newBoard[row][col] = currentPlayer;
+    function play(row: number, col: number) {
+        if (gameState?.status !== "PLAYING") return;
+        if (backendBoard[row][col]) return;
 
-		setBoard(newBoard);
+        makeMove({ row, col });
+    }
 
-		const newWinner = checkWinner(newBoard);
-		const newDraw = newBoard.flat().every(cell => cell !== null);
+    function reset() {
+        setMode(null);
+        returnMenu();
+    }
 
-		if (newWinner || newDraw) {
-			setGameStatus("FINISHED");
-			return;
-		}
-
-		setCurrentPlayer(
-			currentPlayer === "X" ? "O" : "X"
-		);
-	}
-
-	function reset() {
-		setBoard(createEmptyBoard());
-		setCurrentPlayer("X");
-		setMode(null);
-		returnMenu();
-	}
-
-	return { board, currentPlayer, winner, line, draw, 
-		gameState, mode, play, reset, startGame, returnMenu
-	};
+    return { currentPlayer: currentTurn, winner, line, draw, backendBoard,
+		gameState, mode, play, reset, startGame, returnMenu, joinGame
+    };
 }

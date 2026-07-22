@@ -1,26 +1,26 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useWebSocket } from '././webSocketContext';
 import { useNavigate } from 'react-router-dom';
 
 export type GameStatus = 'MENU' | 'PLAYING' | 'FINISHED' | 'JOINING' | 'WAITING' | 'LOBBY' | 'IDLE';
 
-export type GameMode = 'local' | 'online_create' | 'online_join';
+export type GameMode = 'local' | 'online' | 'join';
 
 interface Player {
     id: string;
     login?: string;
-    color?: string;
 }
 
-export interface GameState <TBoard = unknown> {
-    game_id: number;
+export interface GameState {
+    game_id: string;
     game_type: string;
     status: GameStatus;
     players: Player[];
     current_turn: string;
-    winner_id?: string;
-    board_state: TBoard;
+    winner?: string | number;
+    board?: unknown;
     last_dice_roll?: number;
+    turn?: unknown;
 }
 
 interface GameContextType {
@@ -35,14 +35,15 @@ interface GameContextType {
 }
 
 const initialGameState: GameState = {
-	game_id: 0,
+	game_id: '',
 	game_type: '',
 	status: 'MENU',
 	players: [],
 	current_turn: '',
-	board_state: null,
-	winner_id: undefined,
+	board: null,
+	winner: undefined,
 	last_dice_roll: undefined,
+	turn: undefined,
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -52,6 +53,11 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
     const [ gameState, setGameState ] = useState<GameState>(initialGameState);
     const navigate = useNavigate();
 
+	const gameStateRef = useRef(gameState);
+    useEffect(() => {
+        gameStateRef.current = gameState;
+    }, [gameState]);
+
     useEffect(() => {
         if (!user?.id) {
             setGameState(initialGameState);
@@ -59,42 +65,49 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
         }
 
         const unsubscribeGameUpdate = subscribe("game_update", (message: any) => {
-            if (!message.payload) return;
-            
-            const payload: GameState = message.payload;
-            setGameState(payload);
-            if (payload.status === 'FINISHED') {
-                console.log('Game finished. Winner ID:', payload.winner_id);
-            }
+            console.log('Received game_update message:', message);
+			if (!message.status) return;
+			setGameState(prevState => ({
+				...prevState,
+				board: message.state?.board ?? prevState.board,
+				current_turn: message.state?.current_turn ?? prevState.current_turn,
+				status: message.status,
+				winner: message.state?.winner ?? prevState.winner,
+				last_dice_roll: message.state?.last_dice_roll ?? prevState.last_dice_roll,
+				turn: message.state?.turn ?? prevState.turn,
+			}));
         });
 
         const unsubscribeGameCreated = subscribe("game_created", (message: any) => {
             if (!message.payload) return;
             
-            const { game_id, game_type } = message.payload;
+            const { game_id, game_type, state, status } = message.payload;
             
             const slug = game_type.toLowerCase(); 
 
 			setGameState({
 				game_id: game_id,
 				game_type: game_type,
-				status: 'PLAYING',
+				status: status,
 				players: [],
 				current_turn: '',
-				board_state: null,
+				board: state.board,
 			});
 
-			console.log('gameState after game_created:', gameState);       
             navigate(`/app/games/${slug}/${game_id}`);
         });
 
 		const unsubscribeGameFinished = subscribe("game_finished", (message: any) => {
 				setGameState(prevState => ({
 					...prevState,
-					status: 'FINISHED',
-                    winner_id: message.winner,
+					board: message.state?.board ?? prevState.board,
+					current_turn: message.state?.current_turn ?? prevState.current_turn,
+					status: message.status,
+					winner: message.winner ?? prevState.winner	,
+					last_dice_roll: message.state?.last_dice_roll ?? prevState.last_dice_roll,
+					turn: message.state?.turn ?? prevState.turn,
+					winning_line: message.winning_line ?? null,
 				}));
-                console.log('gameState after game_finished:', gameState);
 		});
 
         return () => {
@@ -124,6 +137,10 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
         };
     }, [gameState.game_id, user, send]);
 
+	useEffect(() => {
+		console.log('Current gameState:', gameState);
+	}, [gameState]);
+
     const setGameStatus = useCallback((status: GameStatus) => {
         setGameState(prevState => ({
             ...prevState,
@@ -133,6 +150,7 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 
     const returnMenu = useCallback(() => {
         var gameType = gameState.game_type.toLowerCase();
+		console.log(`Returning to menu for game type: ${gameType}`);
         setGameState(initialGameState);
         navigate('/app/games/' + gameType);
     }, [navigate]);
@@ -150,19 +168,39 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
     }, [user, send]);
 
     const joinGame = useCallback((gameId: string) => {
-        if (!user) return;
-        send({
-            type: "game",
-            payload: {
-                action: "join",
-                game_id: gameId,
-            },
-        });
-    }, [user, send]);
+		if (!user) return;
+
+		const currentStatus = gameStateRef.current.status;
+		const currentRoomId = gameStateRef.current.game_id;
+
+		if (!gameId || gameId.trim() === "") {
+			console.error("Invalid game ID provided for joining.");
+			return;
+		}
+
+		if (currentStatus === "WAITING" && String(currentRoomId) === String(gameId)) {
+			return;
+		}
+
+		navigate(`/app/games/${gameStateRef.current.game_type.toLowerCase()}/${gameId}`);
+
+		setGameState(prevState => ({
+			...prevState,
+			status: "WAITING",
+			game_id: gameId,
+		}));
+
+		send({
+			type: "game",
+			payload: {
+				action: "join",
+				game_id: gameId,
+			},
+		});
+	}, [user, send]);
 
     const makeMove = useCallback((moveData: any) => {
         if (!user || !gameState.game_id) return;
-        console.log(`Enviando movimiento: ${JSON.stringify(moveData)} para el juego ${gameState.game_id}`);
         send({
             type: "game",
             payload: {

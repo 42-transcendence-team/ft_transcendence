@@ -2,10 +2,19 @@ package games
 
 import "encoding/json"
 
+type Player struct {
+	ID       uint   `json:"id"`
+	Username string `json:"username"`
+	Type     string `json:"type"`
+	Token    string `json:"token"`
+}
+
 type GameEngine interface {
-	Init()                                                        // Inicializa el tablero/estado del juego
-	ProcessMove(userID uint, actionPayload json.RawMessage) error // Procesa una jugada
-	GetState() interface{}                                        // Devuelve el estado actual serializado para el front
-	IsFinished() bool                                             // Indica si la partida ha terminado
-	GetWinner() (int, [][2]int)                                   // Devuelve el ganador y la línea ganadora si hay un ganador
+	Init()
+	ProcessMove(userID uint, actionPayload json.RawMessage) error
+	GetState() interface{}
+	IsFinished() bool
+	GetWinner() (int, interface{})
+	IsFull() bool
+	JoinGame(userID uint) error
 }
