@@ -10,7 +10,15 @@ import { ChatModal } from "@components/ChatModal";
 import { Notification } from "@components/Notification";
 import { useEffect, useState } from "react";
 import {apiRequest} from "api/ApiRequest";
+import { SearchFilters } from "@components/advancedSearch/SearchFilters";
+import { useAdvancedSearch } from "@components/advancedSearch/useAdvancedSearch";
+import { AdvancedSearchPanel } from "@components/advancedSearch/AdvancedSearchPanel";
 
+import { PrivateLeftPanel } from "@components/layout/PrivateLeftPanel";
+import { PrivateRightPanel } from "@components/layout/PrivateRightPanel";
+import { PrivateMainContent } from "@components/layout/PrivateMainContent";
+
+import "../styles/components/_privateLayout.scss";
 function useHandleChat() {
 	const [activeChat, setActiveChat] = useState<number | null>(null);
 
@@ -33,6 +41,7 @@ const sendFriendRequest = async () => {
 export function PrivateLayout() {
 	const data = useLoaderData();
 	const {activeChat, toggleChat} = useHandleChat();
+	const search = useAdvancedSearch();
 
 	return (
 		<div className="privateLayout">
@@ -40,13 +49,21 @@ export function PrivateLayout() {
 				<NotificationProvider activeChat={activeChat} user={data.user}> 
 					<ChatProvider user={data.user}>
 						<header className="privateLayout__header">
-							<PrivHeader />
+      						<PrivHeader onSearch={search.handleSearch} />
 						</header>
 
 						<aside className="privateLayout__leftPanel">
 							<div className="leftPanel__content">
 								<div className="leftPanel__actions">
 									<Notification/>
+									<PrivateLeftPanel>
+										<SearchFilters
+										  selectedRelations={search.relations}
+										  onRelationsChange={search.handleRelationsChange}
+										  selectedSort={search.sort}
+										  onSortChange={search.handleSortChange}
+										/>
+								  	</PrivateLeftPanel>
 								</div>
 							</div>
 							<button onClick={sendFriendRequest}>send req</button>
@@ -55,7 +72,13 @@ export function PrivateLayout() {
 						<main className="privateLayout__content">
 							<div className="privateLayout__contentFrame">
 								<div className="privateLayout__contentInner">
-									<Outlet />
+									<PrivateMainContent>
+										{search.hasSearched ? (
+										  <AdvancedSearchPanel search={search} />
+										) : (
+										  <Outlet />
+										)}
+									  </PrivateMainContent>
 								</div>
 							</div>
 							{activeChat && (
@@ -74,3 +97,4 @@ export function PrivateLayout() {
 		</div>
 	);
 }
+

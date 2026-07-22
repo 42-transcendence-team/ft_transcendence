@@ -6,11 +6,13 @@ import (
 	"backend/internal/models"
 	"backend/internal/repository"
 	"backend/internal/utils"
+	"errors"
 	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pquerna/otp/totp"
+	"gorm.io/gorm"
 )
 
 var validate = validator.New()
@@ -23,15 +25,138 @@ func NewUserService(userRepo *repository.UserRepository) *UserService {
 	return &UserService{UserRepo: userRepo}
 }
 
-func (s *UserService) Filter(filter dto.UserFilter) ([]models.User, error) {
-	// Faltan todas las validaciones de filtrado, como accesos permitidos y denegados o tamaños maximos de input...
-	// Tambien, dependiendo de lo anterior, que datos/objeto se devuelve (Admin: todos, User: login, email, surname, ...)
-	// De momento funciona en cualquier caso y devuelve todo segun ausencia o no de filtros
-	return s.UserRepo.Filter(filter)
-}
-
 func (s *UserService) GetSettings(userID uint) (*dto.UserResponse, error) {
 	return s.UserRepo.GetUserData(userID)
+}
+
+// UpdateAvatar sustituye la ruta del avatar y devuelve la anterior para que
+// el handler pueda eliminar el archivo antiguo después de actualizar la base de datos.
+func (s *UserService) UpdateAvatar(
+	userID uint,
+	newAvatarPath string,
+) (*string, error) {
+	user, err := s.UserRepo.FindById(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("user_not_found")
+		}
+
+		return nil, appErr.NewInternal(err)
+	}
+
+	previousAvatarPath := user.AvatarPath
+
+	rows, err := s.UserRepo.UpdateAvatarPath(
+		userID,
+		&newAvatarPath,
+	)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	if rows == 0 {
+		return nil, appErr.NewNotFound("user_not_found")
+	}
+
+	return previousAvatarPath, nil
+}
+
+// DeleteAvatar elimina la ruta del avatar personalizado y devuelve la anterior
+// para que el handler pueda borrar el archivo almacenado.
+func (s *UserService) DeleteAvatar(
+	userID uint,
+) (*string, error) {
+	user, err := s.UserRepo.FindById(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("user_not_found")
+		}
+
+		return nil, appErr.NewInternal(err)
+	}
+
+	// El borrado es idempotente: si no hay avatar, no hacemos nada.
+	if user.AvatarPath == nil {
+		return nil, nil
+	}
+
+	previousAvatarPath := user.AvatarPath
+
+	rows, err := s.UserRepo.UpdateAvatarPath(userID, nil)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	if rows == 0 {
+		return nil, appErr.NewNotFound("user_not_found")
+	}
+
+	return previousAvatarPath, nil
+}
+
+// UpdateBanner sustituye la ruta del banner y devuelve la anterior para que
+// el handler pueda eliminar el archivo antiguo después de actualizar la base de datos.
+func (s *UserService) UpdateBanner(
+	userID uint,
+	newBannerPath string,
+) (*string, error) {
+	user, err := s.UserRepo.FindById(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("user_not_found")
+		}
+
+		return nil, appErr.NewInternal(err)
+	}
+
+	previousBannerPath := user.BannerPath
+
+	rows, err := s.UserRepo.UpdateBannerPath(
+		userID,
+		&newBannerPath,
+	)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	if rows == 0 {
+		return nil, appErr.NewNotFound("user_not_found")
+	}
+
+	return previousBannerPath, nil
+}
+
+// DeleteBanner elimina la ruta del banner personalizado y devuelve la anterior
+// para que el handler pueda borrar el archivo almacenado.
+func (s *UserService) DeleteBanner(
+	userID uint,
+) (*string, error) {
+	user, err := s.UserRepo.FindById(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("user_not_found")
+		}
+
+		return nil, appErr.NewInternal(err)
+	}
+
+	// El borrado es idempotente: si no hay banner, no hacemos nada.
+	if user.BannerPath == nil {
+		return nil, nil
+	}
+
+	previousBannerPath := user.BannerPath
+
+	rows, err := s.UserRepo.UpdateBannerPath(userID, nil)
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	if rows == 0 {
+		return nil, appErr.NewNotFound("user_not_found")
+	}
+
+	return previousBannerPath, nil
 }
 
 func (s *UserService) require2FA(user *models.User, code *string) error {
@@ -253,6 +378,27 @@ func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error
 	}
 
 	return nil
+}
+
+func (s *UserService) GetUserByLogin(
+	login string,
+) (*models.User, error) {
+	cleanLogin := strings.TrimSpace(login)
+
+	if cleanLogin == "" {
+		return nil, appErr.NewBadRequest("invalid_user_login")
+	}
+
+	user, err := s.UserRepo.FindByLogin(cleanLogin)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErr.NewNotFound("user_not_found")
+		}
+
+		return nil, appErr.NewInternal(err)
+	}
+
+	return user, nil
 }
 
 func (s *UserService) GetUserByID(userID uint) (*models.User, error) {

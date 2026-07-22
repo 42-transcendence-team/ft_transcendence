@@ -38,32 +38,46 @@ interface ApiRequestProps {
 export type ApiError = {
 	status: number;
 	message: string;
-	data?: any;
+	data?: unknown;
 };
 
-export async function apiRequest<T = any>(props: ApiRequestProps): Promise<T> {
-	const {endpoint, body, method = "GET", includeCredentials = true} = props;
+export async function apiRequest<T = unknown>(props: ApiRequestProps,): Promise<T> {
+	const {
+		endpoint,
+		body,
+		method = "GET",
+		includeCredentials = true,
+	} = props;
 
 	/*
 	 * FormData no debe serializarse como JSON.
-	 * El navegador añadirá automáticamente el Content-Type multipart
-	 * junto con el boundary correspondiente.
+	 * El navegador añadirá automáticamente el Content-Type
+	 * multipart/form-data y su boundary.
 	 */
 	const isFormData =
 		typeof FormData !== "undefined" && body instanceof FormData;
 
+	const hasBody = body !== undefined && body !== null;
+
 	const config: RequestInit = {
 		method,
 
-		// Solo añadimos Content-Type cuando enviamos JSON.
-		headers: isFormData
-			? undefined
-			: { "Content-Type": "application/json" },
+		/*
+		 * Solo añadimos Content-Type cuando realmente enviamos JSON.
+		 * Para FormData no debemos establecerlo manualmente.
+		 */
+		headers:
+			hasBody && !isFormData
+				? { "Content-Type": "application/json" }
+				: undefined,
 
 		credentials: includeCredentials ? "include" : "same-origin",
 
-		// FormData se envía directamente; el resto se serializa como JSON.
-		body: body
+		/*
+		 * FormData se envía directamente.
+		 * El resto de cuerpos se convierte a JSON.
+		 */
+		body: hasBody
 			? isFormData
 				? body
 				: JSON.stringify(body)
@@ -73,26 +87,30 @@ export async function apiRequest<T = any>(props: ApiRequestProps): Promise<T> {
 	const res = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
 	/*
-	 * Leemos el cuerpo una sola vez y admitimos respuestas vacías,
-	 * habituales en operaciones DELETE con estado 204.
+	 * Leemos el cuerpo una única vez.
+	 * También permite respuestas vacías, como DELETE con 204.
 	 */
 	const data = await parseResponseBody(res);
 
 	/*
-	 * auth/me tiene un comportamiento especial:
-	 * aunque haya respuesta, la sesión solo es válida si authenticated es true.
+	 * auth/me tiene un comportamiento especial.
+	 * La sesión solo es válida cuando authenticated es true.
 	 */
 	if (endpoint === "auth/me") {
-		const authData = data as { authenticated?: boolean } | undefined;
+		const authData = data as
+			| { authenticated?: boolean }
+			| undefined;
 
-		if (authData?.authenticated) {
+		if (res.ok && authData?.authenticated === true) {
 			return data as T;
 		}
 
 		throw buildApiError(res, data);
 	}
 
-	// Centralizamos el tratamiento de todos los errores HTTP.
+	/*
+	 * Tratamiento centralizado de errores HTTP.
+	 */
 	if (!res.ok) {
 		throw buildApiError(res, data);
 	}
@@ -101,10 +119,11 @@ export async function apiRequest<T = any>(props: ApiRequestProps): Promise<T> {
 }
 
 /*
- * Convierte respuestas JSON y evita errores al procesar
- * respuestas correctas que no contienen cuerpo.
+ * Convierte respuestas JSON y admite respuestas sin cuerpo.
  */
-async function parseResponseBody(res: Response): Promise<any> {
+async function parseResponseBody(
+	res: Response,
+): Promise<unknown> {
 	const text = await res.text();
 
 	if (!text) {
@@ -113,29 +132,48 @@ async function parseResponseBody(res: Response): Promise<any> {
 
 	try {
 		return JSON.parse(text);
-	} catch (error) {
+	} catch {
 		/*
-		 * Si la respuesta HTTP ya es un error, dejamos que buildApiError
-		 * genere un error normalizado aunque el cuerpo no sea JSON válido.
+		 * Si la respuesta es un error y no contiene JSON válido,
+		 * devolvemos el texto para poder mostrarlo en ApiError.
 		 */
 		if (!res.ok) {
-			return null;
+			return text;
 		}
 
-		throw error;
+		/*
+		 * Si la respuesta correcta es texto plano,
+		 * también la devolvemos directamente.
+		 */
+		return text;
 	}
 }
 
 /*
  * Unifica el formato de los errores que reciben los componentes.
  */
-export function buildApiError(res: Response, data: any): ApiError {
+export function buildApiError(
+	res: Response,
+	data: unknown,
+): ApiError {
+	const errorData =
+		typeof data === "object" && data !== null
+			? (data as {
+					message?: string;
+					error?: {
+						message?: string;
+					};
+				})
+			: undefined;
+
 	return {
 		status: res.status,
 		message:
-			data?.message ||
-			data?.error?.message ||
-			"Unexpected error",
+			errorData?.message ??
+			errorData?.error?.message ??
+			(typeof data === "string" && data
+				? data
+				: "Unexpected error"),
 		data,
 	};
 }

@@ -266,6 +266,8 @@ func (h *FriendHandler) BlockUser(c *gin.Context) {
 		c.Abort()
 		return
 	}
+
+	c.JSON(200, gin.H{"message": "user blocked"})
 }
 
 func (h *FriendHandler) UnblockUser(c *gin.Context) {
