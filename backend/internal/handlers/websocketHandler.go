@@ -48,8 +48,8 @@ func (h *WebsocketHandler) HandleWebSocket(ctx *gin.Context) {
 	}
 
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
-	log.Printf("err %v", err)
 	if err != nil {
+		log.Printf("failed to upgrade to websocket: %v", err)
 		ctx.Error(appErr.NewInternal(errors.New("failed to upgrade to websocket")))
 		ctx.Abort()
 		return
@@ -107,14 +107,30 @@ func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
 	var req dto.CreateRoomRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		log.Printf("Error binding JSON: %v", req)
+		log.Printf("Error binding JSON: %v", err)
 		c.Error(appErr.NewBadRequest("Invalid request body"))
 		c.Abort()
 		return
 	}
 	
-	if (req.Users[0] != userIDValue.(uint)){//hacer que si se envia un payload con mas user verificar cada uno for
-		req.Users = append(req.Users, userIDValue.(uint))
+	if len(req.Users) == 0 {
+		c.Error(appErr.NewBadRequest("users list cannot be empty"))
+		c.Abort()
+		return
+	}
+	
+	{
+		currentUserID := userIDValue.(uint)
+		found := false
+		for _, u := range req.Users {
+			if u == currentUserID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			req.Users = append(req.Users, currentUserID)
+		}
 	}
 
 	room, err := h.websocketService.CreateRoom(&req)
@@ -128,7 +144,7 @@ func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
 		RoomID: room.ID,
 	})
 	if perr != nil {
-		c.Error(err)
+		c.Error(perr)
 		c.Abort()
 		return
 	}
@@ -137,7 +153,7 @@ func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
 		Payload: payload,
 	})
 	if merr != nil {
-		c.Error(err)
+		c.Error(merr)
 		c.Abort()
 		return
 	}
@@ -240,7 +256,9 @@ func (h *WebsocketHandler) JoinRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
 }
 
 func (h *WebsocketHandler) LeaveRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
+	h.hub.Mu.RLock()
 	room, ok := h.hub.Rooms[msg.RoomID]
+	h.hub.Mu.RUnlock()
 	if !ok {
 		log.Printf("leave room Room with ID %d doesn't exists", msg.RoomID)
 		return

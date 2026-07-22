@@ -35,28 +35,29 @@ interface ChatContextType {
 
 const chatContext = createContext<ChatContextType | undefined>(undefined);
 
-function useJoinRooms(rooms: Array<{ id: number | string }>) {
+function useJoinRooms(rooms: number[]) {
 	const { send, isConnected } = useWebSocket();
-	const joinedRoomsRef = useRef<Set<string | number>>(new Set());
+	const joinedRoomsRef = useRef<Set<number>>(new Set());
 
 	useEffect(() => {
-		if (!isConnected)
+		if (!isConnected) {
+			joinedRoomsRef.current.clear();
 			return;
-		rooms.forEach((room) => {
-			const roomId = room.id;
+		}
+		rooms.forEach((roomId) => {
 			if (!joinedRoomsRef.current.has(roomId)) {
 				send({ type: "join_room", room_id: roomId });
 				joinedRoomsRef.current.add(roomId);
 			}
 		});
-	}, [isConnected]);
+	}, [isConnected, rooms, send]);
 }
 
 export function ChatProvider({ children, user }: { children: React.ReactNode; user: AuthUser | null }) {
 	const { send, subscribe } = useWebSocket();
 	const [ messagesByRoom, setMessagesByRoom ] = useState<MessagesState>({});
 	const [ rooms, setRooms ] = useState<number[]>([]);
-	useJoinRooms(rooms.map(roomId  => ({ id: roomId })));
+	useJoinRooms(rooms);
 
 	const sendMessage = useCallback((roomId: number, content: string) => {
 		if (!user)

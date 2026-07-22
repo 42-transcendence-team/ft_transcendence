@@ -81,14 +81,14 @@ export function useHandleWebsocket(user: AuthUser | null) {
 			ws.onclose = (e) => {
 				console.log("WebSocket cerrado");
 				setIsConnected(false);
-				if (websocket.current) {
-					websocket.current?.close();
-				}
 				console.log("WS close:", {
 					code: e.code,
 					reason: e.reason,
 					wasClean: e.wasClean,
 				});
+				if (websocket.current) {
+					websocket.current?.close();
+				}
 				if (!shouldReconnect.current){
 					return
 				}

@@ -4,6 +4,8 @@ import (
 	"backend/internal/dto"
 	"backend/internal/services"
 	"encoding/json"
+	"log"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,12 +34,14 @@ func (h *NotificationsHandler) GetNotifications(c *gin.Context) {
 
 	incomingRequests, err := h.friendService.ListIncomingRequest(userID)
 	if err != nil {
+		c.JSON(500, gin.H{"error": "failed to list incoming requests"})
 		return
 	}
 	for _, req := range incomingRequests {
 		payload, err := json.Marshal(req)
 		if err != nil {
-			return
+			log.Printf("Error marshaling friend request: %v", err)
+			continue
 		}
 		notificationFeed = append(notificationFeed, dto.NotificationMessage{
 			Type:    "FRIEND_REQUEST",
@@ -47,23 +51,25 @@ func (h *NotificationsHandler) GetNotifications(c *gin.Context) {
 
 	rooms, err := h.websocketService.GetUserRooms(userID)
 	if err != nil {
+		c.JSON(500, gin.H{"error": "failed to get user rooms"})
 		return
 	}
 
 	for _, room := range rooms {
 		unreadCount := h.chatService.GetMessageNotRead(room.ID, userID)
 		//TODO: aqui intentar no hacer tantas llamadas a la base de datos
-		payload,err :=
-			json.Marshal(gin.H{
-				"room_id":      room.ID,
-				"unread_count": unreadCount,
-			})
-		if err != nil {
-			//TODO: no se que poner
-		}
 		if unreadCount > 0 {
+			payload, err :=
+				json.Marshal(gin.H{
+					"room_id":      room.ID,
+					"unread_count": unreadCount,
+				})
+			if err != nil {
+				log.Printf("Error marshaling unread count payload: %v", err)
+				continue
+			}
 			notificationFeed = append(notificationFeed, dto.NotificationMessage{
-				Type: "UNREAD_MESSAGES",
+				Type:    "UNREAD_MESSAGES",
 				Payload: payload,
 			})
 		}

@@ -26,6 +26,14 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
+// El backend no envia un "id" en las notificaciones del fetch HTTP;
+const normalizeNotifications = (data: any[]): Notification[] => {
+	return data.map((n: any, i: number) => ({
+		...n,
+		id: n.id ?? `${n.type}_${n.payload?.id ?? n.payload?.room_id ?? i}`,
+	}));
+};
+
 const getNotifications = async (updateNotifications: (data: Notification[]) => void) => {
 	try {
 		const data = await apiRequest({
@@ -33,11 +41,11 @@ const getNotifications = async (updateNotifications: (data: Notification[]) => v
 		method: 'GET',
 		});
 		if (data && Array.isArray(data)) {
-			updateNotifications(data);
+			updateNotifications(normalizeNotifications(data));
 		} else if (data) {
 			const notifications = data.notifications || data.data || [];
 			if (Array.isArray(notifications)) {
-				updateNotifications(notifications);
+				updateNotifications(normalizeNotifications(notifications));
 			} else {
 				updateNotifications([]);
 			}
@@ -136,16 +144,19 @@ export const useHandleNotification = (user: any, activeChat: number | null, subs
 		};
 
 		const handleFriendRequest = (message: any) => {
+			// El payload WS es {sender_id, receiver_id} (sin "id"); el del fetch HTTP
+			// es {id, user_id, ...}. Se dedup por el emisor para cubrir ambos casos.
+			const senderIdOf = (p: any) => p?.sender_id ?? p?.user_id;
 			setNotifications((prevNotis) => {
 				const currentNotis = Array.isArray(prevNotis) ? prevNotis : [];
 				const exists = currentNotis.some(
-					n => n.type === 'FRIEND_REQUEST' && n.payload?.id === message.payload?.id
+					n => n.type === 'FRIEND_REQUEST' && senderIdOf(n.payload) === senderIdOf(message.payload)
 				);
 				if (exists)
 					return currentNotis;
 				return [
 					{
-						id: message.payload?.id || `friend_req_${Date.now()}`,
+						id: message.payload?.id || `friend_req_${senderIdOf(message.payload) ?? Date.now()}`,
 						type: 'FRIEND_REQUEST',
 						payload: message.payload,
 						createdAt: new Date().toISOString()

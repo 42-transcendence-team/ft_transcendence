@@ -40,9 +40,10 @@ func (r *Room) broadcast(message []byte) {
 		case client.SendChan <- message:
 		default:
 			r.mu.Lock()
-			close(client.SendChan)
 			delete(r.Clients, client)
+			client.Mu.Lock()
 			delete(client.Rooms, r.ID)
+			client.Mu.Unlock()
 			r.mu.Unlock()
 		}
 	}
@@ -68,7 +69,10 @@ func (r *Room) Run() {
 			case client := <-r.Join:
 				r.mu.Lock()
 				r.Clients[client] = true
+				client.Mu.Lock()
 				client.Rooms[r.ID] = r
+				log.Printf("Client %s joined room %s", client.Username, r.Name)
+				client.Mu.Unlock()
 				joinMsg := client.Username + " se ha unido a la sala."
 				msg, err := json.Marshal(joinMsg)
 				r.mu.Unlock()
@@ -82,7 +86,9 @@ func (r *Room) Run() {
 				r.mu.Lock()
 				if _, ok := r.Clients[client]; ok {
 					delete(r.Clients, client)
+					client.Mu.Lock()
 					delete(client.Rooms, r.ID)
+					client.Mu.Unlock()
 
 					leaveMsg := map[string]any{
 						"type":    "system",
@@ -99,6 +105,7 @@ func (r *Room) Run() {
 
 					r.mu.RLock()
 					if len(r.Clients) == 0 {
+						log.Printf("Room %s is empty, destroying...", r.Name)
 						r.mu.RUnlock()
 						r.hub.Mu.Lock()
 						delete(r.hub.Rooms, r.ID)
@@ -114,6 +121,7 @@ func (r *Room) Run() {
 				return
 
 			case message := <-r.Broadcast:
+				log.Printf("Room %s is empty, destroying...", r.Name)
 				r.broadcast(message)
 		}
 	}

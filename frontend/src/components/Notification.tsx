@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"; // si usas React Router
-import { useNotification } from '../context/notificationsContext';
+import { useNotification, type Notification } from '../context/notificationsContext';
 import "../styles/components/_notification.scss";
 
 //TODO: revisar bien, hecho 100 con IA

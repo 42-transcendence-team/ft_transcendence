@@ -4,6 +4,7 @@ import (
 	"backend/internal/dto"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 	"github.com/gorilla/websocket"
 )
@@ -17,6 +18,7 @@ type Client struct {
 	UserID   uint   // ID del usuario asociado al cliente
 	Username string // Nombre de usuario del cliente
 	Rooms map[uint]*Room // Salas a las que el cliente está unido
+	Mu sync.RWMutex // Protege Rooms (se accede desde hub y desde las salas)
 }
 
 func NewClient(conn *websocket.Conn, hub *Hub, userID uint, username string) *Client {
@@ -68,7 +70,9 @@ func (c *Client) LeaveRoom(room *Room) {
 }
 
 func (c *Client) SendMessage(roomID uint, message []byte) error {
+	c.Hub.Mu.RLock()
 	room, ok := c.Hub.Rooms[roomID]
+	c.Hub.Mu.RUnlock()
 	if !ok {
 		return fmt.Errorf("send message Room with ID %d doesn't exists", roomID)
 	}

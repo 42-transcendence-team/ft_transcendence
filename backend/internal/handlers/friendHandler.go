@@ -65,7 +65,7 @@ func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 			ReceiverID: req.ReceiverID,
 		})
 	if (perr != nil) {
-		c.Error(err)
+		c.Error(perr)
 		c.Abort()
 		return
 	}
@@ -75,7 +75,7 @@ func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 			Payload: payload,
 		})
 	if (merr != nil) {
-		c.Error(err)
+		c.Error(merr)
 		c.Abort()
 		return
 	}
@@ -152,7 +152,7 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 			ReceiverID: reqID,
 		})
 	if (perr != nil){
-		c.Error(err)
+		c.Error(perr)
 		c.Abort()
 		return
 	}
@@ -162,7 +162,7 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 			Payload: payload,
 		})
 	if (merr != nil){
-		c.Error(err)
+		c.Error(merr)
 		c.Abort()
 		return
 	}
