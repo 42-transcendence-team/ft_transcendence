@@ -45,8 +45,9 @@ export function useHandleWebsocket(user: AuthUser | null) {
 	}, []);
 
 	useEffect(() => {
-		if (!user)
+		if (!user){
 			return;
+		}
 
 		shouldReconnect.current = true;
 
@@ -55,8 +56,9 @@ export function useHandleWebsocket(user: AuthUser | null) {
 			websocket.current = ws;
 
 			ws.onopen = () => {
-				console.log("WebSocket conectado");
-				setIsConnected(true);
+				if (websocket.current?.readyState === WebSocket.OPEN) {
+					setIsConnected(true);
+				}
 			};
 
 			ws.onmessage = (event) => {
@@ -79,13 +81,17 @@ export function useHandleWebsocket(user: AuthUser | null) {
 			ws.onclose = (e) => {
 				console.log("WebSocket cerrado");
 				setIsConnected(false);
+				if (websocket.current) {
+					websocket.current?.close();
+				}
 				console.log("WS close:", {
 					code: e.code,
 					reason: e.reason,
 					wasClean: e.wasClean,
 				});
-				if (!shouldReconnect.current)
-					return;
+				if (!shouldReconnect.current){
+					return
+				}
 
 				reconnectTimeout.current = window.setTimeout(connect, 2000);
 			};

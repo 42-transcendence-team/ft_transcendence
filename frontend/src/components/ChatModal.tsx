@@ -15,8 +15,9 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
     const lastMessageFromMeRef = useRef(false);
 
     useEffect(() => {
-        if (id)
+        if (id){
 			joinRoom(id);
+		}
     }, [id, joinRoom]);
 
    const handleScroll = () => {

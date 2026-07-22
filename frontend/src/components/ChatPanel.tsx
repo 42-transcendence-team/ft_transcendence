@@ -7,12 +7,11 @@ interface ChatPanelProps {
 }
 
 export function ChatPanel(props: ChatPanelProps) {
-	const { rooms, addChat, bye } = useChat();
+	const { rooms, addChat } = useChat();
 
 	return (
 		<>
         <aside className="chatPanel">
-			<button onClick={bye}>bye room</button>
             {rooms.map(roomId => (
                 <button 
                     key={roomId}

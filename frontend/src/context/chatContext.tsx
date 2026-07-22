@@ -28,7 +28,6 @@ interface ChatContextType {
 	sendMessage: (roomId: number, content: string) => void;
 	messagesByRoom: MessagesState;
 	joinRoom: (roomId: number) => void;
-	bye: () => void;
 	rooms: number[];
 	addChat: () => Promise<void>;
 	user: AuthUser | null;
@@ -41,10 +40,8 @@ function useJoinRooms(rooms: Array<{ id: number | string }>) {
 	const joinedRoomsRef = useRef<Set<string | number>>(new Set());
 
 	useEffect(() => {
-		console.log('joinrooms')
-		if (!isConnected || !rooms.length)
+		if (!isConnected)
 			return;
-
 		rooms.forEach((room) => {
 			const roomId = room.id;
 			if (!joinedRoomsRef.current.has(roomId)) {
@@ -59,7 +56,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 	const { send, subscribe } = useWebSocket();
 	const [ messagesByRoom, setMessagesByRoom ] = useState<MessagesState>({});
 	const [ rooms, setRooms ] = useState<number[]>([]);
-	useJoinRooms(rooms.map(roomId => ({ id: roomId })));
+	useJoinRooms(rooms.map(roomId  => ({ id: roomId })));
 
 	const sendMessage = useCallback((roomId: number, content: string) => {
 		if (!user)
@@ -81,11 +78,6 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 		console.log(`Joining room ${roomId}`);
 	}, [messagesByRoom, send]);
 
-	const bye = () => {
-		const roomId = parseInt(prompt("ID del usuario al que quieres enviar mensaje") || '0'); // TODO - Poner esto bonico
-		send({ type: "destroy", room_id: roomId });
-		setRooms((prevRooms) => prevRooms.filter((id) => id !== roomId));
-	};
 
 	const addChat = async () => {
 		const input = prompt("ID del usuario al que quieres enviar mensaje"); // TODO - Poner esto bonico
@@ -143,7 +135,6 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 				};
 			});
 			console.log('mensaje aqui: ', message)
-			//implementar cacheo
 		});
 		const unsubscribeMessage = subscribe("message", (message: any) => {
 			const { room_id } = message;
@@ -193,7 +184,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 
 
 	return (
-		<chatContext.Provider value={{ messagesByRoom, bye, joinRoom, sendMessage, rooms, addChat, user }}>
+		<chatContext.Provider value={{ messagesByRoom, joinRoom, sendMessage, rooms, addChat, user }}>
 			{children}
 		</chatContext.Provider>
 	);

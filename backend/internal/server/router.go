@@ -18,7 +18,7 @@ import (
 func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 
-	hub := websocket.NewHub(srv.Db)
+	hub := websocket.NewHub()
 	go hub.Run()
 
 	srv.Engine.MaxMultipartMemory = 8 << 20 // 8 MB

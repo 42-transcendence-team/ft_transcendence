@@ -15,7 +15,7 @@ function useHandleChat() {
 	const [activeChat, setActiveChat] = useState<number | null>(null);
 
 	const toggleChat = (id: number) => {
-		setActiveChat((prev) => {console.log(prev);return (prev === id ? null : id)});
+		setActiveChat((prev) => {return (prev === id ? null : id)});
 	};
 
 	return { activeChat, toggleChat };
@@ -34,7 +34,6 @@ export function PrivateLayout() {
 	const data = useLoaderData();
 	const {activeChat, toggleChat} = useHandleChat();
 
-	useEffect(() => {console.log(activeChat)}, [activeChat]);
 	return (
 		<div className="privateLayout">
 			<WebSocketProvider user={data.user}>

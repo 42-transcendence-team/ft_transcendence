@@ -178,8 +178,6 @@ func (h *WebsocketHandler) HandleMessage(c ws.ClientConn, msg *dto.IncomingMessa
 		h.LeaveRoom(c, msg)
 	case "message":
 		h.SendMessage(c, msg)
-	case "destroy":
-		h.Destroy(c, msg)
 	default:
 		log.Printf("Unknown message type: %s", msg.Type)
 	}
@@ -248,16 +246,6 @@ func (h *WebsocketHandler) LeaveRoom(c ws.ClientConn, msg *dto.IncomingMessage) 
 		return
 	}
 	c.LeaveRoom(room)
-}
-
-func (h *WebsocketHandler) Destroy(c ws.ClientConn, msg *dto.IncomingMessage) {
-	room, ok := h.hub.Rooms[msg.RoomID]
-	log.Printf("room: %v", room)
-	if !ok {
-		log.Printf(" destroy Room with ID %d doesn't exists", msg.RoomID)
-		return
-	}
-	c.Destroy(room)
 }
 
 func (h *WebsocketHandler) SendMessage(c ws.ClientConn, msg *dto.IncomingMessage) {

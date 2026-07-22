@@ -3,11 +3,8 @@ package websocket
 import (
 	"backend/internal/dto"
 	"fmt"
-	"io"
 	"log"
-	"strings"
 	"time"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -46,7 +43,6 @@ type ClientConn interface {
 	SendMessage(roomID uint, message []byte) error
 	JoinRoom(*Room)
 	LeaveRoom(*Room)
-	Destroy(*Room)
 	GetUserID() uint
 	GetUsername() string
 }
@@ -69,10 +65,6 @@ func (c *Client) JoinRoom(room *Room) {
 
 func (c *Client) LeaveRoom(room *Room) {
 	room.Leave <- c
-}
-
-func (c *Client) Destroy(room *Room) {
-	room.destroy <- c
 }
 
 func (c *Client) SendMessage(roomID uint, message []byte) error {
@@ -104,14 +96,11 @@ func (c *Client) ReadPump(handler func(ClientConn, *dto.IncomingMessage)) {
 		var msg dto.IncomingMessage
 
 		if err := c.Conn.ReadJSON(&msg); err != nil {
-			isExpectedClose := websocket.IsCloseError(err,
+			if websocket.IsUnexpectedCloseError(err,
 				websocket.CloseNormalClosure,
 				websocket.CloseGoingAway,
 				websocket.CloseNoStatusReceived,
-			)
-			isEOF := err == io.EOF || strings.Contains(err.Error(), "EOF")
-
-			if !isExpectedClose && !isEOF {
+			) {
 				log.Printf("WebSocket Read Error: %v", err)
 			}
 			break
