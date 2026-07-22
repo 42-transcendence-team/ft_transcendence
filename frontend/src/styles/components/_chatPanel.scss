@@ -37,11 +37,15 @@
 	&__list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.3rem;
 		width: 100%;
 		align-items: center;
 		overflow-y: auto;
-		padding: 0.5rem;
+		max-height: 75vh;
+		padding: 0.2rem 0;
+
+		scrollbar-width: thin;
+		scrollbar-color: #555 transparent;
 	}
 
 	&__bubble {
@@ -50,11 +54,51 @@
 		color: $dark-purple-main-text-light;
 	}
 
+	&__bubble.is-active {
+		box-shadow: 0 0 0 3px $green-background-light;
+	}
+
+	&__searchInput {
+		@extend %button-base;
+		border-radius: 12px;
+		width: 75px;
+		text-align: center;
+		font-size: 0.85rem;
+		background-color: $dark-purple-background-light;
+		color: white;
+		outline: none;
+
+		&::placeholder {
+			color: #888;
+			font-size: 0.7rem;
+		}
+	}
+
+	&__noResults {
+		font-size: 0.65rem;
+		color: #888;
+		padding: 0.3rem;
+	}
+
+	&__searchBtn {
+		@extend %button-base;
+		background-color: #555;
+		color: white;
+		font-size: 1.1rem;
+	}
+
+	&__actions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		margin-top: 0.5rem;
+	}
+
 	&__add {
 		@extend %button-base;
 		background-color: $green-background-light;
 		color: white;
-		margin-top: 0.5rem;
+		margin-top: 0;
 		font-size: 1.5rem;
 	}
 }

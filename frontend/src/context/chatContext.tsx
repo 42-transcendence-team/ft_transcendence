@@ -29,7 +29,8 @@ interface ChatContextType {
 	messagesByRoom: MessagesState;
 	joinRoom: (roomId: number) => void;
 	rooms: number[];
-	addChat: () => Promise<void>;
+	lastActivity: Record<number, number>;
+	addChat: () => Promise<number | null>;
 	user: AuthUser | null;
 }
 
@@ -57,6 +58,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 	const { send, subscribe } = useWebSocket();
 	const [ messagesByRoom, setMessagesByRoom ] = useState<MessagesState>({});
 	const [ rooms, setRooms ] = useState<number[]>([]);
+	const [ lastActivity, setLastActivity ] = useState<Record<number, number>>({});
 	useJoinRooms(rooms);
 
 	const sendMessage = useCallback((roomId: number, content: string) => {
@@ -69,6 +71,11 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 			room_id: roomId,
 			content: content
 		});
+		setLastActivity(prev => {
+			if (prev[roomId] !== undefined && prev[roomId] >= Date.now())
+				return prev;
+			return {...prev, [roomId]: Date.now()};
+		});
 	}, [user, send]);
 
     const joinRoom = useCallback((roomId: number) => {
@@ -80,13 +87,13 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 	}, [messagesByRoom, send]);
 
 
-	const addChat = async () => {
+	const addChat = async (): Promise<number | null> => {
 		const input = prompt("ID del usuario al que quieres enviar mensaje"); // TODO - Poner esto bonico
 		if (!input)
-			return;
+			return null;
 		const user_id = parseInt(input, 10);
 		if (isNaN(user_id))
-			return;
+			return null;
 
 		try {
 			const data = await apiRequest({
@@ -101,8 +108,10 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 				return prevRooms;
 			});
 			joinRoom(data.ID)
+			return data.ID;
 		} catch (error) {
 			console.error("Error creating chat room:", error);
+			return null;
 		}
 	};
 
@@ -135,6 +144,16 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 					[room_id]: [...message.messages]
 				};
 			});
+			const msgs = message.messages;
+			if (msgs && msgs.length > 0) {
+				const lastMsg = msgs[msgs.length - 1];
+				if (lastMsg.timestamp) {
+					const ts = new Date(lastMsg.timestamp).getTime();
+					if (!isNaN(ts)) {
+						setLastActivity(prev => ({...prev, [room_id]: ts}));
+					}
+				}
+			}
 			console.log('mensaje aqui: ', message)
 		});
 		const unsubscribeMessage = subscribe("message", (message: any) => {
@@ -147,6 +166,14 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 					...prev,
 					[room_id]: message.messages
 				}));
+				const msgs = message.messages;
+				if (msgs.length > 0) {
+					const lastTs = msgs[msgs.length - 1].timestamp;
+					if (lastTs) {
+						const ts = new Date(lastTs).getTime();
+						if (!isNaN(ts)) setLastActivity(prev => ({...prev, [room_id]: ts}));
+					}
+				}
 				return;
 			}
 
@@ -165,6 +192,13 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 						[room_id]: [...currentRoomMessages, newMsg]
 					};
 				});
+
+				let msgTs = Date.now();
+				if (timestamp) {
+					const parsed = new Date(timestamp).getTime();
+					if (!isNaN(parsed)) msgTs = parsed;
+				}
+				setLastActivity(prev => ({...prev, [room_id]: msgTs}));
 			}
 		});
 
@@ -185,7 +219,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 
 
 	return (
-		<chatContext.Provider value={{ messagesByRoom, joinRoom, sendMessage, rooms, addChat, user }}>
+		<chatContext.Provider value={{ messagesByRoom, joinRoom, sendMessage, rooms, lastActivity, addChat, user }}>
 			{children}
 		</chatContext.Provider>
 	);
