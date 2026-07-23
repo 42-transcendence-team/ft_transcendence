@@ -68,6 +68,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 	const [ lastActivity, setLastActivity ] = useState<Record<number, number>>({});
 	const [ roomMembers, setRoomMembers ] = useState<Record<number, RoomMember[]>>({});
 	const blockedRoomIdsRef = useRef<Set<number>>(new Set());
+	const fetchRoomsRef = useRef<() => Promise<void>>();
 	useJoinRooms(rooms);
 
 	const sendMessage = useCallback((roomId: number, content: string) => {
@@ -95,7 +96,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 	}, [user, send]);
 
     const joinRoom = useCallback((roomId: number) => {
-		if (messagesByRoom[roomId] && messagesByRoom[roomId].length > 0) {
+		if (messagesByRoom[roomId] !== undefined) {
 			return;
 		}
 		send({ type: "join_room", room_id: roomId });
@@ -181,6 +182,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 				console.error("Error fetching rooms:", e);
 			}
 		};
+		fetchRoomsRef.current = fetchRooms;
 		fetchRooms();
 	}, [user?.id]);
 
@@ -273,6 +275,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 				if (blockedRoomIdsRef.current.has(roomId)) return;
 				setRooms((prev) => (prev.includes(roomId) ? prev : [...prev, roomId]));
 				joinRoom(roomId);
+				fetchRoomsRef.current?.();
 			}
 		});
 
