@@ -1,18 +1,31 @@
 import "../styles/components/_chatPanel.scss"
 import { useCallback, useMemo, useState } from "react";
-import { useChat } from "../context/chatContext";
+import { useChat, type RoomMember } from "../context/chatContext";
+import { AddChatModal } from "./AddChatModal";
+import { UserAvatar } from "./users/UserAvatar";
 
 interface ChatPanelProps {
     onChatClick: (id: number) => void;
     activeChatId: number | null;
 }
 
+function getOtherMember(currentUserId: number, members: RoomMember[] | undefined): RoomMember | null {
+	if (!members || members.length === 0) return null;
+	for (const m of members) {
+		if (m.id !== currentUserId) return m;
+	}
+	return null;
+}
+
 export function ChatPanel(props: ChatPanelProps) {
-	const { rooms, lastActivity, addChat } = useChat();
+	const { rooms, lastActivity, roomMembers, addChat, user: currentUser } = useChat();
 	const { onChatClick, activeChatId } = props;
 
 	const [searchOpen, setSearchOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [showAddChat, setShowAddChat] = useState(false);
+
+	const currentUserId = currentUser?.id ? parseInt(currentUser.id, 10) : 0;
 
 	const displayRooms = useMemo(() => {
 		const sorted = Object.entries(lastActivity)
@@ -36,7 +49,6 @@ export function ChatPanel(props: ChatPanelProps) {
 		return result;
 	}, [lastActivity, rooms, activeChatId]);
 
-	// Todas las salas ordenadas por ID (para la vista de busqueda sin filtro)
 	const allRoomsSorted = useMemo(() => [...rooms].sort((a, b) => a - b), [rooms]);
 
 	const searchResults = useMemo(() => {
@@ -54,8 +66,8 @@ export function ChatPanel(props: ChatPanelProps) {
 		setSearchQuery("");
 	}, [onChatClick]);
 
-	const handleAddChat = useCallback(async () => {
-		const newRoomId = await addChat();
+	const handleSelectUser = useCallback(async (userId: number, login: string, avatar: string) => {
+		const newRoomId = await addChat(userId, login, avatar);
 		if (newRoomId !== null) {
 			onChatClick(newRoomId);
 		}
@@ -65,6 +77,31 @@ export function ChatPanel(props: ChatPanelProps) {
 		setSearchOpen(prev => !prev);
 		setSearchQuery("");
 	}, []);
+
+	const renderBubble = (roomId: number) => {
+		const other = getOtherMember(currentUserId, roomMembers[roomId]);
+		return (
+			<button
+				key={roomId}
+				className={`chatPanel__bubble ${activeChatId === roomId ? 'is-active' : ''}`}
+				onClick={() => onChatClick(roomId)}
+				title={other ? other.login : `Sala ${roomId}`}
+			>
+				{other ? (
+					<>
+						<UserAvatar
+							avatarPath={other.avatar_url || null}
+							username={other.login}
+							size="small"
+						/>
+						<span className="chatPanel__bubbleLabel">{other.login}</span>
+					</>
+				) : (
+					<span className="chatPanel__bubbleId">{roomId}</span>
+				)}
+			</button>
+		);
+	};
 
 	return (
 		<>{/* linea vacia obligatoria para que no explote el linter */}
@@ -81,15 +118,30 @@ export function ChatPanel(props: ChatPanelProps) {
 						autoFocus
 					/>
 					<div className="chatPanel__list">
-						{(searchResults !== null ? searchResults : allRoomsSorted).map(roomId => (
-							<button
-								key={roomId}
-								className={`chatPanel__bubble ${activeChatId === roomId ? 'is-active' : ''}`}
-								onClick={() => openRoom(roomId)}
-							>
-								{roomId}
-							</button>
-						))}
+						{(searchResults !== null ? searchResults : allRoomsSorted).map(roomId => {
+							const other = getOtherMember(currentUserId, roomMembers[roomId]);
+							return (
+								<button
+									key={roomId}
+									className={`chatPanel__bubble ${activeChatId === roomId ? 'is-active' : ''}`}
+									onClick={() => openRoom(roomId)}
+									title={other ? other.login : `Sala ${roomId}`}
+								>
+									{other ? (
+										<>
+											<UserAvatar
+												avatarPath={other.avatar_url || null}
+												username={other.login}
+												size="small"
+											/>
+											<span className="chatPanel__bubbleLabel">{other.login}</span>
+										</>
+									) : (
+										<span className="chatPanel__bubbleId">{roomId}</span>
+									)}
+								</button>
+							);
+						})}
 						{searchResults !== null && searchResults.length === 0 && (
 							<span className="chatPanel__noResults">Sin resultados</span>
 						)}
@@ -97,15 +149,7 @@ export function ChatPanel(props: ChatPanelProps) {
 				</>
 			) : (
 				<>
-					{displayRooms.map(roomId => (
-						<button
-							key={roomId}
-							className={`chatPanel__bubble ${activeChatId === roomId ? 'is-active' : ''}`}
-							onClick={() => onChatClick(roomId)}
-						>
-							{roomId}
-						</button>
-					))}
+					{displayRooms.map(renderBubble)}
 				</>
 			)}
 
@@ -117,9 +161,16 @@ export function ChatPanel(props: ChatPanelProps) {
 				>
 					{searchOpen ? "✕" : "⌕"}
 				</button>
-				<button className="chatPanel__add" onClick={handleAddChat}>+</button>
+				<button className="chatPanel__add" onClick={() => setShowAddChat(true)}>+</button>
 			</div>
         </aside>
+
+		{showAddChat && (
+			<AddChatModal
+				onSelect={handleSelectUser}
+				onClose={() => setShowAddChat(false)}
+			/>
+		)}
 		</>
     );
 }

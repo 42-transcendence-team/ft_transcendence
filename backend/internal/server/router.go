@@ -36,7 +36,7 @@ func (srv *HTTPServer) Router() {
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
-	websocketService := services.NewWebsocketService(websocketRepo, userRepo)
+	websocketService := services.NewWebsocketService(websocketRepo, userRepo, friendRepo)
 	chatService := services.NewChatService(chatRepo, userRepo)
 	twoFAService := services.New2FAService(userRepo, authService, srv.Redis)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
@@ -56,7 +56,7 @@ func (srv *HTTPServer) Router() {
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService)
 	chatHandler := handlers.NewChatHandler(hub, chatService)
-	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub)
+	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub, websocketService)
 	postHandler := handlers.NewPostHandler(friendService, hub, postService, imageStorage)
 	commentHandler := handlers.NewCommentHandler(hub, commentService)
 	postLikeHandler := handlers.NewPostLikeHandler(hub, postLikeService)
