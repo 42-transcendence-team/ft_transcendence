@@ -146,10 +146,18 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
+
+	login, _ := c.Get("login")
+	username := ""
+	if login != nil {
+		username = login.(string)
+	}
+
 	payload, perr :=
 		json.Marshal(dto.FriendRequestAcceptedPayload{
-			SenderID: userID,
-			ReceiverID: reqID,
+			SenderID:   userID,
+			ReceiverID: req.SenderID,
+			Username:   username,
 		})
 	if (perr != nil){
 		c.Error(perr)
@@ -167,6 +175,7 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 		return
 	}
 	h.hub.SendMessagesToUser(req.SenderID, []byte(message))
+	h.hub.SendMessagesToUser(userID, []byte(message))
 	c.JSON(200, gin.H{
 		"request-accepted": gin.H{
 			"id":       req.ID,
