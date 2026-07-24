@@ -2,13 +2,18 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import { apiRequest } from "../api/ApiRequest";
 import { useWebSocket } from "./webSocketContext";
 
-export type NotificationType = 'FRIEND_REQUEST' | 'UNREAD_MESSAGES' | 'FRIEND_REQUEST_ACCEPTED';
+export type NotificationType = 'FRIEND_REQUEST' | 'UNREAD_MESSAGES' | 'FRIEND_REQUEST_ACCEPTED' | 'POST' | 'LIKE' | 'COMMENT';
 export interface NotificationPayload {
   id?: number | string;
   username?: string;
   room_id?: number | string;
   unread_count?: number;
   status?: string;
+  post_id?: number | string;
+  user_id?: number | string;
+  sender_id?: number | string;
+  receiver_id?: number | string;
+  content?: string;
   [key: string]: any;
 }
 export interface Notification {
@@ -22,15 +27,15 @@ interface NotificationContextType {
   notifications: Notification[];
   clearRoomNotifications: (roomId: number | string) => void;
   markAsRead: (notificationId: string | number) => void;
+  openChat: (roomId: number) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-// El backend no envia un "id" en las notificaciones del fetch HTTP;
 const normalizeNotifications = (data: any[]): Notification[] => {
 	return data.map((n: any, i: number) => ({
 		...n,
-		id: n.id ?? `${n.type}_${n.payload?.id ?? n.payload?.room_id ?? i}`,
+		id: n.id ?? `${n.type}_${n.payload?.id ?? n.payload?.room_id ?? n.payload?.post_id ?? i}`,
 	}));
 };
 
@@ -69,7 +74,21 @@ const updateChat = async (id: number | null) => {
 	} catch (error) {}
 };
 
-export const useHandleNotification = (user: any, activeChat: number | null, subscribe: (type: string, handler: (message: any) => void) => () => void,) => {
+const markAsReadApi = (notificationId: number) => {
+	apiRequest({
+		endpoint: `notifications/${notificationId}/read`,
+		method: 'PUT',
+	}).catch(() => {});
+};
+
+const genericTypes: NotificationType[] = ['POST', 'LIKE', 'COMMENT'];
+
+export const useHandleNotification = (
+	user: any,
+	activeChat: number | null,
+	subscribe: (type: string, handler: (message: any) => void) => () => void,
+	onChatOpen: (roomId: number) => void,
+) => {
 	const [notifications, setNotifications] = useState<Notification[]>([]);
 
 	useEffect(() => {
@@ -144,8 +163,6 @@ export const useHandleNotification = (user: any, activeChat: number | null, subs
 		};
 
 		const handleFriendRequest = (message: any) => {
-			// El payload WS es {sender_id, receiver_id} (sin "id"); el del fetch HTTP
-			// es {id, user_id, ...}. Se dedup por el emisor para cubrir ambos casos.
 			const senderIdOf = (p: any) => p?.sender_id ?? p?.user_id;
 			setNotifications((prevNotis) => {
 				const currentNotis = Array.isArray(prevNotis) ? prevNotis : [];
@@ -156,7 +173,7 @@ export const useHandleNotification = (user: any, activeChat: number | null, subs
 					return currentNotis;
 				return [
 					{
-						id: message.payload?.id || `friend_req_${senderIdOf(message.payload) ?? Date.now()}`,
+						id: message.id || `friend_req_${senderIdOf(message.payload) ?? Date.now()}`,
 						type: 'FRIEND_REQUEST',
 						payload: message.payload,
 						createdAt: new Date().toISOString()
@@ -167,21 +184,65 @@ export const useHandleNotification = (user: any, activeChat: number | null, subs
 		};
 
 		const handleFriendRequestAccepted = (message: any) => {
+			const payload = message.payload;
+			const acceptedByUserId = payload?.sender_id;
+			const originalSenderId = payload?.receiver_id;
+
 			setNotifications((prevNotis) => {
 				const currentNotis = Array.isArray(prevNotis) ? prevNotis : [];
-				return currentNotis.filter(
-					n => !(n.type === 'FRIEND_REQUEST' && n.payload?.id === message.payload?.id)
+				const filtered = currentNotis.filter(
+					n => !(n.type === 'FRIEND_REQUEST' && n.payload?.sender_id === originalSenderId)
 				);
+				if (Number(user.id) === originalSenderId) {
+					return [
+						{
+							id: message.id || `friend_accepted_${acceptedByUserId}_${Date.now()}`,
+							type: 'FRIEND_REQUEST_ACCEPTED',
+							payload: message.payload,
+							createdAt: new Date().toISOString()
+						},
+						...filtered
+					];
+				}
+				return filtered;
 			});
 		};
+
+		const handleGenericNotification = (message: any) => {
+			const type = message.type as NotificationType;
+			if (!type || !genericTypes.includes(type))
+				return;
+
+			setNotifications((prevNotis) => {
+				const currentNotis = Array.isArray(prevNotis) ? prevNotis : [];
+				if (message.id && currentNotis.some(n => n.id === message.id))
+					return currentNotis;
+				return [
+					{
+						id: message.id || `${type}_${message.payload?.post_id}_${Date.now()}`,
+						type,
+						payload: message.payload,
+						createdAt: new Date().toISOString()
+					},
+					...currentNotis
+				];
+			});
+		};
+
 		const unsubMessage = subscribe('message', handleMessage);
 		const unsubFriendReq = subscribe('FRIEND_REQUEST', handleFriendRequest);
 		const unsubFriendAccepted = subscribe('FRIEND_REQUEST_ACCEPTED', handleFriendRequestAccepted);
+		const unsubPost = subscribe('POST', handleGenericNotification);
+		const unsubLike = subscribe('LIKE', handleGenericNotification);
+		const unsubComment = subscribe('COMMENT', handleGenericNotification);
 
 		return () => {
 			unsubMessage();
 			unsubFriendReq();
 			unsubFriendAccepted();
+			unsubPost();
+			unsubLike();
+			unsubComment();
 		};
 	}, [user?.id, subscribe, activeChat]);
 
@@ -190,6 +251,8 @@ export const useHandleNotification = (user: any, activeChat: number | null, subs
 			const currentNotis = Array.isArray(prevNotis) ? prevNotis : [];
 			return currentNotis.filter(n => n.id !== notificationId);
 		});
+		if (typeof notificationId === 'number')
+			markAsReadApi(notificationId);
 	}, []);
 
 	const clearRoomNotifications = useCallback((roomId: number | string) => {
@@ -204,15 +267,21 @@ export const useHandleNotification = (user: any, activeChat: number | null, subs
 	return {
 		notifications: Array.isArray(notifications) ? notifications : [],
 		clearRoomNotifications,
-		markAsRead
+		markAsRead,
+		openChat: onChatOpen,
 	};
 };
 
-export function NotificationProvider({ children, activeChat, user  }: { children: React.ReactNode; activeChat: number | null; user: any;}) {
+export function NotificationProvider({ children, activeChat, user, onChatOpen }: {
+	children: React.ReactNode;
+	activeChat: number | null;
+	user: any;
+	onChatOpen: (roomId: number) => void;
+}) {
 	const { subscribe} = useWebSocket();
-	const { notifications, clearRoomNotifications, markAsRead } = useHandleNotification( user, activeChat, subscribe,);
+	const { notifications, clearRoomNotifications, markAsRead, openChat } = useHandleNotification(user, activeChat, subscribe, onChatOpen);
 
-	const value = { notifications, clearRoomNotifications, markAsRead };
+	const value = { notifications, clearRoomNotifications, markAsRead, openChat };
 
 	return (
 		<NotificationContext.Provider value={value}>
@@ -228,7 +297,8 @@ export const useNotification = () => {
 		return {
 			notifications: [],
 			clearRoomNotifications: () => {},
-			markAsRead: () => {}
+			markAsRead: () => {},
+			openChat: () => {},
 		};
 	}
 	return context;
