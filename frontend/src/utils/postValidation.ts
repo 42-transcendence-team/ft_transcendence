@@ -1,33 +1,33 @@
-import { validateImageFile } from "@utils/imageValidation";
-
 export const MAX_POST_CONTENT_LENGTH = 5000;
 export const MAX_COMMENT_CONTENT_LENGTH = 1000;
-export const MAX_POST_IMAGE_SIZE = 5 * 1024 * 1024;
+export const MAX_POST_FILE_SIZE = 5 * 1024 * 1024;
 
-export const ALLOWED_POST_IMAGE_TYPES = [
+export const ALLOWED_POST_FILE_TYPES = [
 	"image/jpeg",
 	"image/png",
 	"image/webp",
-] as const;
+	"application/pdf",
+];
 
-export function validatePostImage(image: File): string | null {
-	return validateImageFile(image, {
-		allowedTypes: ALLOWED_POST_IMAGE_TYPES,
-		maxSize: MAX_POST_IMAGE_SIZE,
-		invalidTypeMessage:
-			"The image must be a PNG, JPG, JPEG or WebP file.",
-		maxSizeMessage:
-			"The image cannot be larger than 5 MB.",
-	});
+export function validatePostFile(file: File): string | null {
+	if (!ALLOWED_POST_FILE_TYPES.includes(file.type)) {
+		return "The file must be a PNG, JPG, JPEG, WebP or PDF file.";
+	}
+
+	if (file.size > MAX_POST_FILE_SIZE) {
+		return "The file cannot be larger than 5 MB.";
+	}
+
+	return null;
 }
 
 export function validatePostDraft(
 	content: string,
-	image: File | null,
+	file: File | null,
 ): string | null {
 	const trimmedContent = content.trim();
 
-	if (trimmedContent === "" && image === null) {
+	if (trimmedContent === "" && file === null) {
 		return "You cannot publish an empty post.";
 	}
 
@@ -35,16 +35,14 @@ export function validatePostDraft(
 		return `The post cannot exceed ${MAX_POST_CONTENT_LENGTH} characters.`;
 	}
 
-	if (image !== null) {
-		return validatePostImage(image);
+	if (file !== null) {
+		return validatePostFile(file);
 	}
 
 	return null;
 }
 
-export function validateCommentContent(
-	content: string,
-): string | null {
+export function validateCommentContent(content: string): string | null {
 	const trimmedContent = content.trim();
 
 	if (trimmedContent === "") {

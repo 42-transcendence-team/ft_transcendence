@@ -50,6 +50,14 @@ func (s *PostService) CreatePost(input dto.CreatePostInput) (*dto.PostResponse, 
 		}
 	}
 
+	var fileNamePtr *string
+	if imagePathPtr != nil && input.FileName != nil {
+		fileName := strings.TrimSpace(*input.FileName)
+		if fileName != "" {
+			fileNamePtr = &fileName
+		}
+	}
+
 	if contentPtr == nil && imagePathPtr == nil {
 		return nil, appErr.NewValidation(map[string]string{
 			"post": "content_or_image_required",
@@ -66,6 +74,7 @@ func (s *PostService) CreatePost(input dto.CreatePostInput) (*dto.PostResponse, 
 		UserID:    input.UserID,
 		Content:   contentPtr,
 		ImagePath: imagePathPtr,
+		FileName:  fileNamePtr,
 	}
 
 	createdPost, err := s.postRepo.Create(&post)

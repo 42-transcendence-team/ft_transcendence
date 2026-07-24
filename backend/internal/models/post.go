@@ -14,6 +14,7 @@ type Post struct {
 
 	Content   *string `gorm:"type:text" json:"content,omitempty"`
 	ImagePath *string `gorm:"type:varchar(255)" json:"imagePath,omitempty"`
+	FileName  *string `gorm:"type:varchar(255)" json:"fileName,omitempty"`
 
 	Comments []Comment  `gorm:"foreignKey:PostID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"comments,omitempty"`
 	Likes    []PostLike `gorm:"foreignKey:PostID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`

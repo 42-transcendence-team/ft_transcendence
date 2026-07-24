@@ -12,6 +12,7 @@ export type Post = {
 	author: PostAuthor;
 	content?: string | null;
 	imagePath?: string | null;
+	fileName?: string | null
 
 	likeCount: number;
 	dislikeCount: number;

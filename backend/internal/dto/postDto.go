@@ -13,6 +13,7 @@ type CreatePostInput struct {
 	UserID    uint
 	Content   string
 	ImagePath *string
+	FileName  *string
 }
 
 type PostAuthorResponse struct {
@@ -27,6 +28,7 @@ type PostResponse struct {
 	Author                PostAuthorResponse `json:"author"`
 	Content               *string            `json:"content,omitempty"`
 	ImagePath             *string            `json:"imagePath,omitempty"`
+	FileName              *string            `json:"fileName,omitempty"`
 	LikeCount             int64              `json:"likeCount"`
 	DislikeCount          int64              `json:"dislikeCount"`
 	LikedByCurrentUser    bool               `json:"likedByCurrentUser"`
@@ -60,6 +62,7 @@ func NewPostResponse(
 		},
 		Content:               post.Content,
 		ImagePath:             post.ImagePath,
+		FileName:              post.FileName,
 		LikeCount:             likeCount,
 		DislikeCount:          dislikeCount,
 		LikedByCurrentUser:    likedByCurrentUser,

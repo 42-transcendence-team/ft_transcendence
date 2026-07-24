@@ -13,8 +13,10 @@ import (
 	"backend/internal/storage"
 	"errors"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,6 +50,7 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 
 	var content string
 	var imagePath *string
+	var fileName *string
 
 	contentType := c.GetHeader("Content-Type")
 
@@ -80,6 +83,9 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 			}
 
 			imagePath = &savedPath
+
+			originalName := sanitizeUploadedFileName(file.Filename)
+			fileName = &originalName
 		}
 	}
 
@@ -87,6 +93,7 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		UserID:    userID,
 		Content:   content,
 		ImagePath: imagePath,
+		FileName:  fileName,
 	})
 	if err != nil {
 		if imagePath != nil {
@@ -177,4 +184,41 @@ func (h *PostHandler) DeletePost(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func sanitizeUploadedFileName(rawName string) string {
+	normalizedName := strings.ReplaceAll(rawName, "\\", "/")
+	fileName := strings.TrimSpace(path.Base(normalizedName))
+
+	fileName = strings.Map(func(character rune) rune {
+		if unicode.IsControl(character) {
+			return -1
+		}
+
+		return character
+	}, fileName)
+
+	if fileName == "" || fileName == "." {
+		return "attachment"
+	}
+
+	const maxFileNameLength = 255
+
+	fileNameRunes := []rune(fileName)
+	if len(fileNameRunes) <= maxFileNameLength {
+		return fileName
+	}
+
+	extension := path.Ext(fileName)
+	extensionRunes := []rune(extension)
+
+	if len(extensionRunes) >= maxFileNameLength {
+		return string(fileNameRunes[:maxFileNameLength])
+	}
+
+	baseName := strings.TrimSuffix(fileName, extension)
+	baseNameRunes := []rune(baseName)
+	maximumBaseLength := maxFileNameLength - len(extensionRunes)
+
+	return string(baseNameRunes[:maximumBaseLength]) + extension
 }
