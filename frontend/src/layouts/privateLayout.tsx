@@ -29,15 +29,6 @@ function useHandleChat() {
 	return { activeChat, toggleChat };
 }
 
-const sendFriendRequest = async () => {
-	await apiRequest({
-		endpoint: "friends/requests",
-		//ReceiverID uint `json:"receiver_id" binding:"required"`
-		method: "POST",
-		body: { receiver_id: parseInt(prompt("Enter the user ID to send a friend request:") || "0") },
-	})
-}
-
 export function PrivateLayout() {
 	const data = useLoaderData();
 	const {activeChat, toggleChat} = useHandleChat();
@@ -66,7 +57,6 @@ export function PrivateLayout() {
 								  	</PrivateLeftPanel>
 								</div>
 							</div>
-							<button onClick={sendFriendRequest}>send req</button>
 						</aside>
 
 						<main className="privateLayout__content">
