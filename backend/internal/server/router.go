@@ -9,6 +9,7 @@ import (
 	"backend/internal/storage"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // El enroutador es una retaila de: Metodo -> ruta -> handler
@@ -16,6 +17,7 @@ import (
 // añadir el enpoint con un comantario encima describiendo lo que hace para el swagger
 func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
+	srv.Engine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	srv.Engine.MaxMultipartMemory = 8 << 20 // 8 MB
 	srv.Engine.Static("/uploads", "./uploads")
