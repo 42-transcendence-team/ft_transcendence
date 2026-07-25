@@ -38,5 +38,4 @@ func main() {
 		log.Fatalf("[BOOT] server stopped with error: %v", err)
 	}
 
-
 }
