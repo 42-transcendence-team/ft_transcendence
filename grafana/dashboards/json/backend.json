@@ -1,0 +1,147 @@
+{
+  "id": null,
+  "uid": "backend-monitoring",
+  "title": "Backend Monitoring",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Requests/sec",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 5 },
+      "targets": [
+        {
+          "expr": "sum(rate(back_http_requests_total[1m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total Requests",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 5 },
+      "targets": [
+        {
+          "expr": "sum(back_http_requests_total)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Error Rate (%)",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 5 },
+      "targets": [
+        {
+          "expr": "100 * sum(rate(back_http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(back_http_requests_total[5m])), 1)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "P95 Latency (s)",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 5 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(back_http_request_duration_seconds_bucket[5m])) by (le))",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "HTTP Requests/sec",
+      "gridPos": { "x": 0, "y": 5, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(back_http_requests_total[1m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Requests by Endpoint",
+      "gridPos": { "x": 12, "y": 5, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (path) (rate(back_http_requests_total[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "HTTP Status Codes",
+      "gridPos": { "x": 0, "y": 13, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(back_http_requests_total[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "P95 Request Latency",
+      "gridPos": { "x": 12, "y": 13, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(back_http_request_duration_seconds_bucket[5m])) by (le))",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Average Request Duration",
+      "gridPos": { "x": 0, "y": 21, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "rate(back_http_request_duration_seconds_sum[5m]) / rate(back_http_request_duration_seconds_count[5m])",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Requests by Method",
+      "gridPos": { "x": 12, "y": 21, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (method) (rate(back_http_requests_total[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Backend CPU Usage",
+      "gridPos": { "x": 0, "y": 29, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "rate(process_cpu_seconds_total[5m]) * 100",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Backend Memory (RSS)",
+      "gridPos": { "x": 12, "y": 29, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
