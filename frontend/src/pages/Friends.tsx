@@ -170,3 +170,6 @@ export const Friends = () => {
 		</>
 	)
 }
+
+
+

@@ -1,0 +1,66 @@
+@use "../abstracts/variables" as *;
+
+.relationsActionsMenu {
+	position: relative;
+
+	&__trigger {
+		width: 36px;
+		height: 36px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid $secondary-text-light;
+		border-radius: 8px;
+		background: white;
+		color: $main-text-light;
+		cursor: pointer;
+		font-size: 1rem;
+		transition: .2s;
+
+		&:hover {
+			background-color: $light-purple-secondary-text-light;
+			border-color: $light-purple-border-light;
+		}
+	}
+
+	&__dropdown {
+		position: absolute;
+		top: calc(100% + 6px);
+		right: 0;
+		z-index: 20;
+		min-width: 180px;
+		padding: 6px;
+		background: white;
+		border: 1px solid $light-gray-common-components;
+		border-radius: 10px;
+		box-shadow: 0 8px 20px rgba(0,0,0,.12);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+	}
+
+	&__item {
+		width: 100%;
+		padding: 10px 12px;
+		border: none;
+		border-radius: 8px;
+		background: transparent;
+		text-align: left;
+		cursor: pointer;
+		color: $main-text-light;
+		font-size: .85rem;
+		transition: .2s;
+
+		&:hover {
+			background: $light-purple-secondary-text-light;
+		}
+
+		&--danger {
+			color: $red-border-light;
+
+			&:hover {
+				background: rgba(239,68,68,.08);
+			}
+		}
+	}
+}

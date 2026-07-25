@@ -31,8 +31,9 @@ func NewCommentResponse(comment models.Comment) CommentResponse {
 		PostID: comment.PostID,
 		UserID: comment.UserID,
 		Author: PostAuthorResponse{
-			ID:    comment.User.ID,
-			Login: comment.User.Login,
+			ID:         comment.User.ID,
+			Login:      comment.User.Login,
+			AvatarPath: comment.User.AvatarPath,
 		},
 		Content:   comment.Content,
 		CreatedAt: comment.CreatedAt,
