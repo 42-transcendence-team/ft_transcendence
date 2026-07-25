@@ -3,3 +3,5 @@
 FROM grafana/grafana:latest
 
 COPY datasources/datasources.yml /etc/grafana/provisioning/datasources/
+COPY dashboards/dashboards.yml /etc/grafana/provisioning/dashboards/
+COPY alerts /etc/grafana/provisioning/alerting
