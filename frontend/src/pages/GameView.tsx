@@ -25,8 +25,97 @@ export default function GameView() {
     );
 }
 
+function GameViewMenu() {
+	const { gameState, createGame, setGameStatus } = useGame();
+	return (
+		<div className="game-menu">
+			<button 
+				onClick={() => createGame(gameState.game_type, "local")}
+				className="game-menu__button"
+			>
+					Local
+			</button>
+			<button 
+				onClick={() => {
+					createGame(gameState.game_type, "online")
+					setGameStatus("WAIT");
+				}}
+				className="game-menu__button"
+			>
+					Online
+			</button>
+						<button 
+				onClick={() => { setGameStatus("JOIN"); }}
+				className="game-menu__button"
+			>
+					Unirse
+			</button>
+		</div>
+	)
+}
+
+function GameViewWait() {
+	const { gameState, returnMenu } = useGame();
+	return (
+		<div className="game-menu">
+			<h2 className="game-menu__title">Esperando a que otro jugador se una...</h2>
+			<h3 className="game-menu__subtitle">Código de la partida: {gameState.game_id}</h3>
+			<button 
+				onClick={() => returnMenu()}
+				className="game-menu__button"
+			>
+					Volver
+			</button>
+		</div>
+	)
+}
+
+function GameViewJoin() {
+	const { gameState, joinGame, returnMenu } = useGame();
+	const [code, setCode] = useState(gameState.game_id || "");
+
+	return (
+		<div className="game-menu">
+			<h2 className="game-menu__title">Unirse a una partida</h2>
+			<input
+				type="text"
+				placeholder="Código de la partida"
+				value={code || ""}
+				onChange={(e) => { setCode(e.target.value); }}
+				className="game-menu__input"
+			/>
+			<button 
+				onClick={() => joinGame(code)}
+				className="game-menu__button"
+			>
+					Unirse a la partida
+			</button>
+			<button 
+				onClick={() => returnMenu()}
+				className="game-menu__button"
+			>
+					Volver
+			</button>
+		</div>
+	)
+}
+
+function GameViewFinish() {
+	const { returnMenu } = useGame();
+	return (
+		<div className="game-menu">
+			<button 
+				onClick={() => returnMenu()}
+				className="game-menu__button"
+			>
+					Fin del juego
+			</button>
+		</div>
+	)
+}
+
 function GameViewContent({ game, gameId }: { game: any; gameId?: string }) {
-    const { leaveGame } = useGame(); 
+    const { gameState, leaveGame } = useGame();
     const location = useLocation();
     
     const GameComponent = game.component;
@@ -76,16 +165,20 @@ function GameViewContent({ game, gameId }: { game: any; gameId?: string }) {
     }, [aspectRatio]);
 
     return (
-        <div ref={containerRef} className="game-view" 
-        style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div ref={containerRef} className="game-view" >
             <div
                 className="game-view__content"
-                style={{
-                    width: size.width,
-                    height: size.height,
-                }}
+                style={{ width: size.width, height: size.height}}
             >
                 <GameComponent />
+
+				{ gameState.status === 'MENU' && ( <GameViewMenu /> ) }
+
+				{ gameState.status === 'WAIT' && ( <GameViewWait /> ) }
+				
+				{ gameState.status === 'JOIN' && ( <GameViewJoin /> ) }
+				
+				{ gameState.status === 'FINISH' && ( <GameViewFinish /> ) }
             </div>
         </div>
     );

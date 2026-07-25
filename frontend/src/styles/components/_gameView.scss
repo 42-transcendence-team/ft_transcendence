@@ -38,8 +38,35 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	flex-direction: column;
+	gap: 1.3rem;
 
-	> {
+	&__button {
+		padding: 1rem 1rem;
+		font-size: 2rem;
+		border: none;
+		border-radius: 8px;
+		cursor: pointer;
+		pointer-events: auto;
+		background-color: #6c9ed3;
+	}
+
+	&__input {
+		padding: 1rem 1rem;
+		font-size: 2rem;
+		border: none;
+		border-radius: 8px;
+		pointer-events: auto;
+	}
+
+	&__title {
+		font-size: 2rem;
+		font-weight: bold;
+	}
+
+	&__subtitle {
+		font-size: 1.5rem;
+		font-weight: normal;
 		pointer-events: auto;
 	}
 }

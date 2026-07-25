@@ -48,13 +48,13 @@ export function useTicTacToe() {
     const line = gameState.winning_line || null; 
 
     let winner: Player | "Empate" | null = null;
-    if (gameState.status === "FINISHED") {
+    if (gameState.status === "FINISH") {
         if (gameState.winner === 1) winner = "X";
         else if (gameState.winner === 2) winner = "O";
         else winner = null;
     }
 
-    const draw = gameState.status === "FINISHED" && !gameState.winner;
+    const draw = gameState.status === "FINISH" && !gameState.winner;
 
     function startGame(selectedMode: TicTacToeMode) {
         createGame("TICTACTOE", selectedMode);
@@ -62,7 +62,7 @@ export function useTicTacToe() {
     }
 
     function play(row: number, col: number) {
-        if (gameState?.status !== "PLAYING") return;
+        if (gameState?.status !== "PLAY") return;
         if (backendBoard[row][col]) return;
 
         makeMove({ row, col });

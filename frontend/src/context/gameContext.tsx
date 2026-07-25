@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { useWebSocket } from '././webSocketContext';
 import { useNavigate } from 'react-router-dom';
 
-export type GameStatus = 'MENU' | 'PLAYING' | 'FINISHED' | 'JOINING' | 'WAITING' | 'LOBBY' | 'IDLE';
+export type GameStatus = 'MENU' | 'PLAY' | 'FINISH' | 'JOIN' | 'WAIT' | 'LOBBY' | 'IDLE';
 
 export type GameMode = 'local' | 'online' | 'join';
 
@@ -94,7 +94,7 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 				board: state.board,
 			});
 
-            navigate(`/app/games/${slug}/${game_id}`);
+            navigate(`/app/games/${slug}/${game_id}`, { replace: true });
         });
 
 		const unsubscribeGameFinished = subscribe("game_finished", (message: any) => {
@@ -152,7 +152,7 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
         var gameType = gameState.game_type.toLowerCase();
 		console.log(`Returning to menu for game type: ${gameType}`);
         setGameState(initialGameState);
-        navigate('/app/games/' + gameType);
+        navigate('/app/games/' + gameType, { replace: true });
     }, [navigate]);
 
     const createGame = useCallback((gameType: GameState['game_type'], mode: GameMode) => {
@@ -178,15 +178,15 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 			return;
 		}
 
-		if (currentStatus === "WAITING" && String(currentRoomId) === String(gameId)) {
+		if (currentStatus === "WAIT" && String(currentRoomId) === String(gameId)) {
 			return;
 		}
 
-		navigate(`/app/games/${gameStateRef.current.game_type.toLowerCase()}/${gameId}`);
+		navigate(`/app/games/${gameStateRef.current.game_type.toLowerCase()}/${gameId}`, { replace: true });
 
 		setGameState(prevState => ({
 			...prevState,
-			status: "WAITING",
+			status: "WAIT",
 			game_id: gameId,
 		}));
 

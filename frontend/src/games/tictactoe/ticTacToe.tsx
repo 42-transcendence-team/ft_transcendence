@@ -1,64 +1,16 @@
-import React, { useRef, useCallback, useEffect, useState } from "react";
+import React, { useRef, useCallback, useEffect } from "react";
 import { useTicTacToe } from "./useTicTacToe";
 import { drawBoard } from "./components/board";
-import { drawFinished } from "./components/finish";
-import { Button } from "./components/button";
-import { drawCreateRoom, drawJoinRoom } from "./components/lobby";
-import { TextInput } from "./components/input";
 
 
 export function TicTacToe() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const { play, winner, line, draw: isDraw, reset, startGame, gameState, backendBoard, joinGame } = useTicTacToe();
-
-    const [ onlineScreen, setOnlineScreen ] = useState<"NONE" | "CREATE" | "JOIN">("NONE");
-    const [ errorMessage, setErrorMessage ] = useState("");
+    const { play, winner, line, draw: isDraw, gameState, backendBoard } = useTicTacToe();
 
     const mouseRef = useRef({ x: -1, y: -1, clicked: false });
 
-    const buttonsMenu = useRef<Button[] | null>(null);
-    const buttonBack = useRef<Button | null>(null);
-    const buttonCopy = useRef<Button | null>(null);
-    const buttonSubmitJoin = useRef<Button | null>(null);
-    const textInputJoin = useRef<TextInput | null>(null);
-
-    if (!buttonsMenu.current) {
-        buttonsMenu.current = [
-            new Button(250, 250, 400, 90, "Local", () => startGame("local")),
-            new Button(250, 400, 400, 90, "Crear sala", () => {
-                startGame("online");
-                setOnlineScreen("CREATE");
-            }),
-            new Button(250, 550, 400, 90, "Unirse", () => {
-                setOnlineScreen("JOIN");
-                setErrorMessage("");
-            }),
-        ];
-
-        buttonBack.current = new Button(350, 750, 200, 70, "Volver", () => {
-			setOnlineScreen("NONE");
-            reset();
-        });
-
-        buttonCopy.current = new Button(325, 520, 250, 70, "Copiar", () => {
-            if (gameState.game_id) {
-                navigator.clipboard.writeText(gameState.game_id);
-            }
-        });
-
-        textInputJoin.current = new TextInput(250, 320, 400, 90, "CÓDIGO");
-        
-        buttonSubmitJoin.current = new Button(300, 520, 300, 80, "Entrar", () => {
-            const code = textInputJoin.current?.value.trim();
-            if (!code) {
-                setErrorMessage("Introduce un código válido");
-                return;
-            }
-            joinGame(code);
-        });
-    }
-
     const draw = useCallback(() => {
+		if (gameState.status !== "PLAY") return;
         const canvas = canvasRef.current;
         if (!canvas) return;
 
@@ -69,39 +21,6 @@ export function TicTacToe() {
         const cell = size / 3;
 
         ctx.clearRect(0, 0, size, size);
-
-        if (gameState.status === "MENU" || gameState.status === "WAITING") {
-            if (onlineScreen === "CREATE" && buttonBack.current && buttonCopy.current) {
-                drawCreateRoom(
-                    ctx,
-                    size,
-                    String(gameState.game_id || "Cargando..."),
-                    buttonBack.current,
-                    buttonCopy.current,
-                    mouseRef.current
-                );
-                return;
-            }
-
-            if (onlineScreen === "JOIN" && buttonBack.current && buttonSubmitJoin.current && textInputJoin.current) {
-                drawJoinRoom(
-                    ctx,
-                    size,
-                    textInputJoin.current,
-                    buttonSubmitJoin.current,
-                    buttonBack.current,
-                    { ...mouseRef.current, clicked: mouseRef.current.clicked },
-                    errorMessage
-                );
-                return;
-            }
-
-            for (const button of buttonsMenu.current ?? []) {
-                button.update(mouseRef.current);
-                button.draw(ctx);
-            }
-            return;
-        }
 
         drawBoard(ctx, backendBoard, cell);
 
@@ -117,17 +36,14 @@ export function TicTacToe() {
             ctx.stroke();
         }
 
-        if (gameState.status === "FINISHED") {
-            drawFinished(ctx, size, winner, isDraw);
-        }
-    }, [backendBoard, winner, line, gameState, isDraw, onlineScreen, errorMessage]);
+    }, [backendBoard, winner, line, gameState, isDraw]);
 
     useEffect(() => {
         draw();
     }, [draw]);
 
     useEffect(() => {
-        if (gameState.status !== "MENU" && gameState.status !== "WAITING") return;
+        if (gameState.status !== "MENU" && gameState.status !== "WAIT") return;
 
         let animationFrameId: number;
         const renderLoop = () => {
@@ -157,36 +73,6 @@ export function TicTacToe() {
         const { x, y } = getCanvasCoords(e);
         const canvas = canvasRef.current;
         if (!canvas) return;
-
-        if (gameState.status === "MENU" || gameState.status === "WAITING") {
-            if (onlineScreen === "CREATE") {
-                buttonCopy.current?.click();
-                buttonBack.current?.click();
-                return;
-            }
-
-            if (onlineScreen === "JOIN") {
-                buttonSubmitJoin.current?.click();
-                buttonBack.current?.click();
-                return;
-            }
-
-            for (const button of buttonsMenu.current ?? []) {
-                button.click();
-            }
-            return;
-        }
-
-        if (gameState.status === "FINISHED") {
-            const buttonX = canvas.width / 2 - 150;
-            const buttonY = canvas.height / 2 + 30;
-
-            if (x >= buttonX && x <= buttonX + 300 && y >= buttonY && y <= buttonY + 100) {
-                setOnlineScreen("NONE");
-                reset();
-            }
-            return;
-        }
 
         const cell = canvas.width / 3;
         const col = Math.floor(x / cell);
@@ -220,14 +106,6 @@ export function TicTacToe() {
 				onMouseUp={() => { mouseRef.current.clicked = false; }}
 				style={{ width: "100%", height: "100%", display: "block", position: "absolute", top: 0, left: 0 }}
 			/>
-			{/* <div className="game-menu">
-				<button 
-					onClick={() => console.log("Button clicked!")}
-					style={{ pointerEvents: "auto", padding: "10px 20px", fontSize: "16px", cursor: "pointer" }}
-				>
-						Hola
-				</button>
-			</div> */}
 		</>
     );
 }
