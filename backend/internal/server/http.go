@@ -4,8 +4,9 @@ import (
 	"backend/config"
 	"backend/internal/middlewares"
 	"backend/internal/store"
-	"github.com/redis/go-redis/v9"
+
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +14,7 @@ type HTTPServer struct {
 	Conf   *config.Config
 	Engine *gin.Engine
 	Db     *gorm.DB
-	Redis	*redis.Client
+	Redis  *redis.Client
 }
 
 func NewHTTPServer(conf *config.Config, db *gorm.DB, rdb *redis.Client) *HTTPServer {
@@ -22,12 +23,17 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB, rdb *redis.Client) *HTTPSer
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	middlewares.Register()   // registra los contadores y histogramas de prometheus
+	middlewares.InitLogger() // inicializa el logger de zap
+
 	r := gin.New()
 
 	// esto se deja asi si luego en prod metemos algun otro logger , sino en prod tbn se puede usar r.Use(gin.Logger())
-	if conf.Env == "local" {
-		r.Use(gin.Logger())
-	}
+	// if conf.Env == "local" {
+	// 	r.Use(gin.Logger())
+	// }
+	r.Use(middlewares.PrometheusMiddleware()) // middleware para métricas de prometheus
+	r.Use(middlewares.GinZapLogger())
 
 	r.Use(middlewares.RecoveryJSON())           // captura panic y devuelve JSON
 	r.Use(middlewares.ErrorMiddleware())        // convierte c.Errors a JSON estándar
@@ -39,7 +45,7 @@ func NewHTTPServer(conf *config.Config, db *gorm.DB, rdb *redis.Client) *HTTPSer
 		Conf:   conf,
 		Engine: r,
 		Db:     db,
-		Redis:	rdb,
+		Redis:  rdb,
 	}
 
 	// Inicializa el TempStore global para la gestión de tokens temporales (en este caso para 2FA)

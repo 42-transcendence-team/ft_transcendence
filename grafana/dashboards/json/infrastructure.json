@@ -1,0 +1,155 @@
+{
+  "id": null,
+  "uid": "infra-monitoring",
+  "title": "Infrastructure Monitoring",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "CPU Usage (%)",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Load Average (1m / 5m / 15m)",
+      "gridPos": { "x": 8, "y": 0, "w": 16, "h": 8 },
+      "targets": [
+        {
+          "expr": "node_load1",
+          "refId": "A"
+        },
+        {
+          "expr": "node_load5",
+          "refId": "B"
+        },
+        {
+          "expr": "node_load15",
+          "refId": "C"
+        }
+      ]
+    },
+
+    {
+      "type": "gauge",
+      "title": "Memory Usage (%)",
+      "gridPos": { "x": 0, "y": 8, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Memory Breakdown",
+      "gridPos": { "x": 8, "y": 8, "w": 16, "h": 8 },
+      "targets": [
+        {
+          "expr": "node_memory_MemAvailable_bytes",
+          "refId": "A"
+        },
+        {
+          "expr": "node_memory_Cached_bytes",
+          "refId": "B"
+        },
+        {
+          "expr": "node_memory_Buffers_bytes",
+          "refId": "C"
+        }
+      ]
+    },
+
+    {
+      "type": "gauge",
+      "title": "Disk Usage (%)",
+      "gridPos": { "x": 0, "y": 16, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "100 * (1 - (node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay|squashfs\"}))",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Disk I/O",
+      "gridPos": { "x": 8, "y": 16, "w": 16, "h": 8 },
+      "targets": [
+        {
+          "expr": "rate(node_disk_read_bytes_total[5m])",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(node_disk_written_bytes_total[5m])",
+          "refId": "B"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Network Traffic",
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "rate(node_network_receive_bytes_total[5m])",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(node_network_transmit_bytes_total[5m])",
+          "refId": "B"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "TCP Connections",
+      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "node_netstat_Tcp_CurrEstab",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "stat",
+      "title": "Running Processes",
+      "gridPos": { "x": 0, "y": 32, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "node_procs_running",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Context Switches (kernel activity)",
+      "gridPos": { "x": 12, "y": 32, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(node_context_switches_total[5m])",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
