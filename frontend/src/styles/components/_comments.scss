@@ -158,13 +158,23 @@
 		min-width: 0;
 	}
 
-	&__avatar {
-		width: 30px;
-		height: 30px;
-		flex: 0 0 30px;
+	&__avatar-link {
+		display: inline-flex;
+		flex: 0 0 auto;
 		border-radius: 999px;
-		object-fit: cover;
-		background: #e5e7eb;
+		text-decoration: none;
+	
+		&:focus-visible {
+			outline: 2px solid #111827;
+			outline-offset: 3px;
+		}
+	}
+	
+	&__avatar {
+		--user-avatar-size: 30px;
+		--user-avatar-background: #e5e7eb;
+	
+		flex: 0 0 30px;
 	}
 
 	&__meta {

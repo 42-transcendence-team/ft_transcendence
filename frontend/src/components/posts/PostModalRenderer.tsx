@@ -1,11 +1,10 @@
 import { FiTrash2 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
-import skullLogo from "@icons/skull_logo.png";
-
 import { ReactionButtons } from "@components/posts/ReactionButtons";
 import { CommentForm } from "@components/posts/CommentForm";
 import { CommentList } from "@components/posts/CommentList";
+import { UserAvatar } from "@components/users/UserAvatar";
 
 import type { Comment } from "api/Comments";
 import type { Post, PostReactionState } from "api/Posts";
@@ -38,14 +37,6 @@ function getPublicPath(path: string): string {
 	return `/${path}`;
 }
 
-function getAvatarSrc(avatarPath?: string | null): string {
-	if (!avatarPath) {
-		return skullLogo;
-	}
-
-	return getPublicPath(avatarPath);
-}
-
 function formatPostDate(value: string): string {
 	return new Intl.DateTimeFormat("es-ES", {
 		dateStyle: "medium",
@@ -69,8 +60,11 @@ export const PostModalRenderer = ({
 	onImageClick,
 }: PostModalRendererProps) => {
 	const variant = getPostVariant(post);
-	const imageSrc = post.imagePath ? getPublicPath(post.imagePath) : null;
-	const avatarSrc = getAvatarSrc(post.author.avatarPath);
+	const imageSrc = post.imagePath
+		? getPublicPath(post.imagePath)
+		: null;
+	const authorProfilePath =
+		`/app/profile/${encodeURIComponent(post.author.login)}`;
 	const hasText = Boolean(post.content?.trim());
 
 	return (
@@ -97,16 +91,24 @@ export const PostModalRenderer = ({
 			<div className="post-modal-renderer__side-panel">
 				<header className="post-modal-renderer__header">
 					<div className="post-modal-renderer__author">
-						<img
-							className="post-modal-renderer__avatar"
-							src={avatarSrc}
-							alt=""
-						/>
+						<Link
+							className="post-modal-renderer__avatar-link"
+							to={authorProfilePath}
+							aria-label={`Open ${post.author.login} profile`}
+						>
+							<UserAvatar
+								avatarPath={post.author.avatarPath}
+								username={post.author.login}
+								size="medium"
+								status={null}
+								className="post-modal-renderer__avatar"
+							/>
+						</Link>
 
 						<div className="post-modal-renderer__author-info">
 							<Link
 								className="post-modal-renderer__username"
-								to={`/app/profile/${post.author.login}`}
+								to={authorProfilePath}
 							>
 								{post.author.login}
 							</Link>

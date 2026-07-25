@@ -3,12 +3,14 @@ import { Modal } from "@components/Modal";
 type PostImageModalProps = {
 	open: boolean;
 	imageSrc: string | null;
+	alt?: string;
 	onClose: () => void;
 };
 
 export const PostImageModal = ({
 	open,
 	imageSrc,
+	alt = "Post full size",
 	onClose,
 }: PostImageModalProps) => {
 	if (!imageSrc) {
@@ -26,7 +28,7 @@ export const PostImageModal = ({
 			<img
 				className="post-image-modal__image"
 				src={imageSrc}
-				alt="Post full size"
+				alt={alt}
 			/>
 		</Modal>
 	);

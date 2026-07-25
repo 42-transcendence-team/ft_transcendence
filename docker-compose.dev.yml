@@ -24,7 +24,7 @@ services:
             - redis
             - back-front
             - db-back
-
+        
     frontend:
         env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
         build:
