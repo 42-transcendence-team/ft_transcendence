@@ -4,7 +4,7 @@ import {
   type UserSearch,
   type UserRelation,
   type UserSearchSort,
-} from "../../api/userSearch.tsx";
+} from "../../api/UserSearch.tsx";
 import {
   sendFriendRequest,
   acceptFriendRequest,

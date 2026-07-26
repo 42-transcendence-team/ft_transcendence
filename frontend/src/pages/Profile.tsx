@@ -1,9 +1,21 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { getUserPresence, getUserProfile } from "../api/UserProfile";
+import {
+	getUserPresence,
+	getUserProfile,
+} from "../api/UserProfile";
 import type { UserProfile } from "../api/UserProfile";
 import type { ApiError } from "../api/ApiRequest";
+
+import {
+	acceptFriendRequest,
+	blockUser,
+	rejectFriendRequest,
+	removeFriend,
+	sendFriendRequest,
+	unblockUser,
+} from "../api/Friends";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -46,22 +58,31 @@ export const Profile = () => {
 
 	const [profileUser, setProfileUser] =
 		useState<UserProfile | null>(null);
+
 	const [isLoadingProfile, setIsLoadingProfile] =
 		useState(true);
+
 	const [profileError, setProfileError] =
 		useState<string | null>(null);
+
 	const [profileNotFound, setProfileNotFound] =
 		useState(false);
 
+	const [relationActionError, setRelationActionError] =
+		useState<string | null>(null);
+
 	const [isAvatarEditorOpen, setIsAvatarEditorOpen] =
 		useState(false);
+
 	const [isBannerEditorOpen, setIsBannerEditorOpen] =
 		useState(false);
+
 	const [isAvatarViewerOpen, setIsAvatarViewerOpen] =
 		useState(false);
 
 	const [avatarImageFailed, setAvatarImageFailed] =
 		useState(false);
+
 	const [bannerImageFailed, setBannerImageFailed] =
 		useState(false);
 
@@ -70,6 +91,7 @@ export const Profile = () => {
 
 		setProfileUser(null);
 		setProfileError(null);
+		setRelationActionError(null);
 		setProfileNotFound(false);
 		setIsLoadingProfile(true);
 
@@ -121,9 +143,9 @@ export const Profile = () => {
 	}, [username]);
 
 	/*
-	* Actualiza únicamente la presencia del usuario sin
-	* volver a cargar el perfil completo.
-	*/
+	 * Actualiza únicamente la presencia del usuario sin
+	 * volver a cargar el perfil completo.
+	 */
 	useEffect(() => {
 		if (!profileUser?.login || profileNotFound) {
 			return;
@@ -166,14 +188,13 @@ export const Profile = () => {
 			} catch {
 				/*
 				 * Si falla una comprobación puntual, se conserva
-				 * el último estado conocido del usuario.
+				 * el último estado conocido.
 				 */
 			} finally {
 				requestInFlight = false;
 			}
 		};
 
-		// Actualiza inmediatamente tras cargar el perfil.
 		void refreshPresence();
 
 		const intervalId = window.setInterval(() => {
@@ -187,9 +208,8 @@ export const Profile = () => {
 	}, [profileUser?.login, profileNotFound]);
 
 	/*
-	 * Los editores actualizan primero AuthContext. Cuando el perfil
-	 * abierto es el propio, sincronizamos aquí las rutas nuevas sin
-	 * tener que repetir la petición completa de perfil.
+	 * Sincroniza el perfil propio después de editar
+	 * avatar, banner o datos personales.
 	 */
 	useEffect(() => {
 		if (
@@ -226,10 +246,6 @@ export const Profile = () => {
 		authenticatedUser?.bannerPath,
 	]);
 
-	/*
-	 * UserAvatar ya gestiona su propio fallback, pero Profile también
-	 * necesita saber si la imagen existe para no abrir un visor roto.
-	 */
 	useEffect(() => {
 		setAvatarImageFailed(false);
 
@@ -256,6 +272,93 @@ export const Profile = () => {
 	useEffect(() => {
 		setBannerImageFailed(false);
 	}, [profileUser?.bannerPath]);
+
+	/*
+	 * Ejecuta una acción de amistad y después vuelve a cargar
+	 * el perfil para obtener relation y request_id actualizados.
+	 */
+	const executeRelationAction = async (
+		action: () => Promise<unknown>,
+	) => {
+		if (!username) {
+			return;
+		}
+
+		setRelationActionError(null);
+
+		try {
+			await action();
+
+			const updatedProfile =
+				await getUserProfile(username);
+
+			setProfileUser(updatedProfile);
+		} catch {
+			setRelationActionError(
+				"No se ha podido completar la acción.",
+			);
+		}
+	};
+
+	const handleAddFriend = () => {
+		if (!profileUser) {
+			return;
+		}
+
+		void executeRelationAction(() =>
+			sendFriendRequest(profileUser.id),
+		);
+	};
+
+	const handleAcceptRequest = () => {
+		if (!profileUser?.request_id) {
+			return;
+		}
+
+		void executeRelationAction(() =>
+			acceptFriendRequest(profileUser.request_id!),
+		);
+	};
+
+	const handleRejectRequest = () => {
+		if (!profileUser?.request_id) {
+			return;
+		}
+
+		void executeRelationAction(() =>
+			rejectFriendRequest(profileUser.request_id!),
+		);
+	};
+
+	const handleRemoveFriend = () => {
+		if (!profileUser) {
+			return;
+		}
+
+		void executeRelationAction(() =>
+			removeFriend(profileUser.id),
+		);
+	};
+
+	const handleBlockUser = () => {
+		if (!profileUser) {
+			return;
+		}
+
+		void executeRelationAction(() =>
+			blockUser(profileUser.id),
+		);
+	};
+
+	const handleUnblockUser = () => {
+		if (!profileUser) {
+			return;
+		}
+
+		void executeRelationAction(() =>
+			unblockUser(profileUser.id),
+		);
+	};
 
 	if (authLoading || isLoadingProfile) {
 		return (
@@ -306,6 +409,18 @@ export const Profile = () => {
 			? () => setIsAvatarViewerOpen(true)
 			: undefined;
 
+	const canViewPrivateContent =
+		isOwnProfile || profileUser.relation === "friends";
+
+	const handleShare = async () => {
+		try {
+			await navigator.clipboard.writeText(window.location.href);
+			alert("Enlace copiado al portapapeles.");
+		} catch {
+			alert("No se ha podido copiar el enlace.");
+		}
+	};
+
 	return (
 		<div className="profile">
 			<div className="profile__container">
@@ -323,6 +438,7 @@ export const Profile = () => {
 				/>
 
 				<ProfileHeader
+					userId={profileUser.id}
 					username={profileUser.login}
 					name={profileUser.name}
 					surname={profileUser.surname}
@@ -330,12 +446,39 @@ export const Profile = () => {
 					presence={profilePresence}
 					isOwnProfile={isOwnProfile}
 					hasCustomAvatar={hasCustomAvatar}
+					relation={profileUser.relation}
+					canSendRequest={
+						profileUser.can_send_request
+					}
+					requestId={profileUser.request_id}
 					onAvatarClick={handleAvatarClick}
+					onAddFriend={handleAddFriend}
+					onAcceptRequest={
+						handleAcceptRequest
+					}
+					onRejectRequest={
+						handleRejectRequest
+					}
+					onRemoveFriend={
+						handleRemoveFriend
+					}
+					onBlockUser={handleBlockUser}
+					onUnblockUser={
+						handleUnblockUser
+					}
+					onShare={handleShare}
 				/>
+
+				{relationActionError && (
+					<p className="profile__action-error">
+						{relationActionError}
+					</p>
+				)}
 
 				<ProfileContent
 					status={profileUser.status}
 					isOwnProfile={isOwnProfile}
+					canViewPrivateContent={canViewPrivateContent}
 				/>
 			</div>
 

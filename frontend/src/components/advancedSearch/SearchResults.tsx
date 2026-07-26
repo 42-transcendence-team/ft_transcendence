@@ -1,4 +1,4 @@
-import { type UserSearch } from "../../api/userSearch.tsx";
+import { type UserSearch } from "../../api/UserSearch.tsx";
 import skullLogo from "../../assets/icons/skull_logo.png";
 import "../../styles/components/advancedSearch/_searchResults.scss";
 import { RelationsActionsMenu } from "@components/RelationsActionsMenu.tsx";

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { UserRelation, UserSearchSort } from "../../api/userSearch";
+import type { UserRelation, UserSearchSort } from "../../api/UserSearch";
 import "../../styles/components/advancedSearch/_searchFilters.scss";
 import { FiUsers, FiSend, FiInbox, FiSlash, FiChevronDown } from "react-icons/fi";
 
