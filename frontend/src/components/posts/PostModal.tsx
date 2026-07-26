@@ -36,6 +36,9 @@ type PostModalProps = {
 	onClose: () => void;
 	onDeleted?: () => void;
 	onNotFound?: () => void;
+	onReactionUpdated?: (
+		reactionState: PostReactionState,
+	) => void;
 };
 
 type PendingDeletion =
@@ -65,6 +68,7 @@ export const PostModal = ({
 	onClose,
 	onDeleted,
 	onNotFound,
+	onReactionUpdated,
 }: PostModalProps) => {
 	const normalizedPostId = normalizePostId(postId);
 
@@ -302,17 +306,21 @@ export const PostModal = ({
 			) {
 				return currentPost;
 			}
-
+		
 			return {
 				...currentPost,
 				likeCount: reactionState.likeCount,
-				dislikeCount: reactionState.dislikeCount,
+				dislikeCount:
+					reactionState.dislikeCount,
 				likedByCurrentUser:
 					reactionState.likedByCurrentUser,
 				dislikedByCurrentUser:
 					reactionState.dislikedByCurrentUser,
 			};
 		});
+	
+		// El listado actualiza los contadores de la tarjeta sin recargarse.
+		onReactionUpdated?.(reactionState);
 	};
 
 	const isPostOwner = Boolean(post && currentUserId === post.userId);
