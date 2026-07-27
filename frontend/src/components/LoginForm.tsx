@@ -4,10 +4,10 @@ import { FormField } from "./FormField"
 import { Login, Login2FA, getAuthenticatedUser } from "api/Login"
 import { Modal } from "@components/Modal"
 import { OtpInput, Footer2FA } from "@components/TwoFactorUI"
-import { useAuth as useUserAuth} from "../context/AuthContext";
+import { useAuth as useUserAuth } from "../context/AuthContext";
 
 //todo creo q este es mejor
-import { useAuth as useRouterAuth} from "@components/auth-router/AuthContext"
+import { useAuth as useRouterAuth } from "@components/auth-router/AuthContext"
 
 // Formulario de login.
 // Valida credenciales, gestiona el flujo 2FA y actualiza el estado global de autenticación.
@@ -41,54 +41,82 @@ export const LoginForm = () => {
 			identifier: "",
 			password: "",
 		}
+
 		const MAX_PASSWORD_LENGTH = 64
+
 		if (!identifier.trim()) {
 			newErrors.identifier = "Login or email is required."
 		}
+
 		if (!password) {
 			newErrors.password = "Password is required."
 		} else if (password.length > MAX_PASSWORD_LENGTH) {
 			newErrors.password = `Password cannot exceed ${MAX_PASSWORD_LENGTH} characters.`
 		}
+
 		setErrors(newErrors)
+
 		return Object.values(newErrors).every((error) => error === "")
 	}
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setServerMessage("");
+
 		if (!validateForm()) return;
 
 		setIsSubmitting(true);
+
 		try {
 			const data = await Login(identifier, password);
+
 			console.log("data", data);
 			console.log("LOGIN DATA:", data)
 			console.log("LOGIN USER LOGIN:", data?.user?.login);
-			
+
 			if (!data) {
 				setServerMessage("Unknown error while trying to log in.");
-				setIsSubmitting(false);
 				return;
 			}
+
 			if (data.requires2fa) {
 				setTempToken(data.user?.tempToken || null);
 				setShow2FA(true);
-				setIsSubmitting(false);
 				return;
 			}
-			if (data.user){
-				await refreshUser();
-				navigate(`/app/profile/${data.user.login}`);//TODO se tiene que cambiar id por token por seguridad
-				setErrors({ identifier: "", password: "" });
-				setServerMessage("");
-				setIsSubmitting(false); 
-				return;
-			}
-			setErrors({ identifier: "", password: "" });
-			setServerMessage("");
+
+			/*
+			 * El backend ya ha creado la cookie de sesión, pero los contextos
+			 * de React todavía conservan el estado anterior de invitado.
+			 *
+			 * Los actualizamos antes de navegar para que componentes como
+			 * Header y Footer reaccionen inmediatamente, sin tener que recargar.
+			 */
 			await refreshAuth();
-			navigate(`/app`);
+			await refreshUser();
+
+			setErrors({
+				identifier: "",
+				password: "",
+			});
+			setServerMessage("");
+
+			const login = data.user?.login;
+
+			navigate(
+				login
+					? `/app/profile/${encodeURIComponent(login)}`
+					: "/app",
+				{
+					/*
+					 * Sustituye /login en el historial para que el botón
+					 * atrás no devuelva al formulario tras iniciar sesión.
+					 */
+					replace: true,
+				},
+			);
+
+			return;
 		} catch (err: any) {
 			console.log("LOGIN ERROR:", err)
 			console.log("LOGIN ERROR STATUS:", err?.status)
@@ -100,9 +128,15 @@ export const LoginForm = () => {
 					identifier: err.data.errors.identifier || "",
 					password: err.data.errors.password || "",
 				}));
-				setServerMessage(err.data?.message || "Invalid login data.");
+
+				setServerMessage(
+					err.data?.message || "Invalid login data.",
+				);
 			} else if (err?.status === 401 || err?.status === 403) {
-				setServerMessage(err.data?.message || "Incorrect login/email or password.");
+				setServerMessage(
+					err.data?.message ||
+						"Incorrect login/email or password.",
+				);
 			} else if (err?.status >= 500) {
 				setServerMessage("Internal server error.");
 			} else if (err?.message) {
@@ -111,6 +145,10 @@ export const LoginForm = () => {
 				setServerMessage("Could not log in.");
 			}
 		} finally {
+			/*
+			 * El finally cubre todos los resultados: éxito, error y apertura
+			 * del paso 2FA. No hace falta repetir setIsSubmitting(false).
+			 */
 			setIsSubmitting(false);
 		}
 	};
@@ -122,15 +160,18 @@ export const LoginForm = () => {
 			await Login2FA(otpCode.join(""), tempToken);
 			await refreshAuth();
 			await refreshUser();
+
 			const data = await getAuthenticatedUser();
+
 			setShow2FA(false);
 
 			const login = data.user?.login;
-			setShow2FA(false);
+
 			if (login && login !== tempToken) {
-            	window.location.href = (`/app/profile/${login}`);
+				window.location.href = `/app/profile/${login}`;
 				return;
 			}
+
 			window.location.href = "/app";
 		} catch (err: any) {
 			alert(err.message);
@@ -176,18 +217,29 @@ export const LoginForm = () => {
 						/>
 					))}
 				</div>
-				
-				<button className="auth-form__submit" type="submit" disabled={isSubmitting}>
+
+				<button
+					className="auth-form__submit"
+					type="submit"
+					disabled={isSubmitting}
+				>
 					{isSubmitting ? "Logging in..." : "Login"}
 				</button>
-				
-				{serverMessage && <p className="auth-form__server-message">{serverMessage}</p>}
-				
+
+				{serverMessage && (
+					<p className="auth-form__server-message">
+						{serverMessage}
+					</p>
+				)}
+
 				<p className="auth-form__switch">
-					Don&apos;t have an account yet? <NavLink to="/register">Register</NavLink>
+					Don&apos;t have an account yet?{" "}
+					<NavLink to="/register">
+						Register
+					</NavLink>
 				</p>
 			</form>
-				
+
 			<Modal
 				open={show2FA}
 				onClose={() => setShow2FA(false)}
@@ -196,9 +248,12 @@ export const LoginForm = () => {
 				title="2FA Verification"
 			>
 				<p className="modal__content">
-					To complete the login, enter the 2FA verification code generated by your authentication app.
+					To complete the login, enter the 2FA verification
+					code generated by your authentication app.
 				</p>
+
 				<OtpInput onChange={setOtpCode} />
+
 				<Footer2FA
 					onClose={() => setShow2FA(false)}
 					onVerify={handleVerify2FA}
