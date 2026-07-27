@@ -17,12 +17,17 @@ services:
         # Falta hacer el healthcheck para el backend, para que el frontend dependa de el.
         volumes:
           - ./backend:/app
+          - ./elastic/filebeat/ingest_data:/var/log/api
+        #   - api-logs:/var/log/api
+          - uploads_data:/app/uploads
         environment:
           - GIN_MODE=debug
         networks:
             - redis
             - back-front
             - db-back
+            - monitoring
+            - api-logs
 
     frontend:
         env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
@@ -165,10 +170,12 @@ services:
             - monitoring
 
     grafana:
+        env_file: .env
         build:
             context: ./grafana
         volumes:
             - grafana_data:/var/lib/grafana
+            - ./grafana/dashboards:/etc/grafana/provisioning/dashboards/json
         expose:
             - "3000"
         depends_on:
@@ -183,6 +190,26 @@ services:
             - "9100"
         networks:
             - monitoring
+    # Disabled for WSL compatibility
+    # Required for full host metrics on Linux
+        # command: 
+        #   - '--path.rootfs=/host'
+        # volumes:
+        #   - '/:/host:ro,rslave'
+          
+    cadvisor:
+      image: gcr.io/cadvisor/cadvisor:latest
+      container_name: cadvisor
+      restart: unless-stopped
+      expose:
+        - "8080"
+      networks:
+        - monitoring
+      volumes:
+        - /:/rootfs:ro
+        - /var/run:/var/run:ro
+        - /sys:/sys:ro
+        - /var/lib/docker:/var/lib/docker:ro
 
     elastic-setup:
         image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
@@ -245,22 +272,13 @@ services:
         networks:
           - elastic
         mem_limit: ${KB_MEM_LIMIT}
-        healthcheck:
-          test:
-            [
-              "CMD-SHELL",
-              "curl -s http://localhost:5601/api/status | grep -q '\"state\":\"green\"'",
-            ]
-          interval: 10s
-          timeout: 5s
-          retries: 5
-          start_period: 60s
 
     # Puede dar error por permisos de usuario, en ese caso hacer en terminal "sudo chown root:root ./elastic/metricbeat/metricbeat.yml"
     metricbeat:
         image: docker.elastic.co/beats/metricbeat:${STACK_VERSION}
         env_file: .env
         user: root
+        restart: on-failure:5
         volumes:
           - metricbeat_data:/usr/share/metricbeat/data
           - certs_data:/usr/share/metricbeat/certs
@@ -282,6 +300,7 @@ services:
         image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
         env_file: .env
         user: root
+        restart: on-failure:5
         volumes:
           - filebeat_data:/usr/share/filebeat/data
           - certs_data:/usr/share/filebeat/certs
@@ -289,18 +308,24 @@ services:
           - ./elastic/filebeat/ingest_data:/usr/share/filebeat/ingest_data:ro
           - /var/run/docker.sock:/var/run/docker.sock:ro
           - /var/lib/docker/containers:/var/lib/docker/containers:ro
+        #   - api-logs:/usr/share/filebeat/ingest_data:ro
         networks:
           - elastic
+          - api-logs
         command: ["filebeat", "-e", "--strict.perms=false"]
         depends_on:
           elasticsearch:
             condition: service_started
           kibana:
             condition: service_started
+          logstash:
+            condition: service_started
         
     logstash:
         image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
         env_file: .env
+        expose:
+          - 5044
         group_add:
           - 0 
         volumes:
@@ -310,6 +335,7 @@ services:
           - ./elastic/logstash/ingest_data:/usr/share/logstash/ingest_data:ro
         networks:
           - elastic
+          - api-logs
         environment:
           - xpack.monitoring.enabled=false
           - ELASTIC_HOSTS=https://elasticsearch:9200
@@ -336,6 +362,7 @@ volumes:
     redis_data:
     prometheus_data:
     grafana_data:
+    uploads_data: # Donde se guardan las imágenes subidas a través de los posts
     elastic_data:
     kibana_data:
     metricbeat_data:
@@ -344,6 +371,7 @@ volumes:
     certs_data:
 # TODO - Revisar las redes creadas para la correcta separación y aislamiento entre contenedores
     portainer_data:
+    # api-logs:
 
 networks:
     db-view:
@@ -355,3 +383,4 @@ networks:
     elastic:
     redis-view:
     port-nginx:
+    api-logs:

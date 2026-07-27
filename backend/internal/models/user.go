@@ -6,27 +6,31 @@ import (
 	"gorm.io/gorm"
 )
 
-//NOTE - El Email va a ser unico siempre, en caso de que exista, incluso aunque se borre la cuenta no se va poder crear otra nueva con el mismo.
-// Lo dejo asi pensando que quizá en un futuro se implemente una funcionalidad de recuperar cuenta que requiera el email.
+// NOTE: El email será siempre único. Aunque se elimine una cuenta, no se podrá
+// crear otra con la misma dirección. Se mantiene así por si en el futuro se
+// implementa una recuperación de cuenta que requiera el email.
 
-//NOTE - El Login es unico siempre que la cuenta no este borrada, en caso de que se borre otra persona podra usar este
+// NOTE: El login es único mientras la cuenta no esté eliminada. Si se elimina,
+// otra persona podrá utilizarlo.
 
 type User struct {
 	gorm.Model
 
-	Login     string  `gorm:"not null;uniqueIndex:idx_login_active,where:deleted_at IS NULL"` // Nickname unico de la cuenta (Ej: Login 42)
-	Email     *string `gorm:"uniqueIndex"`                                                    // Correo electronico unico asociado
+	Login     string  `gorm:"not null;uniqueIndex:idx_login_active,where:deleted_at IS NULL"` // Nickname único de la cuenta (ej.: login de 42)
+	Email     *string `gorm:"uniqueIndex"`                                                    // Correo electrónico único asociado
 	Password  string  `gorm:"not null"`                                                       // Contraseña de acceso a la cuenta
-	Active2FA bool    `gorm:"not null; default:false"`                                        // Si el usuario tiene 2FA activado o no
-	Secret2FA *string `gorm:"null"`                                                           // Clave secreta que se genera al activar la 2FA
-	Role      string  `gorm:"not null"`                                                       // Rol del usuario (Ej: 42, bh, normie...)
+	Active2FA bool    `gorm:"not null; default:false"`                                        // Indica si el usuario tiene activado el 2FA
+	Secret2FA *string `gorm:"null"`                                                           // Clave secreta generada al activar el 2FA
+	Role      string  `gorm:"not null"`                                                       // Rol del usuario (ej.: 42, bh, normie...)
 
-	Name     string    `gorm:"not null"` // Nombre de usuario
-	Surname  string    `gorm:"not null"` // Apellido de usuario
-	Birthday time.Time `gorm:"not null"` // Fecha de cunmpleaños del usuario
+	Name       string    `gorm:"not null"`                                      // Nombre del usuario
+	Surname    string    `gorm:"not null"`                                      // Apellido del usuario
+	Birthday   time.Time `gorm:"not null"`                                      // Fecha de cumpleaños del usuario
+	AvatarPath *string   `gorm:"type:varchar(255)" json:"avatarPath,omitempty"` // Ruta relativa del avatar; nil si utiliza la imagen predeterminada
+	BannerPath *string   `gorm:"type:varchar(255)" json:"bannerPath,omitempty"` // Ruta relativa del banner; nil si utiliza el fondo predeterminado
 
-	Status uint   // En el caso de que este online que estado quiere mostrar (Ej: 0 = offline, 1 = online, 2 = ausente...)
-	State  string // Estado del usuario like WhatsApp (Ej: "En una reunión", "Cago en todo", ...)
+	Status uint   // Estado de presencia que muestra el usuario (ej.: 0 = offline, 1 = online, 2 = ausente...)
+	State  string // Mensaje de estado similar al de WhatsApp (ej.: "En una reunión", "Cago en todo", ...)
 
 	Friends []*User     `gorm:"many2many:user_friends;"` // Relación de amigos entre usuarios (muchos a muchos)
 	Chats   []*ChatRoom `gorm:"many2many:user_rooms;"`   // Relación de salas de chat a las que pertenece el usuario (muchos a muchos)

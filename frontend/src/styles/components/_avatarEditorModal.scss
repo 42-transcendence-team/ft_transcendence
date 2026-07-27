@@ -1,0 +1,59 @@
+.avatar-editor-modal {
+	&.modal {
+		width: min(90vw, 480px);
+		max-width: 480px;
+	}
+
+	&__content {
+		margin-bottom: 0;
+	}
+
+	&__current-preview {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 180px;
+		height: 180px;
+		margin: 0 auto 1.25rem;
+		overflow: hidden;
+		border-radius: 50%;
+		background: #f0f0f0;
+	}
+
+	&__avatar {
+		display: block;
+		width: 100%;
+		height: 100%;
+		border-radius: inherit;
+		object-fit: cover;
+		object-position: center;
+
+		&--fallback {
+			width: 55%;
+			height: 55%;
+			border-radius: 0;
+			object-fit: contain;
+		}
+	}
+
+	&__error {
+		margin: 0.75rem 0 0;
+		color: #b91c1c;
+		font-weight: 600;
+		text-align: center;
+	}
+
+	&__actions {
+		flex-wrap: wrap;
+		margin-top: 1.25rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.avatar-editor-modal {
+		&__current-preview {
+			width: 150px;
+			height: 150px;
+		}
+	}
+}

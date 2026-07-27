@@ -1,0 +1,168 @@
+@use "../../abstracts/variables" as *;
+
+.searchFilters {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 20px;
+
+  background-color: $light-gray-common-components;
+  border-radius: 16px;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+
+  box-sizing: border-box;
+
+  &__title {
+    margin: 0;
+
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #222;
+  }
+
+  &__sectionTitle {
+    margin: 8px 0 0;
+
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #222;
+  }
+
+  &__chips {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__chip,
+  &__sortTrigger {
+    width: 100%;
+    min-height: 42px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 10px 12px;
+
+    border: none;
+    border-radius: 10px;
+
+    background-color: #eeeeee;
+    color: #333;
+
+    cursor: pointer;
+
+    font-family: inherit;
+    font-size: 1rem;
+
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  &__chip {
+    gap: 8px;
+  }
+
+  &__sortTrigger {
+    justify-content: space-between;
+  }
+
+  &__chip:hover,
+  &__sortTrigger:hover {
+    transform: translateY(-2px);
+  }
+
+  &__chip--active {
+    background-color: $dark-purple-background-light;
+    color: $dark-purple-main-text-light;
+
+    transform: scale(0.97);
+  }
+
+  &__sortDropdown {
+    position: relative;
+    width: 100%;
+  }
+
+  &__sortIcon {
+    transition: transform 0.2s ease;
+
+    &--open {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__sortMenu {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    right: 0;
+
+    z-index: 20;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    padding: 6px;
+
+    background-color: #eeeeee;
+    border-radius: 10px;
+
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+
+    animation: searchFiltersMenuIn 0.16s ease;
+
+    button {
+      width: 100%;
+
+      padding: 10px 12px;
+
+      border: none;
+      border-radius: 8px;
+
+      background: transparent;
+      color: #333;
+
+      text-align: left;
+
+      cursor: pointer;
+
+      font-family: inherit;
+      font-size: 0.95rem;
+
+      transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+
+      &:hover {
+        background-color: $light-purple-secondary-text-light;
+      }
+    }
+  }
+
+  &__sortOption--active {
+    background-color: $dark-purple-background-light !important;
+    color: $dark-purple-main-text-light !important;
+    font-weight: 600;
+  }
+}
+
+@keyframes searchFiltersMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

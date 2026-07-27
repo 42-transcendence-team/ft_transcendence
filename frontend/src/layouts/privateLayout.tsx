@@ -9,6 +9,11 @@ import { ChatPanel } from "@components/ChatPanel";
 import { ChatModal } from "@components/ChatModal";
 import { Notification } from "@components/Notification";
 import { useState } from "react";
+import { PrivateLeftPanel } from "@components/layout/PrivateLeftPanel";
+import { SearchFilters } from "@components/advancedSearch/SearchFilters";
+import { useAdvancedSearch } from "@components/advancedSearch/useAdvancedSearch";
+import { PrivateMainContent } from "@components/layout/PrivateMainContent";
+import { AdvancedSearchPanel } from "@components/advancedSearch/AdvancedSearchPanel";
 
 function useHandleChat() {
 	const [activeChat, setActiveChat] = useState<number | null>(null);
@@ -22,6 +27,7 @@ function useHandleChat() {
 
 export function PrivateLayout() {
 	const data = useLoaderData();
+	const search = useAdvancedSearch();
 	const {activeChat, toggleChat} = useHandleChat();
 
 	return (
@@ -30,13 +36,21 @@ export function PrivateLayout() {
 				<NotificationProvider activeChat={activeChat} user={data.user}> 
 					<ChatProvider user={data.user}>
 						<header className="privateLayout__header">
-							<PrivHeader />
+							<PrivHeader onSearch={search.handleSearch} />
 						</header>
 
 						<aside className="privateLayout__leftPanel">
 							<div className="leftPanel__content">
 								<div className="leftPanel__actions">
 									<Notification/>
+									<PrivateLeftPanel>
+										<SearchFilters
+										selectedRelations={search.relations}
+										onRelationsChange={search.handleRelationsChange}
+										selectedSort={search.sort}
+										onSortChange={search.handleSortChange}
+										/>
+									</PrivateLeftPanel>
 								</div>
 							</div>
 						</aside>
@@ -44,7 +58,13 @@ export function PrivateLayout() {
 						<main className="privateLayout__content">
 							<div className="privateLayout__contentFrame">
 								<div className="privateLayout__contentInner">
-									<Outlet context={{ user: data.user }} />
+									<PrivateMainContent>
+										{search.hasSearched ? (
+										<AdvancedSearchPanel search={search} />
+										) : (
+										<Outlet context={{ user: data.user }} />
+										)}
+									</PrivateMainContent>
 								</div>
 							</div>
 							{activeChat && (
