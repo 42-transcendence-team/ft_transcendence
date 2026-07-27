@@ -90,24 +90,32 @@ func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessag
 		data = map[string]interface{}{
 			"game_id":   newGameID,
 			"game_type": createData.GameType,
-			"status":    "WAIT",
+			"mode":      createData.Mode,
+			"status":    "LOBBY",
 			"state":     state,
 		}
 	} else {
 		data = map[string]interface{}{
 			"game_id":   newGameID,
 			"game_type": createData.GameType,
+			"mode":      createData.Mode,
 			"status":    "PLAY",
 			"state":     state,
 		}
 	}
 
-	gh.gameManager.ActiveGames[newGameID].JoinGame(c.GetUserID())
+	err = gh.gameManager.ActiveGames[newGameID].JoinGame(c.GetUserID(), c.GetUsername())
+	if err != nil {
+		log.Printf("Error al unir al jugador: %v", err)
+		return
+	}
 
 	response := map[string]interface{}{
 		"type":    "game_created",
 		"payload": data,
 	}
+
+	log.Printf("Juego creado con ID: %s, Tipo: %s, Modo: %s", newGameID, createData.GameType, createData.Mode)
 
 	responseBytes, _ := json.Marshal(response)
 	c.Send(responseBytes)
@@ -139,7 +147,11 @@ func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage)
 		return
 	}
 
-	engine.JoinGame(c.GetUserID())
+	err = engine.JoinGame(c.GetUserID(), c.GetUsername())
+	if err != nil {
+		log.Printf("Error al unir al jugador: %v", err)
+		return
+	}
 
 	broadcast := map[string]interface{}{
 		"type":   "game_update",
@@ -161,6 +173,12 @@ func (gh *GameHandler) HandleLeaveGame(c ws.ClientConn, msg *dto.IncomingMessage
 
 	log.Printf("Usuario %d abandonó la partida %s", c.GetUserID(), leaveData.GameID)
 
+	err = gh.gameManager.ActiveGames[leaveData.GameID].LeaveGame(c.GetUserID())
+	if err != nil {
+		log.Printf("Error al abandonar la partida: %v", err)
+		return
+	}
+
 	var roomID64 uint
 	_, err = fmt.Sscanf(leaveData.GameID, "%d", &roomID64)
 	if err != nil {
@@ -174,6 +192,13 @@ func (gh *GameHandler) HandleLeaveGame(c ws.ClientConn, msg *dto.IncomingMessage
 		log.Printf("Error: Sala %d no existe en Hub", roomID)
 		return
 	}
+	broadcast := map[string]interface{}{
+		"type":  "game_update",
+		"state": gh.gameManager.ActiveGames[leaveData.GameID].GetState(),
+	}
+	broadcastBytes, _ := json.Marshal(broadcast)
+
+	gh.hub.BroadcastToRoom(roomID, broadcastBytes)
 
 	c.LeaveRoom(room)
 }

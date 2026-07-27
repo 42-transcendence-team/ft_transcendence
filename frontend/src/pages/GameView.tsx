@@ -7,6 +7,8 @@ import { GameProvider, useGame } from '../context/gameContext';
 import { games } from './Games';
 import { useOutletContext } from "react-router-dom";
 
+// TODO - Ponerlo bonico en general, quiza añadir un boton para volver a la lista de juegos, y un boton para salir de la partida
+
 export default function GameView() {
     const { user } = useOutletContext<{ user: any }>();
 
@@ -41,7 +43,7 @@ function GameViewMenu() {
 			<button 
 				onClick={() => {
 					createGame(gameState.game_type, "online")
-					setGameStatus("WAIT");
+					setGameStatus("LOBBY");
 				}}
 				className="game-menu__button"
 			>
@@ -57,7 +59,7 @@ function GameViewMenu() {
 	)
 }
 
-function GameViewWait() {
+function GameViewLobby() {
 	const { gameState, returnMenu } = useGame();
 	return (
 		<div className="game-menu">
@@ -104,9 +106,16 @@ function GameViewJoin() {
 }
 
 function GameViewFinish() {
-	const { returnMenu } = useGame();
+	const { returnMenu, gameState } = useGame();
+	const winner = gameState.players.find(player => player.token === gameState.winner);
+
 	return (
 		<div className="game-menu">
+			{ gameState.winner ? (
+				<h2 className="game-menu__title">¡El jugador {winner?.username} ha ganado!</h2>
+			) : (
+				<h2 className="game-menu__title">¡Empate!</h2>
+			)}
 			<button 
 				onClick={() => returnMenu()}
 				className="game-menu__button"
@@ -117,22 +126,23 @@ function GameViewFinish() {
 	)
 }
 
-function GameViewContent({ game, gameId, gameType }: { game: any; gameId?: string; gameType?: string }) {
-    const { gameState, leaveGame, setGameType } = useGame();
+// TODO - Ponerlo bonico
+function GameViewWait() {
+	return (
+		<div className="game-menu">
+			<h2 className="game-menu__title">Esperando al turno del oponente...</h2>
+		</div>
+	)
+}
+
+function GameViewContent({ game, gameId, gameType }: { game: any; gameId?: string; gameType?: string; }) {
+    const { gameState, leaveGame, setGameType, isMyTurn } = useGame();
     const location = useLocation();
     
     const GameComponent = game.component;
     const aspectRatio = game.aspectRatio;
     const containerRef = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });
-
-	useEffect(() => {
-		console.log("GameView mounted:", game.id);
-
-		return () => {
-			console.log("GameView unmounted:", game.id);
-		};
-	}, []);
 
 	useEffect(() => {
 		if (gameType) {
@@ -189,9 +199,13 @@ function GameViewContent({ game, gameId, gameType }: { game: any; gameId?: strin
             >
                 <GameComponent />
 
+				{gameState.status === "PLAY" && !isMyTurn && gameState.mode === "online" && (
+					<GameViewWait />
+				)}
+
 				{ gameState.status === 'MENU' && ( <GameViewMenu /> ) }
 
-				{ gameState.status === 'WAIT' && ( <GameViewWait /> ) }
+				{ gameState.status === 'LOBBY' && ( <GameViewLobby /> ) }
 				
 				{ gameState.status === 'JOIN' && ( <GameViewJoin /> ) }
 				

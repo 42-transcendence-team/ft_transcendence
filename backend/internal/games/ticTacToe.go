@@ -1,10 +1,9 @@
 package games
 
 import (
+	appErr "backend/internal/errors"
 	"encoding/json"
-	"errors"
 	"log"
-	"strconv"
 )
 
 // TODO - Gestionar partidas online y offline, y que el juego sepa si es online o local. Ahora funciona local
@@ -32,35 +31,39 @@ func (t *TicTacToe) GetState() interface{} { return t }
 
 func (t *TicTacToe) IsFinished() bool { return false }
 
+func (t *TicTacToe) GetPlayers() []Player { return t.Players }
+
+func (t *TicTacToe) LeaveGame(userID uint) error { return t.RemovePlayer(userID) }
+
 func (t *TicTacToe) Reset() {
 	t.Board = [3][3]int{}
 	t.Turn = 1
 }
 
-func (t *TicTacToe) JoinGame(userID uint) error {
-	if t.Mode == "local" && len(t.Players) >= 2 {
-		return errors.New("el juego ya tiene 2 jugadores")
+func (t *TicTacToe) JoinGame(userID uint, username string) error {
+	if t.Mode == "local" && len(t.Players) >= 1 {
+		return appErr.NewConflict("no se puede unir a un juego local")
+	}
+	if t.Mode == "online" && len(t.Players) >= 2 {
+		return appErr.NewConflict("el juego ya tiene 2 jugadores")
 	}
 
 	for _, player := range t.Players {
 		if player.ID == userID {
-			return errors.New("el jugador ya está en el juego")
+			return appErr.NewConflict("el jugador ya está en el juego")
 		}
 	}
-	if len(t.Players) >= 2 {
-		return errors.New("el juego ya tiene 2 jugadores")
-	}
 
-	token := strconv.Itoa(len(t.Players) + 1)
+	token := len(t.Players) + 1
 	newPlayer := Player{
 		ID:       userID,
 		Type:     "player",
 		Token:    token,
-		Username: "",
+		Username: username,
 	}
-	log.Printf("Jugador %d se ha unido al juego con token %s", userID, token)
-	log.Printf("Jugadores actuales: %v", t.Players)
+
 	t.Players = append(t.Players, newPlayer)
+	log.Printf("Jugadores actuales: %v", t.Players)
 	return nil
 }
 
@@ -70,23 +73,20 @@ func (t *TicTacToe) ProcessMove(userID uint, moveData json.RawMessage) error {
 	json.Unmarshal(moveData, &m)
 
 	if t.IsFinished() {
-		return errors.New("el juego ya ha terminado")
+		return appErr.NewConflict("el juego ya ha terminado")
 	}
-
-	log.Printf("Jugadores activos: %v", t.Players)
-	log.Printf("Procesando movimiento del jugador %d: fila %d, columna %d", userID, m.Row, m.Col)
 
 	if t.Mode == "online" {
 		if len(t.Players) < 2 {
-			return errors.New("no hay suficientes jugadores para jugar")
+			return appErr.NewConflict("no hay suficientes jugadores para jugar")
 		}
 
-		currentTurnToken := strconv.Itoa(t.Turn)
+		currentTurnToken := t.Turn
 		isMyTurn := false
 		for _, player := range t.Players {
 			if player.ID == userID {
 				if player.Token != currentTurnToken {
-					return errors.New("no es tu turno")
+					return appErr.NewConflict("no es tu turno")
 				}
 				isMyTurn = true
 				break
@@ -94,16 +94,16 @@ func (t *TicTacToe) ProcessMove(userID uint, moveData json.RawMessage) error {
 		}
 
 		if !isMyTurn {
-			return errors.New("no eres un jugador en este juego")
+			return appErr.NewConflict("no eres un jugador en este juego")
 		}
 	}
 
 	if m.Row < 0 || m.Row > 2 || m.Col < 0 || m.Col > 2 {
-		return errors.New("movimiento fuera de los límites del tablero")
+		return appErr.NewConflict("movimiento fuera de los límites del tablero")
 	}
 
 	if t.Board[m.Row][m.Col] != 0 {
-		return errors.New("casilla ocupada")
+		return appErr.NewConflict("casilla ocupada")
 	}
 
 	t.Board[m.Row][m.Col] = t.Turn
@@ -146,4 +146,23 @@ func (t *TicTacToe) IsFull() bool {
 		}
 	}
 	return true
+}
+
+func (t *TicTacToe) IsPlayerInGame(userID uint) bool {
+	for _, player := range t.Players {
+		if player.ID == userID {
+			return true
+		}
+	}
+	return false
+}
+
+func (t *TicTacToe) RemovePlayer(userID uint) error {
+	for i, player := range t.Players {
+		if player.ID == userID {
+			t.Players = append(t.Players[:i], t.Players[i+1:]...)
+			return nil
+		}
+	}
+	return appErr.NewConflict("jugador no encontrado en el juego")
 }

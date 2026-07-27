@@ -2,6 +2,8 @@ import React, { useRef, useCallback, useEffect } from "react";
 import { useTicTacToe } from "./useTicTacToe";
 import { drawBoard } from "./components/board";
 
+// TODO - Ponerlo bonico y hacer alguna animacion 
+
 export function TicTacToe() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const { play, winner, line, draw: isDraw, gameState, backendBoard } = useTicTacToe();
@@ -45,7 +47,7 @@ export function TicTacToe() {
     }, [draw]);
 
     useEffect(() => {
-        if (gameState.status !== "MENU" && gameState.status !== "WAIT") return;
+        if (gameState.status !== "MENU" && gameState.status !== "LOBBY") return;
 
         let animationFrameId: number;
         const renderLoop = () => {

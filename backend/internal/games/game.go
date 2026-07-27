@@ -6,7 +6,7 @@ type Player struct {
 	ID       uint   `json:"id"`
 	Username string `json:"username"`
 	Type     string `json:"type"`
-	Token    string `json:"token"`
+	Token    int    `json:"token"`
 }
 
 type GameEngine interface {
@@ -16,5 +16,6 @@ type GameEngine interface {
 	IsFinished() bool
 	GetWinner() (int, interface{})
 	IsFull() bool
-	JoinGame(userID uint) error
+	JoinGame(userID uint, username string) error
+	LeaveGame(userID uint) error
 }

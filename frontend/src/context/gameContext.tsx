@@ -7,8 +7,10 @@ export type GameStatus = 'MENU' | 'PLAY' | 'FINISH' | 'JOIN' | 'WAIT' | 'LOBBY' 
 export type GameMode = 'local' | 'online' | 'join';
 
 interface Player {
-    id: string;
-    login?: string;
+    id: number;
+    username: string;
+    type: string;
+    token: number;
 }
 
 export interface GameState {
@@ -19,11 +21,13 @@ export interface GameState {
     winner?: string | number;
     board?: unknown;
     last_dice_roll?: number;
-    turn?: unknown;
+    turn?: number;
+    mode?: GameMode;
 }
 
 interface GameContextType {
     gameState: GameState;
+    isMyTurn: boolean;
     setGameStatus: (status: GameStatus) => void;
     setGameType: (gameType: GameState['game_type']) => void;
     returnMenu: () => void;
@@ -52,6 +56,12 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
     const [ gameState, setGameState ] = useState<GameState>(initialGameState);
     const navigate = useNavigate();
 
+    const currentPlayer = gameState.players.find(
+        player => player.id === user?.id
+    );
+
+    const isMyTurn = currentPlayer?.token === gameState.turn;
+
 	const gameStateRef = useRef(gameState);
     useEffect(() => {
         gameStateRef.current = gameState;
@@ -65,14 +75,17 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 
         const unsubscribeGameUpdate = subscribe("game_update", (message: any) => {
             console.log('Received game_update message:', message);
+            console.log('User ID:', user?.id);
 			if (!message.status) return;
 			setGameState(prevState => ({
 				...prevState,
 				board: message.state?.board ?? prevState.board,
+                players: message.state?.players ?? prevState.players,
 				status: message.status,
 				winner: message.state?.winner ?? prevState.winner,
 				last_dice_roll: message.state?.last_dice_roll ?? prevState.last_dice_roll,
 				turn: message.state?.turn ?? prevState.turn,
+                mode: message.state?.mode ?? prevState.mode,
 			}));
         });
 
@@ -189,7 +202,7 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 			return;
 		}
 
-		if (currentStatus === "WAIT" && String(currentRoomId) === String(gameId)) {
+		if (currentStatus === "LOBBY" && String(currentRoomId) === String(gameId)) {
 			return;
 		}
 
@@ -197,7 +210,7 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 
 		setGameState(prevState => ({
 			...prevState,
-			status: "WAIT",
+			status: "LOBBY",
 			game_id: gameId,
 		}));
 
@@ -247,7 +260,7 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 
     return (
         <GameContext.Provider value={{ gameState, createGame, joinGame, makeMove, rollDice, 
-            leaveGame, setGameStatus, returnMenu, setGameType }}>
+            leaveGame, setGameStatus, returnMenu, setGameType, isMyTurn }}>
             {children}
         </GameContext.Provider>
     );
