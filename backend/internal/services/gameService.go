@@ -2,6 +2,8 @@ package services
 
 import (
 	"backend/internal/games"
+	"fmt"
+	"log"
 	"sync"
 )
 
@@ -16,10 +18,14 @@ func NewGameManager() *GameManager {
 	}
 }
 
-func (gm *GameManager) CreateGame(id, gameType, mode string) {
+func (gm *GameManager) CreateGame(id, gameType, mode string) error {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 	if gameType == "TICTACTOE" {
 		gm.ActiveGames[id] = games.NewTicTacToe(mode)
+	} else {
+		log.Printf("Tipo de juego desconocido: %s", gameType)
+		return fmt.Errorf("tipo de juego desconocido: %s", gameType)
 	}
+	return nil
 }

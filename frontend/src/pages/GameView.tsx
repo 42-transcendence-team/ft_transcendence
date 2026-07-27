@@ -20,7 +20,7 @@ export default function GameView() {
 
     return (
         <GameProvider user={user}>
-            <GameViewContent game={game} gameId={gameId} />
+            <GameViewContent game={game} gameId={gameId} gameType={gameType} />
         </GameProvider>
     );
 }
@@ -30,7 +30,10 @@ function GameViewMenu() {
 	return (
 		<div className="game-menu">
 			<button 
-				onClick={() => createGame(gameState.game_type, "local")}
+				onClick={() => {
+					createGame(gameState.game_type, "local")
+					console.log("Game type: ", gameState.game_type);
+				}}
 				className="game-menu__button"
 			>
 					Local
@@ -114,14 +117,28 @@ function GameViewFinish() {
 	)
 }
 
-function GameViewContent({ game, gameId }: { game: any; gameId?: string }) {
-    const { gameState, leaveGame } = useGame();
+function GameViewContent({ game, gameId, gameType }: { game: any; gameId?: string; gameType?: string }) {
+    const { gameState, leaveGame, setGameType } = useGame();
     const location = useLocation();
     
     const GameComponent = game.component;
     const aspectRatio = game.aspectRatio;
     const containerRef = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });
+
+	useEffect(() => {
+		console.log("GameView mounted:", game.id);
+
+		return () => {
+			console.log("GameView unmounted:", game.id);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (gameType) {
+			setGameType(gameType.toUpperCase());
+		}
+	}, [gameType, setGameType]);
 
     useEffect(() => {
         const currentPath = location.pathname;

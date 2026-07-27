@@ -65,7 +65,11 @@ func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessag
 
 	newGameID := fmt.Sprintf("%d", time.Now().Unix())
 
-	gh.gameManager.CreateGame(newGameID, createData.GameType, createData.Mode)
+	err = gh.gameManager.CreateGame(newGameID, createData.GameType, createData.Mode)
+	if err != nil {
+		log.Printf("Error al crear el juego: %v", err)
+		return
+	}
 
 	state := gh.gameManager.ActiveGames[newGameID].GetState()
 

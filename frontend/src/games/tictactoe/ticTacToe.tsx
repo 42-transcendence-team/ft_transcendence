@@ -2,7 +2,6 @@ import React, { useRef, useCallback, useEffect } from "react";
 import { useTicTacToe } from "./useTicTacToe";
 import { drawBoard } from "./components/board";
 
-
 export function TicTacToe() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const { play, winner, line, draw: isDraw, gameState, backendBoard } = useTicTacToe();
@@ -10,12 +9,15 @@ export function TicTacToe() {
     const mouseRef = useRef({ x: -1, y: -1, clicked: false });
 
     const draw = useCallback(() => {
-		if (gameState.status !== "PLAY") return;
         const canvas = canvasRef.current;
         if (!canvas) return;
 
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
+
+        if (gameState.status !== "PLAY" && gameState.status !== "FINISH") {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
 
         const size = canvas.width;
         const cell = size / 3;

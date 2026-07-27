@@ -1,6 +1,6 @@
-import type { Board } from "../useTicTacToe";
+import type { TicTacToeBoard } from "../useTicTacToe";
 
-export function drawBoard(ctx: CanvasRenderingContext2D, board: Board, cell: number) {
+export function drawBoard(ctx: CanvasRenderingContext2D, board: TicTacToeBoard, cell: number) {
 	ctx.strokeStyle = "black";
 	ctx.lineWidth = 2;
 

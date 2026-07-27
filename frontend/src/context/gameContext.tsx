@@ -16,7 +16,6 @@ export interface GameState {
     game_type: string;
     status: GameStatus;
     players: Player[];
-    current_turn: string;
     winner?: string | number;
     board?: unknown;
     last_dice_roll?: number;
@@ -26,6 +25,7 @@ export interface GameState {
 interface GameContextType {
     gameState: GameState;
     setGameStatus: (status: GameStatus) => void;
+    setGameType: (gameType: GameState['game_type']) => void;
     returnMenu: () => void;
     createGame: (gameType: GameState['game_type'], mode: GameMode ) => void;
     joinGame: (gameId: string) => void;
@@ -39,7 +39,6 @@ const initialGameState: GameState = {
 	game_type: '',
 	status: 'MENU',
 	players: [],
-	current_turn: '',
 	board: null,
 	winner: undefined,
 	last_dice_roll: undefined,
@@ -70,7 +69,6 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 			setGameState(prevState => ({
 				...prevState,
 				board: message.state?.board ?? prevState.board,
-				current_turn: message.state?.current_turn ?? prevState.current_turn,
 				status: message.status,
 				winner: message.state?.winner ?? prevState.winner,
 				last_dice_roll: message.state?.last_dice_roll ?? prevState.last_dice_roll,
@@ -90,7 +88,6 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 				game_type: game_type,
 				status: status,
 				players: [],
-				current_turn: '',
 				board: state.board,
 			});
 
@@ -101,7 +98,6 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 				setGameState(prevState => ({
 					...prevState,
 					board: message.state?.board ?? prevState.board,
-					current_turn: message.state?.current_turn ?? prevState.current_turn,
 					status: message.status,
 					winner: message.winner ?? prevState.winner	,
 					last_dice_roll: message.state?.last_dice_roll ?? prevState.last_dice_roll,
@@ -148,12 +144,27 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
         }));
     }, []);
 
+    const setGameType = useCallback((gameType: GameState['game_type']) => {
+        setGameState(prevState => ({
+            ...prevState,
+            game_type: gameType,
+        }));
+    }, []);
+
     const returnMenu = useCallback(() => {
-        var gameType = gameState.game_type.toLowerCase();
-		console.log(`Returning to menu for game type: ${gameType}`);
-        setGameState(initialGameState);
-        navigate('/app/games/' + gameType, { replace: true });
-    }, [navigate]);
+        const gameType = gameState.game_type.toLowerCase();
+
+        console.log(`Returning to menu for game type: ${gameType}`);
+
+        setGameState({
+            ...initialGameState,
+            game_type: gameType.toUpperCase(),
+        });
+
+        setGameType(gameType.toUpperCase());
+
+        navigate(`/app/games/${gameType}`, { replace: true });
+    }, [navigate, gameState.game_type]);
 
     const createGame = useCallback((gameType: GameState['game_type'], mode: GameMode) => {
         if (!user) return;
@@ -232,12 +243,11 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
                 game_id: gameId,
             },
         });
-        setGameState(initialGameState);
-        setGameState(prevState => ({ ...prevState, status: 'MENU' }));
     }, [user, send]);
 
     return (
-        <GameContext.Provider value={{ gameState, createGame, joinGame, makeMove, rollDice, leaveGame, setGameStatus, returnMenu }}>
+        <GameContext.Provider value={{ gameState, createGame, joinGame, makeMove, rollDice, 
+            leaveGame, setGameStatus, returnMenu, setGameType }}>
             {children}
         </GameContext.Provider>
     );

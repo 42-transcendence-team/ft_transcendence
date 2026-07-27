@@ -41,7 +41,7 @@ export function useTicTacToe() {
 
     const gameState = rawGameState as unknown as TicTacToeGameState;
 
-	gameState.game_type = "TICTACTOE";
+	// gameState.game_type = "TICTACTOE";
     const backendBoard = mapBackendToFrontendBoard(gameState.board);
     const currentTurn: Player = gameState.turn === 2 ? "O" : "X";
     
