@@ -52,14 +52,8 @@ func (srv *HTTPServer) Router() {
 
 	gameHandler := handlers.NewGameHandler(gameManager, hub)
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
-	userHandler := handlers.NewUserHandler(
-		userService,
-		srv.Redis,
-		imageStorage,
-		advancedSearchService,
-	)
+	userHandler := handlers.NewUserHandler(userService, srv.Redis, imageStorage, advancedSearchService)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
-	friendHandler := handlers.NewFriendHandler(friendService, blockService)
 	postHandler := handlers.NewPostHandler(postService, imageStorage)
 	commentHandler := handlers.NewCommentHandler(commentService)
 	postLikeHandler := handlers.NewPostLikeHandler(postLikeService)
@@ -103,12 +97,7 @@ func (srv *HTTPServer) Router() {
 		routes.ChatRoutes(protected, chatHandler)
 		routes.UserRoutes(protected, userHandler)
 		routes.NotificationRoutes(protected, notificationsHandler)
-		routes.PostRoutes(
-			protected,
-			postHandler,
-			commentHandler,
-			postLikeHandler,
-		)
+		routes.PostRoutes(protected, postHandler, commentHandler, postLikeHandler)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 
