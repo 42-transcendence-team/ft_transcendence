@@ -7,7 +7,7 @@ import skullLogo from '../../assets/icons/skull_logo.png';
 import '../../styles/components/_userAvatar.scss';
 
 // Estados de presencia que puede representar el indicador del avatar.
-export type UserPresence = 'online' | 'offline' | 'hidden';
+export type UserPresence = 'online' | 'offline' | 'hidden' | 'activo' | 'inactivo' | 'ausente';
 
 type UserAvatarSize = 'small' | 'medium' | 'large';
 
@@ -28,6 +28,9 @@ const presenceLabels: Record<UserPresence, string> = {
   online: 'Online',
   offline: 'Offline',
   hidden: 'Hidden',
+  activo: 'Activo',
+  inactivo: 'Inactivo',
+  ausente: 'Ausente',
 };
 
 // Normaliza la ruta relativa enviada por el backend.

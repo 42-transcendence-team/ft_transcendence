@@ -155,6 +155,21 @@ body {
 		font-size: 0.9em;
 	}
 
+	&__status--editable {
+		padding: 4px 8px;
+		border: 1px solid $color-text-light;
+		border-radius: 4px;
+		background: transparent;
+		cursor: pointer;
+		font: inherit;
+		color: inherit;
+
+		&:focus {
+			outline: 2px solid #2563eb;
+			outline-offset: 1px;
+		}
+	}
+
 	&__posts {
 		display: flex;
 		flex-direction: column;

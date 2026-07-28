@@ -42,6 +42,24 @@ export async function getUserPresence(
 				`users/profile/${encodeURIComponent(username)}/presence`,
 			method: "GET",
 		});
-
 	return response.data.isOnline;
+}
+
+type UpdateStatusApiResponse = {
+	data: {
+		state: string;
+	};
+};
+
+export async function updateUserStatus(
+	state: string,
+): Promise<string> {
+	const response =
+		await apiRequest<UpdateStatusApiResponse>({
+			endpoint: "users/profile/state",
+			method: "PATCH",
+			body: { state },
+		});
+
+	return response.data.state;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -6,6 +6,7 @@ import type { ApiError } from "../api/ApiRequest";
 import {
 	getUserPresence,
 	getUserProfile,
+	updateUserStatus,
 	type UserProfile,
 } from "../api/UserProfile";
 
@@ -24,6 +25,7 @@ import { NotFound } from "./NotFound";
 import { AvatarEditorModal } from "../components/users/AvatarEditorModal";
 import { BannerEditorModal } from "../components/users/BannerEditorModal";
 import { PostImageModal } from "../components/posts/PostImageModal";
+import { useWebSocket } from "../context/webSocketContext";
 
 // Todo cambiar los datos y que lleguen de la BD.
 const postsData = [
@@ -82,6 +84,7 @@ function isApiError(error: unknown): error is ApiError {
 
 export const Profile = () => {
 	const { username } = useParams<{ username: string }>();
+	const { subscribe, isConnected } = useWebSocket();
 
 	const {
 		user: authenticatedUser,
@@ -109,6 +112,7 @@ export const Profile = () => {
 		useState(false);
 	const [bannerImageFailed, setBannerImageFailed] =
 		useState(false);
+	const [localStatus, setLocalStatus] = useState("");
 
 	/*
 	 * Carga inicial del perfil indicado en la ruta.
@@ -168,6 +172,12 @@ export const Profile = () => {
 			cancelled = true;
 		};
 	}, [username]);
+
+	useEffect(() => {
+		if (profileUser) {
+			setLocalStatus(profileUser.status || "");
+		}
+	}, [profileUser?.status]);
 
 	/*
 	 * Consulta únicamente el estado almacenado en Redis.
@@ -276,6 +286,37 @@ export const Profile = () => {
 		authenticatedUser?.bannerPath,
 	]);
 
+	useEffect(() => {
+		if (!isConnected || !profileUser) return;
+
+		const unsub = subscribe(
+			"USER_STATUS_CHANGE",
+			(message: { payload?: string }) => {
+				if (!message.payload) return;
+
+				try {
+					const parsed =
+						typeof message.payload === "string"
+							? JSON.parse(message.payload)
+							: message.payload;
+
+					if (parsed.login === profileUser.login) {
+						setLocalStatus(parsed.state);
+						setProfileUser((prev) =>
+							prev
+								? { ...prev, status: parsed.state }
+								: prev,
+						);
+					}
+				} catch {
+					/* ignore parse errors */
+				}
+			},
+		);
+
+		return unsub;
+	}, [isConnected, subscribe, profileUser?.login]);
+
 	/*
 	 * UserAvatar ya gestiona su propio fallback, pero Profile también
 	 * necesita saber si la imagen existe para no abrir un visor roto.
@@ -306,6 +347,17 @@ export const Profile = () => {
 	useEffect(() => {
 		setBannerImageFailed(false);
 	}, [profileUser?.bannerPath]);
+
+	const handleStatusChange = useCallback(
+		(value: string) => {
+			setLocalStatus(value);
+			updateUserStatus(value).catch((err) => {
+				console.error("Failed to update status:", err);
+				setLocalStatus(profileUser?.status || "");
+			});
+		},
+		[profileUser?.status],
+	);
 
 	if (authLoading || isLoadingProfile) {
 		return (
@@ -340,7 +392,12 @@ export const Profile = () => {
 		authenticatedUser.login === profileUser.login;
 
 	const profilePresence: UserPresence =
-		profileUser.isOnline ? "online" : "offline";
+		profileUser.status === "Activo" && profileUser.isOnline ? "activo"
+		: profileUser.status === "Activo" && !profileUser.isOnline ? "ausente"
+		: profileUser.status === "Inactivo" ? "inactivo"
+		: profileUser.status === "Ausente" ? "ausente"
+		: profileUser.isOnline ? "online"
+		: "offline";
 
 	const hasCustomAvatar =
 		Boolean(profileUser.avatarPath) &&
@@ -452,10 +509,33 @@ export const Profile = () => {
 				</div>
 
 				<div className="profile__feed">
-					<p className="profile__status">
-						{profileUser.status ||
-							"Sin estado disponible"}
-					</p>
+					{isOwnProfile ? (
+						<select
+							className="profile__status profile__status--editable"
+							value={localStatus}
+							onChange={(e) =>
+								handleStatusChange(e.target.value)
+							}
+						>
+							<option value="" disabled>
+								Seleccionar estado...
+							</option>
+							<option value="Activo">
+								Activo
+							</option>
+							<option value="Inactivo">
+								Inactivo
+							</option>
+							<option value="Ausente">
+								Ausente
+							</option>
+						</select>
+					) : (
+						<p className="profile__status">
+							{profileUser.status ||
+								"Sin estado disponible"}
+						</p>
+					)}
 
 					<div className="profile__posts">
 						{postsData.length > 0 ? (

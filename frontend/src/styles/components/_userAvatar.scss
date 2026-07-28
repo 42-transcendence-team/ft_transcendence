@@ -117,9 +117,21 @@
 			background: #22c55e;
 		}
 
-		&--offline,
-		&--hidden {
-			background: #ef4444;
-		}
+	&--offline,
+	&--hidden {
+		background: #ef4444;
 	}
+
+	&--activo {
+		background: #22c55e;
+	}
+
+	&--inactivo {
+		background: #6b7280;
+	}
+
+	&--ausente {
+		background: #f59e0b;
+	}
+}
 }
