@@ -33,6 +33,8 @@ func UserRoutes(
 
 		UserGroup.PATCH("/banner", userHandler.UpdateBanner)
 		UserGroup.DELETE("/banner", userHandler.DeleteBanner)
+		UserGroup.PATCH("/profile/state", userHandler.UpdateProfileState)
+
 		// Busqueda avanzada
 		// Ejemplo de query basica
 		// GET /api/users/search?q=ange&sort=username_asc&page=2&limit=10&relations=friends,pending_sent

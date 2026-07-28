@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"encoding/json"
+
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"backend/internal/storage"
+	ws "backend/internal/websocket"
 	"errors"
 	"fmt"
 	"log"
@@ -22,6 +25,7 @@ type UserHandler struct {
 	Redis                 *redis.Client
 	ImageStorage          *storage.ImageStorage
 	AdvancedSearchService *services.AdvancedSearchService
+	Hub                   *ws.Hub
 }
 
 func NewUserHandler(
@@ -29,12 +33,14 @@ func NewUserHandler(
 	redisClient *redis.Client,
 	imageStorage *storage.ImageStorage,
 	advancedSearchService *services.AdvancedSearchService,
+	hub *ws.Hub,
 ) *UserHandler {
 	return &UserHandler{
 		UserService:           userService,
 		Redis:                 redisClient,
 		ImageStorage:          imageStorage,
 		AdvancedSearchService: advancedSearchService,
+		Hub:                   hub,
 	}
 }
 
@@ -568,6 +574,61 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 			"surname":    user.Surname,
 			"avatarPath": user.AvatarPath,
 			"bannerPath": user.BannerPath,
+		},
+	})
+}
+
+func (h *UserHandler) UpdateProfileState(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
+
+	var req dto.UpdateStateRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(appErr.NewBadRequest("Invalid request body"))
+		c.Abort()
+		return
+	}
+
+	user, err := h.UserService.GetUserByID(userID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	err = h.UserService.UpdateState(userID, req.State)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	payload, perr := json.Marshal(dto.UserStatusPayload{
+		UserID: userID,
+		Login:  user.Login,
+		State:  req.State,
+	})
+	if perr != nil {
+		c.Error(perr)
+		c.Abort()
+		return
+	}
+
+	message, merr := json.Marshal(dto.NotificationMessage{
+		Type:    "USER_STATUS_CHANGE",
+		Payload: payload,
+	})
+	if merr != nil {
+		c.Error(merr)
+		c.Abort()
+		return
+	}
+
+	h.Hub.BroadcastAll(message)
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": gin.H{
+			"state": req.State,
 		},
 	})
 }

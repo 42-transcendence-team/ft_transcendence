@@ -131,3 +131,7 @@ type UserProfileResponse struct {
 	IsOnline   bool    `json:"isOnline"`
 	Visits     int64   `json:"visits"`
 }
+
+type UpdateStateRequest struct {
+	State string `json:"state" binding:"required"`
+}

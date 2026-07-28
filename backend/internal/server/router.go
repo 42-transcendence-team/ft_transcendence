@@ -54,6 +54,7 @@ func (srv *HTTPServer) Router() {
 		srv.Redis,
 		imageStorage,
 		advancedSearchService,
+		hub,
 	)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService)
