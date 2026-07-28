@@ -22,16 +22,16 @@ type CreateGame struct {
 
 type JoinGame struct {
 	Action string `json:"action"`
-	GameID string `json:"game_id"`
+	GameID uint   `json:"game_id"`
 }
 
 type LeaveGame struct {
 	Action string `json:"action"`
-	GameID string `json:"game_id"`
+	GameID uint   `json:"game_id"`
 }
 
 type MakeMove struct {
 	Action  string          `json:"action"`
-	GameID  string          `json:"game_id"`
+	GameID  uint            `json:"game_id"`
 	Payload json.RawMessage `json:"payload"`
 }

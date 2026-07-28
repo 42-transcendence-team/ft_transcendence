@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"time"
+	"math/rand/v2"
 )
 
 type GameHandler struct {
@@ -55,6 +55,19 @@ func (gh *GameHandler) HandleGameMessage(c ws.ClientConn, msg *dto.IncomingMessa
 	}
 }
 
+func (gh *GameHandler) NewRoomId() uint {
+	const min uint32 = 3_000_000_000
+	const max uint32 = 4_294_967_295
+
+	for {
+		newID := uint(min + rand.Uint32N(max-min+1))
+
+		if _, exists := gh.hub.GetRoom(newID); !exists {
+			return newID
+		}
+	}
+}
+
 func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessage) {
 	var createData dto.CreateGame
 	err := json.Unmarshal(msg.Payload, &createData)
@@ -63,7 +76,7 @@ func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessag
 		return
 	}
 
-	newGameID := fmt.Sprintf("%d", time.Now().Unix())
+	newGameID := gh.NewRoomId()
 
 	err = gh.gameManager.CreateGame(newGameID, createData.GameType, createData.Mode)
 	if err != nil {
@@ -73,49 +86,27 @@ func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessag
 
 	state := gh.gameManager.ActiveGames[newGameID].GetState()
 
-	var roomID64 uint
-	_, err = fmt.Sscanf(newGameID, "%d", &roomID64)
-	if err != nil {
-		log.Printf("Error al convertir GameID %s a uint: %v", newGameID, err)
-		return
-	}
-	roomID := uint(roomID64)
-
-	room := gh.hub.CreateRoom(roomID, fmt.Sprintf("Game-%s", newGameID), false)
+	room := gh.hub.CreateRoom(newGameID, fmt.Sprintf("Game-%d", newGameID), false)
 
 	c.JoinRoom(room)
 
-	var data map[string]interface{}
-	if createData.Mode == "online" {
-		data = map[string]interface{}{
-			"game_id":   newGameID,
-			"game_type": createData.GameType,
-			"mode":      createData.Mode,
-			"status":    "LOBBY",
-			"state":     state,
-		}
-	} else {
-		data = map[string]interface{}{
-			"game_id":   newGameID,
-			"game_type": createData.GameType,
-			"mode":      createData.Mode,
-			"status":    "PLAY",
-			"state":     state,
-		}
-	}
-
-	err = gh.gameManager.ActiveGames[newGameID].AddPlayer(c.GetUserID(), c.GetUsername())
+	err = gh.gameManager.ActiveGames[newGameID].ConnectPlayer(c.GetUserID(), c.GetUsername())
 	if err != nil {
 		log.Printf("Error al unir al jugador: %v", err)
 		return
 	}
 
 	response := map[string]interface{}{
-		"type":    "game_created",
-		"payload": data,
+		"type":   "game_created",
+		"state":  state,
+		"status": "",
 	}
 
-	log.Printf("Juego creado con ID: %s, Tipo: %s, Modo: %s", newGameID, createData.GameType, createData.Mode)
+	if createData.Mode == "online" {
+		response["status"] = "LOBBY"
+	} else {
+		response["status"] = "PLAY"
+	}
 
 	responseBytes, _ := json.Marshal(response)
 	c.Send(responseBytes)
@@ -129,25 +120,17 @@ func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage)
 		return
 	}
 
-	var roomID64 uint
-	_, err = fmt.Sscanf(joinData.GameID, "%d", &roomID64)
-	if err != nil {
-		log.Printf("Error al convertir GameID %s a uint: %v", joinData.GameID, err)
-		return
-	}
-	roomID := uint(roomID64)
-
-	room := gh.hub.CreateRoom(roomID, fmt.Sprintf("Game-%s", joinData.GameID), false)
+	room := gh.hub.CreateRoom(joinData.GameID, fmt.Sprintf("Game-%d", joinData.GameID), false)
 
 	c.JoinRoom(room)
 
 	engine, ok := gh.gameManager.ActiveGames[joinData.GameID]
 	if !ok {
-		log.Printf("Error: Partida %s no existe en GameManager", joinData.GameID)
+		log.Printf("Error: Partida %d no existe en GameManager", joinData.GameID)
 		return
 	}
 
-	err = engine.AddPlayer(c.GetUserID(), c.GetUsername())
+	err = engine.ConnectPlayer(c.GetUserID(), c.GetUsername())
 	if err != nil {
 		log.Printf("Error al unir al jugador: %v", err)
 		return
@@ -160,7 +143,7 @@ func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage)
 	}
 	broadcastBytes, _ := json.Marshal(broadcast)
 
-	gh.hub.BroadcastToRoom(roomID, broadcastBytes)
+	gh.hub.BroadcastToRoom(joinData.GameID, broadcastBytes)
 }
 
 func (gh *GameHandler) HandleLeaveGame(c ws.ClientConn, msg *dto.IncomingMessage) {
@@ -171,7 +154,7 @@ func (gh *GameHandler) HandleLeaveGame(c ws.ClientConn, msg *dto.IncomingMessage
 		return
 	}
 
-	log.Printf("Usuario %d abandonó la partida %s", c.GetUserID(), leaveData.GameID)
+	log.Printf("Usuario %d abandonó la partida %d", c.GetUserID(), leaveData.GameID)
 
 	err = gh.gameManager.ActiveGames[leaveData.GameID].DisconnectPlayer(c.GetUserID())
 	if err != nil {
@@ -179,17 +162,9 @@ func (gh *GameHandler) HandleLeaveGame(c ws.ClientConn, msg *dto.IncomingMessage
 		return
 	}
 
-	var roomID64 uint
-	_, err = fmt.Sscanf(leaveData.GameID, "%d", &roomID64)
-	if err != nil {
-		log.Printf("Error al convertir GameID %s a uint: %v", leaveData.GameID, err)
-		return
-	}
-	roomID := uint(roomID64)
-
-	room, exists := gh.hub.GetRoom(roomID)
+	room, exists := gh.hub.GetRoom(leaveData.GameID)
 	if !exists {
-		log.Printf("Error: Sala %d no existe en Hub", roomID)
+		log.Printf("Error: Sala %d no existe en Hub", leaveData.GameID)
 		return
 	}
 	broadcast := map[string]interface{}{
@@ -198,7 +173,7 @@ func (gh *GameHandler) HandleLeaveGame(c ws.ClientConn, msg *dto.IncomingMessage
 	}
 	broadcastBytes, _ := json.Marshal(broadcast)
 
-	gh.hub.BroadcastToRoom(roomID, broadcastBytes)
+	gh.hub.BroadcastToRoom(leaveData.GameID, broadcastBytes)
 
 	c.LeaveRoom(room)
 }
@@ -224,13 +199,12 @@ func (gh *GameHandler) HandleMakeMove(c ws.ClientConn, msg *dto.IncomingMessage)
 	var broadcastBytes []byte
 
 	winner, winningLine := engine.GetWinner()
-	isDraw := (winner == 0) && engine.IsFull()
+	isDraw := (winner == 0) && engine.IsFinished() // TODO - Revisar como pasar Player i no winner como int
 
 	if winner != 0 || isDraw {
 		broadcast := map[string]interface{}{
 			"type":         "game_finished",
 			"status":       "FINISH",
-			"game_id":      moveData.GameID,
 			"winner":       winner,
 			"winning_line": winningLine,
 			"state":        engine.GetState(),
@@ -242,10 +216,9 @@ func (gh *GameHandler) HandleMakeMove(c ws.ClientConn, msg *dto.IncomingMessage)
 		}
 	} else {
 		broadcast := map[string]interface{}{
-			"type":    "game_update",
-			"status":  "PLAY",
-			"game_id": moveData.GameID,
-			"state":   engine.GetState(),
+			"type":   "game_update",
+			"status": "PLAY",
+			"state":  engine.GetState(),
 		}
 		broadcastBytes, err = json.Marshal(broadcast)
 		if err != nil {
@@ -254,13 +227,5 @@ func (gh *GameHandler) HandleMakeMove(c ws.ClientConn, msg *dto.IncomingMessage)
 		}
 	}
 
-	var roomID64 uint
-	_, err = fmt.Sscanf(moveData.GameID, "%d", &roomID64)
-	if err != nil {
-		log.Printf("Error al convertir GameID %s a uint: %v", moveData.GameID, err)
-		return
-	}
-	roomID := uint(roomID64)
-
-	gh.hub.BroadcastToRoom(roomID, broadcastBytes)
+	gh.hub.BroadcastToRoom(moveData.GameID, broadcastBytes)
 }

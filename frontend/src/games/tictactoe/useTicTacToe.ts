@@ -41,18 +41,10 @@ export function useTicTacToe() {
 
     const gameState = rawGameState as unknown as TicTacToeGameState;
 
-	// gameState.game_type = "TICTACTOE";
     const backendBoard = mapBackendToFrontendBoard(gameState.board);
     const currentTurn: Player = gameState.turn === 2 ? "O" : "X";
     
     const line = gameState.winning_line || null; 
-
-    let winner: Player | "Empate" | null = null;
-    if (gameState.status === "FINISH") {
-        if (gameState.winner === 1) winner = "X";
-        else if (gameState.winner === 2) winner = "O";
-        else winner = null;
-    }
 
     const draw = gameState.status === "FINISH" && !gameState.winner;
 
@@ -73,7 +65,7 @@ export function useTicTacToe() {
         returnMenu();
     }
 
-    return { currentPlayer: currentTurn, winner, line, draw, backendBoard,
+    return { currentPlayer: currentTurn, line, draw, backendBoard,
 		gameState, mode, play, reset, startGame, returnMenu, joinGame
     };
 }

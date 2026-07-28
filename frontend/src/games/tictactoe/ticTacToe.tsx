@@ -6,7 +6,7 @@ import { drawBoard } from "./components/board";
 
 export function TicTacToe() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const { play, winner, line, draw: isDraw, gameState, backendBoard } = useTicTacToe();
+    const { play, line, draw: isDraw, gameState, backendBoard } = useTicTacToe();
 
     const mouseRef = useRef({ x: -1, y: -1, clicked: false });
 
@@ -40,7 +40,7 @@ export function TicTacToe() {
             ctx.stroke();
         }
 
-    }, [backendBoard, winner, line, gameState, isDraw]);
+    }, [backendBoard, line, gameState, isDraw]);
 
     useEffect(() => {
         draw();

@@ -77,7 +77,7 @@ function GameViewLobby() {
 
 function GameViewJoin() {
 	const { gameState, joinGame, returnMenu } = useGame();
-	const [code, setCode] = useState(gameState.game_id || "");
+	const [code, setCode] = useState(gameState.game_id ? String(gameState.game_id) : "");
 
 	return (
 		<div className="game-menu">
@@ -85,12 +85,12 @@ function GameViewJoin() {
 			<input
 				type="text"
 				placeholder="Código de la partida"
-				value={code || ""}
+				value={code}
 				onChange={(e) => { setCode(e.target.value); }}
 				className="game-menu__input"
 			/>
 			<button 
-				onClick={() => joinGame(code)}
+				onClick={() => joinGame(Number(code))}
 				className="game-menu__button"
 			>
 					Unirse a la partida
@@ -105,14 +105,14 @@ function GameViewJoin() {
 	)
 }
 
+ // TODO - Revisar como pasar Player y no winner como int (Para online creo que furula bien pero en local no coge cunado ganan O bien)
 function GameViewFinish() {
 	const { returnMenu, gameState } = useGame();
-	const winner = gameState.players.find(player => player.token === gameState.winner);
 
 	return (
 		<div className="game-menu">
-			{ gameState.winner ? (
-				<h2 className="game-menu__title">¡El jugador {winner?.username} ha ganado!</h2>
+			{ gameState.winner && gameState.winner.id !== 0 ? (
+				<h2 className="game-menu__title">¡El jugador {gameState.winner?.username} ha ganado!</h2>
 			) : (
 				<h2 className="game-menu__title">¡Empate!</h2>
 			)}
@@ -134,6 +134,10 @@ function GameViewWait() {
 		</div>
 	)
 }
+
+// function GameviewViwer() {
+// 	// TODO - Hacer vista para espectadores de la partida, donde diga que turno es y boton para salir de la vista de espectador
+// }
 
 function GameViewContent({ game, gameId, gameType }: { game: any; gameId?: string; gameType?: string; }) {
     const { gameState, leaveGame, setGameType, isMyTurn } = useGame();
@@ -162,7 +166,7 @@ function GameViewContent({ game, gameId, gameType }: { game: any; gameId?: strin
                 return;
             }
             if (gameId) {
-                leaveGame(gameId);
+                leaveGame(Number(gameId));
             }
         };
     }, [location.pathname, leaveGame, gameId]);

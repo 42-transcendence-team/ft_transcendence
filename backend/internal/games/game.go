@@ -8,15 +8,15 @@ import (
 )
 
 type Game struct {
-	ID         uint       `json:"id"`
-	Name       string     `json:"name"`
-	Players    []Player   `json:"players"`
-	Type       string     `json:"type"`
-	Turn       int        `json:"turn"`
-	Mode       string     `json:"mode"`
-	IsFinished bool       `json:"is_finished"`
-	CreatedAt  time.Time  `json:"created_at"`
-	ExpiresAt  *time.Time `json:"expires_at"`
+	ID         uint      `json:"id"`
+	Name       string    `json:"name"`
+	Players    []Player  `json:"players"`
+	Type       string    `json:"type"`
+	Turn       int       `json:"turn"`
+	Mode       string    `json:"mode"`
+	IsFinished bool      `json:"is_finished"`
+	Winner     Player    `json:"winner"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 type Player struct {
@@ -33,25 +33,34 @@ type GameEngine interface {
 	ProcessMove(userID uint, actionPayload json.RawMessage) error
 	GetState() interface{}
 	IsFinished() bool
-	GetWinner() (int, interface{})
-	IsFull() bool
+	GetWinner() (int, interface{}) // TODO - Revisar como pasar Player y no winner como int (Para online creo que furula bien pero en local no coge cunado ganan O bien)
 	DisconnectPlayer(userID uint) error
-	AddPlayer(userID uint, username string) error
+	ConnectPlayer(userID uint, username string) error
 }
 
 func (g *Game) GetCurrentPlayer() int { return g.Turn }
 
 func (g *Game) GetPlayers() []Player { return g.Players }
 
-func (g *Game) AddPlayer(userID uint, username string) error {
-	log.Printf("Intentando añadir jugador %d al juego %d", userID, g.ID)
+func (g *Game) ConnectPlayer(userID uint, username string) error {
 	if g.Mode == "local" && len(g.Players) >= 1 {
 		return appErr.NewConflict("no se puede unir a un juego local")
 	}
+
 	if g.Mode == "online" && len(g.Players) >= 2 {
 		err := g.ReconnectPlayer(userID)
 		if err != nil {
-			return err
+			newViwer := Player{
+				ID:        userID,
+				Type:      "viewer",
+				Token:     0,
+				Username:  username,
+				Connected: true,
+				LeftAt:    time.Time{},
+			}
+			g.Players = append(g.Players, newViwer)
+			log.Printf("Jugador %d añadido como espectador al juego %d", userID, g.ID)
+			return nil
 		}
 		log.Printf("Jugador %d reconectado al juego %d", userID, g.ID)
 		return nil

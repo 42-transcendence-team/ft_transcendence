@@ -14,11 +14,11 @@ interface Player {
 }
 
 export interface GameState {
-    game_id: string;
+    game_id: number;
     game_type: string;
     status: GameStatus;
     players: Player[];
-    winner?: string | number;
+    winner?: Player;
     board?: unknown;
     last_dice_roll?: number;
     turn?: number;
@@ -32,14 +32,14 @@ interface GameContextType {
     setGameType: (gameType: GameState['game_type']) => void;
     returnMenu: () => void;
     createGame: (gameType: GameState['game_type'], mode: GameMode ) => void;
-    joinGame: (gameId: string) => void;
+    joinGame: (gameId: number) => void;
     makeMove: (moveData: any) => void;
     rollDice: () => void;
-    leaveGame: (gameId: string) => void;
+    leaveGame: (gameId: number) => void;
 }
 
 const initialGameState: GameState = {
-	game_id: '',
+	game_id: 0,
 	game_type: '',
 	status: 'MENU',
 	players: [],
@@ -90,21 +90,21 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
         });
 
         const unsubscribeGameCreated = subscribe("game_created", (message: any) => {
-            if (!message.payload) return;
+            if (!message.state) return;
             
-            const { game_id, game_type, state, status } = message.payload;
+            const { id, type, board } = message.state;
             
-            const slug = game_type.toLowerCase(); 
+            const slug = type.toLowerCase(); 
 
 			setGameState({
-				game_id: game_id,
-				game_type: game_type,
-				status: status,
+				game_id: id,
+				game_type: type,
+				status: message.status,
 				players: [],
-				board: state.board,
+				board: board,
 			});
 
-            navigate(`/app/games/${slug}/${game_id}`, { replace: true });
+            navigate(`/app/games/${slug}/${id}`, { replace: true });
         });
 
 		const unsubscribeGameFinished = subscribe("game_finished", (message: any) => {
@@ -191,18 +191,18 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
         });
     }, [user, send]);
 
-    const joinGame = useCallback((gameId: string) => {
+    const joinGame = useCallback((gameId: number) => {
 		if (!user) return;
 
 		const currentStatus = gameStateRef.current.status;
 		const currentRoomId = gameStateRef.current.game_id;
 
-		if (!gameId || gameId.trim() === "") {
+		if (!gameId || gameId === 0) {
 			console.error("Invalid game ID provided for joining.");
 			return;
 		}
 
-		if (currentStatus === "LOBBY" && String(currentRoomId) === String(gameId)) {
+		if (currentStatus === "LOBBY" && currentRoomId === gameId) {
 			return;
 		}
 
@@ -246,7 +246,7 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
         });
     }, [user, gameState.game_id, send]);
 
-    const leaveGame = useCallback((gameId: string) => {
+    const leaveGame = useCallback((gameId: number) => {
         if (!user) return;
         console.log(`El usuario ${user.id} está abandonando el juego ${gameId}`);
         send({

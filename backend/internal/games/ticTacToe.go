@@ -16,23 +16,17 @@ func (t *TicTacToe) Init() {
 	t.Turn = 1
 }
 
-func NewTicTacToe(mode string) *TicTacToe {
+func NewTicTacToe(id uint, mode, gameType string) *TicTacToe {
 	return &TicTacToe{
-		Game:  Game{Turn: 1, Players: make([]Player, 0, 2), Mode: mode},
+		Game:  Game{Turn: 1, Players: make([]Player, 0, 2), Mode: mode, ID: id, Type: gameType},
 		Board: [3][3]int{}}
 }
-
-func (t *TicTacToe) GetCurrentPlayer() int { return t.Turn }
 
 func (t *TicTacToe) GetBoard() [3][3]int { return t.Board }
 
 func (t *TicTacToe) GetState() interface{} { return t }
 
-func (t *TicTacToe) IsFinished() bool { return false }
-
-func (t *TicTacToe) GetPlayers() []Player { return t.Players }
-
-func (t *TicTacToe) LeaveGame(userID uint) error { return t.RemovePlayer(userID) }
+func (t *TicTacToe) IsFinished() bool { return t.IsFull() }
 
 func (t *TicTacToe) Reset() {
 	t.Board = [3][3]int{}
