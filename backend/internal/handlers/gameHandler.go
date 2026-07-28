@@ -104,7 +104,7 @@ func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessag
 		}
 	}
 
-	err = gh.gameManager.ActiveGames[newGameID].JoinGame(c.GetUserID(), c.GetUsername())
+	err = gh.gameManager.ActiveGames[newGameID].AddPlayer(c.GetUserID(), c.GetUsername())
 	if err != nil {
 		log.Printf("Error al unir al jugador: %v", err)
 		return
@@ -147,7 +147,7 @@ func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage)
 		return
 	}
 
-	err = engine.JoinGame(c.GetUserID(), c.GetUsername())
+	err = engine.AddPlayer(c.GetUserID(), c.GetUsername())
 	if err != nil {
 		log.Printf("Error al unir al jugador: %v", err)
 		return
@@ -173,7 +173,7 @@ func (gh *GameHandler) HandleLeaveGame(c ws.ClientConn, msg *dto.IncomingMessage
 
 	log.Printf("Usuario %d abandonó la partida %s", c.GetUserID(), leaveData.GameID)
 
-	err = gh.gameManager.ActiveGames[leaveData.GameID].LeaveGame(c.GetUserID())
+	err = gh.gameManager.ActiveGames[leaveData.GameID].DisconnectPlayer(c.GetUserID())
 	if err != nil {
 		log.Printf("Error al abandonar la partida: %v", err)
 		return

@@ -1,8 +1,8 @@
-FROM docker.io/library/golang:1.25.7-alpine
+FROM docker.io/library/golang:1.26.5-alpine
 
 WORKDIR /app
 
-RUN go install github.com/air-verse/air@latest
+RUN apk add --no-cache git && go install github.com/air-verse/air@latest
 
 COPY go.mod go.sum ./
 
