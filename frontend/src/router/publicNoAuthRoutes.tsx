@@ -3,6 +3,7 @@ import { Register } from "@pages/Register";
 
 import { PublicLayout } from "layouts/publicLayout";
 import { GuestRoute } from "@components/auth-router/GuestRoute";
+import Register42 from "@pages/Register42";
 
 export const PublicNoAuthRoutes = {
   element: (
@@ -13,5 +14,6 @@ export const PublicNoAuthRoutes = {
   children: [
     { path: "login", element: <Login /> },
     { path: "register", element: <Register /> },
+    { path: "42register", element: <Register42 /> },
   ],
 };

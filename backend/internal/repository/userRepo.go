@@ -341,8 +341,6 @@ func (r *UserRepository) FindById(userID uint) (*models.User, error) {
 	return &user, err
 }
 
-// FUNCIONES PARA CHATSERVICE
-
 func (r *UserRepository) GetUserID(userID uint) (*dto.ChatUserInfo, error) {
 	var user dto.ChatUserInfo
 
@@ -356,4 +354,15 @@ func (r *UserRepository) GetUserID(userID uint) (*dto.ChatUserInfo, error) {
 	}
 
 	return &user, nil
+}
+
+func (r *UserRepository) FindByOAuth(OAuthID int) (*models.User, error) {
+	var user models.User
+
+	err := r.db.Where("o_auth_id = ?", OAuthID).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, err
 }
