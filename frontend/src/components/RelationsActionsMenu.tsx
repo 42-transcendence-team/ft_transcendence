@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { FiMoreHorizontal } from "react-icons/fi";
-import type { UserRelation } from "../api/userSearch";
+import type { UserRelation } from "../api/UserSearch";
 import "../styles/components/_relationsActionsMenu.scss"; 
 
 type RelationsActionsMenuProps = {
