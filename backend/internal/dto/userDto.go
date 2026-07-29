@@ -134,3 +134,7 @@ type UserProfileResponse struct {
 	CanSendRequest bool    `json:"can_send_request"`
 	RequestID      *uint   `json:"request_id"`
 }
+
+type UpdateStateRequest struct {
+	State string `json:"state" binding:"required"`
+}

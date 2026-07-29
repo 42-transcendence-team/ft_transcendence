@@ -43,10 +43,6 @@ export const ProfileContent = ({
 					</button>
 				</div>
 			)}
-
-			<div className="profile__posts-placeholder">
-				Sección de publicaciones pendiente.
-			</div>
 		</div>
 	);
 };

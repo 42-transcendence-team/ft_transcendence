@@ -273,6 +273,14 @@ func (r *UserRepository) UpdateBannerPath(
 	return result.RowsAffected, result.Error
 }
 
+func (r *UserRepository) UpdateUserState(userID uint, state string) (int64, error) {
+	result := r.db.Model(&models.User{}).
+		Where("id = ?", userID).
+		Update("state", state)
+
+	return result.RowsAffected, result.Error
+}
+
 func (r *UserRepository) Remove2FA(request dto.UserRemove2FA) (int64, error) {
 	result := r.db.Model(&models.User{}).
 		Where("id = ?", request.Id).

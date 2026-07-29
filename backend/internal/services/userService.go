@@ -380,6 +380,24 @@ func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error
 	return nil
 }
 
+func (s *UserService) UpdateState(userID uint, state string) error {
+	if len(state) > 100 {
+		return appErr.NewValidation(map[string]string{
+			"state": "state_too_long",
+		})
+	}
+
+	rows, err := s.UserRepo.UpdateUserState(userID, state)
+	if err != nil {
+		return appErr.NewInternal(err)
+	}
+	if rows == 0 {
+		return appErr.NewNotFound("user_not_found")
+	}
+
+	return nil
+}
+
 func (s *UserService) GetUserByLogin(
 	login string,
 ) (*models.User, error) {

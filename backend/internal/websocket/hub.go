@@ -95,3 +95,15 @@ func (h *Hub) SendMessagesToUser(userID uint, message[] byte) {
 		}
 	}
 }
+
+func (h *Hub) BroadcastAll(message []byte) {
+	h.Mu.RLock()
+	defer h.Mu.RUnlock()
+
+	for _, client := range h.ClientsConnected {
+		select {
+		case client.SendChan <- message:
+		default:
+		}
+	}
+}
