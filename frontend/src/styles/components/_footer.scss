@@ -104,3 +104,22 @@
     text-align: left;
   }
 }
+
+/*
+ * El footer ya cambiaba de color en hover, pero el enlace era blanco
+ * sobre fondo morado tanto antes como después. El subrayado hace visible
+ * el hover y el enlace correspondiente a la ruta actual.
+ */
+.footer__list a:hover,
+.footer__list a.active,
+.footer__list a[aria-current="page"] {
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 4px;
+}
+
+.footer a:focus-visible {
+	outline: 3px solid rgba(255, 255, 255, 0.65);
+	outline-offset: 3px;
+	border-radius: 4px;
+}
