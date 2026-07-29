@@ -18,6 +18,8 @@ type ImageUploadFieldProps = {
 
 // Campo reutilizable para seleccionar, validar y previsualizar imágenes.
 // La validación concreta se recibe desde el componente que lo utiliza.
+// Los archivos que no son imágenes, como los PDF de posts, muestran su nombre
+// en lugar de intentar generar una previsualización con <img>.
 export const ImageUploadField = ({
 	id,
 	label,
@@ -34,13 +36,16 @@ export const ImageUploadField = ({
 	const [previewUrl, setPreviewUrl] =
 		useState<string | null>(null);
 
+	const isImage = Boolean(file?.type.startsWith("image/"));
+
 	useEffect(() => {
-		if (!file) {
+		if (!file || !file.type.startsWith("image/")) {
 			setPreviewUrl(null);
 			return;
 		}
 
 		// Creamos una URL temporal para mostrar el archivo local sin subirlo.
+		// Solo se genera para imágenes: un PDF no debe renderizarse con <img>.
 		const objectUrl = URL.createObjectURL(file);
 		setPreviewUrl(objectUrl);
 
@@ -117,13 +122,23 @@ export const ImageUploadField = ({
 				onChange={handleFileChange}
 			/>
 
-			{previewUrl && (
+			{file && (
 				<div className="image-upload-field__preview">
-					<img
-						className="image-upload-field__image"
-						src={previewUrl}
-						alt={previewAlt}
-					/>
+					{previewUrl ? (
+						<img
+							className="image-upload-field__image"
+							src={previewUrl}
+							alt={previewAlt}
+						/>
+					) : (
+						// Los documentos no tienen previsualización visual:
+						// únicamente se muestra el nombre seleccionado.
+						<div className="image-upload-field__file">
+							<span className="image-upload-field__file-name">
+								{file.name}
+							</span>
+						</div>
+					)}
 
 					<button
 						className="image-upload-field__remove"
@@ -131,7 +146,7 @@ export const ImageUploadField = ({
 						disabled={disabled}
 						onClick={handleRemove}
 					>
-						Remove image
+						{isImage ? "Remove image" : "Remove file"}
 					</button>
 				</div>
 			)}

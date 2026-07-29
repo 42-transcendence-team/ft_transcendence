@@ -1,6 +1,11 @@
-import { useEffect, useState } from "react";
+import {
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { useParams } from "react-router-dom";
 
+import { getPostsByUserId, type PostReactionState, type PostSummary} from "../api/Posts";
 import {
 	getUserPresence,
 	getUserProfile,
@@ -24,21 +29,26 @@ import { ProfileHeader } from "../components/profile/ProfileHeader";
 import { ProfileContent } from "../components/profile/ProfileContent";
 
 import type { UserPresence } from "../components/users/UserAvatar";
+
+import { NotFound } from "./NotFound";
 import { AvatarEditorModal } from "../components/users/AvatarEditorModal";
 import { BannerEditorModal } from "../components/users/BannerEditorModal";
 import { PostImageModal } from "../components/posts/PostImageModal";
-
-import { NotFound } from "./NotFound";
+import { PostList } from "../components/posts/PostList";
 
 import "../styles/pages/_profile.scss";
 
-function getImageSource(imagePath: string): string {
+function getImageSource(
+	imagePath: string,
+): string {
 	return imagePath.startsWith("/")
 		? imagePath
 		: `/${imagePath}`;
 }
 
-function isApiError(error: unknown): error is ApiError {
+function isApiError(
+	error: unknown,
+): error is ApiError {
 	return (
 		typeof error === "object" &&
 		error !== null &&
@@ -47,8 +57,25 @@ function isApiError(error: unknown): error is ApiError {
 	);
 }
 
+function appendUniquePosts(
+	currentPosts: PostSummary[],
+	incomingPosts: PostSummary[],
+): PostSummary[] {
+	const knownPostIDs = new Set(
+		currentPosts.map((post) => post.id),
+	);
+
+	return [
+		...currentPosts,
+		...incomingPosts.filter(
+			(post) => !knownPostIDs.has(post.id),
+		),
+	];
+}
+
 export const Profile = () => {
-	const { username } = useParams<{ username: string }>();
+	const { username } =
+		useParams<{ username: string }>();
 
 	const {
 		user: authenticatedUser,
@@ -86,6 +113,37 @@ export const Profile = () => {
 	const [bannerImageFailed, setBannerImageFailed] =
 		useState(false);
 
+	const [profilePosts, setProfilePosts] =
+		useState<PostSummary[]>([]);
+
+	const [postsPage, setPostsPage] =
+		useState(1);
+
+	const [postsTotalPages, setPostsTotalPages] =
+		useState(0);
+
+	const [isLoadingPosts, setIsLoadingPosts] =
+		useState(false);
+
+	const [
+		isLoadingMorePosts,
+		setIsLoadingMorePosts,
+	] = useState(false);
+
+	const [postsError, setPostsError] =
+		useState<string | null>(null);
+
+	/*
+	 * Permite ignorar respuestas de posts pertenecientes al perfil
+	 * anterior cuando la ruta cambia mientras había una petición activa.
+	 */
+	const postsOwnerIDRef =
+		useRef<number | null>(null);
+
+	/*
+	 * Carga inicial del perfil indicado en la ruta.
+	 * Esta petición incrementa el contador de visitas una sola vez.
+	 */
 	useEffect(() => {
 		let cancelled = false;
 
@@ -145,13 +203,94 @@ export const Profile = () => {
 	/*
 	 * Actualiza únicamente la presencia del usuario sin
 	 * volver a cargar el perfil completo.
+	 * Carga la primera página del usuario visitado.
+	 * Cada cambio de perfil limpia antes las tarjetas anteriores.
 	 */
 	useEffect(() => {
-		if (!profileUser?.login || profileNotFound) {
+		const ownerID =
+			profileUser?.id ?? null;
+
+		postsOwnerIDRef.current = ownerID;
+
+		setProfilePosts([]);
+		setPostsPage(1);
+		setPostsTotalPages(0);
+		setPostsError(null);
+		setIsLoadingMorePosts(false);
+
+		if (ownerID === null) {
+			setIsLoadingPosts(false);
 			return;
 		}
 
-		const profileLogin = profileUser.login;
+		let cancelled = false;
+
+		const loadInitialPosts = async () => {
+			try {
+				setIsLoadingPosts(true);
+
+				const response =
+					await getPostsByUserId(
+						ownerID,
+						1,
+						20,
+					);
+
+				if (
+					cancelled ||
+					postsOwnerIDRef.current !== ownerID
+				) {
+					return;
+				}
+
+				setProfilePosts(response.data);
+				setPostsPage(
+					response.pagination.page,
+				);
+				setPostsTotalPages(
+					response.pagination.totalPages,
+				);
+			} catch {
+				if (
+					!cancelled &&
+					postsOwnerIDRef.current === ownerID
+				) {
+					setPostsError(
+						"The posts could not be loaded.",
+					);
+				}
+			} finally {
+				if (
+					!cancelled &&
+					postsOwnerIDRef.current === ownerID
+				) {
+					setIsLoadingPosts(false);
+				}
+			}
+		};
+
+		void loadInitialPosts();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [profileUser?.id]);
+
+	/*
+	 * Consulta únicamente el estado almacenado en Redis.
+	 * No vuelve a cargar el perfil completo y, por tanto,
+	 * no incrementa artificialmente el contador de visitas.
+	 */
+	useEffect(() => {
+		if (
+			!profileUser?.login ||
+			profileNotFound
+		) {
+			return;
+		}
+
+		const profileLogin =
+			profileUser.login;
 
 		let cancelled = false;
 		let requestInFlight = false;
@@ -165,26 +304,32 @@ export const Profile = () => {
 
 			try {
 				const isOnline =
-					await getUserPresence(profileLogin);
+					await getUserPresence(
+						profileLogin,
+					);
 
 				if (cancelled) {
 					return;
 				}
 
-				setProfileUser((currentProfile) => {
-					if (
-						!currentProfile ||
-						currentProfile.login !== profileLogin ||
-						currentProfile.isOnline === isOnline
-					) {
-						return currentProfile;
-					}
+				setProfileUser(
+					(currentProfile) => {
+						if (
+							!currentProfile ||
+							currentProfile.login !==
+								profileLogin ||
+							currentProfile.isOnline ===
+								isOnline
+						) {
+							return currentProfile;
+						}
 
-					return {
-						...currentProfile,
-						isOnline,
-					};
-				});
+						return {
+							...currentProfile,
+							isOnline,
+						};
+					},
+				);
 			} catch {
 				/*
 				 * Si falla una comprobación puntual, se conserva
@@ -197,15 +342,19 @@ export const Profile = () => {
 
 		void refreshPresence();
 
-		const intervalId = window.setInterval(() => {
-			void refreshPresence();
-		}, 30_000);
+		const intervalId =
+			window.setInterval(() => {
+				void refreshPresence();
+			}, 30_000);
 
 		return () => {
 			cancelled = true;
 			window.clearInterval(intervalId);
 		};
-	}, [profileUser?.login, profileNotFound]);
+	}, [
+		profileUser?.login,
+		profileNotFound,
+	]);
 
 	/*
 	 * Sincroniza el perfil propio después de editar
@@ -215,7 +364,8 @@ export const Profile = () => {
 		if (
 			!profileUser ||
 			!authenticatedUser ||
-			profileUser.login !== authenticatedUser.login
+			profileUser.login !==
+				authenticatedUser.login
 		) {
 			return;
 		}
@@ -234,9 +384,11 @@ export const Profile = () => {
 					authenticatedUser.surname ??
 					currentProfile.surname,
 				avatarPath:
-					authenticatedUser.avatarPath ?? null,
+					authenticatedUser.avatarPath ??
+					null,
 				bannerPath:
-					authenticatedUser.bannerPath ?? null,
+					authenticatedUser.bannerPath ??
+					null,
 			};
 		});
 	}, [
@@ -262,7 +414,9 @@ export const Profile = () => {
 			}
 		};
 
-		image.src = getImageSource(profileUser.avatarPath);
+		image.src = getImageSource(
+			profileUser.avatarPath,
+		);
 
 		return () => {
 			active = false;
@@ -272,7 +426,6 @@ export const Profile = () => {
 	useEffect(() => {
 		setBannerImageFailed(false);
 	}, [profileUser?.bannerPath]);
-
 	/*
 	 * Ejecuta una acción de amistad y después vuelve a cargar
 	 * el perfil para obtener relation y request_id actualizados.
@@ -360,6 +513,94 @@ export const Profile = () => {
 		);
 	};
 
+	const handleLoadMorePosts = async () => {
+		if (
+			!profileUser ||
+			isLoadingMorePosts ||
+			postsPage >= postsTotalPages
+		) {
+			return;
+		}
+
+		const ownerID = profileUser.id;
+		const nextPage = postsPage + 1;
+
+		try {
+			setIsLoadingMorePosts(true);
+			setPostsError(null);
+
+			const response =
+				await getPostsByUserId(
+					ownerID,
+					nextPage,
+					20,
+				);
+
+			if (
+				postsOwnerIDRef.current !== ownerID
+			) {
+				return;
+			}
+
+			setProfilePosts((currentPosts) =>
+				appendUniquePosts(
+					currentPosts,
+					response.data,
+				),
+			);
+
+			setPostsPage(
+				response.pagination.page,
+			);
+
+			setPostsTotalPages(
+				response.pagination.totalPages,
+			);
+		} catch {
+			if (
+				postsOwnerIDRef.current === ownerID
+			) {
+				setPostsError(
+					"More posts could not be loaded.",
+				);
+			}
+		} finally {
+			if (
+				postsOwnerIDRef.current === ownerID
+			) {
+				setIsLoadingMorePosts(false);
+			}
+		}
+	};
+
+	const handlePostDeleted = (
+		postId: number,
+	) => {
+		setProfilePosts((currentPosts) =>
+			currentPosts.filter(
+				(post) => post.id !== postId,
+			),
+		);
+	};
+
+	const handlePostReactionUpdated = (
+		reactionState: PostReactionState,
+	) => {
+		setProfilePosts((currentPosts) =>
+			currentPosts.map((post) =>
+				post.id === reactionState.postId
+					? {
+							...post,
+							likeCount:
+								reactionState.likeCount,
+							dislikeCount:
+								reactionState.dislikeCount,
+						}
+					: post,
+			),
+		);
+	};
+
 	if (authLoading || isLoadingProfile) {
 		return (
 			<div className="loading-screen">
@@ -390,10 +631,13 @@ export const Profile = () => {
 	}
 
 	const isOwnProfile =
-		authenticatedUser.login === profileUser.login;
+		authenticatedUser.login ===
+		profileUser.login;
 
 	const profilePresence: UserPresence =
-		profileUser.isOnline ? "online" : "offline";
+		profileUser.isOnline
+			? "online"
+			: "offline";
 
 	const hasCustomAvatar =
 		Boolean(profileUser.avatarPath) &&
@@ -480,6 +724,71 @@ export const Profile = () => {
 					isOwnProfile={isOwnProfile}
 					canViewPrivateContent={canViewPrivateContent}
 				/>
+
+				<div className="profile__posts">
+						{isLoadingPosts && (
+							<div className="profile__posts-state">
+								Loading posts.
+							</div>
+						)}
+
+						{!isLoadingPosts &&
+							profilePosts.length === 0 &&
+							postsError && (
+								<div className="profile__posts-error">
+									{postsError}
+								</div>
+							)}
+
+						{!isLoadingPosts &&
+							profilePosts.length === 0 &&
+							!postsError && (
+								<div className="profile__empty">
+									This user has not posted
+									anything yet.
+								</div>
+							)}
+
+						{profilePosts.length > 0 && (
+							<>
+								{postsError && (
+									<div className="profile__posts-error">
+										{postsError}
+									</div>
+								)}
+
+								<PostList
+									posts={
+										profilePosts
+									}
+									onPostDeleted={
+										handlePostDeleted
+									}
+									onPostReactionUpdated={
+										handlePostReactionUpdated
+									}
+								/>
+
+								{postsPage <
+									postsTotalPages && (
+									<button
+										className="post-list__load-more"
+										type="button"
+										disabled={
+											isLoadingMorePosts
+										}
+										onClick={() =>
+											void handleLoadMorePosts()
+										}
+									>
+										{isLoadingMorePosts
+											? "Loading..."
+											: "Load more"}
+									</button>
+								)}
+							</>
+						)}
+					</div>
 			</div>
 
 			{isOwnProfile && (
@@ -508,22 +817,25 @@ export const Profile = () => {
 				</>
 			)}
 
-			{!isOwnProfile && hasCustomAvatar && (
-				<PostImageModal
-					open={isAvatarViewerOpen}
-					imageSrc={
-						profileUser.avatarPath
-							? getImageSource(
-									profileUser.avatarPath,
-								)
-							: null
-					}
-					alt={`${profileUser.login} profile image`}
-					onClose={() =>
-						setIsAvatarViewerOpen(false)
-					}
-				/>
-			)}
+			{!isOwnProfile &&
+				hasCustomAvatar && (
+					<PostImageModal
+						open={isAvatarViewerOpen}
+						imageSrc={
+							profileUser.avatarPath
+								? getImageSource(
+										profileUser.avatarPath,
+									)
+								: null
+						}
+						alt={
+							`${profileUser.login} profile image`
+						}
+						onClose={() =>
+							setIsAvatarViewerOpen(false)
+						}
+					/>
+				)}
 		</div>
 	);
 };

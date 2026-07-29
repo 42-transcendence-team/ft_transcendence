@@ -146,8 +146,26 @@ body {
 	&__posts {
 		display: flex;
 		flex-direction: column;
-		overflow: hidden;
+		gap: 1rem;
+		overflow: visible;
 		border-radius: 10px;
+	}
+	
+	&__posts-state,
+	&__posts-error {
+		padding: 2rem 1rem;
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.5);
+		text-align: center;
+	}
+	
+	&__posts-state {
+		color: $color-text-light;
+	}
+	
+	&__posts-error {
+		color: #b91c1c;
+		font-weight: 600;
 	}
 
 	&__empty {

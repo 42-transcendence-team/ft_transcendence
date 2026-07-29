@@ -34,7 +34,9 @@ func NewPostService(
 	}
 }
 
-func (s *PostService) CreatePost(input dto.CreatePostInput) (*dto.PostResponse, error) {
+func (s *PostService) CreatePost(
+	input dto.CreatePostInput,
+) (*dto.PostResponse, error) {
 	content := strings.TrimSpace(input.Content)
 
 	var contentPtr *string
@@ -44,28 +46,48 @@ func (s *PostService) CreatePost(input dto.CreatePostInput) (*dto.PostResponse, 
 
 	var imagePathPtr *string
 	if input.ImagePath != nil {
-		imagePath := strings.TrimSpace(*input.ImagePath)
+		imagePath := strings.TrimSpace(
+			*input.ImagePath,
+		)
+
 		if imagePath != "" {
 			imagePathPtr = &imagePath
 		}
 	}
 
-	if contentPtr == nil && imagePathPtr == nil {
-		return nil, appErr.NewValidation(map[string]string{
-			"post": "content_or_image_required",
-		})
+	var fileNamePtr *string
+	if imagePathPtr != nil && input.FileName != nil {
+		fileName := strings.TrimSpace(
+			*input.FileName,
+		)
+
+		if fileName != "" {
+			fileNamePtr = &fileName
+		}
 	}
 
-	if contentPtr != nil && len([]rune(*contentPtr)) > maxPostContentLength {
-		return nil, appErr.NewValidation(map[string]string{
-			"content": "max",
-		})
+	if contentPtr == nil && imagePathPtr == nil {
+		return nil, appErr.NewValidation(
+			map[string]string{
+				"post": "content_or_image_required",
+			},
+		)
+	}
+
+	if contentPtr != nil &&
+		len([]rune(*contentPtr)) > maxPostContentLength {
+		return nil, appErr.NewValidation(
+			map[string]string{
+				"content": "max",
+			},
+		)
 	}
 
 	post := models.Post{
 		UserID:    input.UserID,
 		Content:   contentPtr,
 		ImagePath: imagePathPtr,
+		FileName:  fileNamePtr,
 	}
 
 	createdPost, err := s.postRepo.Create(&post)
@@ -80,45 +102,62 @@ func (s *PostService) CreatePost(input dto.CreatePostInput) (*dto.PostResponse, 
 		false,
 		false,
 	)
+
 	return &response, nil
 }
 
-func (s *PostService) GetPostByID(postID uint, currentUserID uint) (*dto.PostResponse, error) {
+func (s *PostService) GetPostByID(
+	postID uint,
+	currentUserID uint,
+) (*dto.PostResponse, error) {
 	post, err := s.postRepo.FindByID(postID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, appErr.NewNotFound("post_not_found")
+			return nil, appErr.NewNotFound(
+				"post_not_found",
+			)
 		}
+
 		return nil, appErr.NewInternal(err)
 	}
 
-	likeCount, err := s.postLikeRepo.CountByPostIDAndReaction(
-		postID,
-		models.PostReactionLike,
-	)
+	likeCount, err :=
+		s.postLikeRepo.CountByPostIDAndReaction(
+			postID,
+			models.PostReactionLike,
+		)
+
 	if err != nil {
 		return nil, appErr.NewInternal(err)
 	}
 
-	dislikeCount, err := s.postLikeRepo.CountByPostIDAndReaction(
-		postID,
-		models.PostReactionDislike,
-	)
+	dislikeCount, err :=
+		s.postLikeRepo.CountByPostIDAndReaction(
+			postID,
+			models.PostReactionDislike,
+		)
+
 	if err != nil {
 		return nil, appErr.NewInternal(err)
 	}
 
 	currentReaction, exists, err :=
-		s.postLikeRepo.GetReactionByPostAndUser(postID, currentUserID)
+		s.postLikeRepo.GetReactionByPostAndUser(
+			postID,
+			currentUserID,
+		)
+
 	if err != nil {
 		return nil, appErr.NewInternal(err)
 	}
 
 	likedByCurrentUser :=
-		exists && currentReaction == models.PostReactionLike
+		exists &&
+			currentReaction == models.PostReactionLike
 
 	dislikedByCurrentUser :=
-		exists && currentReaction == models.PostReactionDislike
+		exists &&
+			currentReaction == models.PostReactionDislike
 
 	response := dto.NewPostResponse(
 		*post,
@@ -131,17 +170,146 @@ func (s *PostService) GetPostByID(postID uint, currentUserID uint) (*dto.PostRes
 	return &response, nil
 }
 
-func (s *PostService) DeletePost(userID uint, postID uint) (*string, error) {
+// ListFeed devuelve exclusivamente publicaciones de las amistades
+// registradas del usuario autenticado.
+func (s *PostService) ListFeed(
+	currentUserID uint,
+	page int,
+	limit int,
+) (*dto.PostListResponse, error) {
+	posts, total, err :=
+		s.postRepo.ListFeedByFriendships(
+			currentUserID,
+			page,
+			limit,
+		)
+
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	return s.buildPostListResponse(
+		posts,
+		total,
+		page,
+		limit,
+	)
+}
+
+// ListPostsByUserID devuelve los posts del propietario del perfil.
+func (s *PostService) ListPostsByUserID(
+	userID uint,
+	page int,
+	limit int,
+) (*dto.PostListResponse, error) {
+	posts, total, err :=
+		s.postRepo.ListByUserID(
+			userID,
+			page,
+			limit,
+		)
+
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	return s.buildPostListResponse(
+		posts,
+		total,
+		page,
+		limit,
+	)
+}
+
+// buildPostListResponse construye los DTO de tarjeta y obtiene
+// todos sus contadores mediante una única consulta agrupada.
+func (s *PostService) buildPostListResponse(
+	posts []models.Post,
+	total int64,
+	page int,
+	limit int,
+) (*dto.PostListResponse, error) {
+	postIDs := make([]uint, 0, len(posts))
+
+	for _, post := range posts {
+		postIDs = append(postIDs, post.ID)
+	}
+
+	countsByPostID, err :=
+		s.postLikeRepo.CountGroupedByPostIDs(
+			postIDs,
+		)
+
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
+	summaries := make(
+		[]dto.PostSummaryResponse,
+		0,
+		len(posts),
+	)
+
+	for _, post := range posts {
+		reactionCounts := countsByPostID[post.ID]
+
+		summaries = append(
+			summaries,
+			dto.NewPostSummaryResponse(
+				post,
+				reactionCounts.LikeCount,
+				reactionCounts.DislikeCount,
+			),
+		)
+	}
+
+	return &dto.PostListResponse{
+		Data: summaries,
+		Pagination: dto.PaginationResponse{
+			Page:  page,
+			Limit: limit,
+			Total: total,
+			TotalPages: calculateTotalPages(
+				total,
+				limit,
+			),
+		},
+	}, nil
+}
+
+func calculateTotalPages(
+	total int64,
+	limit int,
+) int {
+	if total == 0 || limit <= 0 {
+		return 0
+	}
+
+	return int(
+		(total + int64(limit) - 1) /
+			int64(limit),
+	)
+}
+
+func (s *PostService) DeletePost(
+	userID uint,
+	postID uint,
+) (*string, error) {
 	post, err := s.postRepo.FindByID(postID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, appErr.NewNotFound("post_not_found")
+			return nil, appErr.NewNotFound(
+				"post_not_found",
+			)
 		}
+
 		return nil, appErr.NewInternal(err)
 	}
 
 	if post.UserID != userID {
-		return nil, appErr.NewForbidden("cannot_delete_other_user_post")
+		return nil, appErr.NewForbidden(
+			"cannot_delete_other_user_post",
+		)
 	}
 
 	imagePath := post.ImagePath
@@ -152,7 +320,9 @@ func (s *PostService) DeletePost(userID uint, postID uint) (*string, error) {
 	}
 
 	if rows == 0 {
-		return nil, appErr.NewNotFound("post_not_found")
+		return nil, appErr.NewNotFound(
+			"post_not_found",
+		)
 	}
 
 	return imagePath, nil

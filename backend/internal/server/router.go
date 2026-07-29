@@ -61,7 +61,7 @@ func (srv *HTTPServer) Router() {
 	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService)
 	chatHandler := handlers.NewChatHandler(hub, chatService)
 	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub, websocketService)
-	postHandler := handlers.NewPostHandler(friendService, hub, postService, imageStorage, notificationService)
+	postHandler := handlers.NewPostHandler(friendService, hub, notificationService, postService, imageStorage)
 	commentHandler := handlers.NewCommentHandler(hub, commentService, notificationService)
 	postLikeHandler := handlers.NewPostLikeHandler(hub, postLikeService, notificationService)
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
