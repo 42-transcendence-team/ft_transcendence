@@ -1,84 +1,129 @@
 @use '../abstracts/variables' as *;
 
 .privateLayout {
-	height: 100vh;
-	padding: 6px;
-	display: grid;
-	gap: 6px;
-	box-sizing: border-box;
-	width: 100%;
+  height: 100dvh;
+  box-sizing: border-box;
+  width: 100%;
+  display: grid;
+  min-width: 410px;
+  
+  /* =========================================
+     DISEÑO MÓVIL (Mobile First)
+     1 sola columna. Ocultamos paneles laterales.
+     ========================================= */
+  padding: 0; // Quitamos el padding para aprovechar toda la pantalla en móvil
+  gap: 0;
+  
+  grid-template-columns: 1fr;
+  grid-template-rows: 60px 1fr;
+  grid-template-areas:
+    "header"
+    "content";
 
-	grid-template-columns: 25% minmax(0, 1fr) 76px;
-	grid-template-rows: 60px minmax(0, 1fr) auto;
+  &__leftPanel,
+  &__rightPanel {
+    display: none; // Ocultamos los paneles en móvil
+  }
 
-	grid-template-areas:
-		"left header header"
-		"left content right"
-		"left footer right";
+  /* =========================================
+     DISEÑO ESCRITORIO / TABLET GRANDE (>= 768px)
+     Volvemos a tu diseño de 3 columnas
+     ========================================= */
+  @media (min-width: 768px) {
+    padding: 6px;
+    gap: 6px;
+    
+    grid-template-columns: 25% minmax(0, 1fr) 76px;
+    grid-template-rows: 60px minmax(0, 1fr) auto;
+    
+    grid-template-areas:
+      "left header header"
+      "left content right"
+      "left footer right";
 
-	&__leftPanel {
-		grid-area: left;
-		background-color: $dark-purple-background-light;
-		border-radius: 10px;
-		color: $dark-purple-main-text-light;
-		padding: 1rem;
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
-	}
+    &__leftPanel {
+      display: flex; // Volvemos a mostrar el panel izquierdo
+    }
 
-	&__header {
-		grid-area: header;
-	}
+    &__rightPanel {
+      display: block; // Volvemos a mostrar el panel derecho
+    }
+  }
 
-	&__content {
-		grid-area: content;
-		min-width: 0;
-		min-height: 0;
-		overflow: hidden;
-	}
+  /* =========================================
+     ESTILOS DE LAS ÁREAS (Comunes)
+     ========================================= */
+  &__leftPanel {
+    grid-area: left;
+    background-color: $dark-purple-background-light;
+    border-radius: 10px;
+    color: $dark-purple-main-text-light;
+    padding: 1rem;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
 
-	&__contentFrame {
-		height: 100%;
-		width: 100%;
-		background-color: rgba(255, 255, 255, 0.05);
-		display: flex;
-		flex-direction: column;
-	}
+  &__header {
+    grid-area: header;
+  }
 
-	&__contentInner {
-		flex: 1;
-		min-height: 0;
-		overflow-y: auto;
-		padding: 1rem;
-		background-color: $light-gray-common-components;
-		border-radius: 10px;
-		// para borrar la barra del scroll
-		&::-webkit-scrollbar {
-			width: 0 !important;
-			height: 0 !important;
-			display: none !important;
-			background: transparent !important;
-		}
-		scrollbar-width: none !important;
-		-ms-overflow-style: none !important;
-	}
+  &__content {
+    grid-area: content;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
 
-	&__rightPanel {
-		grid-area: right;
-		background-color: $light-gray-common-components;
-		border-radius: 10px;
-		color: black;
-		padding: 1rem;
-	}
+  &__contentFrame {
+    height: 100%;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+  }
 
-	&__footer {
-		grid-area: footer;
-		min-width: 0;
-		min-height: 0;
-		padding: 0;
-		background: transparent;
-		border-radius: 10px;
-		overflow: hidden;
-	}
+  &__contentInner {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0;
+    padding-bottom: 70px;
+    background-color: $light-gray-common-components;
+    
+    @media (min-width: 768px) {
+      border-radius: 10px; // Solo redondeamos en escritorio
+      padding: 1rem;
+    }
+
+    // Ocultar barra de scroll
+    &::-webkit-scrollbar {
+      width: 0 !important;
+      height: 0 !important;
+      display: none !important;
+      background: transparent !important;
+    }
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  &__rightPanel {
+    grid-area: right;
+    background-color: $light-gray-common-components;
+    border-radius: 10px;
+    color: black;
+    padding: 1rem;
+  }
+
+  &__footer {
+    grid-area: footer;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    
+    @media (min-width: 768px) {
+      border-radius: 10px;
+    }
+  }
 }

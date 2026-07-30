@@ -4,17 +4,12 @@
 
 .privHeader {
     width: 100%;
-
     background-color: $dark-purple-background-light;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     padding: 0 1rem;
-
     border-radius: 10px;
-
     box-shadow: 0 4px 12px $dark-purple-background-light;
 }
 
@@ -48,4 +43,11 @@
 	height: 60px;
 	width: auto;
 	filter: brightness(0) invert(1);
+}
+
+.privHeader__logo-text {
+    display: inline-block;
+    @media (max-width: 600px) {
+        display: none;
+    }
 }

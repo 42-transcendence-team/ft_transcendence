@@ -1,9 +1,10 @@
 import './styles/App.scss';
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AuthProvider as RouterAuthProvider } from "@components/auth-router/AuthContext";
 import { AuthProvider as UserAuthProvider } from "./context/AuthContext"; 
 import { apiRequest } from 'api/ApiRequest';
+import { MobileBottomNav } from "@components/MobileBottomNav";
 
 type AuthStatus = "loading" | "auth" | "guest"
 // loading -> aun no se si hay sesion activa
@@ -21,6 +22,11 @@ const App = () => {
 	// se renombra a refreshAuth() porque ahora no solo comprueba al cargar la app,
 	// sino que tambien la podremos reutilizar despues del login o del 2FA
 	// una funcion es asincrona cuando hace una peticion http
+	
+	const location = useLocation(); 
+	const shouldHideFooter = 
+		location.pathname.includes("/login") || 
+		location.pathname.includes("/register");
 	async function refreshAuth() {
 
 		setAuthStatus("loading");
@@ -49,6 +55,7 @@ const App = () => {
             <RouterAuthProvider authStatus={authStatus} refreshAuth={refreshAuth}>
                 <div className="content">
                     <Outlet />
+                    {!shouldHideFooter && <MobileBottomNav />}
                 </div>
             </RouterAuthProvider>
         </UserAuthProvider>
