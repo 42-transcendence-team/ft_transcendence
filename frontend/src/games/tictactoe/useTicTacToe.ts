@@ -4,7 +4,7 @@ import { type GameState } from "context/gameContext";
 
 export type Player = "X" | "O";
 
-export type TicTacToeMode = "local" | "online" | "join";
+type TicTacToeMode = "local" | "online" | "join";
 
 export type TicTacToeBoard = [
 	[Player | null, Player | null, Player | null],

@@ -13,12 +13,32 @@ import (
 type GameHandler struct {
 	gameManager *services.GameManager
 	hub         *ws.Hub
+	events      chan dto.GameEvent
 }
 
 func NewGameHandler(gameManager *services.GameManager, hub *ws.Hub) *GameHandler {
-	return &GameHandler{
+	gh := &GameHandler{
 		gameManager: gameManager,
 		hub:         hub,
+		events:      make(chan dto.GameEvent, 100),
+	}
+
+	go gh.listenGameEvents()
+
+	return gh
+}
+
+func (gh *GameHandler) listenGameEvents() {
+	for event := range gh.events {
+
+		_, exists := gh.hub.GetRoom(event.GameID)
+		if !exists {
+			continue
+		}
+
+		bytes, _ := json.Marshal(event)
+
+		gh.hub.BroadcastToRoom(event.GameID, bytes)
 	}
 }
 
@@ -78,7 +98,7 @@ func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessag
 
 	newGameID := gh.NewRoomId()
 
-	err = gh.gameManager.CreateGame(newGameID, createData.GameType, createData.Mode)
+	err = gh.gameManager.CreateGame(newGameID, createData.GameType, createData.Mode, gh.events)
 	if err != nil {
 		log.Printf("Error al crear el juego: %v", err)
 		return
@@ -112,6 +132,8 @@ func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessag
 	c.Send(responseBytes)
 }
 
+// TODO - Enviar mensajes de error al front para que el usuario sepa que algo salió mal y suscribirlos en front
+
 func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage) {
 	var joinData dto.JoinGame
 	err := json.Unmarshal(msg.Payload, &joinData)
@@ -122,11 +144,19 @@ func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage)
 
 	room := gh.hub.CreateRoom(joinData.GameID, fmt.Sprintf("Game-%d", joinData.GameID), false)
 
-	c.JoinRoom(room)
-
 	engine, ok := gh.gameManager.ActiveGames[joinData.GameID]
 	if !ok {
 		log.Printf("Error: Partida %d no existe en GameManager", joinData.GameID)
+		return
+	}
+
+	if engine.GetType() != joinData.Type {
+		message := map[string]interface{}{
+			"type":    "game_join_error",
+			"message": fmt.Sprintf("Tipo de juego no coincide. Esperado: %s, Recibido: %s", engine.GetType(), joinData.Type),
+		}
+		messageBytes, _ := json.Marshal(message)
+		c.Send(messageBytes)
 		return
 	}
 
@@ -135,6 +165,8 @@ func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage)
 		log.Printf("Error al unir al jugador: %v", err)
 		return
 	}
+
+	c.JoinRoom(room)
 
 	broadcast := map[string]interface{}{
 		"type":   "game_update",
@@ -199,13 +231,12 @@ func (gh *GameHandler) HandleMakeMove(c ws.ClientConn, msg *dto.IncomingMessage)
 	var broadcastBytes []byte
 
 	winner, winningLine := engine.GetWinner()
-	isDraw := (winner == 0) && engine.IsFinished() // TODO - Revisar como pasar Player i no winner como int
+	isDraw := (winner == 0) && engine.IsFinished()
 
 	if winner != 0 || isDraw {
 		broadcast := map[string]interface{}{
 			"type":         "game_finished",
 			"status":       "FINISH",
-			"winner":       winner,
 			"winning_line": winningLine,
 			"state":        engine.GetState(),
 		}

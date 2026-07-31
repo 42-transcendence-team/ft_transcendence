@@ -1,15 +1,17 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useWebSocket } from '././webSocketContext';
 import { useNavigate } from 'react-router-dom';
 
-export type GameStatus = 'MENU' | 'PLAY' | 'FINISH' | 'JOIN' | 'WAIT' | 'LOBBY' | 'IDLE';
+export type GameStatus = 'MENU' | 'PLAY' | 'FINISH' | 'JOIN' | 'WAIT' | 'LOBBY' | 'IDLE' | 'RECONNECTING' | 'TIMEOUT';
 
 export type GameMode = 'local' | 'online' | 'join';
+
+type PlayerType = "player" | "viewer";
 
 interface Player {
     id: number;
     username: string;
-    type: string;
+    type: PlayerType;
     token: number;
 }
 
@@ -18,7 +20,7 @@ export interface GameState {
     game_type: string;
     status: GameStatus;
     players: Player[];
-    winner?: Player;
+    winner?: string | number;
     board?: unknown;
     last_dice_roll?: number;
     turn?: number;
@@ -27,7 +29,12 @@ export interface GameState {
 
 interface GameContextType {
     gameState: GameState;
-    isMyTurn: boolean;
+    isMyTurn: boolean
+	myPlayer?: Player;
+	isPlayer: boolean;
+	isViewer: boolean;
+	winnerPlayer?: Player;
+	currentTurnPlayer?: Player;
     setGameStatus: (status: GameStatus) => void;
     setGameType: (gameType: GameState['game_type']) => void;
     returnMenu: () => void;
@@ -56,11 +63,24 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
     const [ gameState, setGameState ] = useState<GameState>(initialGameState);
     const navigate = useNavigate();
 
-    const currentPlayer = gameState.players.find(
-        player => player.id === user?.id
-    );
+    const myPlayer = useMemo(
+		() => gameState.players.find(p => p.id === user?.id),
+		[gameState.players, user?.id]
+	);
 
-    const isMyTurn = currentPlayer?.token === gameState.turn;
+	const currentTurnPlayer = useMemo(
+		() => gameState.players.find(p => p.token === gameState.turn),
+		[gameState.players, gameState.turn]
+	);
+
+	const winnerPlayer = useMemo(
+		() => gameState.players.find(p => p.token === gameState.winner),
+		[gameState.players, gameState.winner]
+	);
+
+	const isPlayer = myPlayer?.type === "player";
+	const isViewer = myPlayer?.type === "viewer";
+	const isMyTurn = !!isPlayer && myPlayer?.token === gameState.turn;
 
 	const gameStateRef = useRef(gameState);
     useEffect(() => {
@@ -112,17 +132,35 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 					...prevState,
 					board: message.state?.board ?? prevState.board,
 					status: message.status,
-					winner: message.winner ?? prevState.winner	,
+					winner: message.state?.winner ?? prevState.winner	,
 					last_dice_roll: message.state?.last_dice_roll ?? prevState.last_dice_roll,
 					turn: message.state?.turn ?? prevState.turn,
 					winning_line: message.winning_line ?? null,
 				}));
 		});
 
+		const unsuscribePlayerDisconnected = subscribe("player_disconnected", (message: any) => {
+			console.log('Received player_disconnected message:', message);
+			setGameState(prevState => ({
+				...prevState,
+				status: message.status,
+			}));
+		});
+
+		const unsubscribePlayerTimeout = subscribe("player_timeout", (message: any) => {
+			console.log('Received player_timeout message:', message);
+			setGameState(prevState => ({
+				...prevState,
+				status: message.status,
+			}));
+		});
+
         return () => {
             unsubscribeGameUpdate();
             unsubscribeGameCreated();
 			unsubscribeGameFinished();
+			unsubscribePlayerTimeout();
+			unsuscribePlayerDisconnected();
         };
     }, [user?.id, subscribe]);
 
@@ -214,11 +252,14 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 			game_id: gameId,
 		}));
 
+		console.log(`Joining game with ID: ${gameId} and type: ${gameStateRef.current.game_type}`);
+
 		send({
 			type: "game",
 			payload: {
 				action: "join",
 				game_id: gameId,
+				game_type: gameStateRef.current.game_type,
 			},
 		});
 	}, [user, send]);
@@ -260,7 +301,8 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 
     return (
         <GameContext.Provider value={{ gameState, createGame, joinGame, makeMove, rollDice, 
-            leaveGame, setGameStatus, returnMenu, setGameType, isMyTurn }}>
+            leaveGame, setGameStatus, returnMenu, setGameType, isMyTurn, isPlayer, isViewer,
+			winnerPlayer, currentTurnPlayer, myPlayer }}>
             {children}
         </GameContext.Provider>
     );

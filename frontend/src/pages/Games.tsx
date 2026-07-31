@@ -1,4 +1,5 @@
 import { TicTacToe } from "games/tictactoe/ticTacToe";
+import { ConnectFour } from "games/connectFour/connectFour";
 import { useNavigate } from "react-router-dom";
 
 export const games = [
@@ -28,7 +29,7 @@ export const games = [
 		name: "Connect Four",
 		description: "This is the fourth game.",
 		aspectRatio: 4 / 3,
-		component: () => <div>Connect Four Game Component</div>,
+		component: ConnectFour,
 	}
 ];
 

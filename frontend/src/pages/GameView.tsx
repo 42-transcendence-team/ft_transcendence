@@ -105,14 +105,25 @@ function GameViewJoin() {
 	)
 }
 
- // TODO - Revisar como pasar Player y no winner como int (Para online creo que furula bien pero en local no coge cunado ganan O bien)
+function getWinnerName() {
+	const { gameState, winnerPlayer } = useGame();
+	if (!gameState.winner) return null;
+
+	if (gameState.mode === "local") {
+		return gameState.winner === 1 ? "X" : "O";
+	}
+
+	return winnerPlayer?.username || "Jugador desconocido";
+}
+
 function GameViewFinish() {
 	const { returnMenu, gameState } = useGame();
+	const winner = getWinnerName();
 
 	return (
 		<div className="game-menu">
-			{ gameState.winner && gameState.winner.id !== 0 ? (
-				<h2 className="game-menu__title">¡El jugador {gameState.winner?.username} ha ganado!</h2>
+			{ gameState.winner ? (
+				<h2 className="game-menu__title">¡El jugador {winner} ha ganado!</h2>
 			) : (
 				<h2 className="game-menu__title">¡Empate!</h2>
 			)}
@@ -135,12 +146,59 @@ function GameViewWait() {
 	)
 }
 
-// function GameviewViwer() {
-// 	// TODO - Hacer vista para espectadores de la partida, donde diga que turno es y boton para salir de la vista de espectador
-// }
+function getPlayerName() {
+	const { gameState } = useGame();
+	let player = gameState.players.find(p => p.token === gameState.turn);
+	if (!player) return "Jugador desconocido";
+
+	if (gameState.mode === "local") {
+		return player.id === 1 ? "X" : "O";
+	}
+
+	return player.username || "Jugador desconocido";
+}
+
+function GameViewViewer() {
+	const { returnMenu } = useGame();
+	// TODO - Vista para espectadores de partida, donde diga turno y boton para salir
+	return (
+		<div className="game-menu">
+			<h2 className="game-menu__title">Turno del jugador {getPlayerName()}</h2>
+			<button 
+				onClick={() => returnMenu()}
+				className="game-menu__button"
+			>
+					Volver al menú
+			</button>
+		</div>
+	)
+}
+
+function GameViewTimeout() {
+	const { returnMenu } = useGame();
+	return (
+		<div className="game-menu">
+			<h2 className="game-menu__title">El jugador ha perdido por tiempo.</h2>
+			<button 
+				onClick={() => returnMenu()}
+				className="game-menu__button"
+			>
+					Volver al menú
+			</button>
+		</div>
+	)
+}
+
+function GameViewReconnecting() {
+	return (
+		<div className="game-menu">
+			<h2 className="game-menu__title">Esperando a que el jugador se reconecte...</h2>
+		</div>
+	)
+}
 
 function GameViewContent({ game, gameId, gameType }: { game: any; gameId?: string; gameType?: string; }) {
-    const { gameState, leaveGame, setGameType, isMyTurn } = useGame();
+    const { gameState, leaveGame, setGameType, isMyTurn, isPlayer, isViewer } = useGame();
     const location = useLocation();
     
     const GameComponent = game.component;
@@ -203,7 +261,9 @@ function GameViewContent({ game, gameId, gameType }: { game: any; gameId?: strin
             >
                 <GameComponent />
 
-				{gameState.status === "PLAY" && !isMyTurn && gameState.mode === "online" && (
+				{isViewer && gameState.status === "PLAY" && <GameViewViewer />}
+
+				{gameState.status === "PLAY" && !isMyTurn && isPlayer && gameState.mode === "online" && (
 					<GameViewWait />
 				)}
 
@@ -214,6 +274,10 @@ function GameViewContent({ game, gameId, gameType }: { game: any; gameId?: strin
 				{ gameState.status === 'JOIN' && ( <GameViewJoin /> ) }
 				
 				{ gameState.status === 'FINISH' && ( <GameViewFinish /> ) }
+
+				{ gameState.status === 'TIMEOUT' && ( <GameViewTimeout /> ) }
+
+				{ gameState.status === 'RECONNECTING' && ( <GameViewReconnecting /> ) }
             </div>
         </div>
     );

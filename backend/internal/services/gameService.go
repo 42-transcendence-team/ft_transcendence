@@ -1,6 +1,7 @@
 package services
 
 import (
+	"backend/internal/dto"
 	"backend/internal/games"
 	"fmt"
 	"log"
@@ -18,14 +19,22 @@ func NewGameManager() *GameManager {
 	}
 }
 
-func (gm *GameManager) CreateGame(id uint, gameType, mode string) error {
+func (gm *GameManager) CreateGame(id uint, gameType, mode string, events chan dto.GameEvent) error {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
-	if gameType == "TICTACTOE" {
-		gm.ActiveGames[id] = games.NewTicTacToe(id, mode, gameType)
-	} else {
+
+	var engine games.GameEngine
+
+	switch gameType {
+	case "TICTACTOE":
+		engine = games.NewTicTacToe(id, mode, gameType, events)
+	case "CONNECTFOUR":
+		engine = games.NewConnectFour(id, mode, gameType, events)
+	default:
 		log.Printf("Tipo de juego desconocido: %s", gameType)
 		return fmt.Errorf("tipo de juego desconocido: %s", gameType)
 	}
+
+	gm.ActiveGames[id] = engine
 	return nil
 }
