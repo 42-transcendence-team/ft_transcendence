@@ -32,10 +32,7 @@ function GameViewMenu() {
 	return (
 		<div className="game-menu">
 			<button 
-				onClick={() => {
-					createGame(gameState.game_type, "local")
-					console.log("Game type: ", gameState.game_type);
-				}}
+				onClick={() => {createGame(gameState.game_type, "local")}}
 				className="game-menu__button"
 			>
 					Local
@@ -77,7 +74,7 @@ function GameViewLobby() {
 
 function GameViewJoin() {
 	const { gameState, joinGame, returnMenu } = useGame();
-	const [code, setCode] = useState(gameState.game_id ? String(gameState.game_id) : "");
+	const [code, setCode] = useState( gameState.game_id ? String(gameState.game_id) : "");
 
 	return (
 		<div className="game-menu">
@@ -86,23 +83,24 @@ function GameViewJoin() {
 				type="text"
 				placeholder="Código de la partida"
 				value={code}
-				onChange={(e) => { setCode(e.target.value); }}
-				className="game-menu__input"
+				onChange={(e) => setCode(e.target.value)}
+				className={`game-menu__input ${
+					gameState.error ? "game-menu__input--error" : ""
+				}`}
 			/>
-			<button 
-				onClick={() => joinGame(Number(code))}
-				className="game-menu__button"
-			>
-					Unirse a la partida
+			{gameState.error && (
+				<div className="game-menu__error" >
+					{gameState.error}
+				</div>
+			)}
+			<button onClick={() => joinGame(Number(code))} className="game-menu__button" >
+				Unirse a la partida
 			</button>
-			<button 
-				onClick={() => returnMenu()}
-				className="game-menu__button"
-			>
-					Volver
+			<button onClick={returnMenu} className="game-menu__button" >
+				Volver
 			</button>
 		</div>
-	)
+	);
 }
 
 function getWinnerName() {

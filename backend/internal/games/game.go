@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const reconnectTimeout = 30 * time.Second
+const reconnectTimeout = 10 * time.Second
 
 type Game struct {
 	ID        uint      `json:"id"`
@@ -49,6 +49,7 @@ type GameEngine interface {
 	DisconnectPlayer(userID uint) error
 	ConnectPlayer(userID uint, username string) error
 	PlayerTimeout(userID uint) (interface{}, error)
+	GetPlayers() []Player
 }
 
 func (g *Game) GetCurrentPlayer() int { return g.Turn }
@@ -160,6 +161,7 @@ func (g *Game) StartReconnectTimer(userID uint) {
 			g.Events <- dto.GameEvent{
 				Type:    "player_timeout",
 				Payload: state,
+				GameID:  g.ID,
 				Status:  "TIMEOUT",
 			}
 		}
@@ -168,6 +170,7 @@ func (g *Game) StartReconnectTimer(userID uint) {
 	g.Events <- dto.GameEvent{
 		Type:    "player_disconnected",
 		Status:  "RECONNECTING",
+		GameID:  g.ID,
 		Payload: g.GetGameState(),
 	}
 }

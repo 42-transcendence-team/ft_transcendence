@@ -30,14 +30,12 @@ func NewGameHandler(gameManager *services.GameManager, hub *ws.Hub) *GameHandler
 
 func (gh *GameHandler) listenGameEvents() {
 	for event := range gh.events {
-
 		_, exists := gh.hub.GetRoom(event.GameID)
 		if !exists {
 			continue
 		}
 
 		bytes, _ := json.Marshal(event)
-
 		gh.hub.BroadcastToRoom(event.GameID, bytes)
 	}
 }
@@ -142,18 +140,23 @@ func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage)
 		return
 	}
 
-	room := gh.hub.CreateRoom(joinData.GameID, fmt.Sprintf("Game-%d", joinData.GameID), false)
-
 	engine, ok := gh.gameManager.ActiveGames[joinData.GameID]
 	if !ok {
-		log.Printf("Error: Partida %d no existe en GameManager", joinData.GameID)
+		message := map[string]interface{}{
+			"type":   "game_join_error",
+			"status": "JOIN",
+			"error":  fmt.Sprintf("Juego %d no encontrado", joinData.GameID),
+		}
+		messageBytes, _ := json.Marshal(message)
+		c.Send(messageBytes)
 		return
 	}
 
 	if engine.GetType() != joinData.Type {
 		message := map[string]interface{}{
-			"type":    "game_join_error",
-			"message": fmt.Sprintf("Tipo de juego no coincide. Esperado: %s, Recibido: %s", engine.GetType(), joinData.Type),
+			"type":   "game_join_error",
+			"status": "JOIN",
+			"error":  fmt.Sprintf("Tipo de juego no coincide. Esperado: %s, Recibido: %s", engine.GetType(), joinData.Type),
 		}
 		messageBytes, _ := json.Marshal(message)
 		c.Send(messageBytes)
@@ -166,7 +169,18 @@ func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage)
 		return
 	}
 
+	log.Printf("Usuario %d se unió a la partida %d", c.GetUserID(), joinData.GameID)
+	room := gh.hub.CreateRoom(joinData.GameID, fmt.Sprintf("Game-%d", joinData.GameID), false)
+
 	c.JoinRoom(room)
+
+	message := map[string]interface{}{
+		"type":   "game_joined",
+		"state":  engine.GetState(),
+		"status": "PLAY",
+	}
+	messageBytes, _ := json.Marshal(message)
+	c.Send(messageBytes)
 
 	broadcast := map[string]interface{}{
 		"type":   "game_update",
@@ -188,25 +202,24 @@ func (gh *GameHandler) HandleLeaveGame(c ws.ClientConn, msg *dto.IncomingMessage
 
 	log.Printf("Usuario %d abandonó la partida %d", c.GetUserID(), leaveData.GameID)
 
-	err = gh.gameManager.ActiveGames[leaveData.GameID].DisconnectPlayer(c.GetUserID())
-	if err != nil {
-		log.Printf("Error al abandonar la partida: %v", err)
-		return
-	}
-
 	room, exists := gh.hub.GetRoom(leaveData.GameID)
 	if !exists {
 		log.Printf("Error: Sala %d no existe en Hub", leaveData.GameID)
 		return
 	}
+
+	state, err := gh.gameManager.LeaveGame(leaveData.GameID, c.GetUserID())
+	if err != nil {
+		return
+	}
+
 	broadcast := map[string]interface{}{
 		"type":  "game_update",
-		"state": gh.gameManager.ActiveGames[leaveData.GameID].GetState(),
+		"state": state,
 	}
+
 	broadcastBytes, _ := json.Marshal(broadcast)
-
 	gh.hub.BroadcastToRoom(leaveData.GameID, broadcastBytes)
-
 	c.LeaveRoom(room)
 }
 

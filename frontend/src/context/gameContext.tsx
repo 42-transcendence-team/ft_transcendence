@@ -25,6 +25,7 @@ export interface GameState {
     last_dice_roll?: number;
     turn?: number;
     mode?: GameMode;
+    error?: string;
 }
 
 interface GameContextType {
@@ -155,11 +156,44 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 			}));
 		});
 
+        const unsubscribeGameJoined = subscribe("game_join_error", (message: any) => {
+            setGameState(prevState => ({
+                ...prevState,
+                error: message.error,
+                status: message.status,
+            }));
+        });
+
+        const unsubscribeGameJoinedSuccess = subscribe("game_joined", (message: any) => {
+            if (!message.state?.id) {
+                console.error("Game ID is missing in the game_joined message.");
+                return;
+            }
+            setGameState(prevState => ({
+                ...prevState,
+                game_id: message.state?.id ?? prevState.game_id,
+                game_type: message.state?.type ?? prevState.game_type,
+                board: message.state?.board ?? prevState.board,
+                players: message.state?.players ?? prevState.players,
+                status: message.status,
+                winner: message.state?.winner ?? prevState.winner,
+                last_dice_roll: message.state?.last_dice_roll ?? prevState.last_dice_roll,
+                turn: message.state?.turn ?? prevState.turn,
+                mode: message.state?.mode ?? prevState.mode,
+            }));
+            const slug = gameStateRef.current.game_type.toLowerCase();
+            const gameId = message.state?.id ?? gameStateRef.current.game_id;
+            console.log(`Navigating to game page: /app/games/${slug}/${gameId}`);
+            navigate(`/app/games/${slug}/${gameId}`, { replace: true });
+        });
+
         return () => {
+            unsubscribeGameJoined();
             unsubscribeGameUpdate();
             unsubscribeGameCreated();
 			unsubscribeGameFinished();
 			unsubscribePlayerTimeout();
+            unsubscribeGameJoinedSuccess();
 			unsuscribePlayerDisconnected();
         };
     }, [user?.id, subscribe]);
@@ -232,27 +266,10 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
     const joinGame = useCallback((gameId: number) => {
 		if (!user) return;
 
-		const currentStatus = gameStateRef.current.status;
-		const currentRoomId = gameStateRef.current.game_id;
-
 		if (!gameId || gameId === 0) {
 			console.error("Invalid game ID provided for joining.");
 			return;
 		}
-
-		if (currentStatus === "LOBBY" && currentRoomId === gameId) {
-			return;
-		}
-
-		navigate(`/app/games/${gameStateRef.current.game_type.toLowerCase()}/${gameId}`, { replace: true });
-
-		setGameState(prevState => ({
-			...prevState,
-			status: "LOBBY",
-			game_id: gameId,
-		}));
-
-		console.log(`Joining game with ID: ${gameId} and type: ${gameStateRef.current.game_type}`);
 
 		send({
 			type: "game",
