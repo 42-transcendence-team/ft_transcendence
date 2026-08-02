@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
+
 import { Footer } from "@components/Footer";
 import { PrivHeader } from "@components/PrivHeader";
 import { SearchFilters } from "@components/advancedSearch/SearchFilters";
@@ -12,34 +14,76 @@ import { PrivateMainContent } from "@components/layout/PrivateMainContent";
 import "../styles/components/_privateLayout.scss";
 
 export function PrivateLayout() {
-  const search = useAdvancedSearch();
+	const search = useAdvancedSearch();
 
-  return (
-    <div className="privateLayout">
-      <PrivateLeftPanel>
-        <SearchFilters
-          selectedRelations={search.relations}
-          onRelationsChange={search.handleRelationsChange}
-          selectedSort={search.sort}
-          onSortChange={search.handleSortChange}
-        />
-      </PrivateLeftPanel>
+	/*
+	 * SearchBar mantiene el texto escrito en estado local.
+	 * Incrementar esta clave le indica que debe vaciarlo.
+	 */
+	const [
+		searchResetKey,
+		setSearchResetKey,
+	] = useState(0);
 
-      <PrivHeader onSearch={search.handleSearch} />
+	const handleBrandActivate = () => {
+		/*
+		 * resetSearch cambia hasSearched a false, haciendo que
+		 * PrivateLayout vuelva a renderizar el Outlet y, por tanto,
+		 * la Home situada en /app.
+		 */
+		search.resetSearch();
 
-      <PrivateMainContent>
-        {search.hasSearched ? (
-          <AdvancedSearchPanel search={search} />
-        ) : (
-          <Outlet />
-        )}
-      </PrivateMainContent>
+		setSearchResetKey(
+			(currentKey) => currentKey + 1,
+		);
+	};
 
-      <footer className="privateLayout__footer">
-        <Footer />
-      </footer>
+	return (
+		<div className="privateLayout">
+			<PrivateLeftPanel>
+				<SearchFilters
+					selectedRelations={search.relations}
+					onRelationsChange={
+						search.handleRelationsChange
+					}
+					selectedSort={search.sort}
+					onSortChange={
+						search.handleSortChange
+					}
+				/>
+			</PrivateLeftPanel>
 
-      <PrivateRightPanel />
-    </div>
-  );
+			<PrivHeader
+				onSearch={search.handleSearch}
+				onBrandActivate={
+					handleBrandActivate
+				}
+				searchResetKey={searchResetKey}
+			/>
+
+			<PrivateMainContent>
+				{search.hasSearched ? (
+					<AdvancedSearchPanel
+						search={search}
+					/>
+				) : (
+					<Outlet />
+				)}
+			</PrivateMainContent>
+
+			<footer className="privateLayout__footer">
+				{/*
+				 * El Footer privado utiliza el mismo callback.
+				 * Así no reaparece el bug si se pulsa la marca inferior.
+				 */}
+				<Footer
+					onBrandActivate={
+						handleBrandActivate
+					}
+				/>
+			</footer>
+
+			<PrivateRightPanel />
+		</div>
+	);
 }

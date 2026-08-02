@@ -1,29 +1,43 @@
-
-import { Link } from "react-router-dom";
-
-import "../styles/components/_privHeader.scss"
-import logo from "../assets/icons/24_logo.png"
+import { AppBrand } from "@components/AppBrand";
+import { SearchBar } from "./SearchBar";
 import { UserMenu } from "./UserMenu";
-import { SearchBar } from "./advancedSearch/SearchBar";
+
+import "../styles/components/_privHeader.scss";
 
 type PrivHeaderProps = {
-  onSearch: (query: string) => void;
-}
+	onSearch: (
+		query: string,
+	) => void | Promise<void>;
 
+	onBrandActivate: () => void;
+	searchResetKey: number;
+};
 
-export function PrivHeader({ onSearch }: PrivHeaderProps) {
-
+export function PrivHeader({
+	onSearch,
+	onBrandActivate,
+	searchResetKey,
+}: PrivHeaderProps) {
 	return (
 		<header className="privHeader privateLayout__header">
 			<div className="privHeader__left">
-				<Link to="/app" className="privHeader__logo">
-					<img src={logo} alt="logo" className="privHeader__logo-img" />
-					<span className="privHeader__logo-text">Twenty Four</span>
-				</Link>
+				<AppBrand
+					className="privHeader__brand"
+					logoSize="medium"
+					textSize="small"
+					tone="light"
+					bold
+					onActivate={onBrandActivate}
+				/>
 			</div>
+
 			<div className="privHeader__center">
-				<SearchBar onSearch={onSearch} />
+				<SearchBar
+					onSearch={onSearch}
+					resetKey={searchResetKey}
+				/>
 			</div>
+
 			<div className="privHeader__right">
 				<UserMenu />
 			</div>

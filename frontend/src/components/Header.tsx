@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 import { useAuth } from "@components/auth-router/AuthContext";
-import logo from "../assets/icons/24_logo.png";
+import { AppBrand } from "@components/AppBrand";
 import "../styles/components/_header.scss";
 
 const publicLinks = [
@@ -14,27 +14,15 @@ const publicLinks = [
 export const Header = () => {
 	const { authStatus } = useAuth();
 
-	const brandTarget =
-		authStatus === "auth"
-			? "/app"
-			: "/login";
-
 	return (
 		<header className="public-header">
-			<NavLink
-				to={brandTarget}
+			<AppBrand
 				className="public-header__brand"
-				aria-label="Twenty Four home"
-			>
-				<img
-					className="public-header__logo"
-					src={logo}
-					alt=""
-					aria-hidden="true"
-				/>
-
-				<span>Twenty Four</span>
-			</NavLink>
+				logoSize="medium"
+				textSize="medium"
+				tone="dark"
+				bold
+			/>
 
 			<nav
 				className="public-header__nav"

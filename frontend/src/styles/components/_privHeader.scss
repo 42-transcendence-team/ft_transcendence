@@ -1,51 +1,56 @@
-@use '../abstracts/functions' as *;
-@use '../abstracts/mixins' as *;
-@use '../abstracts/variables' as *;
+@use "../abstracts/variables" as *;
 
 .privHeader {
-    width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	padding: 0 1rem;
+	border-radius: 10px;
+	background-color: $dark-purple-background-light;
+	box-shadow: 0 4px 12px $dark-purple-background-light;
 
-    background-color: $dark-purple-background-light;
+	&__left,
+	&__center,
+	&__right {
+		display: flex;
+		align-items: center;
+		height: 100%;
+		color: $dark-purple-main-text-light;
+	}
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+	&__left {
+		justify-content: flex-start;
+		min-width: 170px;
+	}
 
-    padding: 0 1rem;
+	&__center {
+		flex: 1;
+		justify-content: center;
+		min-width: 0;
+	}
 
-    border-radius: 10px;
+	&__right {
+		justify-content: flex-end;
+		min-width: 48px;
+	}
 
-    box-shadow: 0 4px 12px $dark-purple-background-light;
+	&__brand {
+		max-width: 100%;
+	}
 }
 
-.privHeader__left,
-.privHeader__center,
-.privHeader__right {
-    color: $dark-purple-main-text-light;
-    display: flex;
-    align-items: center;
-    height: 100%;
-}
+@media screen and (max-width: 700px) {
+	.privHeader {
+		gap: 0.75rem;
+		padding: 0 0.75rem;
 
-.privHeader__center {
-	justify-content: center;
-}
+		&__left {
+			min-width: auto;
+		}
 
-.privHeader__right {
-	justify-content: flex-end;
-}
-
-.privHeader__logo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-
-    text-decoration: none;
-    color: $dark-purple-main-text-light;
-}
-
-.privHeader__logo-img {
-	height: 60px;
-	width: auto;
-	filter: brightness(0) invert(1);
+		&__brand .app-brand__name {
+			display: none;
+		}
+	}
 }

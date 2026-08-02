@@ -221,6 +221,22 @@ export function useAdvancedSearch() {
     }
   }
 
+    /*
+   * Cierra la vista de búsqueda y limpia únicamente sus resultados.
+   * Se conservan los filtros de relación y orden seleccionados.
+   */
+  const resetSearch = () => {
+    setSearchResults([]);
+    setHasSearched(false);
+    setError(null);
+
+    setCurrentQuery("");
+
+    setTotalResults(0);
+    setPage(1);
+    setTotalPages(1);
+  };
+
   return {
     searchResults,
     hasSearched,
@@ -247,5 +263,7 @@ export function useAdvancedSearch() {
     handleRemoveFriend,
     handleBlockUser,
     handleUnblockUser,
+
+	resetSearch,
   };
 }
