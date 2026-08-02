@@ -1,34 +1,35 @@
 import "@styles/_settingsSection.scss";
 
-import React, { Fragment, useEffect, useState } from "react";
-import { FormField } from "./FormField";
-import { updatePassword, type PasswordSettings } from "api/Settings";
-import { Modal } from "./Modal";
+import { useState, Fragment, useEffect } from "react";
 import { useFormErrors } from "@hooks/useFormErrors";
-import { Footer2FA, OtpInput } from "./TwoFactorUI";
+import { calculateAge } from "@utils/calculateAge";
+import { updateData, type DataSettings } from "api/Settings";
+import { FormField } from "../FormField";
+import { DateInput } from "../DateInput";
+import { Modal } from "../Modal";
+import { Footer2FA, OtpInput } from "../TwoFactorUI";
 
 type SettingsFields = {
-	previous_password: string;
-	password: string;
-	verify_password: string;
+	name: string;
+	surname: string;
+	birthday: string;
 };
 
 // TODO - Pensar como mover cosas a Hook comun para evitar repetir codigo en los 3 componentes de modificacion de datos, email y password
 // TODO - Aplicar estilos al formulario
 
 const inputsConfig: Array<{ id: keyof SettingsFields; label: string; type: string }> = [
-	{ id: "previous_password", label: "Contraseña anterior", type: "password" },
-	{ id: "password", label: "Nueva contraseña", type: "password" },
-	{ id: "verify_password", label: "Verificar nueva contraseña", type: "password" },
+	{ id: "name", label: "Nombre", type: "text" },
+	{ id: "surname", label: "Apellido", type: "text" },
 ];
 
 type RequestStatus = { type: "success" | "error"; message: string; } | null;
 
-export function ModifyPassword({ user }: { user: any }) {
+export function ModifyData({ user, onUpdate }: { user: any; onUpdate: () => void }) {
 	const [formData, setFormData] = useState<SettingsFields>({
-		previous_password: "",
-		password: "",
-		verify_password: "",
+		name: "",
+		surname: "",
+		birthday: "",
 	});
 
 	const [openModal, setOpenModal] = useState(false);
@@ -52,52 +53,68 @@ export function ModifyPassword({ user }: { user: any }) {
 	};
 
 	function validateForm() {
-		const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,64}$/
+		const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s-]+$/
+		const maxLegth = 42
 
 		const errors: Partial<Record<keyof SettingsFields, string>> = {};
+		if (formData.name && !nameRegex.test(formData.name))
+			errors.name = "El nombre solo puede contener letras.";
+		else if (formData.name && formData.name.length > maxLegth)
+			errors.name = "El nombre es demasiado largo, máximo de 42 caracteres.";
 
-		if (formData.password && formData.password !== formData.verify_password)
-			errors.verify_password = "Las contraseñas no coinciden";
+		if (formData.surname && !nameRegex.test(formData.surname))
+			errors.surname = "El apellido solo puede contener letras.";
+		else if (formData.surname && formData.surname.length > maxLegth)
+			errors.surname = "El apellido es demasiado largo, máximo de 42 caracteres.";
 
-		if (formData.password && !passwordRegex.test(formData.password))
-			errors.password =
-				"La contraseña debe tener entre 8 y 64 caracteres, incluir una mayúscula, un número y un símbolo como mínimo.";
-
-		if (!formData.previous_password || !passwordRegex.test(formData.previous_password))
-			errors.previous_password = "Por favor, introduce tu contraseña actual para confirmar los cambios.";
-
-		if (!formData.password)
-			errors.password = "Por favor, introduce una nueva contraseña.";
-
-		if (!formData.verify_password)
-			errors.verify_password = "Por favor, verifica tu nueva contraseña.";
-		
+		if (formData.birthday) {
+			const birthDate = new Date(formData.birthday)
+			if (Number.isNaN(birthDate.getTime())) {
+				errors.birthday = "Introduce una fecha de nacimiento válida."
+			} else {
+				const age = calculateAge(formData.birthday)
+				if (age < 18)
+					errors.birthday = "Debes tener al menos 18 años para registrarte."
+				else if (age > 150) {
+					errors.birthday = "Ojalá estuviese permitido superar los 150 años."
+				}
+			}
+		}
 		return errors;
 	}
 
 	const cleanInputs = () => {
 		setFormData({
-			previous_password: "",
-			password: "",
-			verify_password: "",
+			name: "",
+			surname: "",
+			birthday: "",
 		});
 	};
 
 	const executeUpdate = async (verificationCode?: string) => {
-		const allowedFields = ["previous_password", "password", "verify_password"];
+		const allowedFields = ["name", "surname", "birthday"];
 		const buildRequestData = Object.fromEntries(
 			Object.entries(formData)
 				.filter(([key, value]) => allowedFields.includes(key) &&
 					value != null && value.trim() !== "")
 		);
 
+		if (Object.keys(buildRequestData).length === 0) {
+		setRequestStatus({
+			type: "error",
+			message: "No se han detectado cambios para guardar.",
+		});
+		setOpenModal(true);
+		return;
+	}
+
 		const payload = {
 			...buildRequestData,
 			...(verificationCode && { code: verificationCode })
-		} as PasswordSettings;
+		} as DataSettings;
 
 		try {
-			await updatePassword(payload);
+			await updateData(payload);
 			setRequestStatus({
 				type: "success",
 				message: "Los cambios se han guardado correctamente."
@@ -105,6 +122,7 @@ export function ModifyPassword({ user }: { user: any }) {
 			setShow2FA(false);
 			setOpenModal(true);
 			cleanInputs();
+			onUpdate();
 		} catch (error: any) {
 			setRequestStatus({
 				type: "error",
@@ -150,7 +168,7 @@ export function ModifyPassword({ user }: { user: any }) {
 
 	return (
 		<div className="settings__section">
-			<h2 className="settings__title">Cambio de contraseña</h2>
+			<h2 className="settings__title">Configuración de la cuenta</h2>
 			<form onSubmit={handleSubmit} className="settings__form">
 				{inputsConfig.map((field) => (
 					<Fragment key={field.id}>
@@ -162,7 +180,7 @@ export function ModifyPassword({ user }: { user: any }) {
 								value={formData[field.id]}
 								onChange={(value) => handleInputChange(field.id, value)}
 								placeholder={user[field.id] || undefined}
-								className=""
+								className="form-field"
 							/>
 
 							{formErrors[field.id] && (
@@ -173,6 +191,15 @@ export function ModifyPassword({ user }: { user: any }) {
 						</div>
 					</Fragment>
 				))}
+				<DateInput
+					label="Fecha de nacimiento"
+					value={formData.birthday}
+					onChange={(value) => handleInputChange("birthday", value)}
+					error={formErrors.birthday}
+					onClearError={() => clearError("birthday")}
+					placeholder={user.birthday}
+					className="settings__field"
+				/>
 				<button type="submit" className="settings__button">
 					Guardar cambios
 				</button>
@@ -205,6 +232,6 @@ export function ModifyPassword({ user }: { user: any }) {
 			>
 				<p>{requestStatus?.message}</p>
 			</Modal>
-		</div>
+		</div >
 	);
 }

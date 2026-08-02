@@ -25,6 +25,11 @@ export const UserMenu = () => {
 		}
 	};
 
+	const handleSettings = async () => {
+		navigate("settings");
+		console.log("setting button");
+	};
+
 	return (
 		<div className="userMenu">
 			<button
@@ -40,7 +45,7 @@ export const UserMenu = () => {
 						<FiUser className="userMenu__item-icon" />
 						<span>Perfil</span>
 					</button>
-					<button className="userMenu__item" type="button">
+					<button className="userMenu__item" type="button" onClick={handleSettings}>
 						<FiSettings className="userMenu__item-icon" />
 						<span>Configuración</span>
 					</button>
