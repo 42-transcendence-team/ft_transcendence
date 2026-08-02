@@ -1,3 +1,5 @@
+@use "../abstracts/variables" as *;
+
 .footer {
 	display: flex;
 	align-items: center;
@@ -8,7 +10,7 @@
 	padding: 12px 32px;
 	border-top: 1px solid #2a2a2a;
 	color: #ffffff;
-	background-color: #7c7af2;
+	background-color: $app-shell-background-light;
 }
 
 .footer__nav {
