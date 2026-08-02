@@ -6,6 +6,8 @@ import {
 import { Button1 } from "../Button1";
 import type { UserRelation } from "../../api/UserSearch";
 
+import { useState } from "react";
+
 type ProfileHeaderProps = {
 	userId: number;
 	username: string;
@@ -29,7 +31,6 @@ type ProfileHeaderProps = {
 	onRemoveFriend?: () => void;
 	onBlockUser?: () => void;
 	onUnblockUser?: () => void;
-	onShare?: () => void;
 };
 
 export const ProfileHeader = ({
@@ -50,7 +51,6 @@ export const ProfileHeader = ({
 	onRemoveFriend,
 	onBlockUser,
 	onUnblockUser,
-	onShare,
 }: ProfileHeaderProps) => {
 	const displayName =
 		name && surname
@@ -168,6 +168,18 @@ export const ProfileHeader = ({
 		}
 	};
 
+	const [showCopied, setShowCopied] = useState(false);
+
+	const handleShare = async () => {
+		await navigator.clipboard.writeText(window.location.href);
+
+		setShowCopied(true);
+
+		setTimeout(() => {
+			setShowCopied(false);
+		}, 2000);
+	};
+
 	return (
 		<div className="profile__header">
 			<UserAvatar
@@ -199,11 +211,19 @@ export const ProfileHeader = ({
 
 			{relation !== "blocked_by_me" &&
 				relation !== "blocked_me" && (
-					<Button1
-						label="Compartir"
-						variant="secondary"
-						onClick={onShare}
-					/>
+					<div className="profile__share">
+						{showCopied && (
+							<div className="profile__share-toast">
+								Enlace copiado
+							</div>
+						)}
+
+						<Button1
+							label="Compartir"
+							variant="secondary"
+							onClick={handleShare}
+						/>
+					</div>
 			)}
 		</div>
 	);

@@ -426,14 +426,6 @@ export const Profile = () => {
 	const canViewPrivateContent =
 		isOwnProfile || profileUser.relation === "friends";
 
-	const handleShare = async () => {
-		try {
-			await navigator.clipboard.writeText(window.location.href);
-			alert("Enlace copiado al portapapeles.");
-		} catch {
-			alert("No se ha podido copiar el enlace.");
-		}
-	};
 
 	const handleConfirmRelationAction = async () => {
 		if (!confirmAction) {
@@ -532,7 +524,6 @@ export const Profile = () => {
 					onRemoveFriend={() => setConfirmAction("remove-friend")}
 					onBlockUser={() => setConfirmAction("block")}
 					onUnblockUser={() => setConfirmAction("unblock")}
-					onShare={handleShare}
 				/>
 
 				{relationActionError && (
