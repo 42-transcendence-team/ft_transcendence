@@ -7,7 +7,8 @@ import { useAdvancedSearch } from "./useAdvancedSearch";
 import { ConfirmModal } from "@components/ConfirmModal";
 
 type AdvancedSearchPanelProps = {
-  search: ReturnType<typeof useAdvancedSearch>;
+	search: ReturnType<typeof useAdvancedSearch>;
+	onClose: () => void;
 };
 
 type ConfirmAction =
@@ -21,147 +22,190 @@ type PendingConfirmation = {
 	login: string;
 };
 
-export function AdvancedSearchPanel({ search }: AdvancedSearchPanelProps) {
+export function AdvancedSearchPanel({
+	search,
+	onClose,
+}: AdvancedSearchPanelProps) {
+	const [pendingConfirmation, setPendingConfirmation] =
+		useState<PendingConfirmation | null>(null);
 
-  const [pendingConfirmation, setPendingConfirmation] =
-	  useState<PendingConfirmation | null>(null);
+	const [isConfirming, setIsConfirming] =
+		useState(false);
 
-  const [isConfirming, setIsConfirming] =
-    useState(false);
-  
-  const requestConfirmation = (
-    action: ConfirmAction,
-    userId: number,
-  ) => {
-    const user = search.searchResults.find(
-      (result) => result.id === userId,
-    );
+	const requestConfirmation = (
+		action: ConfirmAction,
+		userId: number,
+	) => {
+		const user = search.searchResults.find(
+			(result) => result.id === userId,
+		);
 
-    if (!user) {
-      return;
-    }
+		if (!user) {
+			return;
+		}
 
-    setPendingConfirmation({
-      action,
-      userId,
-      login: user.login,
-    });
-  };
+		setPendingConfirmation({
+			action,
+			userId,
+			login: user.login,
+		});
+	};
 
-  if (search.error) {
-    return <p>{search.error}</p>;
-  }
+	const handleConfirm = async () => {
+		if (!pendingConfirmation) {
+			return;
+		}
 
-  const showInitialLoading =
-    search.isLoading && search.searchResults.length === 0;
+		setIsConfirming(true);
 
-  if (showInitialLoading) {
-    return <p>Buscando...</p>;
-  }
+		try {
+			switch (pendingConfirmation.action) {
+				case "remove-friend":
+					await search.handleRemoveFriend(
+						pendingConfirmation.userId,
+					);
+					break;
 
-  const handleConfirm = async () => {
-    if (!pendingConfirmation) {
-      return;
-    }
+				case "block":
+					await search.handleBlockUser(
+						pendingConfirmation.userId,
+					);
+					break;
 
-    setIsConfirming(true);
+				case "unblock":
+					await search.handleUnblockUser(
+						pendingConfirmation.userId,
+					);
+					break;
+			}
 
-    try {
-      switch (pendingConfirmation.action) {
-        case "remove-friend":
-          await search.handleRemoveFriend(
-            pendingConfirmation.userId,
-          );
-          break;
+			setPendingConfirmation(null);
+		} finally {
+			setIsConfirming(false);
+		}
+	};
 
-        case "block":
-          await search.handleBlockUser(
-            pendingConfirmation.userId,
-          );
-          break;
+	const confirmationConfig = pendingConfirmation
+		? {
+				"remove-friend": {
+					title: "Eliminar amigo",
+					message:
+						`¿Seguro que quieres eliminar a @${pendingConfirmation.login} de tus amigos?`,
+					confirmLabel: "Eliminar",
+					confirmingLabel: "Eliminando...",
+				},
 
-        case "unblock":
-          await search.handleUnblockUser(
-            pendingConfirmation.userId,
-          );
-          break;
-      }
+				block: {
+					title: "Bloquear usuario",
+					message:
+						`¿Seguro que quieres bloquear a @${pendingConfirmation.login}?`,
+					confirmLabel: "Bloquear",
+					confirmingLabel: "Bloqueando...",
+				},
 
-      setPendingConfirmation(null);
-    } finally {
-      setIsConfirming(false);
-    }
-  };
+				unblock: {
+					title: "Desbloquear usuario",
+					message:
+						`¿Seguro que quieres desbloquear a @${pendingConfirmation.login}?`,
+					confirmLabel: "Desbloquear",
+					confirmingLabel: "Desbloqueando...",
+				},
+			}[pendingConfirmation.action]
+		: null;
 
-  const confirmationConfig = pendingConfirmation
-    ? {
-        "remove-friend": {
-          title: "Eliminar amigo",
-          message: `¿Seguro que quieres eliminar a @${pendingConfirmation.login} de tus amigos?`,
-          confirmLabel: "Eliminar",
-          confirmingLabel: "Eliminando...",
-        },
-        block: {
-          title: "Bloquear usuario",
-          message: `¿Seguro que quieres bloquear a @${pendingConfirmation.login}?`,
-          confirmLabel: "Bloquear",
-          confirmingLabel: "Bloqueando...",
-        },
-        unblock: {
-          title: "Desbloquear usuario",
-          message: `¿Seguro que quieres desbloquear a @${pendingConfirmation.login}?`,
-          confirmLabel: "Desbloquear",
-          confirmingLabel: "Desbloqueando...",
-        },
-      }[pendingConfirmation.action]
-    : null;
+	return (
+		<div className="advancedSearchOverlay">
+			<div className="advancedSearchPanel">
+				<div className="advancedSearchPanel__header">
+					<h3 className="advancedSearchPanel__title">
+						Búsqueda avanzada
+					</h3>
 
-  return (
-    <>
-      <p className="searchResults__count">
-        {search.totalResults} usuarios encontrados
-      </p>
+					<button
+						type="button"
+						className="advancedSearchPanel__close"
+						onClick={onClose}
+						aria-label="Cerrar búsqueda avanzada"
+					>
+						×
+					</button>
+				</div>
 
-      <SearchResults
-        results={search.searchResults}
-        onSendFriendRequest={search.handleSendFriendRequest}
-        onAcceptFriendRequest={search.handleAcceptFriendRequest}
-        onRejectFriendRequest={search.handleRejectFriendRequest}
-        onRemoveFriend={(userId) =>
-          requestConfirmation("remove-friend", userId)
-        }
-        onBlockUser={(userId) =>
-          requestConfirmation("block", userId)
-        }
-        onUnblockUser={(userId) =>
-          requestConfirmation("unblock", userId)
-        }
-      />
+				{search.error ? (
+					<p>{search.error}</p>
+				) : search.isLoading &&
+					search.searchResults.length === 0 ? (
+					<p>Buscando...</p>
+				) : (
+					<>
+						<p className="searchResults__count">
+							{search.totalResults} usuarios encontrados
+						</p>
 
-      <SearchPagination
-        page={search.page}
-        totalPages={search.totalPages}
-        onPrevious={search.handlePreviousPage}
-        onNext={search.handleNextPage}
-      />
+						<SearchResults
+							results={search.searchResults}
+							onSendFriendRequest={
+								search.handleSendFriendRequest
+							}
+							onAcceptFriendRequest={
+								search.handleAcceptFriendRequest
+							}
+							onRejectFriendRequest={
+								search.handleRejectFriendRequest
+							}
+							onRemoveFriend={(userId) =>
+								requestConfirmation(
+									"remove-friend",
+									userId,
+								)
+							}
+							onBlockUser={(userId) =>
+								requestConfirmation(
+									"block",
+									userId,
+								)
+							}
+							onUnblockUser={(userId) =>
+								requestConfirmation(
+									"unblock",
+									userId,
+								)
+							}
+						/>
 
-      {confirmationConfig && (
-        <ConfirmModal
-          open={pendingConfirmation !== null}
-          title={confirmationConfig.title}
-          message={confirmationConfig.message}
-          confirmLabel={confirmationConfig.confirmLabel}
-          confirmingLabel={
-            confirmationConfig.confirmingLabel
-          }
-          cancelLabel="Cancelar"
-          isConfirming={isConfirming}
-          onConfirm={handleConfirm}
-          onClose={() =>
-            setPendingConfirmation(null)
-          }
-        />
-      )}
-    </>
-  );
+						<SearchPagination
+							page={search.page}
+							totalPages={search.totalPages}
+							onPrevious={
+								search.handlePreviousPage
+							}
+							onNext={
+								search.handleNextPage
+							}
+						/>
+					</>
+				)}
+
+				{confirmationConfig && (
+					<ConfirmModal
+						open={pendingConfirmation !== null}
+						title={confirmationConfig.title}
+						message={confirmationConfig.message}
+						confirmLabel={
+							confirmationConfig.confirmLabel
+						}
+						confirmingLabel={
+							confirmationConfig.confirmingLabel
+						}
+						cancelLabel="Cancelar"
+						isConfirming={isConfirming}
+						onConfirm={handleConfirm}
+						onClose={() =>
+							setPendingConfirmation(null)
+						}
+					/>
+				)}
+			</div>
+		</div>
+	);
 }

@@ -57,6 +57,8 @@ function isApiError(error: unknown): error is ApiError {
 
 export const Profile = () => {
 	const { username } = useParams<{ username: string }>();
+	console.log("PROFILE username:", username);
+	console.log("PROFILE SE HA RENDERIZADO:", username);
 
 	const {
 		user: authenticatedUser,
@@ -101,6 +103,7 @@ export const Profile = () => {
 	useState(false);
 
 	useEffect(() => {
+		console.log("PROFILE useEffect:", username);
 		let cancelled = false;
 
 		setProfileUser(null);
