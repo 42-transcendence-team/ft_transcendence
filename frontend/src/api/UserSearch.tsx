@@ -15,7 +15,7 @@ export type UserSearch = {
     status: string;
     relation: UserRelation;
     can_send_request: boolean;
-    request_id?: number;
+    request_id: number | null;
 };
 
 export type UserSearchResponse = {
@@ -57,7 +57,7 @@ export async function searchUsers(
     queryParams.set("relations", params.relations.join(","));
   }
 
-  const data = await apiRequest({
+  const data = await apiRequest<UserSearchResponse>({
     endpoint: `users/search?${queryParams.toString()}`,
   });
 

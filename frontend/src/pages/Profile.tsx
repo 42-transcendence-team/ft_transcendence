@@ -32,6 +32,14 @@ import { NotFound } from "./NotFound";
 
 import "../styles/pages/_profile.scss";
 
+import { ConfirmModal } from "../components/ConfirmModal";
+
+type ConfirmAction =
+	| "remove-friend"
+	| "block"
+	| "unblock"
+	| null;
+
 function getImageSource(imagePath: string): string {
 	return imagePath.startsWith("/")
 		? imagePath
@@ -85,6 +93,12 @@ export const Profile = () => {
 
 	const [bannerImageFailed, setBannerImageFailed] =
 		useState(false);
+
+	const [confirmAction, setConfirmAction] =
+	useState<ConfirmAction>(null);
+
+	const [isConfirming, setIsConfirming] =
+	useState(false);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -330,32 +344,32 @@ export const Profile = () => {
 		);
 	};
 
-	const handleRemoveFriend = () => {
+	const handleRemoveFriend = async () => {
 		if (!profileUser) {
 			return;
 		}
 
-		void executeRelationAction(() =>
+		await executeRelationAction(() =>
 			removeFriend(profileUser.id),
 		);
 	};
 
-	const handleBlockUser = () => {
+	const handleBlockUser = async () => {
 		if (!profileUser) {
 			return;
 		}
 
-		void executeRelationAction(() =>
+		await executeRelationAction(() =>
 			blockUser(profileUser.id),
 		);
 	};
 
-	const handleUnblockUser = () => {
+	const handleUnblockUser = async () => {
 		if (!profileUser) {
 			return;
 		}
 
-		void executeRelationAction(() =>
+		await executeRelationAction(() =>
 			unblockUser(profileUser.id),
 		);
 	};
@@ -421,6 +435,62 @@ export const Profile = () => {
 		}
 	};
 
+	const handleConfirmRelationAction = async () => {
+		if (!confirmAction) {
+			return;
+		}
+
+		setIsConfirming(true);
+
+		try {
+			switch (confirmAction) {
+				case "remove-friend":
+					await handleRemoveFriend();
+					break;
+
+				case "block":
+					await handleBlockUser();
+					break;
+
+				case "unblock":
+					await handleUnblockUser();
+					break;
+			}
+
+			setConfirmAction(null);
+		} finally {
+			setIsConfirming(false);
+		}
+	};
+
+	const confirmationConfig = {
+		"remove-friend": {
+			title: "Eliminar amigo",
+			message:
+				"¿Seguro que quieres eliminar a este usuario de tus amigos?",
+			confirmLabel: "Eliminar",
+			confirmingLabel: "Eliminando...",
+		},
+		block: {
+			title: "Bloquear usuario",
+			message:
+				"¿Seguro que quieres bloquear a este usuario?",
+			confirmLabel: "Bloquear",
+			confirmingLabel: "Bloqueando...",
+		},
+		unblock: {
+			title: "Desbloquear usuario",
+			message:
+				"¿Seguro que quieres desbloquear a este usuario?",
+			confirmLabel: "Desbloquear",
+			confirmingLabel: "Desbloqueando...",
+		},
+	};
+
+	const currentConfirmation = confirmAction
+		? confirmationConfig[confirmAction]
+		: null;
+
 	return (
 		<div className="profile">
 			<div className="profile__container">
@@ -459,13 +529,9 @@ export const Profile = () => {
 					onRejectRequest={
 						handleRejectRequest
 					}
-					onRemoveFriend={
-						handleRemoveFriend
-					}
-					onBlockUser={handleBlockUser}
-					onUnblockUser={
-						handleUnblockUser
-					}
+					onRemoveFriend={() => setConfirmAction("remove-friend")}
+					onBlockUser={() => setConfirmAction("block")}
+					onUnblockUser={() => setConfirmAction("unblock")}
 					onShare={handleShare}
 				/>
 
@@ -524,6 +590,28 @@ export const Profile = () => {
 					}
 				/>
 			)}
+
+		{currentConfirmation && (
+			<ConfirmModal
+				open={confirmAction !== null}
+				title={currentConfirmation.title}
+				message={currentConfirmation.message}
+				confirmLabel={
+					currentConfirmation.confirmLabel
+				}
+				confirmingLabel={
+					currentConfirmation.confirmingLabel
+				}
+				cancelLabel="Cancelar"
+				isConfirming={isConfirming}
+				onConfirm={
+					handleConfirmRelationAction
+				}
+				onClose={() =>
+					setConfirmAction(null)
+				}
+			/>
+		)}
 		</div>
 	);
 };
