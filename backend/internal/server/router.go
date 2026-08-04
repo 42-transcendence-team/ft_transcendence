@@ -80,7 +80,7 @@ func (srv *HTTPServer) Router() {
 
 	// Esto en realidad no se como poder hacerlo bonito
 	login := api.Group("/2fa")
-	login.Use(middlewares.TwoFAMiddleware(srv.Conf))
+	login.Use(middlewares.TwoFAMiddleware(srv.Conf, srv.Redis))
 	{
 		login.POST("/login", twoFAHandler.Login2FA)
 	}

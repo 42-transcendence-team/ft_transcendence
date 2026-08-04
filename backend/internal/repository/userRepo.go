@@ -6,8 +6,9 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"errors"
-	"gorm.io/gorm"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type UserRepository struct {
@@ -356,4 +357,15 @@ func (r *UserRepository) GetUserID(userID uint) (*dto.ChatUserInfo, error) {
 	}
 
 	return &user, nil
+}
+
+func (r *UserRepository) FindByOAuth(OAuthID int) (*models.User, error) {
+	var user models.User
+
+	err := r.db.Where("o_auth_id = ?", OAuthID).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, err
 }

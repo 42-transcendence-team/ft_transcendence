@@ -24,6 +24,7 @@ export const UserMenu = () => {
 			console.log("logout ERROR", error);
 		}
 	};
+
 	const handleSettings = async () => {
 		navigate("settings");
 		console.log("setting button");
@@ -33,6 +34,7 @@ export const UserMenu = () => {
 		navigate('profile/a')
 		console.log('profile button')
 	}
+
 	return (
 		<div className="userMenu">
 			<button

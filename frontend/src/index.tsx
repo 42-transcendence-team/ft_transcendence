@@ -15,4 +15,4 @@ if (rootEl) {
       <RouterProvider router={router} />
     </React.StrictMode>
   );
-}
+} 
