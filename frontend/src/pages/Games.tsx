@@ -1,6 +1,7 @@
 import { TicTacToe } from "games/tictactoe/ticTacToe";
 import { ConnectFour } from "games/connectFour/connectFour";
 import { useNavigate } from "react-router-dom";
+import { Goose } from "games/goose/goose";
 
 export const games = [
 	{
@@ -10,19 +11,19 @@ export const games = [
 		aspectRatio: 1,
 		component: TicTacToe,
 	},
+	// {
+	// 	id: "parchis",
+	// 	name: "Parchis",
+	// 	description: "This is the second game.",
+	// 	aspectRatio: 16 / 9,
+	// 	component: () => <div>Parchis Game Component</div>,
+	// },
 	{
-		id: "parchis",
-		name: "Parchis",
-		description: "This is the second game.",
-		aspectRatio: 4 / 3,
-		component: () => <div>Parchis Game Component</div>,
-	},
-	{
-		id: "oca",
-		name: "Oca",
+		id: "goose",
+		name: "Goose",
 		description: "This is the third game.",
-		aspectRatio: 16 / 9,
-		component: () => <div>Oca Game Component</div>,
+		aspectRatio: 4 / 3,
+		component: Goose,
 	},
 	{
 		id: "connectfour",

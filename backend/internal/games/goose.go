@@ -1,23 +1,37 @@
 package games
 
 import (
+	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"encoding/json"
+	"log"
 	"math/rand/v2"
+	"time"
 )
 
 type Goose struct {
 	Game
-	Board []Cell
-	State map[uint]*GooseState
+	Board   []Cell               `json:"board"`
+	State   map[uint]*GooseState `json:"playerstate"`
+	Actions []GooseAction        `json:"actions,omitempty"`
 }
 
 type GooseState struct {
-	Position  int  `json:"position"`
+	Position  uint `json:"position"`
 	SkipTurns int  `json:"skip_turns"`
 	InWell    bool `json:"in_well"`
 	InPrison  bool `json:"in_prison"`
-	ExtraTurn bool `json:"extra_turn"`
+	Token     int  `json:"token"`
+}
+
+type GooseAction struct {
+	Type    string `json:"type"`
+	Token   int    `json:"token,omitempty"`
+	From    uint   `json:"from,omitempty"`
+	To      uint   `json:"to,omitempty"`
+	Dice1   uint   `json:"dice1,omitempty"`
+	Dice2   uint   `json:"dice2,omitempty"`
+	Message string `json:"payload,omitempty"`
 }
 
 type Cell struct {
@@ -37,8 +51,29 @@ const (
 	CellPrison
 	CellDice
 	CellSkull
-	CellFinish
 )
+
+func NewGoose(id, players uint, mode, gameType string, events chan dto.GameEvent) *Goose {
+	g := &Goose{
+		Game: Game{
+			Turn:           1,
+			Players:        make([]Player, 0, players),
+			MaxPlayers:     int(players),
+			Mode:           mode,
+			ID:             id,
+			Type:           gameType,
+			CreatedAt:      time.Now(),
+			ReconnectTimer: make(map[uint]*time.Timer),
+			Events:         events,
+		},
+		Board: make([]Cell, 64),
+		State: make(map[uint]*GooseState),
+	}
+	g.TimeoutPlayer = g.PlayerTimeout
+	g.GetGameState = g.GetState
+	g.Init()
+	return g
+}
 
 func (g *Goose) GetState() interface{} { return g }
 
@@ -64,6 +99,18 @@ func (g *Goose) GetWinner() (int, interface{}) {
 func (g *Goose) Init() {
 	g.Board = make([]Cell, 64)
 	g.State = make(map[uint]*GooseState)
+
+	if g.Mode == "local" {
+		for i := 1; i <= g.MaxPlayers; i++ {
+			g.State[uint(i)] = &GooseState{
+				Position:  0,
+				SkipTurns: 0,
+				InWell:    false,
+				InPrison:  false,
+				Token:     i,
+			}
+		}
+	}
 
 	for i := 0; i <= 63; i++ {
 		g.Board[i] = Cell{Number: i, Type: CellNormal}
@@ -100,7 +147,7 @@ func (g *Goose) ConnectPlayer(userID uint, username string) error {
 				SkipTurns: 0,
 				InWell:    false,
 				InPrison:  false,
-				ExtraTurn: false,
+				Token:     len(g.Players),
 			}
 		}
 	}
@@ -108,69 +155,129 @@ func (g *Goose) ConnectPlayer(userID uint, username string) error {
 }
 
 func (g *Goose) ProcessMove(userID uint, actionPayload json.RawMessage) error {
-	player := g.FindPlayerByID(userID)
-	if player == nil {
-		return appErr.NewNotFound("jugador no encontrado")
+	if g.Finished {
+		return appErr.NewConflict("el juego ya ha terminado")
 	}
 
-	if g.Turn != player.Token {
-		return appErr.NewConflict("no es tu turno")
+	var playerID uint
+
+	if g.Mode == "online" {
+		if len(g.Players) < 2 {
+			return appErr.NewConflict("no hay suficientes jugadores para jugar")
+		}
+
+		player := g.FindPlayerByID(userID)
+		if player == nil {
+			return appErr.NewNotFound("jugador no encontrado")
+		}
+
+		if g.Turn != player.Token {
+			return appErr.NewConflict("no es tu turno")
+		}
+
+		playerID = player.ID
+	} else {
+		playerID = uint(g.Turn)
 	}
 
-	g.RollDice(player)
-	state := g.State[player.ID]
-
-	if state.ExtraTurn {
-		state.ExtraTurn = false
-		return nil
-	}
+	g.Actions = g.RollDice(playerID)
 
 	if !g.Finished && len(g.Players) > 0 {
-		g.Turn = (g.Turn % len(g.Players)) + 1
+		g.Turn = (g.Turn % int(g.MaxPlayers)) + 1
 	}
+
 	return nil
 }
 
-func (g *Goose) RollDice(player *Player) {
-	state := g.State[player.ID]
+func (g *Goose) RollDice(playerId uint) []GooseAction {
+	state := g.State[playerId]
+
+	actions := make([]GooseAction, 0)
 
 	if state.SkipTurns > 0 {
 		state.SkipTurns--
-		return
+		actions = append(actions, GooseAction{
+			Type:    "skip_turn",
+			Token:   state.Token,
+			Message: "Pierde un turno",
+		})
+		return actions
 	}
 
-	if state.InWell || state.InPrison {
-		return
+	if state.InWell {
+		actions = append(actions, GooseAction{
+			Type:    "well",
+			Token:   state.Token,
+			Message: "Sigue en el pozo",
+		})
+		return actions
 	}
 
-	var d1, d2, total int
+	if state.InPrison {
+		actions = append(actions, GooseAction{
+			Type:    "prison",
+			Token:   state.Token,
+			Message: "Sigue en la cárcel",
+		})
+		return actions
+	}
 
-	if state.Position >= 60 {
-		total = rand.IntN(6) + 1
-	} else {
-		d1 = rand.IntN(6) + 1
-		d2 = rand.IntN(6) + 1
-		total = d1 + d2
+	for {
+		var d1, d2, total uint
+		if state.Position >= 60 {
+			d1 = uint(rand.IntN(6) + 1)
+			total = d1
+		} else {
+			d1 = uint(rand.IntN(6) + 1)
+			d2 = uint(rand.IntN(6) + 1)
+			total = d1 + d2
+		}
 
-		switch state.Position {
-		case 0:
-			if total == 9 {
-				if (d1 == 5 && d2 == 4) || (d1 == 4 && d2 == 5) {
-					state.Position = 53
-				} else if (d1 == 6 && d2 == 3) || (d1 == 3 && d2 == 6) {
-					state.Position = 26
-				}
-				g.ResolveCell(player, true)
-				return
+		actions = append(actions, GooseAction{
+			Type:  "roll",
+			Dice1: d1,
+			Dice2: d2,
+			Token: state.Token,
+		})
+
+		old := state.Position
+
+		if old == 0 && total == 9 {
+			if (d1 == 5 && d2 == 4) || (d1 == 4 && d2 == 5) {
+				state.Position = 53
+			} else if (d1 == 6 && d2 == 3) || (d1 == 3 && d2 == 6) {
+				state.Position = 26
 			}
+			actions = append(actions, GooseAction{
+				Type:  "move",
+				From:  old,
+				To:    state.Position,
+				Token: state.Token,
+			})
+			return actions
+		} else {
+			g.MovePlayer(playerId, total)
+			actions = append(actions, GooseAction{
+				Type:  "move",
+				From:  old,
+				To:    state.Position,
+				Token: state.Token,
+			})
+		}
+
+		extra := g.ResolveCell(playerId, &actions)
+
+		if !extra {
+			break
 		}
 	}
+	log.Printf("Actions for player %d: %+v", playerId, actions)
 
-	g.MovePlayer(player, total)
+	return actions
 }
 
-func (g *Goose) MovePlayer(player *Player, steps int) {
-	state := g.State[player.ID]
+func (g *Goose) MovePlayer(playerId uint, steps uint) {
+	state := g.State[playerId]
 	state.Position += steps
 
 	if state.Position > 63 {
@@ -178,67 +285,117 @@ func (g *Goose) MovePlayer(player *Player, steps int) {
 		state.Position = 63 - excess
 	}
 
-	g.checkRescue(player.ID, state.Position)
-	g.ResolveCell(player, false)
+	g.checkRescue(playerId, state.Position)
 }
 
-func (g *Goose) ResolveCell(player *Player, extraTurn bool) {
-	state := g.State[player.ID]
-	cell := g.Board[state.Position]
+func (g *Goose) ResolveCell(playerId uint, actions *[]GooseAction) bool {
+	state := g.State[playerId]
 
-	switch cell.Type {
+	switch g.Board[state.Position].Type {
 	case CellGoose:
-		if state.Position == 63 {
-			g.Winner = player.Token
-			g.Finished = true
-			return
-		}
-		state.Position = g.NextGoose(state.Position)
-		if state.Position == 63 {
-			g.Winner = player.Token
-			g.Finished = true
-			return
-		}
-		state.ExtraTurn = true
+		old := state.Position
+		state.Position = g.NextGoose(old)
+		*actions = append(*actions, GooseAction{
+			Type:    "goose",
+			From:    old,
+			To:      state.Position,
+			Message: "De oca a oca y tiro porque me toca",
+			Token:   state.Token,
+		})
+		return true
 
 	case CellBridge:
-		switch state.Position {
-		case 6:
+		old := state.Position
+		if old == 6 {
 			state.Position = 12
-		case 12:
+		} else {
 			state.Position = 6
 		}
+		*actions = append(*actions, GooseAction{
+			Type:    "bridge",
+			From:    old,
+			To:      state.Position,
+			Message: "De puente a puente",
+			Token:   state.Token,
+		})
+		return true
+
+	case CellDice:
+		old := state.Position
+		var rawTarget uint
+
+		if old == 26 {
+			rawTarget = old + 26
+		} else {
+			rawTarget = old + 53
+		}
+
+		if rawTarget > 63 {
+			state.Position = 126 - rawTarget
+		} else {
+			state.Position = rawTarget
+		}
+
+		*actions = append(*actions, GooseAction{
+			Type:    "dice",
+			From:    old,
+			To:      state.Position,
+			Message: "De dados a dados",
+			Token:   state.Token,
+		})
+		return true
 
 	case CellInn:
 		state.SkipTurns = 1
+		*actions = append(*actions, GooseAction{
+			Type:    "inn",
+			Message: "Te quedas en la posada y pierdes un turno",
+			Token:   state.Token,
+		})
 
 	case CellWell:
 		state.InWell = true
-
-	case CellMaze:
-		state.Position = 30
+		*actions = append(*actions, GooseAction{
+			Type:    "well",
+			Message: "Caes en el pozo y pierdes turnos hasta que otro jugador caiga aquí",
+			Token:   state.Token,
+		})
 
 	case CellPrison:
 		state.InPrison = true
+		*actions = append(*actions, GooseAction{
+			Type:    "prison",
+			Message: "Caes en la cárcel y pierdes turnos hasta que otro jugador caiga aquí",
+			Token:   state.Token,
+		})
 
-	case CellDice:
-		switch state.Position {
-		case 26:
-			state.Position = 53
-		case 53:
-			state.Position = 26
-		}
+	case CellMaze:
+		old := state.Position
+		state.Position = 30
+		*actions = append(*actions, GooseAction{
+			Type:    "maze",
+			From:    old,
+			To:      30,
+			Message: "Entras en el laberinto",
+			Token:   state.Token,
+		})
 
 	case CellSkull:
-		state.Position = 0
-
-	case CellFinish:
-		g.Winner = player.Token
-		g.Finished = true
+		old := state.Position
+		state.Position = 1
+		*actions = append(*actions, GooseAction{
+			Type:    "skull",
+			From:    old,
+			To:      1,
+			Message: "La calavera te devuelve al inicio",
+			Token:   state.Token,
+		})
 	}
+
+	return false
 }
 
-func (g *Goose) NextGoose(position int) int {
+func (g *Goose) NextGoose(position uint) uint {
 	for i := position + 1; i <= 63; i++ {
 		if g.Board[i].Type == CellGoose {
 			return i
@@ -247,7 +404,7 @@ func (g *Goose) NextGoose(position int) int {
 	return position
 }
 
-func (g *Goose) checkRescue(currentPlayerID uint, position int) {
+func (g *Goose) checkRescue(currentPlayerID uint, position uint) {
 	for id, s := range g.State {
 		if id != currentPlayerID {
 			if position == 31 && s.InWell {
@@ -258,4 +415,15 @@ func (g *Goose) checkRescue(currentPlayerID uint, position int) {
 			}
 		}
 	}
+}
+
+func (g *Goose) PlayerTimeout(userID uint) (interface{}, error) {
+	player := g.FindPlayerByID(userID)
+	if player == nil {
+		return nil, appErr.NewNotFound("jugador no encontrado")
+	}
+
+	g.Finished = true
+
+	return g.GetState(), nil
 }

@@ -12,15 +12,15 @@ import (
 const reconnectTimeout = 10 * time.Second
 
 type Game struct {
-	ID        uint      `json:"id"`
-	Name      string    `json:"name"`
-	Players   []Player  `json:"players"`
-	Type      string    `json:"type"`
-	Turn      int       `json:"turn"`
-	Mode      string    `json:"mode"`
-	Finished  bool      `json:"is_finished"`
-	Winner    int       `json:"winner,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	ID         uint      `json:"id"`
+	Players    []Player  `json:"players"`
+	MaxPlayers int       `json:"max_players"`
+	Type       string    `json:"type"`
+	Turn       int       `json:"turn"`
+	Mode       string    `json:"mode"`
+	Finished   bool      `json:"is_finished"`
+	Winner     int       `json:"winner,omitempty"`
+	CreatedAt  time.Time `json:"created_at"`
 
 	Events chan dto.GameEvent `json:"-"`
 
@@ -50,6 +50,7 @@ type GameEngine interface {
 	ConnectPlayer(userID uint, username string) error
 	PlayerTimeout(userID uint) (interface{}, error)
 	GetPlayers() []Player
+	RedyToStart() bool
 }
 
 func (g *Game) GetCurrentPlayer() int { return g.Turn }
@@ -71,17 +72,19 @@ func (g *Game) FindPlayerByID(userID uint) *Player {
 	return nil
 }
 
+func (g *Game) RedyToStart() bool {
+	if g.Mode == "online" {
+		return len(g.Players) == g.MaxPlayers
+	}
+	return true
+}
+
 func (g *Game) ConnectPlayer(userID uint, username string) error {
 	if g.Mode == "local" && len(g.Players) >= 1 {
 		return appErr.NewConflict("no se puede unir a un juego local")
 	}
 
-	maxPlayers := 2
-	if g.Type == "goose" {
-		maxPlayers = 6
-	}
-
-	if g.Mode == "online" && len(g.Players) >= maxPlayers {
+	if g.Mode == "online" && len(g.Players) >= g.MaxPlayers {
 		err := g.reconnectPlayer(userID)
 		if err != nil {
 			newViwer := Player{

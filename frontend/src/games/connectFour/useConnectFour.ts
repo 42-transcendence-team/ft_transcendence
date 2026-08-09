@@ -42,7 +42,7 @@ function mapBackendToFrontendBoard(backendBoard: number[][] | null): ConnectFour
 
 export function useConnectFour() {
 	const [ mode, setMode ] = useState<ConnectFourMode | null>(null);
-	const { createGame, makeMove, gameState: rawGameState, returnMenu, joinGame } = useGame();
+	const { makeMove, gameState: rawGameState, returnMenu, joinGame } = useGame();
 
 	const gameState = rawGameState as unknown as ConnectFourGameState;
 
@@ -52,11 +52,6 @@ export function useConnectFour() {
 	const line = gameState.winning_line || null;
 
 	const draw = gameState.status === "FINISH" && !gameState.winner;
-
-	function startGame(selectedMode: ConnectFourMode) {
-		createGame("CONNECTFOUR", selectedMode);
-		setMode(selectedMode);
-	}
 
 	function play(column: number) {
 		if (gameState?.status !== "PLAY") return;
@@ -68,7 +63,7 @@ export function useConnectFour() {
 		returnMenu();
 	}
 
-	return { mode, startGame, play, line, draw, gameState, backendBoard, reset, joinGame, currentTurn };
+	return { mode, play, line, draw, gameState, backendBoard, reset, joinGame, currentTurn };
 }
 
 export default useConnectFour;

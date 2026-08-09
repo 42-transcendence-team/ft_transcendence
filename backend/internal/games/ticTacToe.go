@@ -4,7 +4,6 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"encoding/json"
-	"log"
 	"time"
 )
 
@@ -141,7 +140,6 @@ func (t *TicTacToe) IsFull() bool {
 func (t *TicTacToe) PlayerTimeout(userID uint) (interface{}, error) {
 	player := t.FindPlayerByID(userID)
 	if player == nil {
-		log.Printf("Jugador %d no encontrado en el juego %d", userID, t.ID)
 		return nil, appErr.NewNotFound("jugador no encontrado")
 	}
 

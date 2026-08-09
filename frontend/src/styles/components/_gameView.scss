@@ -42,6 +42,12 @@
 	gap: 1.3rem;
 	background-color: rgba(140, 140, 140, 0.400);
 
+	&__player {
+		display: flex;
+		flex-direction: row;
+		gap: 1rem;
+	}
+
 	&__button {
 		padding: 1rem 1rem;
 		font-size: 2rem;

@@ -29,31 +29,83 @@ export default function GameView() {
 
 function GameViewMenu() {
 	const { gameState, createGame, setGameStatus } = useGame();
+	const [playerSelection, setPlayerSelection] = useState<"local" | "online" | null>(null);
+
+	const isMultiPlayerGame = gameState.game_type === "GOOSE";
+
+	const create = (mode: "local" | "online", numPlayers: number = 2) => {
+		createGame(gameState.game_type, mode, numPlayers);
+
+		if (mode === "online") {
+			setGameStatus("LOBBY");
+		}
+	};
+
+	if (playerSelection !== null) {
+		return (
+			<div className="game-menu">
+				<h3 className="game-menu__subtitle">Numero de Jugadores</h3>
+				<div className="game-menu__player">
+				{[2, 3, 4, 5, 6].map((numPlayers) => (
+					<button
+						key={numPlayers}
+						onClick={() => {
+							create(playerSelection, numPlayers);
+							setPlayerSelection(null);
+						}}
+						className="game-menu__button"
+					>
+						{numPlayers}
+					</button>
+				))}
+				</div>
+
+				<button
+					onClick={() => setPlayerSelection(null)}
+					className="game-menu__button"
+				>
+					Volver
+				</button>
+			</div>
+		);
+	}
+
 	return (
 		<div className="game-menu">
-			<button 
-				onClick={() => {createGame(gameState.game_type, "local")}}
-				className="game-menu__button"
-			>
-					Local
-			</button>
-			<button 
+			<button
 				onClick={() => {
-					createGame(gameState.game_type, "online")
-					setGameStatus("LOBBY");
+					if (isMultiPlayerGame) {
+						setPlayerSelection("local");
+					} else {
+						create("local");
+					}
 				}}
 				className="game-menu__button"
 			>
-					Online
+				Local
 			</button>
-						<button 
-				onClick={() => { setGameStatus("JOIN"); }}
+
+			<button
+				onClick={() => {
+					if (isMultiPlayerGame) {
+						setPlayerSelection("online");
+					} else {
+						create("online");
+					}
+				}}
 				className="game-menu__button"
 			>
-					Unirse
+				Online
+			</button>
+
+			<button
+				onClick={() => setGameStatus("JOIN")}
+				className="game-menu__button"
+			>
+				Unirse
 			</button>
 		</div>
-	)
+	);
 }
 
 function GameViewLobby() {
@@ -176,7 +228,7 @@ function GameViewTimeout() {
 	const { returnMenu } = useGame();
 	return (
 		<div className="game-menu">
-			<h2 className="game-menu__title">El jugador ha perdido por tiempo.</h2>
+			<h2 className="game-menu__title">El jugador ha perdido por abandono.</h2>
 			<button 
 				onClick={() => returnMenu()}
 				className="game-menu__button"

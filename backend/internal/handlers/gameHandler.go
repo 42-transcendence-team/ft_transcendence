@@ -93,16 +93,15 @@ func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessag
 		log.Printf("Error al decodificar CreateGame: %v", err)
 		return
 	}
+	log.Printf("Mensaje recibido para crear juego: %+v", createData)
 
 	newGameID := gh.NewRoomId()
 
-	err = gh.gameManager.CreateGame(newGameID, createData.GameType, createData.Mode, gh.events)
+	err = gh.gameManager.CreateGame(newGameID, createData.Players, createData.GameType, createData.Mode, gh.events)
 	if err != nil {
 		log.Printf("Error al crear el juego: %v", err)
 		return
 	}
-
-	state := gh.gameManager.ActiveGames[newGameID].GetState()
 
 	room := gh.hub.CreateRoom(newGameID, fmt.Sprintf("Game-%d", newGameID), false)
 
@@ -114,6 +113,7 @@ func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessag
 		return
 	}
 
+	state := gh.gameManager.ActiveGames[newGameID].GetState()
 	response := map[string]interface{}{
 		"type":   "game_created",
 		"state":  state,
@@ -129,8 +129,6 @@ func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessag
 	responseBytes, _ := json.Marshal(response)
 	c.Send(responseBytes)
 }
-
-// TODO - Enviar mensajes de error al front para que el usuario sepa que algo salió mal y suscribirlos en front
 
 func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage) {
 	var joinData dto.JoinGame
@@ -173,6 +171,27 @@ func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage)
 	room := gh.hub.CreateRoom(joinData.GameID, fmt.Sprintf("Game-%d", joinData.GameID), false)
 
 	c.JoinRoom(room)
+
+	start := engine.RedyToStart()
+	if !start {
+		message := map[string]interface{}{
+			"type":   "game_joined",
+			"state":  engine.GetState(),
+			"status": "LOBBY",
+		}
+		messageBytes, _ := json.Marshal(message)
+		c.Send(messageBytes)
+
+		broadcast := map[string]interface{}{
+			"type":   "game_update",
+			"state":  engine.GetState(),
+			"status": "LOBBY",
+		}
+		broadcastBytes, _ := json.Marshal(broadcast)
+
+		gh.hub.BroadcastToRoom(joinData.GameID, broadcastBytes)
+		return
+	}
 
 	message := map[string]interface{}{
 		"type":   "game_joined",

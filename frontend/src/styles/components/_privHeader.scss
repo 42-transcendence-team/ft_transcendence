@@ -4,48 +4,57 @@
 
 .privHeader {
     width: 100%;
-
     background-color: $dark-purple-background-light;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     padding: 0 1rem;
-
     border-radius: 10px;
-
     box-shadow: 0 4px 12px $dark-purple-background-light;
-}
 
-.privHeader__left,
-.privHeader__center,
-.privHeader__right {
-    color: $dark-purple-main-text-light;
-    display: flex;
-    align-items: center;
-    height: 100%;
-}
+    &__left,
+    &__center,
+    &__right {
+        color: $dark-purple-main-text-light;
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
 
-.privHeader__center {
-	justify-content: center;
-}
+    &__center {
+        justify-content: center;
+    }
 
-.privHeader__right {
-	justify-content: flex-end;
-}
+    &__right {
+        justify-content: flex-end;
+    }
 
-.privHeader__logo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    &__logo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
 
-    text-decoration: none;
-    color: $dark-purple-main-text-light;
-}
+        text-decoration: none;
+        color: $dark-purple-main-text-light;
+    }
 
-.privHeader__logo-img {
-	height: 60px;
-	width: auto;
-	filter: brightness(0) invert(1);
+    &__logo-img {
+        height: 60px;
+        width: auto;
+        filter: brightness(0) invert(1);
+    }
+
+    &__games-link {
+        text-decoration: none;
+        color: $dark-purple-main-text-light;
+        font-size: 1rem;
+        font-weight: bold;
+        background-color: $orange-background-light;
+        padding: 0.5rem 0.8rem;
+        border-radius: 10px;
+
+        &:hover {
+            color: $actions-light;
+        }
+    }
 }

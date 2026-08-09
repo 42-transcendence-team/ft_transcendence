@@ -37,7 +37,7 @@ function mapBackendToFrontendBoard(backendBoard: number[][] | null): TicTacToeBo
 
 export function useTicTacToe() {
     const [ mode, setMode ] = useState<TicTacToeMode | null>(null);
-    const { createGame, makeMove, gameState: rawGameState, returnMenu, joinGame } = useGame();
+    const { makeMove, gameState: rawGameState, returnMenu, joinGame } = useGame();
 
     const gameState = rawGameState as unknown as TicTacToeGameState;
 
@@ -47,11 +47,6 @@ export function useTicTacToe() {
     const line = gameState.winning_line || null; 
 
     const draw = gameState.status === "FINISH" && !gameState.winner;
-
-    function startGame(selectedMode: TicTacToeMode) {
-        createGame("TICTACTOE", selectedMode);
-        setMode(selectedMode);
-    }
 
     function play(row: number, col: number) {
         if (gameState?.status !== "PLAY") return;
@@ -66,6 +61,6 @@ export function useTicTacToe() {
     }
 
     return { currentPlayer: currentTurn, line, draw, backendBoard,
-		gameState, mode, play, reset, startGame, returnMenu, joinGame
+		gameState, mode, play, reset, returnMenu, joinGame
     };
 }
