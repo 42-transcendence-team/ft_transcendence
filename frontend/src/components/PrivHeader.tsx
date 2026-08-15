@@ -13,12 +13,10 @@ type PrivHeaderProps = {
 
 
 export function PrivHeader({ onSearch }: PrivHeaderProps) {
-	const user = useLoaderData()
-
 	return (
 		<header className="privHeader privateLayout__header">
 			<div className="privHeader__left">
-				<Link to={`/app/profile/${user.user.login}`} className="privHeader__logo">
+				<Link to={`/app/`} className="privHeader__logo">
 					<img src={logo} alt="logo" className="privHeader__logo-img" />
 					<span className="privHeader__logo-text">Twenty Four</span>
 				</Link>

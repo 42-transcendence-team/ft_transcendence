@@ -31,10 +31,9 @@ export const UserMenu = () => {
 	};
 
 	const handleProfile = () => {
-		console.log(user)
 		navigate(`profile/${user.user.login}`)
-		console.log('profile button')
 	}
+
 	return (
 		<div className="userMenu">
 			<button

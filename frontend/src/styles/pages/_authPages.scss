@@ -56,6 +56,25 @@
 		line-height: 1.5;
 		color: #6f7683;
 	}
+	&__button {
+		width: 100%;
+		height: 40px;
+		border: none;
+		border-radius: 999px;
+		background: #42e08c;
+		color: #fff;
+		font-size: 1rem;
+		font-weight: 600;
+		margin-top: 15px;
+		cursor: pointer;
+		box-shadow: 0 6px 14px rgba(66, 224, 140, 0.35);
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+		&:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 8px 18px rgba(66, 224, 140, 0.4);
+		}
+	}
 }
 
 .form-field {
@@ -139,6 +158,49 @@
 
 		&::after {
 			right: 0;
+		}
+	}
+
+	&__divider {
+		margin-top: 16px;
+		text-align: center;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: #5d6270;
+		position: relative;
+
+		&::before,
+		&::after {
+			content: "";
+			position: absolute;
+			top: 50%;
+			width: 42%;
+			height: 1px;
+			background: #8f939c;
+		}
+
+		&::before {
+			left: 0;
+		}
+
+		&::after {
+			right: 0;
+		}
+	}
+
+	&__info {
+		margin: 0;
+		font-size: 0.78rem;
+		color: #5f6675;
+
+		& a {
+			color: #6992d8;
+			font-weight: 600;
+			text-decoration: none;
+
+			&:hover {
+				text-decoration: underline;
+			}
 		}
 	}
 
@@ -228,73 +290,3 @@
 	}
 }
 
-@include desktop {
-  .auth-page--register .auth-card {
-    max-width: 860px;
-  }
-
-  .auth-page--register .auth-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-      "section-account section-personal"
-      "account personal"
-      "checkboxes checkboxes"
-      "submit submit"
-      "switch switch";
-    column-gap: 42px;
-    row-gap: 18px;
-    align-items: start;
-  }
-
-  .auth-page--register .auth-form__group--account {
-    grid-area: account;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .auth-page--register .auth-form__section--account {
-    grid-area: section-account;
-    margin: 0;
-    align-self: end;
-  }
-  
-  .auth-page--register .auth-form__section--personal {
-    grid-area: section-personal;
-    margin: 0;
-    align-self: end;
-  }
-
-  .auth-page--register .auth-form__group--personal {
-    grid-area: personal;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .auth-page--register .auth-form__checkboxes {
-    grid-area: checkboxes;
-    width: fit-content;
-    margin: 0 auto;
-  }
-
-  .auth-page--register .auth-form__submit {
-    grid-area: submit;
-    justify-self: center;
-    width: 280px;
-    margin-top: 4px;
-  }
-
-  .auth-page--register .auth-form__switch {
-    grid-area: switch;
-    margin: 0;
-    text-align: center;
-  }
-
-  .auth-page--register .auth-form__server-message {
-    grid-column: 1 / -1;
-    margin: 0 auto;
-    text-align: center;
-  }
-}
