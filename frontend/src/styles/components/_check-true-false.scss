@@ -1,16 +1,15 @@
 @use '../abstracts/variables' as *;
 
 .check-true-false {
-    margin: 10px;
     display: flex;
     align-items: center;
 	justify-content: space-between;
     color: $secondary-text-light;
     font-family: sans-serif;
     --medida-base: 1.5rem;
+    margin-bottom: 1.8rem;
 
     &__label {
-        margin-left: 10px;
         cursor: pointer;
         user-select: none;
         font-size: 20px;

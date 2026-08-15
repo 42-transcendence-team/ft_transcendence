@@ -341,19 +341,29 @@ func (r *UserRepository) FindById(userID uint) (*models.User, error) {
 	return &user, err
 }
 
-// FUNCIONES PARA CHATSERVICE
-
+// GetUserID devuelve la información básica (ID y Login) de un usuario para el chat.
+// Implementa la interfaz services.UserProvider usada por WebsocketService y ChatService.
 func (r *UserRepository) GetUserID(userID uint) (*dto.ChatUserInfo, error) {
-	var user dto.ChatUserInfo
+	var user models.User
 
-	err := r.db.Model(&models.User{}).
-		Select("id", "login").
-		Where("id = ?", userID).
-		First(&user).Error
-
+	err := r.db.Select("ID", "Login").Where("ID = ?", userID).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
 
-	return &user, nil
+	return &dto.ChatUserInfo{
+		ID:    user.ID,
+		Login: user.Login,
+	}, nil
+}
+
+func (r *UserRepository) FindByOAuth(OAuthID int) (*models.User, error) {
+	var user models.User
+
+	err := r.db.Where("o_auth_id = ?", OAuthID).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, err
 }

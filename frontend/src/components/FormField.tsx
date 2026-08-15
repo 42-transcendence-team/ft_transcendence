@@ -1,6 +1,7 @@
 type FormFieldProps = {
 	id: string
 	label?: string
+	name?: string
 	type: string
 	value: string
 	onChange: (value: string) => void
@@ -33,6 +34,7 @@ export const FormField = ({
 				placeholder={placeholder}
 				onChange={(e) => onChange(e.target.value)}
 				className={className ? `${className}__input` : "default-input"}
+				autoComplete="off"
 			/>
 
 			{error && <p className={className ? `${className}__tooltip` : "default-tooltip"}>{error}</p>}
