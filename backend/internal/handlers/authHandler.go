@@ -5,6 +5,8 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
+	"backend/internal/utils"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -80,6 +82,28 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.Abort()
 		return
 	}
+
+	strToken, expTime, err := utils.CreateJwtToken(&user, h.cfg)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	timeExp := time.Until(expTime)
+	if timeExp < 0 {
+		log.Printf("authHandler: Expired session %v", err)
+		c.AbortWithStatusJSON(400, gin.H{"Error": "Expired session"})
+		return
+	}
+	sessionKey := fmt.Sprintf("session:%d", user.ID)
+	err = h.Redis.Set(c, sessionKey, strToken, timeExp).Err()
+	if err != nil {
+		log.Printf("Error: registration redis session")
+	}
+	h.Redis.SAdd(c, "online_users", user.ID)
+
+	h.setCookie(c, strToken, expTime)
 
 	// TODO: Hay que ver como damos la respuesta al front
 	c.JSON(201, gin.H{
@@ -273,4 +297,232 @@ func (h *AuthHandler) SetTempToken(c *gin.Context, tempToken string, exp time.Ti
 // Un llamador a la funcion de arriba para borrar el Token temporal de las Cookies del usuario
 func (h *AuthHandler) ClearTempToken(c *gin.Context) {
 	h.SetTempToken(c, "", time.Unix(0, 0))
+}
+
+// Redirige al usuario a la URL de autenticacion de 42, que se genera con la funcion Build42AuthURL()
+func (h *AuthHandler) Login42(c *gin.Context) {
+	authURL := h.AuthService.Build42AuthURL()
+	c.Redirect(http.StatusFound, authURL)
+}
+
+func (h *AuthHandler) Login42Callback(c *gin.Context) {
+	oauthError := c.Query("error")
+	if oauthError != "" {
+		description := c.Query("error_description")
+
+		log.Printf(
+			"42 OAuth rejected: %s (%s)",
+			oauthError,
+			description,
+		)
+
+		c.Redirect(
+			http.StatusFound,
+			"https://localhost/login?oauth_error=access_denied",
+		)
+		return
+	}
+
+	code := c.Query("code")
+	if code == "" {
+		c.Error(appErr.NewBadRequest("code query parameter is required"))
+		c.Abort()
+		return
+	}
+
+	token, err := h.AuthService.Exchange42Code(code)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	user42, err := h.AuthService.Get42User(token)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	user, err := h.AuthService.Search42User(user42)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	if user == nil {
+		newUser, err := h.AuthService.PreRegister42User(user42)
+		if err != nil {
+			c.Error(err)
+			c.Abort()
+			return
+		}
+
+		timeExp := time.Duration(5 * time.Minute)
+		err = h.Redis.Set(c, "42_register:"+token, newUser, timeExp).Err()
+		if err != nil {
+			c.Error(err)
+			c.Abort()
+			return
+		}
+
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "42_token",
+			Value:    token,
+			Expires:  time.Now().Add(timeExp),
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		})
+
+		c.Redirect(
+			http.StatusFound,
+			"https://localhost/42register",
+		)
+		return
+	}
+
+	final, err := h.AuthService.Login42User(user)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	ctx := c.Request.Context()
+	if final.Requires2FA {
+		rediskey := fmt.Sprintf("2fa_token:%s", final.TempToken)
+		timeExp := time.Until(final.ExpTime)
+		if timeExp < 0 {
+			log.Printf("authHandler: Expired session %v", err)
+			c.AbortWithStatusJSON(401, gin.H{"Error": "Expired session"})
+			return
+		}
+		err := h.Redis.Set(ctx, rediskey, final.User.ID, timeExp).Err()
+		if err != nil {
+			log.Printf("authHandler: Redis error %v", err)
+			c.AbortWithStatusJSON(500, gin.H{"Error": "Server error (redis error)"})
+			return
+		}
+		h.SetTempToken(c, final.TempToken, final.ExpTime)
+		c.Redirect(
+			http.StatusFound,
+			"https://localhost/login?requires_2fa=true&temp_token="+final.TempToken,
+		)
+		return
+	}
+
+	h.setCookie(c, final.Token, final.ExpTime)
+	h.ClearTempToken(c)
+	sessionKey := fmt.Sprintf("session:%d", user.ID)
+	err = h.Redis.Set(ctx, sessionKey, final.Token, time.Until(final.ExpTime)).Err()
+	if err != nil {
+		log.Printf("Error: 42 login redis session")
+	}
+	h.Redis.SAdd(ctx, "online_users", user.ID)
+	c.Redirect(
+		http.StatusFound,
+		"https://localhost/app",
+	)
+}
+
+func (h *AuthHandler) Get42UserInfo(c *gin.Context) {
+	token, err := c.Cookie("42_token")
+	if err != nil {
+		c.Error(appErr.NewBadRequest("42_token cookie is required"))
+		c.Abort()
+		return
+	}
+
+	data, err := h.Redis.Get(c, "42_register:"+token).Result()
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+
+	var user dto.Redis42User
+
+	if err := json.Unmarshal([]byte(data), &user); err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
+func (h *AuthHandler) Register42(c *gin.Context) {
+	token, err := c.Cookie("42_token")
+	if err != nil {
+		c.Error(appErr.NewBadRequest("42_token cookie is required"))
+		c.Abort()
+		return
+	}
+
+	var regUser dto.Register42User
+	err = ValidationBindRequest(c, &regUser)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	birthday, err := time.Parse("2006-01-02", regUser.Birthday)
+	if err != nil {
+		c.Error(appErr.NewValidation(map[string]string{
+			"birthday": "invalid_format",
+		}))
+		c.Abort()
+		return
+	}
+
+	data, err := h.Redis.Get(c, "42_register:"+token).Result()
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+
+	var redisUser dto.User42
+	err = json.Unmarshal([]byte(data), &redisUser)
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+
+	user, err := h.AuthService.Register42User(&regUser, &redisUser.ID42, birthday)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	// TODO - Crear token de sesion y redirigir al perfil/home
+	h.Redis.Del(c, "42_register:"+token)
+	c.SetCookie("42_token", "", -1, "/", "localhost", false, true)
+
+	strToken, expTime, err := utils.CreateJwtToken(user, h.cfg)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	timeExp := time.Until(expTime)
+	if timeExp < 0 {
+		log.Printf("authHandler: Expired session %v", err)
+		c.AbortWithStatusJSON(400, gin.H{"Error": "Expired session"})
+		return
+	}
+	sessionKey := fmt.Sprintf("session:%d", user.ID)
+	err = h.Redis.Set(c, sessionKey, strToken, timeExp).Err()
+	if err != nil {
+		log.Printf("Error: registration redis session")
+	}
+	h.Redis.SAdd(c, "online_users", user.ID)
+
+	h.setCookie(c, strToken, expTime)
+	c.JSON(http.StatusOK, gin.H{"message": "42 registration successful", "user": user})
 }

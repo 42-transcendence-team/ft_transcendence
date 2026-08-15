@@ -41,7 +41,6 @@ export function TwoFactorSettings(active: { active: boolean }) {
 			}, 300);
 			return;
 		}
-		if (!modalOpen) setOtpCode(Array(CODE_LENGTH).fill(""));
 	}, [modalOpen]);
 
 	const handleToggle = async (checked: boolean) => {
