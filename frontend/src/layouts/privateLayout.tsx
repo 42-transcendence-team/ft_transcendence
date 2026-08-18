@@ -3,8 +3,8 @@ import { Outlet, useLoaderData } from "react-router-dom";
 import { Footer } from "@components/Footer";
 import { PrivHeader } from "@components/PrivHeader";
 import { WebSocketProvider } from "context/webSocketContext";
-import {ChatProvider} from "context/chatContext";
-import {NotificationProvider} from "context/notificationsContext";
+import { ChatProvider} from "context/chatContext";
+import { NotificationProvider} from "context/notificationsContext";
 import { ChatPanel } from "@components/ChatPanel";
 import { ChatModal } from "@components/ChatModal";
 import { Notification } from "@components/Notification";
@@ -63,14 +63,14 @@ export function PrivateLayout() {
 								<div className="privateLayout__contentInner">
 									<PrivateMainContent>
 										 <Outlet />
+									</PrivateMainContent>
+								</div>
 										{search.hasSearched && (
 										<AdvancedSearchPanel
 											search={search}
 											onClose={search.handleCloseSearch}
 										/>
 										)}
-									</PrivateMainContent>
-								</div>
 							</div>
 							{activeChat && (
 								<ChatModal id={activeChat} onClose={() => toggleChat(activeChat)} />

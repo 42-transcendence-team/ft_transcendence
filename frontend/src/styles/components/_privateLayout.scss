@@ -41,11 +41,7 @@
 		position: relative;
 
 		grid-area: content;
-<<<<<<< HEAD
-
-=======
 		position: relative;
->>>>>>> origin/main
 		min-width: 0;
 		min-height: 0;
 
@@ -76,23 +72,9 @@
 		&::-webkit-scrollbar {
 			width: 6px;
 		}
-<<<<<<< HEAD
 
 		scrollbar-width: none !important;
 		-ms-overflow-style: none !important;
-=======
-		&::-webkit-scrollbar-track {
-			background: transparent; 
-		}
-		&::-webkit-scrollbar-thumb {
-			background-color: rgba(0, 0, 0, 0.1);
-			border-radius: 10px;
-			
-			&:hover {
-				background-color: rgba(0, 0, 0, 0.2);
-			}
-    	}
->>>>>>> origin/main
 	}
 
 	&__rightPanel {
