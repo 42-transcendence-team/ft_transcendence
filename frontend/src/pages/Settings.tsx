@@ -13,11 +13,13 @@ export function Settings() {
 
 	return (
 		<>
-			<ModifyData user={user} onUpdate={() => revalidator.revalidate()}/>
-			<ModifyEmail user={user} onUpdate={() => revalidator.revalidate()}/>
-			<ModifyPassword user={user}/>
-			<TwoFactorSettings active={user.active_2fa} />
-			<DeleteAccount user={user} />
+			<div className="settings__section">
+				<ModifyData user={user} onUpdate={() => revalidator.revalidate()}/>
+				<ModifyEmail user={user} onUpdate={() => revalidator.revalidate()}/>
+				<ModifyPassword user={user}/>
+				<TwoFactorSettings active={user.active_2fa} />
+				<DeleteAccount user={user} />
+			</div>
 		</>
 	);
 }

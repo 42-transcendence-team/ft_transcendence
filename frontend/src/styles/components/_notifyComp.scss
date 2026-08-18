@@ -1,0 +1,61 @@
+.notifyComp {
+  background-color: #e5e7eb; // El mismo fondo gris que Filtros y MiniProfile
+  border-radius: 12px;       // Mismos bordes redondeados
+  padding: 16px;             // Espacio interior de la tarjeta
+  box-sizing: border-box;
+  
+  display: flex;
+  flex-direction: column;
+  // height: 100%; 
+  flex: 1;
+  min-height: 0; 
+  
+  &__title {
+    text-align: center; // Centrado para que coincida con el estilo del título "Filtros"
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #111; // Letra oscura porque el fondo ahora es gris claro
+    flex-shrink: 0;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto; // Mantiene el scroll interno
+    padding-right: 6px; 
+    
+    // Barra de scroll adaptada al fondo gris
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: #c4c4c4; // Un gris un poco más oscuro para que se vea
+      border-radius: 10px;
+      
+      &:hover {
+        background-color: #a0a0a0;
+      }
+    }
+  }
+}
+
+.notificationItem {
+  background-color: #f3f4f6;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #333;
+  flex-shrink: 0;
+  
+  &--unread {
+    background-color: #ffffff;
+    border-left: 4px solid #3b82f6;
+    font-weight: 500;
+    // Para que el borde de color no se vea cuadrado en las esquinas
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+  }
+}

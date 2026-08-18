@@ -1,66 +1,301 @@
 @use '../abstracts/functions' as *;
 @use '../abstracts/mixins' as *;
-@use '../abstracts/variables' as *;
+@use "../abstracts/variables" as *;
 
 .settings {
-	position: relative;
-	display: inline-block;
-	width: 100%;
-
 	&__section {
-		margin-bottom: 30px;
-		position: relative;
-		display: inline-block;
 		width: 100%;
+		max-width: 800px;
+		margin: 0 auto;
+		padding: 1.5rem;
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	/* bloque de tarjetas */
+	&__card {
+		background: $bg-card;
+		border: 1px solid $border-color;
+		border-radius: 16px;
+		padding: 1.75rem;
+		box-shadow: $shadow-sm;
+
+		&--danger {
+			border-color: rgba($error-color, 0.3);
+			background: #fff5f5;
+		}
+	}
+
+	&__header {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid $border-color;
+	}
+
+	&__icon-wrapper {
+		width: 42px;
+		height: 42px;
+		border-radius: 10px;
+		background: rgba($primary-color, 0.1);
+		color: $primary-color;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1.25rem;
+		flex-shrink: 0;
+	}
+
+	&__title {
+		font-size: 1.2rem;
+		font-weight: 600;
+		color: $text-main;
+		margin: 0 0 0.2rem 0;
+	}
+
+	&__subtitle {
+		font-size: 0.85rem;
+		color: $text-muted;
+		margin: 0;
 	}
 
 	&__form {
-		display: inline-block;
+		display: flex;
 		flex-direction: column;
-		gap: 20px;
-		position: relative;
+		gap: 1.25rem;
+	}
+
+	&__grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+		gap: 1.25rem;
 	}
 
 	&__field {
 		position: relative;
-		margin-bottom: 15px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+
+		label {
+			font-size: 0.875rem;
+			font-weight: 500;
+			color: $text-main;
+		}
+
+		input[type="text"],
+		input[type="email"],
+		input[type="password"] {
+			width: 100%;
+			height: 42px;
+			padding: 0 0.875rem;
+			font-size: 0.95rem;
+			color: $text-main;
+			background-color: $bg-input;
+			border: 1px solid $border-color;
+			border-radius: 8px;
+			box-sizing: border-box;
+			outline: none;
+			transition: all 0.2s ease;
+
+			&::placeholder {
+				color: color.adjust($text-muted, $lightness: 15%);
+			}
+
+			&:hover {
+				border-color: color.adjust($border-color, $lightness: -10%);
+			}
+
+			&:focus {
+				background-color: #ffffff;
+				border-color: $primary-color;
+				box-shadow: 0 0 0 3px rgba($primary-color, 0.15);
+			}
+		}
 	}
 
-	&__field-tooltip {
-		position: absolute;
-		bottom: 50%;
-		min-width: 200px;
-		max-width: fit-content;
-		transform: translateY(20%);
-		background-color: $red-background-light;
-		color: white;
-		padding: 4px 10px;
-		border-radius: 4px;
-		font-size: 0.75rem;
-		z-index: 10;
-		pointer-events: auto;
+	&__date-trigger {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		height: 42px;
+		padding: 0 0.875rem;
+		border-radius: 8px;
+		border: 1px solid $border-color;
+		background: $bg-input;
+		color: $text-muted;
+		font-size: 0.95rem;
 		cursor: pointer;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-		user-select: none;
-		transition: opacity 0.2s ease, transform 0.2s ease;
-		animation: fadeOut 5s forwards;
+		transition: all 0.2s ease;
+
+		&:hover {
+			border-color: color.adjust($border-color, $lightness: -10%);
+		}
+
+		&.is-active {
+			color: $text-main;
+			background: #ffffff;
+		}
+	}
+
+	&__date-icon {
+		font-size: 1.1rem;
+		color: $primary-color;
+	}
+
+	/* Errores y Tooltips */
+	&__field-tooltip {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		font-size: 0.8rem;
+		color: $error-color;
+		margin-top: 0.2rem;
+		cursor: pointer;
+		animation: fadeIn 0.2s ease;
+	}
+
+	/* Botones */
+	&__actions {
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 0.5rem;
+	}
+
+	&__button {
+		padding: 0.65rem 1.5rem;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: #ffffff;
+		background: $primary-color;
+		border: none;
+		border-radius: 8px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+
+		&:hover {
+			background: $primary-hover;
+			transform: translateY(-1px);
+		}
 
 		&:active {
-			transform: scale(0.95);
+			transform: translateY(0);
 		}
 
-		&::after {
-			content: "";
-			position: absolute;
-			bottom: -4px;
-			left: 10px;
-			border-left: 5px solid transparent;
-			border-right: 5px solid transparent;
-			border-top: 5px solid $red-background-light;
+		&--modal {
+			width: 100%;
+			margin-top: 1.25rem;
 		}
 
-		&::hover {
-			background-color: color.scale($red-background-light, $lightness: -15%);
+		&--danger {
+			background: $error-color;
+
+			&:hover {
+				background: color.adjust($error-color, $lightness: -8%);
+			}
 		}
 	}
+}
+
+/* 2FA & OTP */
+.otp {
+	display: flex;
+	gap: 0.5rem;
+	justify-content: center;
+	align-items: center;
+	margin: 1.25rem 0;
+
+	&__separator {
+		font-size: 1.25rem;
+		color: $text-muted;
+	}
+
+	&__input {
+		width: 42px;
+		height: 48px;
+		text-align: center;
+		font-size: 1.25rem;
+		font-weight: 600;
+		border-radius: 8px;
+		border: 1px solid $border-color;
+		background: $bg-input;
+		color: $text-main;
+		outline: none;
+		transition: all 0.2s ease;
+
+		&:focus {
+			background: #ffffff;
+			border-color: $primary-color;
+			box-shadow: 0 0 0 3px rgba($primary-color, 0.15);
+		}
+
+		&.is-filled {
+			border-color: $border-focus;
+		}
+	}
+}
+
+/* estilos modales */
+.modal-2fa,
+.modal-status {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+
+	&__icon {
+		font-size: 2.5rem;
+		margin-bottom: 0.5rem;
+		color: $primary-color;
+
+		&--success { color: #16a34a; }
+		&--error { color: $error-color; }
+	}
+
+	&__text, &__message {
+		font-size: 0.95rem;
+		color: $text-muted;
+		margin: 0;
+	}
+
+	&__footer {
+		display: flex;
+		gap: 0.75rem;
+		width: 100%;
+		margin-top: 1.25rem;
+	}
+
+	&__btn {
+		flex: 1;
+		padding: 0.65rem;
+		border-radius: 8px;
+		font-weight: 600;
+		cursor: pointer;
+		border: none;
+
+		&--cancel {
+			background: $bg-input;
+			border: 1px solid $border-color;
+			color: $text-main;
+
+			&:hover { background: color.adjust($bg-input, $lightness: -3%); }
+		}
+
+		&--verify {
+			background: $primary-color;
+			color: #ffffff;
+
+			&:hover:not(:disabled) { background: $primary-hover; }
+			&:disabled { opacity: 0.5; cursor: not-allowed; }
+		}
+	}
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; transform: translateY(-4px); }
+	to { opacity: 1; transform: translateY(0); }
 }

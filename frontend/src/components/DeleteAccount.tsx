@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Modal } from "./Modal";
 import { Footer2FA, OtpInput } from "./TwoFactorUI";
 import { deleteAccount } from "api/Settings";
+import { FiAlertCircle } from "react-icons/fi";
 
 export function DeleteAccount({ user }: { user: any }) {
 	const [password, setPassword] = useState("");
@@ -66,58 +67,71 @@ export function DeleteAccount({ user }: { user: any }) {
 	}
 
 	return (
-		<div className="settings__section">
-			<h2 className="settings__title">Zona de peligro</h2>
-			<div className="settings__danger-zone">
-				<p>Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate.</p>
-				<button
-					className="settings__button settings__button--danger"
-					onClick={() => setOpenConfirmModal(true)}
-				>
-					Eliminar mi cuenta definitivamente
-				</button>
-			</div>
+		<div className="settings__card settings__card--danger">
+            <header className="settings__header">
+                <div className="settings__icon-wrapper" style={{ color: '#dc2626', background: 'rgba(220, 38, 38, 0.1)' }}>
+                    <FiAlertCircle />
+                </div>
+                <div>
+                    <h2 className="settings__title">Eliminar cuenta</h2>
+                    <p className="settings__subtitle">
+                        Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate.
+                    </p>
+                </div>
+            </header>
 
-			<Modal
-				open={openConfirmModal}
-				onClose={() => setOpenConfirmModal(false)}
-				title="¿Estás absolutamente seguro?"
-			>
-				<div className="modal__content">
-					<p>Esta acción es irreversible. Por favor, introduce tu contraseña para continuar:</p>
-					<input
-						type="password"
-						className="settings__input"
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
-						placeholder="Tu contraseña actual"
-						autoFocus
-					/>
-				</div>
-				<Footer2FA
-					onClose={() => setOpenConfirmModal(false)}
-					onVerify={handleDeleteAttempt}
-					disabled={!password}
-				/>
-			</Modal>
+            <div className="settings__actions">
+                <button
+                    className="settings__button settings__button--danger"
+                    onClick={() => setOpenConfirmModal(true)}
+                >
+                    Eliminar mi cuenta definitivamente
+                </button>
+            </div>
 
-			<Modal
-				open={show2FA}
-				onClose={() => setShow2FA(false)}
-				title="Verificación de seguridad"
-			>
-				<p className="modal__content">Introduce el código 2FA para autorizar la eliminación de la cuenta.</p>
-				<OtpInput onChange={setOtpCode} />
-				<Footer2FA
-					onClose={() => setShow2FA(false)}
-					onVerify={() => executeDelete(otpCode.join(""))}
-					disabled={!isComplete}
-				/>
-			</Modal>
+            {/* Modal de Confirmación */}
+            <Modal
+                open={openConfirmModal}
+                onClose={() => setOpenConfirmModal(false)}
+                title="¿Estás absolutamente seguro?"
+            >
+                <div className="modal__content">
+                    <p>Esta acción es irreversible. Por favor, introduce tu contraseña para continuar:</p>
+                    <input
+                        type="password"
+                        className="settings__input"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Tu contraseña actual"
+                        autoFocus
+                    />
+                </div>
+                <Footer2FA
+                    onClose={() => setOpenConfirmModal(false)}
+                    onVerify={handleDeleteAttempt}
+                    disabled={!password}
+                />
+            </Modal>
 
-			<Modal open={openStatusModal} onClose={() => setOpenStatusModal(false)} title="Eliminar cuenta">
-				<p>{status?.message}</p>
-			</Modal>
-		</div>
+            {/* Modal 2FA */}
+            <Modal
+                open={show2FA}
+                onClose={() => setShow2FA(false)}
+                title="Verificación de seguridad"
+            >
+                <p className="modal__content">Introduce el código 2FA para autorizar la eliminación de la cuenta.</p>
+                <OtpInput onChange={setOtpCode} />
+                <Footer2FA
+                    onClose={() => setShow2FA(false)}
+                    onVerify={() => executeDelete(otpCode.join(""))}
+                    disabled={!isComplete}
+                />
+            </Modal>
+
+            {/* Modal Estado */}
+            <Modal open={openStatusModal} onClose={() => setOpenStatusModal(false)} title="Eliminar cuenta">
+                <p>{status?.message}</p>
+            </Modal>
+        </div>
 	);
 }

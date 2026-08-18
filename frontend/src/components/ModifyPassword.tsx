@@ -1,11 +1,11 @@
 import "@styles/_settingsSection.scss";
-
 import React, { Fragment, useEffect, useState } from "react";
 import { FormField } from "./FormField";
 import { updatePassword, type PasswordSettings } from "api/Settings";
 import { Modal } from "./Modal";
 import { useFormErrors } from "@hooks/useFormErrors";
 import { Footer2FA, OtpInput } from "./TwoFactorUI";
+import { FiLock, FiShield, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 
 type SettingsFields = {
 	previous_password: string;
@@ -149,62 +149,120 @@ export function ModifyPassword({ user }: { user: any }) {
 	}, [show2FA]);
 
 	return (
-		<div className="settings__section">
-			<h2 className="settings__title">Cambio de contraseña</h2>
-			<form onSubmit={handleSubmit} className="settings__form">
-				{inputsConfig.map((field) => (
-					<Fragment key={field.id}>
-						<div className="settings__field">
-							<FormField
-								id={field.id}
-								label={field.label}
-								type={field.type}
-								value={formData[field.id]}
-								onChange={(value) => handleInputChange(field.id, value)}
-								placeholder={user[field.id] || undefined}
-								className=""
-							/>
+		<div className="settings__card">
+            <header className="settings__header">
+                <div className="settings__icon-wrapper">
+                    <FiLock />
+                </div>
+                <div>
+                    <h2 className="settings__title">Cambio de contraseña</h2>
+                    <p className="settings__subtitle">
+                        Asegúrate de utilizar una contraseña segura y difícil de adivinar.
+                    </p>
+                </div>
+            </header>
 
-							{formErrors[field.id] && (
-								<div className="settings__field-tooltip" onClick={() => clearError(field.id)}>
-									{formErrors[field.id]}
-								</div>
-							)}
-						</div>
-					</Fragment>
-				))}
-				<button type="submit" className="settings__button">
-					Guardar cambios
-				</button>
-			</form>
+            <form onSubmit={handleSubmit} className="settings__form">
+                {/* Campo Contraseña Anterior */}
+                <div className="settings__field">
+                    <FormField
+                        id="previous_password"
+                        label="Contraseña anterior"
+                        type="password"
+                        value={formData.previous_password}
+                        onChange={(value) => handleInputChange("previous_password", value)}
+                    />
+                    {formErrors.previous_password && (
+                        <div className="settings__field-tooltip" onClick={() => clearError("previous_password")}>
+                            <FiAlertCircle /> {formErrors.previous_password}
+                        </div>
+                    )}
+                </div>
 
-			<Modal
-				open={show2FA}
-				onClose={() => setShow2FA(false)}
-				title="Confirmar cambios"
-				onSubmit={() => executeUpdate(otpCode.join(""))}
-				submitDisabled={!isComplete}
-			>
-				<p className="modal__content">
-					Para completar los cambios, introduce el código de verificación.
-				</p>
+                {/* Campos Nueva y Verificar Contraseña en Grid */}
+                <div className="settings__grid">
+                    <div className="settings__field">
+                        <FormField
+                            id="password"
+                            label="Nueva contraseña"
+                            type="password"
+                            value={formData.password}
+                            onChange={(value) => handleInputChange("password", value)}
+                        />
+                        {formErrors.password && (
+                            <div className="settings__field-tooltip" onClick={() => clearError("password")}>
+                                <FiAlertCircle /> {formErrors.password}
+                            </div>
+                        )}
+                    </div>
 
-				<OtpInput onChange={setOtpCode} />
+                    <div className="settings__field">
+                        <FormField
+                            id="verify_password"
+                            label="Verificar nueva contraseña"
+                            type="password"
+                            value={formData.verify_password}
+                            onChange={(value) => handleInputChange("verify_password", value)}
+                        />
+                        {formErrors.verify_password && (
+                            <div className="settings__field-tooltip" onClick={() => clearError("verify_password")}>
+                                <FiAlertCircle /> {formErrors.verify_password}
+                            </div>
+                        )}
+                    </div>
+                </div>
 
-				<Footer2FA
-					onClose={() => setShow2FA(false)}
-					onVerify={() => executeUpdate(otpCode.join(""))}
-					disabled={!isComplete}
-				/>
-			</Modal >
+                <div className="settings__actions">
+                    <button type="submit" className="settings__button">
+                        Guardar cambios
+                    </button>
+                </div>
+            </form>
 
-			<Modal
-				open={openModal}
-				onClose={() => setOpenModal(false)}
-				title={requestStatus?.type === "success" ? "Cambios guardados" : "Error"}
-			>
-				<p>{requestStatus?.message}</p>
-			</Modal>
-		</div>
+            {/* Modal 2FA */}
+            <Modal
+                open={show2FA}
+                onClose={() => setShow2FA(false)}
+                title="Confirmar con 2FA"
+            >
+                <div className="modal-2fa">
+                    <div className="modal-2fa__icon">
+                        <FiShield />
+                    </div>
+                    <p className="modal-2fa__text">
+                        Para cambiar tu contraseña introduce el código de 6 dígitos de tu app de autenticación.
+                    </p>
+
+                    <OtpInput onChange={setOtpCode} />
+
+                    <Footer2FA
+                        onClose={() => setShow2FA(false)}
+                        onVerify={() => executeUpdate(otpCode.join(""))}
+                        disabled={!isComplete}
+                    />
+                </div>
+            </Modal>
+
+            {/* Modal Estado */}
+            <Modal
+                open={openModal}
+                onClose={() => setOpenModal(false)}
+                title={requestStatus?.type === "success" ? "Operación exitosa" : "Atención"}
+            >
+                <div className="modal-status">
+                    <div className={`modal-status__icon modal-status__icon--${requestStatus?.type}`}>
+                        {requestStatus?.type === "success" ? <FiCheckCircle /> : <FiAlertCircle />}
+                    </div>
+                    <p className="modal-status__message">{requestStatus?.message}</p>
+                    <button
+                        type="button"
+                        className="settings__button settings__button--modal"
+                        onClick={() => setOpenModal(false)}
+                    >
+                        Entendido
+                    </button>
+                </div>
+            </Modal>
+        </div>
 	);
 }

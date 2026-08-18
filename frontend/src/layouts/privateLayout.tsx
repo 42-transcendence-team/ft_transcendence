@@ -6,6 +6,8 @@ import { useAdvancedSearch } from "@components/advancedSearch/useAdvancedSearch"
 import { AdvancedSearchPanel } from "@components/advancedSearch/AdvancedSearchPanel";
 
 import { PrivateLeftPanel } from "@components/layout/PrivateLeftPanel";
+import { NotifyComp } from "@components/notifyComp";
+import { MiniProfile } from "@components/miniProfile";
 import { PrivateRightPanel } from "@components/layout/PrivateRightPanel";
 import { PrivateMainContent } from "@components/layout/PrivateMainContent";
 
@@ -17,12 +19,24 @@ export function PrivateLayout() {
   return (
     <div className="privateLayout">
       <PrivateLeftPanel>
-        <SearchFilters
-          selectedRelations={search.relations}
-          onRelationsChange={search.handleRelationsChange}
-          selectedSort={search.sort}
-          onSortChange={search.handleSortChange}
-        />
+        <div className="leftPanel__wrapper">
+          <div className="leftPanel__section leftPanel__section--top">
+            <SearchFilters
+              selectedRelations={search.relations}
+              onRelationsChange={search.handleRelationsChange}
+              selectedSort={search.sort}
+              onSortChange={search.handleSortChange}
+            />
+          </div>
+
+          <div className="leftPanel__section leftPanel__section--middle">
+            <NotifyComp />
+          </div>
+
+          <div className="leftPanel__section leftPanel__section--bottom">
+            <MiniProfile />
+          </div>
+        </div>
       </PrivateLeftPanel>
 
       <PrivHeader onSearch={search.handleSearch} />

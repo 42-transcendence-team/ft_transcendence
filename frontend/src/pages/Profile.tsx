@@ -139,6 +139,7 @@ export const Profile = () => {
 			.then((profile) => {
 				if (!cancelled) {
 					setProfileUser(profile);
+					window.dispatchEvent(new CustomEvent('updateVisits', { detail: profile.visits }));
 				}
 			})
 			.catch((error: unknown) => {

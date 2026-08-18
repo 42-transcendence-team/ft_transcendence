@@ -9,9 +9,7 @@ export const Footer = () => {
 
 	return (
 		<>
-			{/* =========================================
-				FOOTER DE ESCRITORIO (Se oculta en móvil)
-				========================================= */}
+			{/* FOOTER DE ESCRITORIO (Se oculta en móvil) */}
 			<div className="footer desktop-footer">
 				<nav className="footer__nav">
 					<ul className="footer__list">

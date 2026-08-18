@@ -7,10 +7,9 @@
   display: grid;
   min-width: 410px;
   
-  /* =========================================
+  /* 
      DISEÑO MÓVIL (Mobile First)
-     1 sola columna. Ocultamos paneles laterales.
-     ========================================= */
+     1 sola columna. Ocultamos paneles laterales.*/
   padding: 0; // Quitamos el padding para aprovechar toda la pantalla en móvil
   gap: 0;
   
@@ -25,10 +24,8 @@
     display: none; // Ocultamos los paneles en móvil
   }
 
-  /* =========================================
-     DISEÑO ESCRITORIO / TABLET GRANDE (>= 768px)
-     Volvemos a tu diseño de 3 columnas
-     ========================================= */
+  /* DISEÑO ESCRITORIO / TABLET GRANDE (>= 768px)
+     Volvemos a tu diseño de 3 columnas*/
   @media (min-width: 768px) {
     padding: 6px;
     gap: 6px;
@@ -50,9 +47,7 @@
     }
   }
 
-  /* =========================================
-     ESTILOS DE LAS ÁREAS (Comunes)
-     ========================================= */
+  /* ESTILOS DE LAS ÁREAS (Comunes)*/
   &__leftPanel {
     grid-area: left;
     background-color: $dark-purple-background-light;
@@ -61,6 +56,33 @@
     padding: 1rem;
     flex-direction: column;
     justify-content: flex-end;
+
+    .leftPanel__wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100%; 
+      gap: 16px; // Separación entre los 3 bloques
+      // padding: 1rem; // El padding que antes estaba en el leftPanel
+      box-sizing: border-box;
+
+      .leftPanel__section {
+        width: 100%;
+      }
+
+      // Secciones superior (Filtros) e inferior (Perfil)
+      .leftPanel__section--top,
+      .leftPanel__section--bottom {
+        flex-shrink: 0; // evita que se encojan con notificaciones
+      }
+
+      // Sección central (Notificaciones)
+      .leftPanel__section--middle {
+        flex-grow: 1;
+        min-height: 0;//para q haga scroll
+        display: flex;
+        flex-direction: column;
+      }
+    }
   }
 
   &__header {

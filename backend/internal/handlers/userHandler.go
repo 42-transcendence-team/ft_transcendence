@@ -493,14 +493,17 @@ func (h *UserHandler) DeleteBanner(c *gin.Context) {
 
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	login := c.Param("login")
-
+	noIncrement := c.Query("no_increment") == "true"
 	user, err := h.UserService.GetUserByLogin(login)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
-
+	callerID, exists := c.Get("userID") //evitamos q se sumen visitas si eres el usuario del perfil
+	if exists && callerID.(uint) == user.ID {
+		noIncrement = true
+	}
 	ctx := c.Request.Context()
 
 	isOnline, err := h.Redis.
@@ -516,15 +519,24 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	}
 
 	visitKey := fmt.Sprintf("visits:%d", user.ID)
+	var visits int64
 
-	visits, err := h.Redis.Incr(ctx, visitKey).Result()
-	if err != nil {
-		log.Printf(
-			"could not update visits for user %d: %v",
-			user.ID,
-			err,
-		)
-		visits = 0
+	if noIncrement { //sacamos el valor sin sumar numero de visitas sin sumar
+		visitsStr, err := h.Redis.Get(ctx, visitKey).Result()
+		if err == redis.Nil { // La clave aún no existe
+			visits = 0
+		} else if err != nil {
+			log.Printf("could not read visits for user %d: %v", user.ID, err)
+			visits = 0
+		} else {
+			visits, _ = strconv.ParseInt(visitsStr, 10, 64)
+		}
+	} else { //se suma 1 como se hacia antes
+		visits, err = h.Redis.Incr(ctx, visitKey).Result()
+		if err != nil {
+			log.Printf("could not update visits for user %d: %v", user.ID, err)
+			visits = 0
+		}
 	}
 
 	profile := dto.UserProfileResponse{
