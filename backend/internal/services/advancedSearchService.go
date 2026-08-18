@@ -53,11 +53,16 @@ func (s *AdvancedSearchService) SearchUsers(userID uint, filter *dto.UserFilter)
 			return nil, err
 		}
 
+		avatarURL := ""
+		if user.AvatarPath != nil {
+			avatarURL = *user.AvatarPath
+		}
 		item := dto.UserSearch{
 			ID:         user.ID,
 			Login:      user.Login,
 			Name:       user.Name,
 			Surname:    user.Surname,
+			AvatarURL:  avatarURL,
 			Relation:   relation,
 			CanSendReq: relation == "none",
 			RequestID:  requestID,

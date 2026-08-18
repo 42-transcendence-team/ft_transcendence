@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Modal } from "./Modal";
-import { Footer2FA, OtpInput } from "./TwoFactorUI";
+import { Modal } from "../Modal";
+import { Footer2FA, OtpInput } from "../TwoFactorUI";
 import { deleteAccount } from "api/Settings";
 
 export function DeleteAccount({ user }: { user: any }) {

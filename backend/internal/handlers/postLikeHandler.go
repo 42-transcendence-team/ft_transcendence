@@ -1,22 +1,26 @@
 package handlers
 
 import (
+	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
+	"encoding/json"
 	"net/http"
-
 	"github.com/gin-gonic/gin"
+	ws "backend/internal/websocket"
 )
 
 type PostLikeHandler struct {
-	PostLikeService *services.PostLikeService
+	PostLikeService     *services.PostLikeService
+	notificationService *services.NotificationService
+	hub                 *ws.Hub
 }
 
-func NewPostLikeHandler(
-	postLikeService *services.PostLikeService,
-) *PostLikeHandler {
+func NewPostLikeHandler(hub *ws.Hub, postLikeService *services.PostLikeService, notificationService *services.NotificationService) *PostLikeHandler {
 	return &PostLikeHandler{
-		PostLikeService: postLikeService,
+		PostLikeService:     postLikeService,
+		notificationService: notificationService,
+		hub:                 hub,
 	}
 }
 
@@ -36,11 +40,27 @@ func (h *PostLikeHandler) LikePost(c *gin.Context) {
 		return
 	}
 
-	reactionState, err := h.PostLikeService.LikePost(userID, postID)
+	reactionState, postOwnerID, err := h.PostLikeService.LikePost(userID, postID)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
+	}
+
+	if postOwnerID != 0 && postOwnerID != userID {
+		login, _ := c.Get("login")
+		username := ""
+		if login != nil {
+			username = login.(string)
+		}
+		payload, err := json.Marshal(dto.LikePayload{
+			PostID:   postID,
+			UserID:   userID,
+			Username: username,
+		})
+		if err == nil {
+			h.notificationService.Notify(postOwnerID, "LIKE", payload)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{

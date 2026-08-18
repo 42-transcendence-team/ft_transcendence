@@ -5,7 +5,7 @@ import "../styles/pages/_authPages.scss"
 
 export const Register = () => {
 	return (
-		<section className="auth-page auth-page--register">
+		<>
 			<div className="auth-card">
 				<div className="auth-card__header">
 					<NavLink to="/login" className="auth-card__homeLink">
@@ -20,6 +20,6 @@ export const Register = () => {
 
 				<RegisterForm />
 			</div>
-		</section>
+		</>
 	)
 }

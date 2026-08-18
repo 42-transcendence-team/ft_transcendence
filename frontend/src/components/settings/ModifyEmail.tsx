@@ -2,10 +2,10 @@ import "@styles/_settingsSection.scss";
 
 import React, { Fragment, useEffect, useState } from "react";
 import { useFormErrors } from "@hooks/useFormErrors";
-import { FormField } from "./FormField";
+import { FormField } from "../FormField";
 import { updateEmail, type EmailSettings } from "api/Settings";
-import { Modal } from "./Modal";
-import { Footer2FA, OtpInput } from "./TwoFactorUI";
+import { Modal } from "../Modal";
+import { Footer2FA, OtpInput } from "../TwoFactorUI";
 
 type SettingsFields = {
 	email: string;
@@ -153,7 +153,7 @@ export function ModifyEmail({ user, onUpdate }: { user: any; onUpdate: () => voi
 								value={formData[field.id]}
 								onChange={(value) => handleInputChange(field.id, value)}
 								placeholder={user[field.id] || undefined}
-								className=""
+								className="form-field"
 							/>
 
 							{formErrors[field.id] && (

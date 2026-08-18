@@ -14,7 +14,8 @@ import (
 )
 
 type CustomClaims struct {
-	Id uint `json:"id"`
+	Id    uint   `json:"id"`
+	Login string `json:"login"`
 	jwt.RegisteredClaims
 }
 
@@ -23,8 +24,9 @@ func CreateJwtToken(user *models.User, cfg *config.Config) (string, time.Time, e
 	exp := time.Now().Add(time.Duration(cfg.JwtExpirationTime) * time.Second)
 
 	claims := CustomClaims{
-		user.ID,
-		jwt.RegisteredClaims{
+		Id:               user.ID,
+		Login:            user.Login,
+		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   strconv.Itoa(int(user.ID)),     // "sub" quien es el dueño del token
 			ExpiresAt: jwt.NewNumericDate(exp),        // "exp" cuando deja el token de ser valido
 			IssuedAt:  jwt.NewNumericDate(time.Now()), // "iat" cuando se creo el token

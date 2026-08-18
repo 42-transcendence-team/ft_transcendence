@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import "../styles/components/_privHeader.scss"
 import logo from "../assets/icons/24_logo.png"
 import { UserMenu } from "./UserMenu";
+import { useLoaderData } from "react-router-dom";
 import { SearchBar } from "./advancedSearch/SearchBar";
 
 type PrivHeaderProps = {
@@ -12,11 +13,10 @@ type PrivHeaderProps = {
 
 
 export function PrivHeader({ onSearch }: PrivHeaderProps) {
-
 	return (
 		<header className="privHeader privateLayout__header">
 			<div className="privHeader__left">
-				<Link to="/app" className="privHeader__logo">
+				<Link to={`/app/`} className="privHeader__logo">
 					<img src={logo} alt="logo" className="privHeader__logo-img" />
 					<span className="privHeader__logo-text">Twenty Four</span>
 				</Link>

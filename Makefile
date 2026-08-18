@@ -1,7 +1,8 @@
 DC		= docker compose
 DEV 	= docker-compose.dev.yml
+DEV_MIN	= docker-compose.dev.min.yml
 
-.PHONY: all start stop logs logs-all daemon remove full-remove shell restart re dev dev-demon dev-stop dev-remove dev-logs-all dev-logs
+.PHONY: all start stop logs logs-all daemon remove full-remove shell restart re dev dev-demon dev-stop dev-remove dev-logs-all dev-logs dev-min dev-min-demon dev-min-stop dev-min-remove dev-min-logs-all dev-min-logs
 
 all: daemon
 
@@ -51,6 +52,26 @@ dev-logs-all:
 
 dev-logs:
 	$(DC) -f $(DEV) logs -f $(s)
+
+# Desarrollo ligero: solo backend, frontend, nginx, postgres y redis.
+# Sin Elastic/Prometheus/Grafana/Portainer para ahorrar RAM.
+dev-min:
+	$(DC) -f $(DEV_MIN) up --build
+
+dev-min-demon:
+	$(DC) -f $(DEV_MIN) up --build -d
+
+dev-min-stop:
+	$(DC) -f $(DEV_MIN) down
+
+dev-min-remove:
+	$(DC) -f $(DEV_MIN) down -v
+
+dev-min-logs-all:
+	$(DC) -f $(DEV_MIN) logs -f
+
+dev-min-logs:
+	$(DC) -f $(DEV_MIN) logs -f $(s)
 
 build-%: FORCE
 	$(DC) build $*
@@ -105,3 +126,11 @@ help:
 	@echo "  make dev-remove    - Stop and remove development environment"
 	@echo "  make dev-logs      - Tail logs from a dev service (use s=<name>)"
 	@echo "  make dev-logs-all  - Tail logs from all dev services"
+	@echo ""
+	@echo "Lightweight Development (no monitoring stack, saves RAM):"
+	@echo "  make dev-min         - Start only backend, frontend, nginx, postgres, redis"
+	@echo "  make dev-min-demon   - Same as dev-min but in detached mode"
+	@echo "  make dev-min-stop    - Stop lightweight environment"
+	@echo "  make dev-min-remove  - Stop and remove lightweight environment"
+	@echo "  make dev-min-logs    - Tail logs from a dev-min service (use s=<name>)"
+	@echo "  make dev-min-logs-all - Tail logs from all dev-min services"
