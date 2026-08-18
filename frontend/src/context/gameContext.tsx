@@ -20,7 +20,7 @@ export interface GameState {
     game_type: string;
     status: GameStatus;
     players: Player[];
-    winner?: string | number;
+    winner?: number;
     board?: unknown;
     last_dice_roll?: number;
     turn?: number;

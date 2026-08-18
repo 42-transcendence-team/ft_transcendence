@@ -288,13 +288,39 @@ func (g *Goose) MovePlayer(playerId uint, steps uint) {
 	g.checkRescue(playerId, state.Position)
 }
 
+func (g *Goose) CheckFinish(playerID uint, actions *[]GooseAction) bool {
+	state := g.State[playerID]
+
+	if state.Position != 63 {
+		return false
+	}
+
+	g.Finished = true
+	g.Winner = state.Token
+	log.Printf("Player %d has won the game!", playerID)
+
+	*actions = append(*actions, GooseAction{
+		Type:    "finish",
+		To:      state.Position,
+		Token:   state.Token,
+		Message: "¡Has llegado a la meta!",
+	})
+
+	return true
+}
+
 func (g *Goose) ResolveCell(playerId uint, actions *[]GooseAction) bool {
 	state := g.State[playerId]
+
+	if g.CheckFinish(playerId, actions) {
+		return false
+	}
 
 	switch g.Board[state.Position].Type {
 	case CellGoose:
 		old := state.Position
 		state.Position = g.NextGoose(old)
+
 		*actions = append(*actions, GooseAction{
 			Type:    "goose",
 			From:    old,
@@ -302,6 +328,11 @@ func (g *Goose) ResolveCell(playerId uint, actions *[]GooseAction) bool {
 			Message: "De oca a oca y tiro porque me toca",
 			Token:   state.Token,
 		})
+
+		if g.CheckFinish(playerId, actions) {
+			return false
+		}
+
 		return true
 
 	case CellBridge:

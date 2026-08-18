@@ -7,6 +7,12 @@ import { GameProvider, useGame } from '../context/gameContext';
 import { games } from './Games';
 import { useOutletContext } from "react-router-dom";
 
+const LOCAL_PLAYER_NAMES: Record<string, Record<number, string>> = {
+	TICTACTOE: { 1: "X", 2: "O" },
+	CONNECTFOUR: { 1: "Rojo", 2: "Amarillo" },
+	GOOSE: { 1: "Rojo", 2: "Azul", 3: "Amarillo", 4: "Verde", 5: "Morado", 6: "Naranja" },
+};
+
 // TODO - Ponerlo bonico en general, quiza añadir un boton para volver a la lista de juegos, y un boton para salir de la partida
 
 export default function GameView() {
@@ -160,7 +166,7 @@ function getWinnerName() {
 	if (!gameState.winner) return null;
 
 	if (gameState.mode === "local") {
-		return gameState.winner === 1 ? "X" : "O";
+		return LOCAL_PLAYER_NAMES[gameState.game_type]?.[gameState.winner] || "Jugador desconocido";
 	}
 
 	return winnerPlayer?.username || "Jugador desconocido";
@@ -202,7 +208,7 @@ function getPlayerName() {
 	if (!player) return "Jugador desconocido";
 
 	if (gameState.mode === "local") {
-		return player.id === 1 ? "X" : "O";
+		return LOCAL_PLAYER_NAMES[gameState.game_type]?.[player.token] || "Jugador desconocido";
 	}
 
 	return player.username || "Jugador desconocido";

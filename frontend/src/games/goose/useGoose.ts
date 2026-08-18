@@ -80,12 +80,7 @@ function mapBackendBoard(board: GooseGameState["board"]): GooseCell[] {
 export function useGoose() {
 	const [mode, setMode] = useState<GooseMode | null>(null);
 
-	const {
-		makeMove,
-		gameState: rawGameState,
-		returnMenu,
-		joinGame,
-	} = useGame();
+	const { makeMove, gameState: rawGameState, returnMenu, joinGame } = useGame();
 
 	const gameState = rawGameState as unknown as GooseGameState;
 
@@ -111,14 +106,6 @@ export function useGoose() {
 		returnMenu();
 	}
 
-	return {
-		mode,
-		gameState,
-		board,
-		players,
-		rollDice,
-		reset,
-		joinGame,
-	};
+	return { mode, gameState, board, players, rollDice, reset, joinGame };
 }
 export default useGoose;
