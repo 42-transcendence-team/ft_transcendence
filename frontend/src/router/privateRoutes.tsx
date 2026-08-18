@@ -13,8 +13,8 @@ import { getAuthenticatedUser } from "../api/Login";
 
 const privateLoader = async () => {
 	try {
-		await getAuthenticatedUser();
-		return null;
+		const data = await getAuthenticatedUser();
+		return data;
 	} catch {
 		throw redirect("/login");
 	}

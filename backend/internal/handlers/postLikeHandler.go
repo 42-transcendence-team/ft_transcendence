@@ -4,19 +4,23 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"net/http"
-
 	"github.com/gin-gonic/gin"
+	ws "backend/internal/websocket"
+	//"backend/internal/dto"
+	//"encoding/json"
 )
 
 type PostLikeHandler struct {
 	PostLikeService *services.PostLikeService
+	hub *ws.Hub
+	//friendService *services.FriendRequestService//no se necesita creo
 }
 
-func NewPostLikeHandler(
-	postLikeService *services.PostLikeService,
-) *PostLikeHandler {
+func NewPostLikeHandler(/*friendService *services.FriendRequestService ,*/hub *ws.Hub, postLikeService *services.PostLikeService) *PostLikeHandler {
 	return &PostLikeHandler{
 		PostLikeService: postLikeService,
+		hub : hub,
+		//friendService: friendService,
 	}
 }
 
@@ -43,6 +47,23 @@ func (h *PostLikeHandler) LikePost(c *gin.Context) {
 		return
 	}
 
+	// payload, err := json.Marshal(dto.LikePayload{
+	// 	UserID: userID,
+	// 	PostID: postID,
+	// })
+
+	// if err != nil {
+	// 	c.Error(err)
+	// 	c.Abort()
+	// 	return
+	// }
+
+	// message, err := json.Marshal(dto.NotificationMessage{
+	// 	Type: "LIKE",
+	// 	Payload: payload,
+	// })
+	// h.hub.SendMessagesToUser()
+	//TODO: preguntar como hacer, el like no tiene destinatario solo postid
 	c.JSON(http.StatusOK, gin.H{
 		"message": "post liked",
 		"data":    reactionState,

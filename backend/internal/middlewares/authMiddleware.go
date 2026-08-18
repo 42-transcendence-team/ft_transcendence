@@ -4,6 +4,8 @@ import (
 	"backend/config"
 	appErr "backend/internal/errors"
 	"backend/internal/utils"
+
+	"github.com/gorilla/websocket"
 	"fmt"
 	"log"
 
@@ -17,6 +19,26 @@ Para el front -> si recibe un eror unautroized redirigir la peticion al login
 
 func AuthMiddleware(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if websocket.IsWebSocketUpgrade(c.Request) {
+			strToken, err := c.Cookie("jwt")
+			if err != nil {
+				c.Error(appErr.NewUnauthorized("missing auth token"))
+				c.Abort()
+				return
+			}
+
+			claims, err := utils.ValidateToken(strToken, cfg)
+			if err != nil {
+				c.Error(err)
+				c.Abort()
+				return
+			}
+
+			c.Set("userID", claims.Id)
+			c.Next()
+			return
+		}
+
 		strToken, err := c.Cookie("jwt")
 		if err != nil {
 			c.Error(appErr.NewUnauthorized("missing auth token"))

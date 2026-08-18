@@ -7,6 +7,7 @@ import (
 	routes "backend/internal/routes"
 	"backend/internal/services"
 	"backend/internal/storage"
+	"backend/internal/websocket"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -19,19 +20,26 @@ func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 	srv.Engine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
+	hub := websocket.NewHub()
+	go hub.Run()
+
 	srv.Engine.MaxMultipartMemory = 8 << 20 // 8 MB
 	srv.Engine.Static("/uploads", "./uploads")
 
 	userRepo := repository.NewUserRepository(srv.Db)
+	chatRepo := repository.NewChatRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
 	postRepo := repository.NewPostRepository(srv.Db)
 	commentRepo := repository.NewCommentRepository(srv.Db)
+	websocketRepo := repository.NewWebsocketRepository(srv.Db)
 	postLikeRepo := repository.NewPostLikeRepository(srv.Db)
 
 	imageStorage := storage.NewImageStorage("uploads")
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
+	websocketService := services.NewWebsocketService(websocketRepo, userRepo)
+	chatService := services.NewChatService(chatRepo, userRepo)
 	twoFAService := services.New2FAService(userRepo, authService, srv.Redis)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 	advancedSearchService := services.NewAdvancedSearch(userRepo, friendRepo)
@@ -48,11 +56,14 @@ func (srv *HTTPServer) Router() {
 		advancedSearchService,
 	)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
-	friendHandler := handlers.NewFriendHandler(friendService, blockService)
-	postHandler := handlers.NewPostHandler(postService, imageStorage)
-	commentHandler := handlers.NewCommentHandler(commentService)
-	postLikeHandler := handlers.NewPostLikeHandler(postLikeService)
+	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService)
+	chatHandler := handlers.NewChatHandler(hub, chatService)
+	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub)
+	postHandler := handlers.NewPostHandler(friendService, hub, postService, imageStorage)
+	commentHandler := handlers.NewCommentHandler(hub, commentService)
+	postLikeHandler := handlers.NewPostLikeHandler(hub, postLikeService)
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
+	notificationsHandler := handlers.NewNotificationsHandler(friendService, websocketService, chatService)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -85,7 +96,10 @@ func (srv *HTTPServer) Router() {
 		routes.AuthRoutesPrivate(protected, authHandler)
 		routes.FriendsRoutes(protected, friendHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
+		routes.WebsocketRoutes(protected, websocketHandler)
+		routes.ChatRoutes(protected, chatHandler)
 		routes.UserRoutes(protected, userHandler)
+		routes.NotificationRoutes(protected, notificationsHandler)
 		routes.PostRoutes(
 			protected,
 			postHandler,

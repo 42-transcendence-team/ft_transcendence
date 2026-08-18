@@ -33,6 +33,7 @@
 
 	&__content {
 		grid-area: content;
+		position: relative;
 		min-width: 0;
 		min-height: 0;
 		overflow: hidden;
@@ -53,15 +54,21 @@
 		padding: 1rem;
 		background-color: $light-gray-common-components;
 		border-radius: 10px;
-		// para borrar la barra del scroll
+
 		&::-webkit-scrollbar {
-			width: 0 !important;
-			height: 0 !important;
-			display: none !important;
-			background: transparent !important;
+			width: 6px;
 		}
-		scrollbar-width: none !important;
-		-ms-overflow-style: none !important;
+		&::-webkit-scrollbar-track {
+			background: transparent; 
+		}
+		&::-webkit-scrollbar-thumb {
+			background-color: rgba(0, 0, 0, 0.1);
+			border-radius: 10px;
+			
+			&:hover {
+				background-color: rgba(0, 0, 0, 0.2);
+			}
+    	}
 	}
 
 	&__rightPanel {

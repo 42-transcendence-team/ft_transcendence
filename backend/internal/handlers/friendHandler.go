@@ -5,19 +5,22 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"strconv"
-
+	ws "backend/internal/websocket"
 	"github.com/gin-gonic/gin"
+	"encoding/json"
 )
 
 type FriendHandler struct {
 	FriendRequestService *services.FriendRequestService
 	BlockUserService     *services.BlockUserService
+	hub				  *ws.Hub
 }
 
-func NewFriendHandler(friendService *services.FriendRequestService, blockService *services.BlockUserService) *FriendHandler {
+func NewFriendHandler(friendService *services.FriendRequestService, blockService *services.BlockUserService, hub *ws.Hub) *FriendHandler {
 	return &FriendHandler{
 		FriendRequestService: friendService,
 		BlockUserService:     blockService,
+		hub: hub,
 	}
 }
 
@@ -37,13 +40,6 @@ func (h *FriendHandler) ListFriends(c *gin.Context) {
 		"data": ListFriends,
 	})
 }
-
-/*
-{
-	"receiver_id": 1
-}
-*/
-
 func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 
 	var req dto.SendFriendRequest
@@ -63,7 +59,29 @@ func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
+	payload, perr:=
+		json.Marshal(dto.FriendRequestPayload{
+			SenderID: userID,
+			ReceiverID: req.ReceiverID,
+		})
+	if (perr != nil) {
+		c.Error(perr)
+		c.Abort()
+		return
+	}
+	message, merr :=
+		json.Marshal(dto.NotificationMessage{
+			Type : "FRIEND_REQUEST",
+			Payload: payload,
+		})
+	if (merr != nil) {
+		c.Error(merr)
+		c.Abort()
+		return
+	}
+	
+	h.hub.SendMessagesToUser(req.ReceiverID, []byte(message))
+	
 	c.JSON(201, gin.H{
 		"message": "friend request sent successfully",
 		"data": gin.H{
@@ -128,7 +146,27 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
+	payload, perr :=
+		json.Marshal(dto.FriendRequestAcceptedPayload{
+			SenderID: userID,
+			ReceiverID: reqID,
+		})
+	if (perr != nil){
+		c.Error(perr)
+		c.Abort()
+		return
+	}
+	message, merr :=
+		json.Marshal(dto.NotificationMessage{
+			Type : "FRIEND_REQUEST_ACCEPTED",
+			Payload: payload,
+		})
+	if (merr != nil){
+		c.Error(merr)
+		c.Abort()
+		return
+	}
+	h.hub.SendMessagesToUser(req.SenderID, []byte(message))
 	c.JSON(200, gin.H{
 		"request-accepted": gin.H{
 			"id":       req.ID,

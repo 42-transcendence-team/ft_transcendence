@@ -11,10 +11,13 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"backend/internal/storage"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 	"strings"
+	"log"
+	ws "backend/internal/websocket"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,15 +25,43 @@ import (
 type PostHandler struct {
 	PostService  *services.PostService
 	ImageStorage *storage.ImageStorage
+	hub	*ws.Hub
+	friendService *services.FriendRequestService
 }
 
-func NewPostHandler(postService *services.PostService, imageStorage *storage.ImageStorage) *PostHandler {
+func NewPostHandler(friendService *services.FriendRequestService,hub *ws.Hub, postService *services.PostService, imageStorage *storage.ImageStorage) *PostHandler {
 	return &PostHandler{
 		PostService:  postService,
 		ImageStorage: imageStorage,
+		hub: hub,
+		friendService: friendService,
 	}
 }
+/*
+type PostPayload struct {
+	PostID uint `json:"post_id"`
+	UserID uint `json:"user_id"`//el que genero el post
+}
 
+type likePayload struct {
+	PostID uint `json:"post_id"`
+	UserID uint `json:"user_id"`//el que dio like
+}
+
+type CommentPayload struct {
+	PostID  uint   `json:"post_id"`
+	UserID  uint   `json:"user_id"`//el que comento
+	Content string `json:"content"`
+}
+*/
+
+//func (s *FriendRequestService) ListFriends(userID uint) ([]dto.FriendsResponse, error) {
+/*
+type FriendsResponse struct {
+	UserID uint `json:"user_id"`
+	Username string `json:"username"`
+}
+*/
 func (h *PostHandler) CreatePost(c *gin.Context) {
 	userIDValue, exists := c.Get("userID")
 	if !exists {
@@ -97,7 +128,38 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		c.Abort()
 		return
 	}
+	friends, err := h.friendService.ListFriends(userID)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+	friendIds := make([]uint, len(friends))
+	for _, friend := range friends {
+		friendIds = append(friendIds, friend.UserID)
+	}
+	payload, err := json.Marshal(dto.PostPayload{
+		PostID: post.ID,
+		UserID: userID,
+	})
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+	message, err := json.Marshal(dto.NotificationMessage{
+		Type: "POST",
+		Payload: payload,
+	})
 
+	if err != nil {
+		c.Error(appErr.NewInternal(err))
+		c.Abort()
+		return
+	}
+	friendIds = append(friendIds, userID) //solo para probar, no tengo accept friend en front
+	h.hub.SendMessagesToUsers(friendIds, []byte(message))
+	log.Printf("Sent message to friends: %v", friendIds)
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "post created",
 		"data":    post,
