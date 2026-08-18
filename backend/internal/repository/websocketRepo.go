@@ -48,8 +48,22 @@ func (r *WebsocketRepository) CreateChatMessage(message *models.ChatMessage) err
 
 func (r *WebsocketRepository) GetRoomByID(roomID uint) (*models.ChatRoom, error) {
 	var room models.ChatRoom
-	err := r.db.First(&room, roomID).Error
+	err := r.db.Preload("Members").First(&room, roomID).Error
 	return &room, err
+}
+
+func (r *WebsocketRepository) GetSharedRoom(userID1 uint, userID2 uint) (*models.ChatRoom, error) {
+	var room models.ChatRoom
+	err := r.db.
+		Joins("JOIN room_users AS ru1 ON ru1.chat_room_id = chat_rooms.id AND ru1.user_id = ?", userID1).
+		Joins("JOIN room_users AS ru2 ON ru2.chat_room_id = chat_rooms.id AND ru2.user_id = ?", userID2).
+		Where("chat_rooms.deleted_at IS NULL").
+		Preload("Members").
+		First(&room).Error
+	if err != nil {
+		return nil, err
+	}
+	return &room, nil
 }
 
 func (r *ChatRepository) CreateChatMessage(message *models.ChatMessage) error {

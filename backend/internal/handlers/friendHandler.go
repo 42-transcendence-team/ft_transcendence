@@ -13,14 +13,16 @@ import (
 type FriendHandler struct {
 	FriendRequestService *services.FriendRequestService
 	BlockUserService     *services.BlockUserService
+	websocketService     *services.WebsocketService
 	hub				  *ws.Hub
 }
 
-func NewFriendHandler(friendService *services.FriendRequestService, blockService *services.BlockUserService, hub *ws.Hub) *FriendHandler {
+func NewFriendHandler(friendService *services.FriendRequestService, blockService *services.BlockUserService, hub *ws.Hub, websocketService *services.WebsocketService) *FriendHandler {
 	return &FriendHandler{
 		FriendRequestService: friendService,
 		BlockUserService:     blockService,
-		hub: hub,
+		hub:                  hub,
+		websocketService:     websocketService,
 	}
 }
 
@@ -229,6 +231,8 @@ func (h *FriendHandler) DeleteFriend(c *gin.Context) {
 		return
 	}
 
+	h.notifyRoomBlocked(userID, deleteFriendID)
+
 	c.JSON(204, gin.H{})
 }
 
@@ -267,6 +271,8 @@ func (h *FriendHandler) BlockUser(c *gin.Context) {
 		return
 	}
 
+	h.notifyRoomBlocked(BlockerID, req.BlockedID)
+
 	c.JSON(200, gin.H{"message": "user blocked"})
 }
 
@@ -291,4 +297,27 @@ func (h *FriendHandler) UnblockUser(c *gin.Context) {
 	}
 
 	c.JSON(204, gin.H{})
+}
+
+// notifyRoomBlocked busca la sala compartida entre dos usuarios. Si existe,
+// envia un mensaje WS de tipo ROOM_BLOCKED a ambos para que el frontend oculte el chat.
+func (h *FriendHandler) notifyRoomBlocked(userID1 uint, userID2 uint) {
+	roomID, err := h.websocketService.GetSharedRoom(userID1, userID2)
+	if err != nil || roomID == 0 {
+		return
+	}
+
+	payload, err := json.Marshal(dto.RoomPayload{RoomID: roomID})
+	if err != nil {
+		return
+	}
+	message, err := json.Marshal(dto.NotificationMessage{
+		Type:    "ROOM_BLOCKED",
+		Payload: payload,
+	})
+	if err != nil {
+		return
+	}
+
+	h.hub.SendMessagesToUsers([]uint{userID1, userID2}, message)
 }
