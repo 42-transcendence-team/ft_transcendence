@@ -4,6 +4,7 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	ws "backend/internal/websocket"
@@ -11,14 +12,16 @@ import (
 )
 
 type CommentHandler struct {
-	CommentService *services.CommentService
-	hub *ws.Hub
+	CommentService      *services.CommentService
+	notificationService *services.NotificationService
+	hub                 *ws.Hub
 }
 
-func NewCommentHandler(hub *ws.Hub, commentService *services.CommentService) *CommentHandler {
+func NewCommentHandler(hub *ws.Hub, commentService *services.CommentService, notificationService *services.NotificationService) *CommentHandler {
 	return &CommentHandler{
-		CommentService: commentService,
-		hub: hub,
+		CommentService:      commentService,
+		notificationService: notificationService,
+		hub:                 hub,
 	}
 }
 
@@ -52,7 +55,7 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 		return
 	}
 
-	comment, err := h.CommentService.CreateComment(dto.CreateCommentInput{
+	comment, postOwnerID, err := h.CommentService.CreateComment(dto.CreateCommentInput{
 		PostID:  postID,
 		UserID:  userID,
 		Content: req.Content,
@@ -62,7 +65,24 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	//TODO : necesito el id del usuario al que pertenece el comentario
+
+	if postOwnerID != 0 && postOwnerID != userID {
+		login, _ := c.Get("login")
+		username := ""
+		if login != nil {
+			username = login.(string)
+		}
+		payload, err := json.Marshal(dto.CommentPayload{
+			PostID:   postID,
+			UserID:   userID,
+			Username: username,
+			Content:  req.Content,
+		})
+		if err == nil {
+			h.notificationService.Notify(postOwnerID, "COMMENT", payload)
+		}
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "comment created",
 		"data":    comment,

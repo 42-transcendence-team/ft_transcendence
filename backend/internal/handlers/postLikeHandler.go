@@ -1,26 +1,26 @@
 package handlers
 
 import (
+	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
+	"encoding/json"
 	"net/http"
 	"github.com/gin-gonic/gin"
 	ws "backend/internal/websocket"
-	//"backend/internal/dto"
-	//"encoding/json"
 )
 
 type PostLikeHandler struct {
-	PostLikeService *services.PostLikeService
-	hub *ws.Hub
-	//friendService *services.FriendRequestService//no se necesita creo
+	PostLikeService     *services.PostLikeService
+	notificationService *services.NotificationService
+	hub                 *ws.Hub
 }
 
-func NewPostLikeHandler(/*friendService *services.FriendRequestService ,*/hub *ws.Hub, postLikeService *services.PostLikeService) *PostLikeHandler {
+func NewPostLikeHandler(hub *ws.Hub, postLikeService *services.PostLikeService, notificationService *services.NotificationService) *PostLikeHandler {
 	return &PostLikeHandler{
-		PostLikeService: postLikeService,
-		hub : hub,
-		//friendService: friendService,
+		PostLikeService:     postLikeService,
+		notificationService: notificationService,
+		hub:                 hub,
 	}
 }
 
@@ -40,30 +40,29 @@ func (h *PostLikeHandler) LikePost(c *gin.Context) {
 		return
 	}
 
-	reactionState, err := h.PostLikeService.LikePost(userID, postID)
+	reactionState, postOwnerID, err := h.PostLikeService.LikePost(userID, postID)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 
-	// payload, err := json.Marshal(dto.LikePayload{
-	// 	UserID: userID,
-	// 	PostID: postID,
-	// })
+	if postOwnerID != 0 && postOwnerID != userID {
+		login, _ := c.Get("login")
+		username := ""
+		if login != nil {
+			username = login.(string)
+		}
+		payload, err := json.Marshal(dto.LikePayload{
+			PostID:   postID,
+			UserID:   userID,
+			Username: username,
+		})
+		if err == nil {
+			h.notificationService.Notify(postOwnerID, "LIKE", payload)
+		}
+	}
 
-	// if err != nil {
-	// 	c.Error(err)
-	// 	c.Abort()
-	// 	return
-	// }
-
-	// message, err := json.Marshal(dto.NotificationMessage{
-	// 	Type: "LIKE",
-	// 	Payload: payload,
-	// })
-	// h.hub.SendMessagesToUser()
-	//TODO: preguntar como hacer, el like no tiene destinatario solo postid
 	c.JSON(http.StatusOK, gin.H{
 		"message": "post liked",
 		"data":    reactionState,

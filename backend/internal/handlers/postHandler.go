@@ -23,18 +23,26 @@ import (
 )
 
 type PostHandler struct {
-	PostService  *services.PostService
-	ImageStorage *storage.ImageStorage
-	hub	*ws.Hub
-	friendService *services.FriendRequestService
+	PostService         *services.PostService
+	ImageStorage        *storage.ImageStorage
+	hub                 *ws.Hub
+	friendService       *services.FriendRequestService
+	notificationService *services.NotificationService
 }
 
-func NewPostHandler(friendService *services.FriendRequestService,hub *ws.Hub, postService *services.PostService, imageStorage *storage.ImageStorage) *PostHandler {
+func NewPostHandler(
+	friendService *services.FriendRequestService,
+	hub *ws.Hub,
+	postService *services.PostService,
+	imageStorage *storage.ImageStorage,
+	notificationService *services.NotificationService,
+) *PostHandler {
 	return &PostHandler{
-		PostService:  postService,
-		ImageStorage: imageStorage,
-		hub: hub,
-		friendService: friendService,
+		PostService:         postService,
+		ImageStorage:        imageStorage,
+		hub:                 hub,
+		friendService:       friendService,
+		notificationService: notificationService,
 	}
 }
 /*
@@ -134,32 +142,33 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	friendIds := make([]uint, len(friends))
+	friendIds := make([]uint, 0, len(friends))
 	for _, friend := range friends {
 		friendIds = append(friendIds, friend.UserID)
 	}
-	payload, err := json.Marshal(dto.PostPayload{
-		PostID: post.ID,
-		UserID: userID,
-	})
-	if err != nil {
-		c.Error(appErr.NewInternal(err))
-		c.Abort()
-		return
-	}
-	message, err := json.Marshal(dto.NotificationMessage{
-		Type: "POST",
-		Payload: payload,
-	})
 
+	login, _ := c.Get("login")
+	username := ""
+	if login != nil {
+		username = login.(string)
+	}
+
+	payload, err := json.Marshal(dto.PostPayload{
+		PostID:   post.ID,
+		UserID:   userID,
+		Username: username,
+	})
 	if err != nil {
 		c.Error(appErr.NewInternal(err))
 		c.Abort()
 		return
 	}
-	friendIds = append(friendIds, userID) //solo para probar, no tengo accept friend en front
-	h.hub.SendMessagesToUsers(friendIds, []byte(message))
-	log.Printf("Sent message to friends: %v", friendIds)
+
+	for _, friendID := range friendIds {
+		h.notificationService.Notify(friendID, "POST", payload)
+	}
+
+	log.Printf("Sent notifications to friends: %v", friendIds)
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "post created",
 		"data":    post,

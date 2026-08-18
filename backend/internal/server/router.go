@@ -33,6 +33,7 @@ func (srv *HTTPServer) Router() {
 	commentRepo := repository.NewCommentRepository(srv.Db)
 	websocketRepo := repository.NewWebsocketRepository(srv.Db)
 	postLikeRepo := repository.NewPostLikeRepository(srv.Db)
+	notifRepo := repository.NewNotificationRepository(srv.Db)
 
 	imageStorage := storage.NewImageStorage("uploads")
 
@@ -47,6 +48,7 @@ func (srv *HTTPServer) Router() {
 	postService := services.NewPostService(postRepo, postLikeRepo)
 	commentService := services.NewCommentService(commentRepo, postRepo)
 	postLikeService := services.NewPostLikeService(postRepo, postLikeRepo)
+	notificationService := services.NewNotificationService(notifRepo, hub)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(
@@ -58,12 +60,12 @@ func (srv *HTTPServer) Router() {
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
 	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService)
 	chatHandler := handlers.NewChatHandler(hub, chatService)
+	postHandler := handlers.NewPostHandler(friendService, hub, postService, imageStorage, notificationService)
+	commentHandler := handlers.NewCommentHandler(hub, commentService, notificationService)
+	postLikeHandler := handlers.NewPostLikeHandler(hub, postLikeService, notificationService)
 	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub, websocketService)
-	postHandler := handlers.NewPostHandler(friendService, hub, postService, imageStorage)
-	commentHandler := handlers.NewCommentHandler(hub, commentService)
-	postLikeHandler := handlers.NewPostLikeHandler(hub, postLikeService)
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
-	notificationsHandler := handlers.NewNotificationsHandler(friendService, websocketService, chatService)
+	notificationsHandler := handlers.NewNotificationsHandler(friendService, websocketService, chatService, notificationService)
 
 	api := srv.Engine.Group("/api/v1")
 

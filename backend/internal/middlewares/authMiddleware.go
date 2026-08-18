@@ -35,6 +35,7 @@ func AuthMiddleware(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 			}
 
 			c.Set("userID", claims.Id)
+			c.Set("login", claims.Login)
 			c.Next()
 			return
 		}
@@ -69,6 +70,7 @@ func AuthMiddleware(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 		log.Printf("AuthMiddleware: Session valid for user ID %d", claims.Id)
 
 		c.Set("userID", claims.Id) // guarda dentro del contexto el usuario que hace la peticion
+		c.Set("login", claims.Login)
 		/*
 			Si el usuario es validado por que el token esta bien pasa al siguiente paso (ya sea midelware o el handler de la ruta) , para en estaa request si quieres saber el id del
 			propietario se usara ->

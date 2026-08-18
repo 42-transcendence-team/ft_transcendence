@@ -37,7 +37,7 @@ export function PrivateLayout() {
 	return (
 		<div className="privateLayout">
 			<WebSocketProvider user={data.user}>
-				<NotificationProvider activeChat={activeChat} user={data.user}> 
+				<NotificationProvider activeChat={activeChat} user={data.user} onChatOpen={toggleChat}>
 					<ChatProvider user={data.user}>
 						<header className="privateLayout__header">
       						<PrivHeader onSearch={search.handleSearch} />

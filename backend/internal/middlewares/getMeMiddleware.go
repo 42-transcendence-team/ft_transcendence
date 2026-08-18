@@ -22,6 +22,7 @@ func GetMeMiddleware(cfg *config.Config) gin.HandlerFunc {
 		}
 
 		c.Set("userID", claims.Id) // guarda dentro del contexto el usuario que hace la peticion
+		c.Set("login", claims.Login)
 		/*
 			Si el usuario es validado por que el token esta bien pasa al siguiente paso (ya sea midelware o el handler de la ruta) , para en estaa request si quieres saber el id del
 			propietario se usara ->

@@ -1,27 +1,27 @@
-import { useNavigate } from "react-router-dom"; // si usas React Router
+import { useNavigate } from "react-router-dom";
 import { useNotification, type Notification } from '../context/notificationsContext';
 import "../styles/components/_notification.scss";
 
-//TODO: revisar bien, hecho 100 con IA
-
-// Componente item
 const NotificationItem: React.FC<{ 
   notification: Notification; 
   onMarkAsRead: (id: string | number) => void;
-}> = ({ notification, onMarkAsRead }) => {
+  onChatOpen: (roomId: number) => void;
+}> = ({ notification, onMarkAsRead, onChatOpen }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    // Marcar como leída
     onMarkAsRead(notification.id);
 
-    // Si es un mensaje no leído, redirigir al chat correspondiente
     if (notification.type === 'UNREAD_MESSAGES' && notification.payload?.room_id) {
-      navigate(`/chat/${notification.payload.room_id}`); // ajusta la ruta según tu app
+      onChatOpen(Number(notification.payload.room_id));
+      return;
     }
-    // Para otros tipos, podrías redirigir a otra página
-    // if (notification.type === 'FRIEND_REQUEST') navigate('/friends');
+    if ((notification.type === 'POST' || notification.type === 'LIKE' || notification.type === 'COMMENT') && notification.payload?.post_id) {
+      navigate(`/app/posts/${notification.payload.post_id}`);
+    }
   };
+
+  const getUsername = () => notification.payload.username || 'Alguien';
 
   const getNotificationContent = (notif: Notification) => {
     switch (notif.type) {
@@ -30,7 +30,7 @@ const NotificationItem: React.FC<{
           <div className="notification-friend-request">
             <span className="notification-icon">👤</span>
             <div className="notification-content">
-              <strong>{notif.payload.username || 'Alguien'}</strong>
+              <strong>{getUsername()}</strong>
               <span> te ha enviado una solicitud de amistad</span>
             </div>
           </div>
@@ -41,7 +41,7 @@ const NotificationItem: React.FC<{
           <div className="notification-friend-accepted">
             <span className="notification-icon">✅</span>
             <div className="notification-content">
-              <strong>{notif.payload.username || 'Alguien'}</strong>
+              <strong>{getUsername()}</strong>
               <span> ha aceptado tu solicitud de amistad</span>
             </div>
           </div>
@@ -54,9 +54,42 @@ const NotificationItem: React.FC<{
             <div className="notification-content">
               <span>Tienes </span>
               <strong>{notif.payload.unread_count || 0}</strong>
-              <span> mensajes sin leer en el chat</span>
-              {notif.payload.room_id && (
-                <span className="notification-room-id"> (ID: {notif.payload.room_id})</span>
+              <span> mensajes sin leer</span>
+            </div>
+          </div>
+        );
+
+      case 'POST':
+        return (
+          <div className="notification-post">
+            <span className="notification-icon">📝</span>
+            <div className="notification-content">
+              <strong>{getUsername()}</strong>
+              <span> ha creado un nuevo post</span>
+            </div>
+          </div>
+        );
+
+      case 'LIKE':
+        return (
+          <div className="notification-like">
+            <span className="notification-icon">❤️</span>
+            <div className="notification-content">
+              <strong>{getUsername()}</strong>
+              <span> le ha gustado tu post</span>
+            </div>
+          </div>
+        );
+
+      case 'COMMENT':
+        return (
+          <div className="notification-comment">
+            <span className="notification-icon">💭</span>
+            <div className="notification-content">
+              <strong>{getUsername()}</strong>
+              <span> ha comentado tu post</span>
+              {notif.payload.content && (
+                <span className="notification-comment-preview">: {notif.payload.content.slice(0, 50)}{notif.payload.content.length > 50 ? '...' : ''}</span>
               )}
             </div>
           </div>
@@ -91,12 +124,9 @@ const NotificationItem: React.FC<{
   );
 };
 
-// Componente principal
 export const Notification: React.FC = () => {
-  const { notifications, markAsRead } = useNotification();
-  // Asegurar que notifications sea un array
+  const { notifications, markAsRead, openChat } = useNotification();
   const safeNotifications = Array.isArray(notifications) ? notifications : [];
-	console.log(safeNotifications);
   if (safeNotifications.length === 0) {
     return (
       <div className="simple-notification-empty">
@@ -109,9 +139,10 @@ export const Notification: React.FC = () => {
     <div className="simple-notification-list">
       {safeNotifications.map((notification) => (
         <NotificationItem
-          key={notification.id} // ✅ Usamos el ID único
+          key={notification.id}
           notification={notification}
           onMarkAsRead={markAsRead}
+          onChatOpen={openChat}
         />
       ))}
     </div>
