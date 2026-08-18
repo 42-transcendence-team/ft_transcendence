@@ -1,4 +1,5 @@
 import { apiRequest } from "./ApiRequest";
+import type { UserRelation } from "./UserSearch";
 
 export type UserProfile = {
 	id: number;
@@ -10,6 +11,10 @@ export type UserProfile = {
 	status: string;
 	isOnline: boolean;
 	visits: number;
+
+	relation: UserRelation;
+	can_send_request: boolean;
+	request_id: number | null;
 };
 
 type UserProfileApiResponse = {

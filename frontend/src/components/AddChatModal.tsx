@@ -1,5 +1,5 @@
 import "../styles/components/_addChatModal.scss";
-import { searchUsers, type UserSearch } from "api/userSearch";
+import { searchUsers, type UserSearch } from "api/UserSearch";
 import skullLogo from "assets/icons/skull_logo.png";
 import { useEffect, useState, useRef } from "react";
 

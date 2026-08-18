@@ -3,19 +3,17 @@ import { Outlet, useLoaderData } from "react-router-dom";
 import { Footer } from "@components/Footer";
 import { PrivHeader } from "@components/PrivHeader";
 import { WebSocketProvider } from "context/webSocketContext";
-import {ChatProvider} from "context/chatContext";
-import {NotificationProvider} from "context/notificationsContext";
+import { ChatProvider} from "context/chatContext";
+import { NotificationProvider} from "context/notificationsContext";
 import { ChatPanel } from "@components/ChatPanel";
 import { ChatModal } from "@components/ChatModal";
 import { Notification } from "@components/Notification";
-import { useEffect, useState } from "react";
-import {apiRequest} from "api/ApiRequest";
+import { useState } from "react";
 import { SearchFilters } from "@components/advancedSearch/SearchFilters";
 import { useAdvancedSearch } from "@components/advancedSearch/useAdvancedSearch";
 import { AdvancedSearchPanel } from "@components/advancedSearch/AdvancedSearchPanel";
 
 import { PrivateLeftPanel } from "@components/layout/PrivateLeftPanel";
-import { PrivateRightPanel } from "@components/layout/PrivateRightPanel";
 import { PrivateMainContent } from "@components/layout/PrivateMainContent";
 
 import "../styles/components/_privateLayout.scss";
@@ -36,6 +34,7 @@ export function PrivateLayout() {
 
 	return (
 		<div className="privateLayout">
+
 			<WebSocketProvider user={data.user}>
 				<NotificationProvider activeChat={activeChat} user={data.user} onChatOpen={toggleChat}>
 					<ChatProvider user={data.user}>
@@ -63,13 +62,15 @@ export function PrivateLayout() {
 							<div className="privateLayout__contentFrame">
 								<div className="privateLayout__contentInner">
 									<PrivateMainContent>
-										{search.hasSearched ? (
-										  <AdvancedSearchPanel search={search} />
-										) : (
-										  <Outlet />
-										)}
-									  </PrivateMainContent>
+										 <Outlet />
+									</PrivateMainContent>
 								</div>
+										{search.hasSearched && (
+										<AdvancedSearchPanel
+											search={search}
+											onClose={search.handleCloseSearch}
+										/>
+										)}
 							</div>
 							{activeChat && (
 								<ChatModal id={activeChat} onClose={() => toggleChat(activeChat)} />

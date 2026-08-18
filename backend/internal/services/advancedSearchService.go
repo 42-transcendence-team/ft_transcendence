@@ -141,3 +141,10 @@ func (s *AdvancedSearchService) getUserRelation(currentUserID uint, otherUserID 
 
 	return "none", nil, nil
 }
+
+func (s *AdvancedSearchService) GetUserRelation(
+	currentUserID uint,
+	otherUserID uint,
+) (string, *uint, error) {
+	return s.getUserRelation(currentUserID, otherUserID)
+}
