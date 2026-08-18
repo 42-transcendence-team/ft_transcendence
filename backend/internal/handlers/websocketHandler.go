@@ -267,6 +267,19 @@ func (h *WebsocketHandler) LeaveRoom(c ws.ClientConn, msg *dto.IncomingMessage) 
 }
 
 func (h *WebsocketHandler) SendMessage(c ws.ClientConn, msg *dto.IncomingMessage) {
+	// Antes de guardar: comprobar que el remitente sigue siendo amigo de los
+	// demas miembros de la sala y que no hay bloqueo entre ellos.
+	if ok, motivo := h.websocketService.CanSendToRoom(msg.RoomID, c.GetUserID()); !ok {
+		errMsg, _ := json.Marshal(map[string]any{
+			"type":    "message_rejected",
+			"room_id": msg.RoomID,
+			"content": msg.Message,
+			"reason":  motivo,
+		})
+		c.Send(errMsg)
+		return
+	}
+
 	timestamp := time.Now().In(utils.Madrid)
 
 	tmp_msg := &models.ChatMessage{
