@@ -537,8 +537,21 @@ export const Profile = () => {
 
 				<ProfileContent
 					status={profileUser.status}
+					visits={profileUser.visits}
 					isOwnProfile={isOwnProfile}
 					canViewPrivateContent={canViewPrivateContent}
+					onStatusUpdated={(newStatus) => {
+						setProfileUser((currentProfile) => {
+							if (!currentProfile) {
+								return currentProfile;
+							}
+
+							return {
+								...currentProfile,
+								status: newStatus,
+							};
+						});
+					}}
 				/>
 			</div>
 
