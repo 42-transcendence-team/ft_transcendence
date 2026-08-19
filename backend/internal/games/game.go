@@ -74,7 +74,7 @@ func (g *Game) FindPlayerByID(userID uint) *Player {
 
 func (g *Game) RedyToStart() bool {
 	if g.Mode == "online" {
-		return len(g.Players) == g.MaxPlayers
+		return len(g.Players) >= g.MaxPlayers
 	}
 	return true
 }
@@ -95,6 +95,7 @@ func (g *Game) ConnectPlayer(userID uint, username string) error {
 				Connected: true,
 				LeftAt:    time.Time{},
 			}
+			log.Printf("Jugador %d se unió como espectador al juego %d", userID, g.ID)
 			g.Players = append(g.Players, newViwer)
 			return nil
 		}
