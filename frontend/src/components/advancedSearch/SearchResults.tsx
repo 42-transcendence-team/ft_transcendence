@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
 import { type UserSearch } from "../../api/UserSearch.tsx";
-import skullLogo from "../../assets/icons/skull_logo.png";
+import { UserAvatar } from "@components/users/UserAvatar.tsx";
 
 import { RelationsActionsMenu } from "@components/RelationsActionsMenu.tsx";
 
@@ -42,9 +42,10 @@ export const SearchResults = ({
 				>
 					<div className="searchResults__left">
 						<div className="searchResults__avatar">
-							<img
-								src={user.avatar_url || skullLogo}
-								alt={`${user.login} avatar`}
+							<UserAvatar
+								avatarPath={user.avatar_url}
+								username={user.login}
+								size="medium"
 							/>
 						</div>
 
