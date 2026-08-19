@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useGoose, type GoosePlayerState } from "games/goose/useGoose";
+import { useGoose } from "games/goose/useGoose";
 import { drawBoard, drawPlayers } from "./components/board";
 
 export function getPosition(number: number, cellSize: number) {
