@@ -63,6 +63,31 @@ func (h *Hub) Run() {
 				}
 			}
 			h.Mu.Unlock()
+
+			// case client := <-h.Register:
+			// 				h.Mu.Lock()
+			// 				h.Clients[client] = true
+			// 				h.ClientsConnected[client.UserID] = client
+			// 				h.Mu.Unlock()
+
+			// 			case client := <-h.Unregister:
+			// 				h.Mu.Lock()
+			// 				_, ok := h.Clients[client]
+			// 				if ok {
+			// 					delete(h.Clients, client)
+			// 					delete(h.ClientsConnected, client.UserID)
+			// 				}
+			// 				h.Mu.Unlock()
+
+			// 				if ok {
+			// 					client.Mu.RLock()
+			// 					for _, room := range client.Rooms {
+			// 						select {
+			// 						case room.Leave <- client:
+			// 						default:
+			// 						}
+			// 					}
+			// 					client.Mu.RUnlock()
 		}
 	}
 }
@@ -81,16 +106,17 @@ func (h *Hub) CreateRoom(id uint, name string, private bool) *Room {
 	return room
 }
 
-/*
-h.hub.SendNotification(req.Users, m)
-*/
 func (h *Hub) SendMessagesToUsers(userID []uint, message []byte) {
 	h.Mu.RLock()
 	defer h.Mu.RUnlock()
 
 	for _, id := range userID {
 		if client, ok := h.ClientsConnected[id]; ok {
-			client.SendChan <- message
+			// Envio no bloqueante: un cliente lento no debe congelar el hub
+			select {
+			case client.SendChan <- message:
+			default:
+			}
 		}
 	}
 }
@@ -100,7 +126,10 @@ func (h *Hub) SendMessagesToUser(userID uint, message []byte) {
 	defer h.Mu.RUnlock()
 
 	if client, ok := h.ClientsConnected[userID]; ok {
-		client.SendChan <- message
+		select {
+		case client.SendChan <- message:
+		default:
+		}
 	}
 }
 

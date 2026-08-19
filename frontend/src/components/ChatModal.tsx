@@ -2,6 +2,7 @@ import "../styles/components/_chatModal.scss";
 
 import { useEffect, useRef } from "react";
 import { useChat } from "../context/chatContext";
+import { UserAvatar } from "./users/UserAvatar";
 
 interface ChatModalProps {
     id: number;
@@ -9,13 +10,16 @@ interface ChatModalProps {
 }
 
 export function ChatModal({ id, onClose }: ChatModalProps) {
-    const { messagesByRoom, sendMessage, user, joinRoom } = useChat();
+    const { messagesByRoom, sendMessage, user, roomMembers, joinRoom } = useChat();
     const messagesRef = useRef<HTMLDivElement>(null);
+    const otherMember = (roomMembers[id] || []).find(m => m.id !== parseInt(user?.id || '0', 10));
     const isAtBottomRef = useRef(true);
     const lastMessageFromMeRef = useRef(false);
 
     useEffect(() => {
-        if (id) joinRoom(id);
+        if (id){
+			joinRoom(id);
+		}
     }, [id, joinRoom]);
 
    const handleScroll = () => {
@@ -58,7 +62,14 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
     return (
         <div className="chatModal">
             <div className="chatModal__header">
-                <span>Sala {id}</span>
+                {otherMember ? (
+					<span className="chatModal__headerUser">
+						<UserAvatar avatarPath={otherMember.avatar_url || null} username={otherMember.login} size="small" />
+						<span>{otherMember.login}</span>
+					</span>
+				) : (
+                	<span>Sala {id}</span>
+				)}
                 <button onClick={onClose}>X</button>
             </div>
             

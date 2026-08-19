@@ -19,7 +19,7 @@ function useHandleChat() {
 	const [activeChat, setActiveChat] = useState<number | null>(null);
 
 	const toggleChat = (id: number) => {
-		setActiveChat((prev) => (prev === id ? null : id));
+		setActiveChat((prev) => {return (prev === id ? null : id)});
 	};
 
 	return { activeChat, toggleChat };
@@ -32,8 +32,9 @@ export function PrivateLayout() {
 
 	return (
 		<div className="privateLayout">
+
 			<WebSocketProvider user={data.user}>
-				<NotificationProvider activeChat={activeChat} user={data.user}> 
+				<NotificationProvider activeChat={activeChat} user={data.user} onChatOpen={toggleChat}>
 					<ChatProvider user={data.user}>
 						<header className="privateLayout__header">
 							<PrivHeader onSearch={search.handleSearch} />
@@ -59,13 +60,15 @@ export function PrivateLayout() {
 							<div className="privateLayout__contentFrame">
 								<div className="privateLayout__contentInner">
 									<PrivateMainContent>
-										{search.hasSearched ? (
-										<AdvancedSearchPanel search={search} />
-										) : (
-										<Outlet context={{ user: data.user }} />
-										)}
+										 <Outlet context={{ user: data.user }} />
 									</PrivateMainContent>
 								</div>
+										{search.hasSearched && (
+										<AdvancedSearchPanel
+											search={search}
+											onClose={search.handleCloseSearch}
+										/>
+										)}
 							</div>
 							{activeChat && (
 								<ChatModal id={activeChat} onClose={() => toggleChat(activeChat)} />

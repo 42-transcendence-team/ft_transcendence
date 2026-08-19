@@ -49,8 +49,8 @@ func (h *WebsocketHandler) HandleWebSocket(ctx *gin.Context) {
 	}
 
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
-	log.Printf("err %v", err)
 	if err != nil {
+		log.Printf("failed to upgrade to websocket: %v", err)
 		ctx.Error(appErr.NewInternal(errors.New("failed to upgrade to websocket")))
 		ctx.Abort()
 		return
@@ -104,17 +104,35 @@ func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	log.Printf("request: %v", c.Request.Body)
 
 	var req dto.CreateRoomRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		log.Printf("Error binding JSON: %v", req)
+		log.Printf("Error binding JSON: %v", err)
 		c.Error(appErr.NewBadRequest("Invalid request body"))
 		c.Abort()
 		return
 	}
-	req.Users = append(req.Users, userIDValue.(uint))
+	
+	if len(req.Users) == 0 {
+		c.Error(appErr.NewBadRequest("users list cannot be empty"))
+		c.Abort()
+		return
+	}
+	
+	{
+		currentUserID := userIDValue.(uint)
+		found := false
+		for _, u := range req.Users {
+			if u == currentUserID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			req.Users = append(req.Users, currentUserID)
+		}
+	}
 
 	room, err := h.websocketService.CreateRoom(&req)
 	if err != nil {
@@ -127,7 +145,7 @@ func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
 		RoomID: room.ID,
 	})
 	if perr != nil {
-		c.Error(err)
+		c.Error(perr)
 		c.Abort()
 		return
 	}
@@ -136,7 +154,7 @@ func (h *WebsocketHandler) CreateRoom(c *gin.Context) {
 		Payload: payload,
 	})
 	if merr != nil {
-		c.Error(err)
+		c.Error(merr)
 		c.Abort()
 		return
 	}
@@ -231,7 +249,7 @@ func (h *WebsocketHandler) JoinRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
 	}
 	resp := dto.Messages{
 		RoomID: room.ID,
-		Type:   "message",
+		Type:   "join",
 		Msgs:   dtoMessages,
 	}
 
@@ -241,15 +259,30 @@ func (h *WebsocketHandler) JoinRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
 }
 
 func (h *WebsocketHandler) LeaveRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
+	h.hub.Mu.RLock()
 	room, ok := h.hub.Rooms[msg.RoomID]
+	h.hub.Mu.RUnlock()
 	if !ok {
-		log.Printf("Room with ID %d doesn't exists", msg.RoomID)
+		log.Printf("leave room Room with ID %d doesn't exists", msg.RoomID)
 		return
 	}
 	c.LeaveRoom(room)
 }
 
 func (h *WebsocketHandler) SendMessage(c ws.ClientConn, msg *dto.IncomingMessage) {
+	// Antes de guardar: comprobar que el remitente sigue siendo amigo de los
+	// demas miembros de la sala y que no hay bloqueo entre ellos.
+	if ok, motivo := h.websocketService.CanSendToRoom(msg.RoomID, c.GetUserID()); !ok {
+		errMsg, _ := json.Marshal(map[string]any{
+			"type":    "message_rejected",
+			"room_id": msg.RoomID,
+			"content": msg.Message,
+			"reason":  motivo,
+		})
+		c.Send(errMsg)
+		return
+	}
+
 	timestamp := time.Now().In(utils.Madrid)
 
 	tmp_msg := &models.ChatMessage{

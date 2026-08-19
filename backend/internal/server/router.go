@@ -7,7 +7,6 @@ import (
 	routes "backend/internal/routes"
 	"backend/internal/services"
 	"backend/internal/storage"
-
 	"backend/internal/websocket"
 
 	"github.com/gin-gonic/gin"
@@ -34,12 +33,13 @@ func (srv *HTTPServer) Router() {
 	postRepo := repository.NewPostRepository(srv.Db)
 	commentRepo := repository.NewCommentRepository(srv.Db)
 	postLikeRepo := repository.NewPostLikeRepository(srv.Db)
+	notifRepo := repository.NewNotificationRepository(srv.Db)
 
 	imageStorage := storage.NewImageStorage("uploads")
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
-	websocketService := services.NewWebsocketService(websocketRepo, userRepo)
+	websocketService := services.NewWebsocketService(websocketRepo, userRepo, friendRepo)
 	chatService := services.NewChatService(chatRepo, userRepo)
 	twoFAService := services.New2FAService(userRepo, authService, srv.Redis)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
@@ -49,19 +49,20 @@ func (srv *HTTPServer) Router() {
 	commentService := services.NewCommentService(commentRepo, postRepo)
 	postLikeService := services.NewPostLikeService(postRepo, postLikeRepo)
 	gameManager := services.NewGameManager()
+	notificationService := services.NewNotificationService(notifRepo, hub)
 
 	gameHandler := handlers.NewGameHandler(gameManager, hub)
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis, imageStorage, advancedSearchService)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
-	postHandler := handlers.NewPostHandler(postService, imageStorage)
-	commentHandler := handlers.NewCommentHandler(commentService)
-	postLikeHandler := handlers.NewPostLikeHandler(postLikeService)
-	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService, gameHandler)
 	chatHandler := handlers.NewChatHandler(hub, chatService)
-	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub)
+	postHandler := handlers.NewPostHandler(friendService, hub, postService, imageStorage, notificationService)
+	commentHandler := handlers.NewCommentHandler(hub, commentService, notificationService)
+	postLikeHandler := handlers.NewPostLikeHandler(hub, postLikeService, notificationService)
+	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub, websocketService)
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
-	notificationsHandler := handlers.NewNotificationsHandler(friendService, websocketService, chatService)
+	notificationsHandler := handlers.NewNotificationsHandler(friendService, websocketService, chatService, notificationService)
+	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService, gameHandler)
 
 	api := srv.Engine.Group("/api/v1")
 

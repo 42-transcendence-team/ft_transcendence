@@ -3,9 +3,7 @@ package websocket
 import (
 	"backend/internal/dto"
 	"fmt"
-	"io"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -70,9 +68,11 @@ func (c *Client) LeaveRoom(room *Room) {
 }
 
 func (c *Client) SendMessage(roomID uint, message []byte) error {
+	c.Hub.Mu.RLock()
 	room, ok := c.Hub.Rooms[roomID]
+	c.Hub.Mu.RUnlock()
 	if !ok {
-		return fmt.Errorf("Room with ID %d doesn't exists", roomID)
+		return fmt.Errorf("send message Room with ID %d doesn't exists", roomID)
 	}
 
 	room.Broadcast <- message
@@ -98,14 +98,11 @@ func (c *Client) ReadPump(handler func(ClientConn, *dto.IncomingMessage)) {
 		var msg dto.IncomingMessage
 
 		if err := c.Conn.ReadJSON(&msg); err != nil {
-			isExpectedClose := websocket.IsCloseError(err,
+			if websocket.IsUnexpectedCloseError(err,
 				websocket.CloseNormalClosure,
 				websocket.CloseGoingAway,
 				websocket.CloseNoStatusReceived,
-			)
-			isEOF := err == io.EOF || strings.Contains(err.Error(), "EOF")
-
-			if !isExpectedClose && !isEOF {
+			) {
 				log.Printf("WebSocket Read Error: %v", err)
 			}
 			break

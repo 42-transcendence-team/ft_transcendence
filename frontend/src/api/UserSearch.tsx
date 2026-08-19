@@ -7,15 +7,15 @@ export type UserRelation = "friends" | "pending_sent" | "pending_received"
 export type UserSearchSort ="username_asc" | "username_desc" | "newest" | "oldest";
 
 export type UserSearch = {
-    id: number;
-    login: string;
-    name: string;
-    surname: string;
-    avatar_url: string;
-    status: string;
-    relation: UserRelation;
-    can_send_request: boolean;
-    request_id?: number;
+	id: number;
+	login: string;
+	name: string;
+	surname: string;
+	avatar_url: string;
+	status: string;
+	relation: UserRelation;
+	can_send_request: boolean;
+	request_id: number | null;
 };
 
 export type UserSearchResponse = {
@@ -57,7 +57,7 @@ export async function searchUsers(
     queryParams.set("relations", params.relations.join(","));
   }
 
-  const data = await apiRequest({
+  const data = await apiRequest<UserSearchResponse>({
     endpoint: `users/search?${queryParams.toString()}`,
   });
 

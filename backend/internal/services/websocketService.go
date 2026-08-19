@@ -14,12 +14,13 @@ type UserProvider interface {
 }
 
 type WebsocketService struct {
-	chatRepo *repository.WebsocketRepository
-	userProv UserProvider
+	chatRepo   *repository.WebsocketRepository
+	userProv   UserProvider
+	friendRepo *repository.FriendRepository
 }
 
-func NewWebsocketService(chatRepo *repository.WebsocketRepository, userProv UserProvider) *WebsocketService {
-	return &WebsocketService{chatRepo: chatRepo, userProv: userProv}
+func NewWebsocketService(chatRepo *repository.WebsocketRepository, userProv UserProvider, friendRepo *repository.FriendRepository) *WebsocketService {
+	return &WebsocketService{chatRepo: chatRepo, userProv: userProv, friendRepo: friendRepo}
 }
 
 func (s *WebsocketService) GetUser(userID uint) (*dto.ChatUserInfo, error) {
@@ -104,4 +105,41 @@ func (s *WebsocketService) IsUserInRoom(roomID, userID uint) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// CanSendToRoom comprueba que el remitente sea amigo de todos los demas
+// miembros de la sala y que no haya un bloqueo entre ellos.
+// Devuelve (ok, motivo) — si ok es false, motivo explica por que.
+func (s *WebsocketService) CanSendToRoom(roomID uint, senderID uint) (bool, string) {
+	room, err := s.GetRoomByID(roomID)
+	if err != nil || room.ID == 0 {
+		return false, "la sala no existe"
+	}
+
+	for _, member := range room.Members {
+		if member.ID == senderID {
+			continue
+		}
+
+		blocked, err := s.friendRepo.AreBlock(senderID, member.ID)
+		if err != nil || blocked {
+			return false, "no puedes enviar mensajes a un usuario bloqueado"
+		}
+
+		friends, err := s.friendRepo.AreFriends(senderID, member.ID)
+		if err != nil || !friends {
+			return false, "solo puedes enviar mensajes a amigos"
+		}
+	}
+
+	return true, ""
+}
+
+// GetSharedRoom devuelve el ID de la sala compartida entre dos usuarios, si existe.
+func (s *WebsocketService) GetSharedRoom(userID1 uint, userID2 uint) (uint, error) {
+	room, err := s.chatRepo.GetSharedRoom(userID1, userID2)
+	if err != nil {
+		return 0, err
+	}
+	return room.ID, nil
 }
