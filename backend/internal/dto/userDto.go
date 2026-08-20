@@ -121,13 +121,16 @@ type UserRemove2FA struct {
 // UserProfileResponse contiene únicamente los datos públicos
 // necesarios para mostrar un perfil.
 type UserProfileResponse struct {
-	ID         uint    `json:"id"`
-	Login      string  `json:"login"`
-	Name       string  `json:"name"`
-	Surname    string  `json:"surname"`
-	AvatarPath *string `json:"avatarPath"`
-	BannerPath *string `json:"bannerPath"`
-	Status     string  `json:"status"`
-	IsOnline   bool    `json:"isOnline"`
-	Visits     int64   `json:"visits"`
+	ID             uint    `json:"id"`
+	Login          string  `json:"login"`
+	Name           string  `json:"name"`
+	Surname        string  `json:"surname"`
+	AvatarPath     *string `json:"avatarPath"`
+	BannerPath     *string `json:"bannerPath"`
+	Status         string  `json:"status"`
+	IsOnline       bool    `json:"isOnline"`
+	Visits         int64   `json:"visits"`
+	Relation       string  `json:"relation"`
+	CanSendRequest bool    `json:"can_send_request"`
+	RequestID      *uint   `json:"request_id"`
 }

@@ -4,11 +4,12 @@ import { useState } from "react";
 import { Logout } from "api/Logout";
 import { useAuth } from "@components/auth-router/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+import { useLoaderData } from "react-router-dom";
 
 export const UserMenu = () => {
 	const [isOpen, setIsOpen] = useState(false);
 
+	const user = useLoaderData()
 	const { refreshAuth } = useAuth();
 
 	const navigate = useNavigate();
@@ -24,6 +25,14 @@ export const UserMenu = () => {
 			console.log("logout ERROR", error);
 		}
 	};
+	const handleSettings = async () => {
+		navigate("settings");
+		console.log("setting button");
+	};
+
+	const handleProfile = () => {
+		navigate(`profile/${user.user.login}`)
+	}
 
 	return (
 		<div className="userMenu">
@@ -36,11 +45,11 @@ export const UserMenu = () => {
 			</button>
 			{isOpen && (
 				<div className="userMenu__dropdown">
-					<button className="userMenu__item" type="button">
+					<button className="userMenu__item" type="button" onClick={handleProfile}>
 						<FiUser className="userMenu__item-icon" />
 						<span>Perfil</span>
 					</button>
-					<button className="userMenu__item" type="button">
+					<button className="userMenu__item" type="button" onClick={handleSettings}>
 						<FiSettings className="userMenu__item-icon" />
 						<span>Configuración</span>
 					</button>

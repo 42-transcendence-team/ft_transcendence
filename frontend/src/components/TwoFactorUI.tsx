@@ -58,6 +58,7 @@ export function OtpInput({ onChange }: { onChange?: (code: string[]) => void }) 
 						onChange={(e) => handleChange(e.target.value, index)}
 						onKeyDown={(e) => handleKeyDown(e, index)}
 						onPaste={handlePaste}
+						autoComplete="off"
 						className="otp__input" />
 				</Fragment>
 			))}

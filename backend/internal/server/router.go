@@ -7,6 +7,7 @@ import (
 	routes "backend/internal/routes"
 	"backend/internal/services"
 	"backend/internal/storage"
+	"backend/internal/websocket"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -19,19 +20,27 @@ func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
 	srv.Engine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
+	hub := websocket.NewHub()
+	go hub.Run()
+
 	srv.Engine.MaxMultipartMemory = 8 << 20 // 8 MB
 	srv.Engine.Static("/uploads", "./uploads")
 
 	userRepo := repository.NewUserRepository(srv.Db)
+	chatRepo := repository.NewChatRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
 	postRepo := repository.NewPostRepository(srv.Db)
 	commentRepo := repository.NewCommentRepository(srv.Db)
+	websocketRepo := repository.NewWebsocketRepository(srv.Db)
 	postLikeRepo := repository.NewPostLikeRepository(srv.Db)
+	notifRepo := repository.NewNotificationRepository(srv.Db)
 
 	imageStorage := storage.NewImageStorage("uploads")
 
 	authService := services.NewAuthService(userRepo, srv.Conf)
 	userService := services.NewUserService(userRepo)
+	websocketService := services.NewWebsocketService(websocketRepo, userRepo, friendRepo)
+	chatService := services.NewChatService(chatRepo, userRepo)
 	twoFAService := services.New2FAService(userRepo, authService, srv.Redis)
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 	advancedSearchService := services.NewAdvancedSearch(userRepo, friendRepo)
@@ -39,6 +48,7 @@ func (srv *HTTPServer) Router() {
 	postService := services.NewPostService(postRepo, postLikeRepo)
 	commentService := services.NewCommentService(commentRepo, postRepo)
 	postLikeService := services.NewPostLikeService(postRepo, postLikeRepo)
+	notificationService := services.NewNotificationService(notifRepo, hub)
 
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(
@@ -48,11 +58,14 @@ func (srv *HTTPServer) Router() {
 		advancedSearchService,
 	)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
-	friendHandler := handlers.NewFriendHandler(friendService, blockService)
-	postHandler := handlers.NewPostHandler(postService, imageStorage)
-	commentHandler := handlers.NewCommentHandler(commentService)
-	postLikeHandler := handlers.NewPostLikeHandler(postLikeService)
+	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService)
+	chatHandler := handlers.NewChatHandler(hub, chatService)
+	postHandler := handlers.NewPostHandler(friendService, hub, postService, imageStorage, notificationService)
+	commentHandler := handlers.NewCommentHandler(hub, commentService, notificationService)
+	postLikeHandler := handlers.NewPostLikeHandler(hub, postLikeService, notificationService)
+	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub, websocketService)
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
+	notificationsHandler := handlers.NewNotificationsHandler(friendService, websocketService, chatService, notificationService)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -71,7 +84,7 @@ func (srv *HTTPServer) Router() {
 
 	// Esto en realidad no se como poder hacerlo bonito
 	login := api.Group("/2fa")
-	login.Use(middlewares.TwoFAMiddleware(srv.Conf))
+	login.Use(middlewares.TwoFAMiddleware(srv.Conf, srv.Redis))
 	{
 		login.POST("/login", twoFAHandler.Login2FA)
 	}
@@ -85,7 +98,10 @@ func (srv *HTTPServer) Router() {
 		routes.AuthRoutesPrivate(protected, authHandler)
 		routes.FriendsRoutes(protected, friendHandler)
 		routes.TwoFARoutesPrivate(protected, twoFAHandler)
+		routes.WebsocketRoutes(protected, websocketHandler)
+		routes.ChatRoutes(protected, chatHandler)
 		routes.UserRoutes(protected, userHandler)
+		routes.NotificationRoutes(protected, notificationsHandler)
 		routes.PostRoutes(
 			protected,
 			postHandler,

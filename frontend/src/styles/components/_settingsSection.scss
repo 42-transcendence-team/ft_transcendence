@@ -6,12 +6,20 @@
 	position: relative;
 	display: inline-block;
 	width: 100%;
+	padding: 0.50rem 1rem;
 
 	&__section {
 		margin-bottom: 30px;
 		position: relative;
 		display: inline-block;
 		width: 100%;
+	}
+
+	&__title {
+		font-size: 1.5rem;
+		font-weight: bold;
+		margin-bottom: 10px;
+		color: #475569;
 	}
 
 	&__form {

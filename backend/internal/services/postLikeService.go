@@ -29,9 +29,10 @@ func NewPostLikeService(
 func (s *PostLikeService) LikePost(
 	userID uint,
 	postID uint,
-) (*dto.PostLikeStateResponse, error) {
-	if err := s.ensurePostExists(postID); err != nil {
-		return nil, err
+) (*dto.PostLikeStateResponse, uint, error) {
+	postOwnerID, err := s.ensurePostExists(postID)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	if err := s.postLikeRepo.SetReaction(
@@ -39,10 +40,11 @@ func (s *PostLikeService) LikePost(
 		userID,
 		models.PostReactionLike,
 	); err != nil {
-		return nil, appErr.NewInternal(err)
+		return nil, 0, appErr.NewInternal(err)
 	}
 
-	return s.buildReactionState(postID, userID)
+	state, err := s.buildReactionState(postID, userID)
+	return state, postOwnerID, err
 }
 
 // UnlikePost elimina el like del usuario.
@@ -51,7 +53,7 @@ func (s *PostLikeService) UnlikePost(
 	userID uint,
 	postID uint,
 ) (*dto.PostLikeStateResponse, error) {
-	if err := s.ensurePostExists(postID); err != nil {
+	if _, err := s.ensurePostExists(postID); err != nil {
 		return nil, err
 	}
 
@@ -71,7 +73,7 @@ func (s *PostLikeService) DislikePost(
 	userID uint,
 	postID uint,
 ) (*dto.PostLikeStateResponse, error) {
-	if err := s.ensurePostExists(postID); err != nil {
+	if _, err := s.ensurePostExists(postID); err != nil {
 		return nil, err
 	}
 
@@ -92,7 +94,7 @@ func (s *PostLikeService) UndislikePost(
 	userID uint,
 	postID uint,
 ) (*dto.PostLikeStateResponse, error) {
-	if err := s.ensurePostExists(postID); err != nil {
+	if _, err := s.ensurePostExists(postID); err != nil {
 		return nil, err
 	}
 
@@ -107,17 +109,17 @@ func (s *PostLikeService) UndislikePost(
 	return s.buildReactionState(postID, userID)
 }
 
-func (s *PostLikeService) ensurePostExists(postID uint) error {
-	_, err := s.postRepo.FindByID(postID)
+func (s *PostLikeService) ensurePostExists(postID uint) (uint, error) {
+	post, err := s.postRepo.FindByID(postID)
 	if err == nil {
-		return nil
+		return post.UserID, nil
 	}
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return appErr.NewNotFound("post_not_found")
+		return 0, appErr.NewNotFound("post_not_found")
 	}
 
-	return appErr.NewInternal(err)
+	return 0, appErr.NewInternal(err)
 }
 
 func (s *PostLikeService) buildReactionState(
