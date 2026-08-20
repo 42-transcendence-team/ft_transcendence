@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { FiTrendingUp } from "react-icons/fi";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getUserProfile, getUserPresence, type UserProfile } from "../api/UserProfile"; // Ajusta la ruta
 import skullLogo from '../assets/icons/skull_logo.png';
@@ -53,10 +54,6 @@ export const MiniProfile = () => {
     };
   }, []);
 
-  const handlePublish = () => {
-    console.log("Abriendo modal para nueva publicación...");
-  };
-
   // Si está cargando la sesión, mostramos un esqueleto o estado de carga
   if (authLoading) {
     return (
@@ -96,14 +93,13 @@ export const MiniProfile = () => {
       <div className="miniProfile__stats" title={`${visits} visitas en tu perfil`}>
         <FiTrendingUp /> <span>{visits} visitas</span>
       </div>
-
-      <button 
-        type="button" 
+      <Link
         className="miniProfile__publishBtn"
-        onClick={handlePublish}
+        to="/app/posts/new"
       >
-        Share
-      </button>
+        New Post
+      </Link>
+      
     </div>
   );
 };

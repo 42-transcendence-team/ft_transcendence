@@ -448,8 +448,7 @@ export const Profile = () => {
 								: profileUser.login}
 						</h4>
 					</div>
-
-					<Button1 label="Share" />
+					<Button1 label="New Post" to="/app/posts/new" />
 				</div>
 
 				<div className="profile__feed">

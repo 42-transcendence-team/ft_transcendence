@@ -1,23 +1,26 @@
 .action-buttons {
-	display: flex;
-	gap: 15px;
+  display: flex;
+  gap: 15px;
 
-	button {
-		padding: 10px 20px;
-		border: none;
-		border-radius: 5px;
-		cursor: pointer;
-		color: white;
-		font-weight: bold;
-		font-size: 0.9em;
-		transition: background-color 0.3s ease;
+  .share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    text-decoration: none;
 
-		&:hover {
-			opacity: 0.9;
-		}
-	}
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    font-size: 0.9em;
+    background-color: $color-btn-share;
+    transition: background-color 0.3s ease;
 
-	.share-btn {
-		background-color: $color-btn-share;
-	}
+    &:hover {
+      background-color: $color-btn-share-hover;
+    }
+  }
 }
