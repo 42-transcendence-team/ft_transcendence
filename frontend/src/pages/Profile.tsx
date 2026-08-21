@@ -1,13 +1,24 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import {
+	useEffect,
+	useRef,
+	useState,
+} from "react";
+import {
+	useNavigate,
+	useParams,
+} from "react-router-dom";
 
+import type { ApiError } from "../api/ApiRequest";
+import {
+	getPostsByUserId,
+	type PostReactionState,
+	type PostSummary,
+} from "../api/Posts";
 import {
 	getUserPresence,
 	getUserProfile,
 } from "../api/UserProfile";
 import type { UserProfile } from "../api/UserProfile";
-import type { ApiError } from "../api/ApiRequest";
-
 import {
 	acceptFriendRequest,
 	blockUser,
@@ -27,12 +38,12 @@ import type { UserPresence } from "../components/users/UserAvatar";
 import { AvatarEditorModal } from "../components/users/AvatarEditorModal";
 import { BannerEditorModal } from "../components/users/BannerEditorModal";
 import { PostImageModal } from "../components/posts/PostImageModal";
+import { PostList } from "../components/posts/PostList";
+import { ConfirmModal } from "../components/ConfirmModal";
 
 import { NotFound } from "./NotFound";
 
 import "../styles/pages/_profile.scss";
-
-import { ConfirmModal } from "../components/ConfirmModal";
 
 type ConfirmAction =
 	| "remove-friend"
@@ -55,10 +66,33 @@ function isApiError(error: unknown): error is ApiError {
 	);
 }
 
+function appendUniquePosts(
+	currentPosts: PostSummary[],
+	incomingPosts: PostSummary[],
+): PostSummary[] {
+	const knownPostIDs = new Set(
+		currentPosts.map((post) => post.id),
+	);
+
+	return [
+		...currentPosts,
+		...incomingPosts.filter(
+			(post) => !knownPostIDs.has(post.id),
+		),
+	];
+}
+
 export const Profile = () => {
-	const { username } = useParams<{ username: string }>();
+	const { username } =
+		useParams<{ username: string }>();
+
+	const navigate = useNavigate();
+
 	console.log("PROFILE username:", username);
-	console.log("PROFILE SE HA RENDERIZADO:", username);
+	console.log(
+		"PROFILE SE HA RENDERIZADO:",
+		username,
+	);
 
 	const {
 		user: authenticatedUser,
@@ -78,32 +112,75 @@ export const Profile = () => {
 	const [profileNotFound, setProfileNotFound] =
 		useState(false);
 
-	const [relationActionError, setRelationActionError] =
+	const [
+		relationActionError,
+		setRelationActionError,
+	] = useState<string | null>(null);
+
+	const [
+		isAvatarEditorOpen,
+		setIsAvatarEditorOpen,
+	] = useState(false);
+
+	const [
+		isBannerEditorOpen,
+		setIsBannerEditorOpen,
+	] = useState(false);
+
+	const [
+		isAvatarViewerOpen,
+		setIsAvatarViewerOpen,
+	] = useState(false);
+
+	const [
+		avatarImageFailed,
+		setAvatarImageFailed,
+	] = useState(false);
+
+	const [
+		bannerImageFailed,
+		setBannerImageFailed,
+	] = useState(false);
+
+	const [profilePosts, setProfilePosts] =
+		useState<PostSummary[]>([]);
+
+	const [postsPage, setPostsPage] =
+		useState(1);
+
+	const [postsTotalPages, setPostsTotalPages] =
+		useState(0);
+
+	const [isLoadingPosts, setIsLoadingPosts] =
+		useState(false);
+
+	const [
+		isLoadingMorePosts,
+		setIsLoadingMorePosts,
+	] = useState(false);
+
+	const [postsError, setPostsError] =
 		useState<string | null>(null);
 
-	const [isAvatarEditorOpen, setIsAvatarEditorOpen] =
-		useState(false);
-
-	const [isBannerEditorOpen, setIsBannerEditorOpen] =
-		useState(false);
-
-	const [isAvatarViewerOpen, setIsAvatarViewerOpen] =
-		useState(false);
-
-	const [avatarImageFailed, setAvatarImageFailed] =
-		useState(false);
-
-	const [bannerImageFailed, setBannerImageFailed] =
-		useState(false);
+	/*
+	 * Permite ignorar respuestas de posts pertenecientes al perfil
+	 * anterior cuando la ruta cambia mientras había una petición activa.
+	 */
+	const postsOwnerIDRef =
+		useRef<number | null>(null);
 
 	const [confirmAction, setConfirmAction] =
-	useState<ConfirmAction>(null);
+		useState<ConfirmAction>(null);
 
 	const [isConfirming, setIsConfirming] =
-	useState(false);
+		useState(false);
 
 	useEffect(() => {
-		console.log("PROFILE useEffect:", username);
+		console.log(
+			"PROFILE useEffect:",
+			username,
+		);
+
 		let cancelled = false;
 
 		setProfileUser(null);
@@ -160,15 +237,117 @@ export const Profile = () => {
 	}, [username]);
 
 	/*
+	 * Carga la primera página de publicaciones del perfil visitado.
+	 * Cada cambio de perfil limpia antes las tarjetas anteriores.
+	 */
+	useEffect(() => {
+		const ownerID =
+			profileUser?.id ?? null;
+
+		postsOwnerIDRef.current = ownerID;
+
+		setProfilePosts([]);
+		setPostsPage(1);
+		setPostsTotalPages(0);
+		setPostsError(null);
+		setIsLoadingMorePosts(false);
+
+		/*
+		 * ProfileContent oculta el contenido privado a usuarios
+		 * que no son amigos. Evitamos también solicitar sus posts.
+		 */
+		const canLoadPosts = Boolean(
+			profileUser &&
+				authenticatedUser &&
+				(
+					authenticatedUser.login ===
+						profileUser.login ||
+					profileUser.relation === "friends"
+				),
+		);
+
+		if (
+			ownerID === null ||
+			!canLoadPosts
+		) {
+			setIsLoadingPosts(false);
+			return;
+		}
+
+		let cancelled = false;
+
+		const loadInitialPosts = async () => {
+			try {
+				setIsLoadingPosts(true);
+
+				const response =
+					await getPostsByUserId(
+						ownerID,
+						1,
+						20,
+					);
+
+				if (
+					cancelled ||
+					postsOwnerIDRef.current !== ownerID
+				) {
+					return;
+				}
+
+				setProfilePosts(response.data);
+
+				setPostsPage(
+					response.pagination.page,
+				);
+
+				setPostsTotalPages(
+					response.pagination.totalPages,
+				);
+			} catch {
+				if (
+					!cancelled &&
+					postsOwnerIDRef.current === ownerID
+				) {
+					setPostsError(
+						"The posts could not be loaded.",
+					);
+				}
+			} finally {
+				if (
+					!cancelled &&
+					postsOwnerIDRef.current === ownerID
+				) {
+					setIsLoadingPosts(false);
+				}
+			}
+		};
+
+		void loadInitialPosts();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [
+		profileUser?.id,
+		profileUser?.login,
+		profileUser?.relation,
+		authenticatedUser?.login,
+	]);
+
+	/*
 	 * Actualiza únicamente la presencia del usuario sin
 	 * volver a cargar el perfil completo.
 	 */
 	useEffect(() => {
-		if (!profileUser?.login || profileNotFound) {
+		if (
+			!profileUser?.login ||
+			profileNotFound
+		) {
 			return;
 		}
 
-		const profileLogin = profileUser.login;
+		const profileLogin =
+			profileUser.login;
 
 		let cancelled = false;
 		let requestInFlight = false;
@@ -182,26 +361,32 @@ export const Profile = () => {
 
 			try {
 				const isOnline =
-					await getUserPresence(profileLogin);
+					await getUserPresence(
+						profileLogin,
+					);
 
 				if (cancelled) {
 					return;
 				}
 
-				setProfileUser((currentProfile) => {
-					if (
-						!currentProfile ||
-						currentProfile.login !== profileLogin ||
-						currentProfile.isOnline === isOnline
-					) {
-						return currentProfile;
-					}
+				setProfileUser(
+					(currentProfile) => {
+						if (
+							!currentProfile ||
+							currentProfile.login !==
+								profileLogin ||
+							currentProfile.isOnline ===
+								isOnline
+						) {
+							return currentProfile;
+						}
 
-					return {
-						...currentProfile,
-						isOnline,
-					};
-				});
+						return {
+							...currentProfile,
+							isOnline,
+						};
+					},
+				);
 			} catch {
 				/*
 				 * Si falla una comprobación puntual, se conserva
@@ -214,15 +399,19 @@ export const Profile = () => {
 
 		void refreshPresence();
 
-		const intervalId = window.setInterval(() => {
-			void refreshPresence();
-		}, 30_000);
+		const intervalId =
+			window.setInterval(() => {
+				void refreshPresence();
+			}, 30_000);
 
 		return () => {
 			cancelled = true;
 			window.clearInterval(intervalId);
 		};
-	}, [profileUser?.login, profileNotFound]);
+	}, [
+		profileUser?.login,
+		profileNotFound,
+	]);
 
 	/*
 	 * Sincroniza el perfil propio después de editar
@@ -232,7 +421,8 @@ export const Profile = () => {
 		if (
 			!profileUser ||
 			!authenticatedUser ||
-			profileUser.login !== authenticatedUser.login
+			profileUser.login !==
+				authenticatedUser.login
 		) {
 			return;
 		}
@@ -251,9 +441,11 @@ export const Profile = () => {
 					authenticatedUser.surname ??
 					currentProfile.surname,
 				avatarPath:
-					authenticatedUser.avatarPath ?? null,
+					authenticatedUser.avatarPath ??
+					null,
 				bannerPath:
-					authenticatedUser.bannerPath ?? null,
+					authenticatedUser.bannerPath ??
+					null,
 			};
 		});
 	}, [
@@ -279,7 +471,9 @@ export const Profile = () => {
 			}
 		};
 
-		image.src = getImageSource(profileUser.avatarPath);
+		image.src = getImageSource(
+			profileUser.avatarPath,
+		);
 
 		return () => {
 			active = false;
@@ -289,6 +483,94 @@ export const Profile = () => {
 	useEffect(() => {
 		setBannerImageFailed(false);
 	}, [profileUser?.bannerPath]);
+
+	const handleLoadMorePosts = async () => {
+		if (
+			!profileUser ||
+			isLoadingMorePosts ||
+			postsPage >= postsTotalPages
+		) {
+			return;
+		}
+
+		const ownerID = profileUser.id;
+		const nextPage = postsPage + 1;
+
+		try {
+			setIsLoadingMorePosts(true);
+			setPostsError(null);
+
+			const response =
+				await getPostsByUserId(
+					ownerID,
+					nextPage,
+					20,
+				);
+
+			if (
+				postsOwnerIDRef.current !== ownerID
+			) {
+				return;
+			}
+
+			setProfilePosts((currentPosts) =>
+				appendUniquePosts(
+					currentPosts,
+					response.data,
+				),
+			);
+
+			setPostsPage(
+				response.pagination.page,
+			);
+
+			setPostsTotalPages(
+				response.pagination.totalPages,
+			);
+		} catch {
+			if (
+				postsOwnerIDRef.current === ownerID
+			) {
+				setPostsError(
+					"More posts could not be loaded.",
+				);
+			}
+		} finally {
+			if (
+				postsOwnerIDRef.current === ownerID
+			) {
+				setIsLoadingMorePosts(false);
+			}
+		}
+	};
+
+	const handlePostDeleted = (
+		postId: number,
+	) => {
+		setProfilePosts((currentPosts) =>
+			currentPosts.filter(
+				(post) => post.id !== postId,
+			),
+		);
+	};
+
+	const handlePostReactionUpdated = (
+		reactionState: PostReactionState,
+	) => {
+		setProfilePosts((currentPosts) =>
+			currentPosts.map((post) =>
+				post.id === reactionState.postId
+					? {
+							...post,
+							likeCount:
+								reactionState.likeCount,
+							dislikeCount:
+								reactionState.dislikeCount,
+						}
+					: post,
+			),
+		);
+	};
 
 	/*
 	 * Ejecuta una acción de amistad y después vuelve a cargar
@@ -333,7 +615,9 @@ export const Profile = () => {
 		}
 
 		void executeRelationAction(() =>
-			acceptFriendRequest(profileUser.request_id!),
+			acceptFriendRequest(
+				profileUser.request_id!,
+			),
 		);
 	};
 
@@ -343,7 +627,9 @@ export const Profile = () => {
 		}
 
 		void executeRelationAction(() =>
-			rejectFriendRequest(profileUser.request_id!),
+			rejectFriendRequest(
+				profileUser.request_id!,
+			),
 		);
 	};
 
@@ -407,10 +693,13 @@ export const Profile = () => {
 	}
 
 	const isOwnProfile =
-		authenticatedUser.login === profileUser.login;
+		authenticatedUser.login ===
+		profileUser.login;
 
 	const profilePresence: UserPresence =
-		profileUser.isOnline ? "online" : "offline";
+		profileUser.isOnline
+			? "online"
+			: "offline";
 
 	const hasCustomAvatar =
 		Boolean(profileUser.avatarPath) &&
@@ -427,36 +716,37 @@ export const Profile = () => {
 			: undefined;
 
 	const canViewPrivateContent =
-		isOwnProfile || profileUser.relation === "friends";
+		isOwnProfile ||
+		profileUser.relation === "friends";
 
-
-	const handleConfirmRelationAction = async () => {
-		if (!confirmAction) {
-			return;
-		}
-
-		setIsConfirming(true);
-
-		try {
-			switch (confirmAction) {
-				case "remove-friend":
-					await handleRemoveFriend();
-					break;
-
-				case "block":
-					await handleBlockUser();
-					break;
-
-				case "unblock":
-					await handleUnblockUser();
-					break;
+	const handleConfirmRelationAction =
+		async () => {
+			if (!confirmAction) {
+				return;
 			}
 
-			setConfirmAction(null);
-		} finally {
-			setIsConfirming(false);
-		}
-	};
+			setIsConfirming(true);
+
+			try {
+				switch (confirmAction) {
+					case "remove-friend":
+						await handleRemoveFriend();
+						break;
+
+					case "block":
+						await handleBlockUser();
+						break;
+
+					case "unblock":
+						await handleUnblockUser();
+						break;
+				}
+
+				setConfirmAction(null);
+			} finally {
+				setIsConfirming(false);
+			}
+		};
 
 	const confirmationConfig = {
 		"remove-friend": {
@@ -490,15 +780,23 @@ export const Profile = () => {
 		<div className="profile">
 			<div className="profile__container">
 				<ProfileBanner
-					bannerPath={profileUser.bannerPath}
+					bannerPath={
+						profileUser.bannerPath
+					}
 					username={profileUser.login}
 					isOwnProfile={isOwnProfile}
-					hasCustomBanner={hasCustomBanner}
+					hasCustomBanner={
+						hasCustomBanner
+					}
 					onEdit={() =>
-						setIsBannerEditorOpen(true)
+						setIsBannerEditorOpen(
+							true,
+						)
 					}
 					onImageError={() =>
-						setBannerImageFailed(true)
+						setBannerImageFailed(
+							true,
+						)
 					}
 				/>
 
@@ -507,16 +805,24 @@ export const Profile = () => {
 					username={profileUser.login}
 					name={profileUser.name}
 					surname={profileUser.surname}
-					avatarPath={profileUser.avatarPath}
+					avatarPath={
+						profileUser.avatarPath
+					}
 					presence={profilePresence}
 					isOwnProfile={isOwnProfile}
-					hasCustomAvatar={hasCustomAvatar}
+					hasCustomAvatar={
+						hasCustomAvatar
+					}
 					relation={profileUser.relation}
 					canSendRequest={
 						profileUser.can_send_request
 					}
-					requestId={profileUser.request_id}
-					onAvatarClick={handleAvatarClick}
+					requestId={
+						profileUser.request_id
+					}
+					onAvatarClick={
+						handleAvatarClick
+					}
 					onAddFriend={handleAddFriend}
 					onAcceptRequest={
 						handleAcceptRequest
@@ -524,9 +830,19 @@ export const Profile = () => {
 					onRejectRequest={
 						handleRejectRequest
 					}
-					onRemoveFriend={() => setConfirmAction("remove-friend")}
-					onBlockUser={() => setConfirmAction("block")}
-					onUnblockUser={() => setConfirmAction("unblock")}
+					onRemoveFriend={() =>
+						setConfirmAction(
+							"remove-friend",
+						)
+					}
+					onBlockUser={() =>
+						setConfirmAction("block")
+					}
+					onUnblockUser={() =>
+						setConfirmAction(
+							"unblock",
+						)
+					}
 				/>
 
 				{relationActionError && (
@@ -538,74 +854,163 @@ export const Profile = () => {
 				<ProfileContent
 					status={profileUser.status}
 					isOwnProfile={isOwnProfile}
-					canViewPrivateContent={canViewPrivateContent}
-				/>
+					canViewPrivateContent={
+						canViewPrivateContent
+					}
+					onCreatePost={() =>
+						navigate("/app/posts/new")
+					}
+				>
+					<div className="profile__posts">
+						{isLoadingPosts && (
+							<div className="profile__posts-state">
+								Loading posts.
+							</div>
+						)}
+
+						{!isLoadingPosts &&
+							profilePosts.length === 0 &&
+							postsError && (
+								<div className="profile__posts-error">
+									{postsError}
+								</div>
+							)}
+
+						{!isLoadingPosts &&
+							profilePosts.length === 0 &&
+							!postsError && (
+								<div className="profile__empty">
+									This user has not posted
+									anything yet.
+								</div>
+							)}
+
+						{profilePosts.length > 0 && (
+							<>
+								{postsError && (
+									<div className="profile__posts-error">
+										{postsError}
+									</div>
+								)}
+
+								<PostList
+									posts={
+										profilePosts
+									}
+									onPostDeleted={
+										handlePostDeleted
+									}
+									onPostReactionUpdated={
+										handlePostReactionUpdated
+									}
+								/>
+
+								{postsPage <
+									postsTotalPages && (
+									<button
+										className="post-list__load-more"
+										type="button"
+										disabled={
+											isLoadingMorePosts
+										}
+										onClick={() =>
+											void handleLoadMorePosts()
+										}
+									>
+										{isLoadingMorePosts
+											? "Loading..."
+											: "Load more"}
+									</button>
+								)}
+							</>
+						)}
+					</div>
+				</ProfileContent>
 			</div>
 
 			{isOwnProfile && (
 				<>
 					<AvatarEditorModal
-						open={isAvatarEditorOpen}
+						open={
+							isAvatarEditorOpen
+						}
 						currentAvatarPath={
 							profileUser.avatarPath
 						}
 						onClose={() =>
-							setIsAvatarEditorOpen(false)
+							setIsAvatarEditorOpen(
+								false,
+							)
 						}
 						onUpdated={refreshUser}
 					/>
 
 					<BannerEditorModal
-						open={isBannerEditorOpen}
+						open={
+							isBannerEditorOpen
+						}
 						currentBannerPath={
 							profileUser.bannerPath
 						}
 						onClose={() =>
-							setIsBannerEditorOpen(false)
+							setIsBannerEditorOpen(
+								false,
+							)
 						}
 						onUpdated={refreshUser}
 					/>
 				</>
 			)}
 
-			{!isOwnProfile && hasCustomAvatar && (
-				<PostImageModal
-					open={isAvatarViewerOpen}
-					imageSrc={
-						profileUser.avatarPath
-							? getImageSource(
-									profileUser.avatarPath,
-								)
-							: null
+			{!isOwnProfile &&
+				hasCustomAvatar && (
+					<PostImageModal
+						open={
+							isAvatarViewerOpen
+						}
+						imageSrc={
+							profileUser.avatarPath
+								? getImageSource(
+										profileUser.avatarPath,
+									)
+								: null
+						}
+						alt={`${profileUser.login} profile image`}
+						onClose={() =>
+							setIsAvatarViewerOpen(
+								false,
+							)
+						}
+					/>
+				)}
+
+			{currentConfirmation && (
+				<ConfirmModal
+					open={
+						confirmAction !== null
 					}
-					alt={`${profileUser.login} profile image`}
+					title={
+						currentConfirmation.title
+					}
+					message={
+						currentConfirmation.message
+					}
+					confirmLabel={
+						currentConfirmation.confirmLabel
+					}
+					confirmingLabel={
+						currentConfirmation.confirmingLabel
+					}
+					cancelLabel="Cancelar"
+					isConfirming={isConfirming}
+					onConfirm={
+						handleConfirmRelationAction
+					}
 					onClose={() =>
-						setIsAvatarViewerOpen(false)
+						setConfirmAction(null)
 					}
 				/>
 			)}
-
-		{currentConfirmation && (
-			<ConfirmModal
-				open={confirmAction !== null}
-				title={currentConfirmation.title}
-				message={currentConfirmation.message}
-				confirmLabel={
-					currentConfirmation.confirmLabel
-				}
-				confirmingLabel={
-					currentConfirmation.confirmingLabel
-				}
-				cancelLabel="Cancelar"
-				isConfirming={isConfirming}
-				onConfirm={
-					handleConfirmRelationAction
-				}
-				onClose={() =>
-					setConfirmAction(null)
-				}
-			/>
-		)}
 		</div>
 	);
 };

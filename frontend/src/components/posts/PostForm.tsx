@@ -3,12 +3,15 @@ import type { FormEvent } from "react";
 
 import { createPost } from "api/Posts";
 import type { Post } from "api/Posts";
+
 import { ImageUploadField } from "@components/ImageUploadField";
+
 import {
-	ALLOWED_POST_IMAGE_TYPES,
+	ALLOWED_POST_FILE_TYPES,
 	validatePostDraft,
-	validatePostImage,
+	validatePostFile,
 } from "@utils/postValidation";
+
 import { getPostCreateErrorMessage } from "@utils/apiErrorMessages";
 
 type PostFormProps = {
@@ -17,7 +20,7 @@ type PostFormProps = {
 
 export const PostForm = ({ onCreated }: PostFormProps) => {
 	const [content, setContent] = useState("");
-	const [image, setImage] = useState<File | null>(null);
+	const [file, setFile] = useState<File | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -26,7 +29,7 @@ export const PostForm = ({ onCreated }: PostFormProps) => {
 	) => {
 		event.preventDefault();
 
-		const validationError = validatePostDraft(content, image);
+		const validationError = validatePostDraft(content, file);
 
 		if (validationError) {
 			setError(validationError);
@@ -40,8 +43,9 @@ export const PostForm = ({ onCreated }: PostFormProps) => {
 			formData.append("content", trimmedContent);
 		}
 
-		if (image) {
-			formData.append("image", image);
+		if (file) {
+			// Se mantiene el nombre multipart actual para no cambiar la API.
+			formData.append("image", file);
 		}
 
 		try {
@@ -78,14 +82,14 @@ export const PostForm = ({ onCreated }: PostFormProps) => {
 			</div>
 
 			<ImageUploadField
-				id="post-image"
-				label="Image"
-				file={image}
-				accept={ALLOWED_POST_IMAGE_TYPES.join(",")}
+				id="post-file"
+				label="Image or PDF"
+				file={file}
+				accept={ALLOWED_POST_FILE_TYPES.join(",")}
 				disabled={isSubmitting}
 				previewAlt="Post preview"
-				validate={validatePostImage}
-				onChange={setImage}
+				validate={validatePostFile}
+				onChange={setFile}
 				onError={setError}
 			/>
 
