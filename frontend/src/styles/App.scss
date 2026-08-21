@@ -5,6 +5,9 @@
 @use './abstracts/variables' as *;
 
 @use './pages/posts';
+@use './pages/informationPages';
+
+@use './components/appBrand';
 @use './components/postDetail';
 @use './components/comments';
 @use './components/imageUploadField';

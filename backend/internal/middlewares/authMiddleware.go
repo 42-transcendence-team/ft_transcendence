@@ -4,6 +4,8 @@ import (
 	"backend/config"
 	appErr "backend/internal/errors"
 	"backend/internal/utils"
+
+	"github.com/gorilla/websocket"
 	"fmt"
 	"log"
 
@@ -17,6 +19,27 @@ Para el front -> si recibe un eror unautroized redirigir la peticion al login
 
 func AuthMiddleware(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if websocket.IsWebSocketUpgrade(c.Request) {
+			strToken, err := c.Cookie("jwt")
+			if err != nil {
+				c.Error(appErr.NewUnauthorized("missing auth token"))
+				c.Abort()
+				return
+			}
+
+			claims, err := utils.ValidateToken(strToken, cfg)
+			if err != nil {
+				c.Error(err)
+				c.Abort()
+				return
+			}
+
+			c.Set("userID", claims.Id)
+			c.Set("login", claims.Login)
+			c.Next()
+			return
+		}
+
 		strToken, err := c.Cookie("jwt")
 		if err != nil {
 			c.Error(appErr.NewUnauthorized("missing auth token"))
@@ -47,6 +70,7 @@ func AuthMiddleware(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 		log.Printf("AuthMiddleware: Session valid for user ID %d", claims.Id)
 
 		c.Set("userID", claims.Id) // guarda dentro del contexto el usuario que hace la peticion
+		c.Set("login", claims.Login)
 		/*
 			Si el usuario es validado por que el token esta bien pasa al siguiente paso (ya sea midelware o el handler de la ruta) , para en estaa request si quieres saber el id del
 			propietario se usara ->

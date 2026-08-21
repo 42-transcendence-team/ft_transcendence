@@ -1,0 +1,116 @@
+@use "../abstracts/variables" as *;
+
+.app-brand {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.65rem;
+	min-width: 0;
+	color: inherit;
+	line-height: 1;
+	text-decoration: none;
+	white-space: nowrap;
+	cursor: pointer;
+	transition:
+		opacity 0.18s ease,
+		transform 0.18s ease;
+
+	&:hover {
+		color: inherit;
+		opacity: 0.88;
+		transform: translateY(-1px);
+	}
+
+	&:focus-visible {
+		outline: 3px solid rgba(
+			$dark-purple-background-light,
+			0.35
+		);
+		outline-offset: 4px;
+		border-radius: 6px;
+	}
+
+	&__logo {
+		display: block;
+		flex: 0 0 auto;
+		object-fit: contain;
+	}
+
+	&__name {
+		display: block;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	/*
+	 * "light" se usa sobre fondos oscuros o morados.
+	 * El PNG original es oscuro, por lo que el filtro lo vuelve blanco.
+	 */
+	&--light {
+		color: #ffffff;
+
+		.app-brand__logo {
+			filter: brightness(0) invert(1);
+		}
+
+		&:focus-visible {
+			outline-color: rgba(255, 255, 255, 0.72);
+		}
+	}
+
+	/*
+	 * "dark" mantiene el logo original y utiliza el tono oscuro
+	 * empleado actualmente en Login y Register.
+	 */
+	&--dark {
+		color: #4d5b73;
+
+		.app-brand__logo {
+			filter: none;
+		}
+	}
+
+	&--logo-small {
+		.app-brand__logo {
+			width: 32px;
+			height: 32px;
+		}
+	}
+
+	&--logo-medium {
+		.app-brand__logo {
+			width: 42px;
+			height: 42px;
+		}
+	}
+
+	&--logo-large {
+		.app-brand__logo {
+			width: 56px;
+			height: 56px;
+		}
+	}
+
+	&--text-small {
+		.app-brand__name {
+			font-size: 0.95rem;
+		}
+	}
+
+	&--text-medium {
+		.app-brand__name {
+			font-size: 1.1rem;
+		}
+	}
+
+	&--text-large {
+		.app-brand__name {
+			font-size: 2rem;
+		}
+	}
+
+	&--bold {
+		.app-brand__name {
+			font-weight: 700;
+		}
+	}
+}

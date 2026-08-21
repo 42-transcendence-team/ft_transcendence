@@ -1,0 +1,143 @@
+
+@use "../abstracts/variables" as *;
+@use "../abstracts/animations" as *;
+
+%button-base {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	width: 55px;
+	height: 55px;
+	border: none;
+	cursor: pointer;
+	transition: transform 0.1s ease;
+
+	&:active {
+		transform: scale(0.95);
+	}
+
+	&:hover {
+		opacity: 0.8;
+	}
+}
+
+.chatPanel {
+	grid-area: right;
+	background-color: $light-gray-common-components;
+	border-radius: 10px;
+	color: black;
+	padding: 0.5rem;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 0.3rem;
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		width: 100%;
+		align-items: center;
+		overflow-y: auto;
+		max-height: 75vh;
+		padding: 0.2rem 0;
+
+		scrollbar-width: thin;
+		scrollbar-color: #555 transparent;
+	}
+
+	&__bubble {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+		border: none;
+		background: transparent;
+		cursor: pointer;
+		transition: transform 0.1s ease;
+		outline: none;
+
+		&:active {
+			transform: scale(0.95);
+		}
+
+		&:hover {
+			opacity: 0.8;
+		}
+
+		// El UserAvatar dentro de la burbuja
+		.user-avatar {
+			border: 2px solid $dark-purple-background-light;
+			border-radius: 50%;
+		}
+	}
+
+	&__bubble.is-active {
+		.user-avatar {
+			border-color: $green-background-light;
+			box-shadow: 0 0 0 2px $green-background-light;
+		}
+	}
+
+	&__bubbleLabel {
+		font-size: 0.65rem;
+		color: $dark-purple-main-text-light;
+		max-width: 70px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		text-align: center;
+	}
+
+	&__bubbleId {
+		@extend %button-base;
+		background-color: $dark-purple-background-light;
+		color: $dark-purple-main-text-light;
+	}
+
+	&__searchInput {
+		@extend %button-base;
+		border-radius: 12px;
+		width: 75px;
+		text-align: center;
+		font-size: 0.85rem;
+		background-color: $dark-purple-background-light;
+		color: white;
+		outline: none;
+
+		&::placeholder {
+			color: #888;
+			font-size: 0.7rem;
+		}
+	}
+
+	&__noResults {
+		font-size: 0.65rem;
+		color: #888;
+		padding: 0.3rem;
+	}
+
+	&__searchBtn {
+		@extend %button-base;
+		background-color: #555;
+		color: white;
+		font-size: 1.1rem;
+	}
+
+	&__actions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		margin-top: 0.5rem;
+	}
+
+	&__add {
+		@extend %button-base;
+		background-color: $green-background-light;
+		color: white;
+		margin-top: 0;
+		font-size: 1.5rem;
+	}
+}
