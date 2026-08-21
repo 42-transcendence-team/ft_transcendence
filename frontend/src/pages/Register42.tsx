@@ -5,7 +5,7 @@ import { FormField } from "../components/FormField"
 import { calculateAge } from "../utils/calculateAge"
 import { get42UserInfo } from "../api/Register"
 import { useEffect } from "react"
-import logo from "../assets/icons/24_logo.png"
+import { AppBrand } from "@components/AppBrand";
 
 type FormFields = {
     login: string
@@ -185,12 +185,15 @@ export default function Register42() {
 
     return (
         <div className="auth-card">
-            <div className="auth-card__header">
-				<NavLink to="/login" className="auth-card__homeLink">
-					<img className="auth-card__logo" src={logo} alt="Twenty Four logo" />
-					<h1 className="auth-card__title">Twenty Four</h1>
-				</NavLink>
-            </div>
+			<div className="auth-card__header">
+			        <AppBrand
+			                className="auth-card__brand"
+			                logoSize="medium"
+			                textSize="large"
+			                tone="dark"
+			                bold
+			        />
+			</div>
             <form className="auth-form" onSubmit={handleSubmit}>
                 <h3 className="auth-form__section-title">ACCOUNT DATA</h3>
                 <div className="auth-form__group">

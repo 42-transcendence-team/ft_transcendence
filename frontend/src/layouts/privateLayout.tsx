@@ -16,76 +16,83 @@ import { AdvancedSearchPanel } from "@components/advancedSearch/AdvancedSearchPa
 import { PrivateLeftPanel } from "@components/layout/PrivateLeftPanel";
 import { PrivateMainContent } from "@components/layout/PrivateMainContent";
 
-import "../styles/components/_privateLayout.scss";
 function useHandleChat() {
-	const [activeChat, setActiveChat] = useState<number | null>(null);
+        const [activeChat, setActiveChat] = useState<number | null>(null);
 
-	const toggleChat = (id: number) => {
-		setActiveChat((prev) => {return (prev === id ? null : id)});
-	};
+        const toggleChat = (id: number) => {
+                setActiveChat((prev) => {return (prev === id ? null : id)});
+        };
 
-	return { activeChat, toggleChat };
+        return { activeChat, toggleChat };
 }
 
 export function PrivateLayout() {
-	const data = useLoaderData();
-	const {activeChat, toggleChat} = useHandleChat();
-	const search = useAdvancedSearch();
+        const data = useLoaderData();
+        const {activeChat, toggleChat} = useHandleChat();
+        const search = useAdvancedSearch();
 
-	return (
-		<div className="privateLayout">
+        const handleBrandActivate = () => {
+                search.handleCloseSearch();
+        };
 
-			<WebSocketProvider user={data.user}>
-				<NotificationProvider activeChat={activeChat} user={data.user} onChatOpen={toggleChat}>
-					<ChatProvider user={data.user}>
-						<header className="privateLayout__header">
-      						<PrivHeader onSearch={search.handleSearch} />
-						</header>
+        return (
+                <div className="privateLayout">
 
-						<aside className="privateLayout__leftPanel">
-							<div className="leftPanel__content">
-								<div className="leftPanel__actions">
-									<Notification/>
-									<PrivateLeftPanel>
-										<SearchFilters
-										  selectedRelations={search.relations}
-										  onRelationsChange={search.handleRelationsChange}
-										  selectedSort={search.sort}
-										  onSortChange={search.handleSortChange}
-										/>
-								  	</PrivateLeftPanel>
-								</div>
-							</div>
-						</aside>
+                        <WebSocketProvider user={data.user}>
+                                <NotificationProvider activeChat={activeChat} user={data.user} onChatOpen={toggleChat}>
+                                        <ChatProvider user={data.user}>
+                                                <header className="privateLayout__header">
+                                                        <PrivHeader
+                                                                onSearch={search.handleSearch}
+                                                                onBrandActivate={handleBrandActivate}
+                                                        />
+                                                </header>
 
-						<main className="privateLayout__content">
-							<div className="privateLayout__contentFrame">
-								<div className="privateLayout__contentInner">
-									<PrivateMainContent>
-										 <Outlet />
-									</PrivateMainContent>
-								</div>
-										{search.hasSearched && (
-										<AdvancedSearchPanel
-											search={search}
-											onClose={search.handleCloseSearch}
-										/>
-										)}
-							</div>
-							{activeChat && (
-								<ChatModal id={activeChat} onClose={() => toggleChat(activeChat)} />
-							)}
-						</main>
+                                                <aside className="privateLayout__leftPanel">
+                                                        <div className="leftPanel__content">
+                                                                <div className="leftPanel__actions">
+                                                                        <Notification/>
+                                                                        <PrivateLeftPanel>
+                                                                                <SearchFilters
+                                                                                  selectedRelations={search.relations}
+                                                                                  onRelationsChange={search.handleRelationsChange}
+                                                                                  selectedSort={search.sort}
+                                                                                  onSortChange={search.handleSortChange}
+                                                                                />
+                                                                        </PrivateLeftPanel>
+                                                                </div>
+                                                        </div>
+                                                </aside>
 
-						<ChatPanel onChatClick={toggleChat} activeChatId={activeChat} />
-						
-						<footer className="privateLayout__footer">
-							<Footer />
-						</footer>
-					</ChatProvider>
-				</NotificationProvider>
-			</WebSocketProvider>
-		</div>
-	);
+                                                <main className="privateLayout__content">
+                                                        <div className="privateLayout__contentFrame">
+                                                                <div className="privateLayout__contentInner">
+                                                                        <PrivateMainContent>
+                                                                                 <Outlet />
+                                                                        </PrivateMainContent>
+                                                                </div>
+                                                                                {search.hasSearched && (
+                                                                                <AdvancedSearchPanel
+                                                                                        search={search}
+                                                                                        onClose={search.handleCloseSearch}
+                                                                                />
+                                                                                )}
+                                                        </div>
+                                                        {activeChat && (
+                                                                <ChatModal id={activeChat} onClose={() => toggleChat(activeChat)} />
+                                                        )}
+                                                </main>
+
+                                                <ChatPanel onChatClick={toggleChat} activeChatId={activeChat} />
+
+                                                <footer className="privateLayout__footer">
+                                                        <Footer
+                                                                onBrandActivate={handleBrandActivate}
+                                                        />
+                                                </footer>
+                                        </ChatProvider>
+                                </NotificationProvider>
+                        </WebSocketProvider>
+                </div>
+        );
 }
-
