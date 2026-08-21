@@ -114,18 +114,16 @@ body {
 		--user-avatar-status-border-color: #{$background-profile};
 	}
 
-	&__user-details {
-		display: flex;
-		flex: 1;
-		flex-direction: column;
-		gap: 5px;
-	}
+	.profile__user-details {
+	min-width: 0;
+	flex: 1;
+}
 
-	&__user-name {
-		margin: 0;
-		color: #333;
-		font-size: 1.5em;
-		font-weight: bold;
+	.profile__user-name,
+	.profile__username {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	&__feed {
@@ -162,10 +160,13 @@ body {
 	&__actions {
 		display: flex;
 		align-items: center;
-		justify-content: flex-end;
-		flex-wrap: wrap;
 		gap: 8px;
-		margin-left: auto;
+		flex-wrap: nowrap;
+		flex-shrink: 0;
+
+		> * {
+			flex-shrink: 0;
+		}
 	}
 
 	&__action-error {
