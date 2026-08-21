@@ -3,7 +3,10 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { useParams } from "react-router-dom";
+import {
+	useNavigate,
+	useParams,
+} from "react-router-dom";
 
 import type { ApiError } from "../api/ApiRequest";
 import {
@@ -82,6 +85,8 @@ function appendUniquePosts(
 export const Profile = () => {
 	const { username } =
 		useParams<{ username: string }>();
+
+	const navigate = useNavigate();
 
 	console.log("PROFILE username:", username);
 	console.log(
@@ -851,6 +856,9 @@ export const Profile = () => {
 					isOwnProfile={isOwnProfile}
 					canViewPrivateContent={
 						canViewPrivateContent
+					}
+					onCreatePost={() =>
+						navigate("/app/posts/new")
 					}
 				>
 					<div className="profile__posts">
