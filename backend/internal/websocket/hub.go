@@ -47,15 +47,16 @@ func (h *Hub) Run() {
 			h.Mu.Unlock()
 
 			if ok {
-				h.Mu.RLock()
+				client.Mu.RLock()
 				for _, room := range client.Rooms {
 					select {
-						case room.Leave <- client:
-						default:
+					case room.Leave <- client:
+					default:
 					}
 				}
-				h.Mu.RUnlock()
+				client.Mu.RUnlock()
 			}
+
 		case roomID := <-h.CloseRooms:
 			h.Mu.Lock()
 			if _, ok := h.Rooms[roomID]; ok {
@@ -73,7 +74,6 @@ func (h *Hub) Run() {
 				}
 			}
 			h.Mu.Unlock()
-		
 		}
 	}
 }

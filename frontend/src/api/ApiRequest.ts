@@ -41,7 +41,7 @@ export type ApiError = {
 	data?: unknown;
 };
 
-export async function apiRequest<T = unknown>(props: ApiRequestProps): Promise<T> {
+export async function apiRequest<T = unknown>(props: ApiRequestProps,): Promise<T> {
 	const {
 		endpoint,
 		body,

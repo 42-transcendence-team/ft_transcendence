@@ -31,6 +31,22 @@
 		object-fit: contain;
 	}
 
+	&__file {
+		display: flex;
+		align-items: center;
+		width: 100%;
+		padding: 0.85rem 1rem;
+		border: 1px solid #e5e7eb;
+		border-radius: 14px;
+		background: #f8fafc;
+	}
+	
+	&__file-name {
+		overflow-wrap: anywhere;
+		color: #111827;
+		font-weight: 600;
+	}
+
 	&__remove {
 		padding: 0.55rem 0.85rem;
 		border: 1px solid #cbd5e1;

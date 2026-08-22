@@ -1,13 +1,21 @@
+import type { ReactNode } from "react";
+
+import { ProfileCreatePostTrigger } from "./ProfileCreatePostTrigger";
+
 type ProfileContentProps = {
 	status: string | null;
 	isOwnProfile: boolean;
 	canViewPrivateContent: boolean;
+	onCreatePost?: () => void;
+	children?: ReactNode;
 };
 
 export const ProfileContent = ({
 	status,
 	isOwnProfile,
 	canViewPrivateContent,
+	onCreatePost,
+	children,
 }: ProfileContentProps) => {
 	if (!canViewPrivateContent) {
 		return (
@@ -33,20 +41,16 @@ export const ProfileContent = ({
 			</p>
 
 			{isOwnProfile && (
-				<div className="profile__create-post">
-					<button
-						type="button"
-						className="profile__create-post-button"
-					>
-						<i className="fas fa-plus" />
-						<span>Añadir publicación</span>
-					</button>
-				</div>
+				<ProfileCreatePostTrigger
+					onClick={onCreatePost}
+				/>
 			)}
 
-			<div className="profile__posts-placeholder">
-				Sección de publicaciones pendiente.
-			</div>
+			{children ?? (
+				<div className="profile__posts-placeholder">
+					Sección de publicaciones pendiente.
+				</div>
+			)}
 		</div>
 	);
 };

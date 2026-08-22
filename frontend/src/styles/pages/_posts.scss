@@ -465,6 +465,45 @@ $post-radius: 18px;
 		background: $post-border;
 	}
 
+	&__attachment {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		width: 100%;
+		margin-top: 0.85rem;
+		padding: 0.8rem 0.95rem;
+		border: 1px solid $post-border;
+		border-radius: 12px;
+		background: #f8fafc;
+		color: $post-text;
+		font-weight: 700;
+		text-decoration: none;
+		transition:
+			background-color 0.15s ease,
+			border-color 0.15s ease;
+	
+		&:hover {
+			border-color: #94a3b8;
+			background: #f1f5f9;
+		}
+	
+		&:focus-visible {
+			outline: 2px solid currentColor;
+			outline-offset: 3px;
+		}
+	}
+	
+	&__attachment-icon,
+	&__attachment-download {
+		flex: 0 0 auto;
+	}
+	
+	&__attachment-name {
+		min-width: 0;
+		flex: 1;
+		overflow-wrap: anywhere;
+	}
+
 	&__comments {
 		display: flex;
 		flex-direction: column;

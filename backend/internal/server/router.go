@@ -27,11 +27,11 @@ func (srv *HTTPServer) Router() {
 	srv.Engine.Static("/uploads", "./uploads")
 
 	userRepo := repository.NewUserRepository(srv.Db)
-	websocketRepo := repository.NewWebsocketRepository(srv.Db)
 	chatRepo := repository.NewChatRepository(srv.Db)
 	friendRepo := repository.NewFriendRepository(srv.Db)
 	postRepo := repository.NewPostRepository(srv.Db)
 	commentRepo := repository.NewCommentRepository(srv.Db)
+	websocketRepo := repository.NewWebsocketRepository(srv.Db)
 	postLikeRepo := repository.NewPostLikeRepository(srv.Db)
 	notifRepo := repository.NewNotificationRepository(srv.Db)
 
@@ -98,7 +98,12 @@ func (srv *HTTPServer) Router() {
 		routes.ChatRoutes(protected, chatHandler)
 		routes.UserRoutes(protected, userHandler)
 		routes.NotificationRoutes(protected, notificationsHandler)
-		routes.PostRoutes(protected, postHandler, commentHandler, postLikeHandler)
+		routes.PostRoutes(
+			protected,
+			postHandler,
+			commentHandler,
+			postLikeHandler,
+		)
 		// aqui irean todas las rutas que tienen que pasar por el middleware de auth
 	}
 
