@@ -9,7 +9,6 @@ import { ForgotPassword } from "@pages/ForgotPassword";
 import { ResetPassword } from "@pages/ResetPassword";
 import { Conditions } from "@pages/Conditions";
 
-
 export const PublicRoutes = {
 	element: <PublicLayout />,
 	children: [

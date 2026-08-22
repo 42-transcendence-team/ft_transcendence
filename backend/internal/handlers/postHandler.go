@@ -54,16 +54,12 @@ func NewPostHandler(
 		notificationService: notificationService,
 	}
 }
-
 /*
 type PostPayload struct {
 	PostID uint `json:"post_id"`
 	UserID uint `json:"user_id"`//el que genero el post
 }
 
-func (h *PostHandler) CreatePost(
-	c *gin.Context,
-) {
 type likePayload struct {
 	PostID uint `json:"post_id"`
 	UserID uint `json:"user_id"`//el que dio like

@@ -121,9 +121,7 @@ export async function apiRequest<T = unknown>(props: ApiRequestProps,): Promise<
 /*
  * Convierte respuestas JSON y admite respuestas sin cuerpo.
  */
-async function parseResponseBody(
-	res: Response,
-): Promise<unknown> {
+async function parseResponseBody(res: Response): Promise<unknown> {
 	const text = await res.text();
 
 	if (!text) {
@@ -152,10 +150,7 @@ async function parseResponseBody(
 /*
  * Unifica el formato de los errores que reciben los componentes.
  */
-export function buildApiError(
-	res: Response,
-	data: unknown,
-): ApiError {
+export function buildApiError(res: Response, data: unknown): ApiError {
 	const errorData =
 		typeof data === "object" && data !== null
 			? (data as {

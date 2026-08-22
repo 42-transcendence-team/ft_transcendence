@@ -65,8 +65,9 @@ export function useHandleWebsocket(user: AuthUser | null) {
 				const message = JSON.parse(event.data);
 				const { type } = message;
 				const typeListeners = listeners.current.get(type);
-				console.log('Mensaje recibido:', message);
-				
+
+				console.log("Mensaje recibido:", message);
+
 				if (typeListeners) {
 					typeListeners.forEach(listener => {
 						try {

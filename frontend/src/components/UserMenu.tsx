@@ -25,6 +25,7 @@ export const UserMenu = () => {
 			console.log("logout ERROR", error);
 		}
 	};
+
 	const handleSettings = async () => {
 		navigate("settings");
 		console.log("setting button");

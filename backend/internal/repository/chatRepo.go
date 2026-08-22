@@ -20,18 +20,17 @@ func NewChatRepository(db *gorm.DB) *ChatRepository {
 // 	return r.db.Create(message).Error
 // }
 
-
-// func (r *ChatRepository) GetRoomByID(roomID uint) (*models.ChatRoom, error) {
-// 	var room models.ChatRoom
-// 	err := r.db.First(&room, roomID).Error
-// 	return &room, err
-// }
+func (r *ChatRepository) GetRoomByID(roomID uint) (*models.ChatRoom, error) {
+	var room models.ChatRoom
+	err := r.db.First(&room, roomID).Error
+	return &room, err
+}
 
 func (r *ChatRepository) UpdateLastTimeOpenChat(userID uint, roomID uint) error {
 	return r.db.Model(&models.RoomUser{}).Where("chat_room_id = ? AND user_id = ?", roomID, userID).Update("last_read_at", time.Now()).Error
 }
 
-func (r *ChatRepository) GetMessagesNoRead(roomId uint , userID uint) uint {
+func (r *ChatRepository) GetMessagesNoRead(roomId uint, userID uint) uint {
 	var unreadCount int64
 	var roomUser models.RoomUser
 

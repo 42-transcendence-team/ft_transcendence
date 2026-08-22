@@ -6,8 +6,9 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/models"
 	"errors"
-	"gorm.io/gorm"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type UserRepository struct {
