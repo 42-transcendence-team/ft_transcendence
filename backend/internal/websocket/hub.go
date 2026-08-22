@@ -39,17 +39,23 @@ func (h *Hub) Run() {
 
 		case client := <-h.Unregister:
 			h.Mu.Lock()
-			if _, ok := h.Clients[client]; ok {
-				for _, room := range h.Rooms {
-					if _, ok := room.Clients[client]; ok {
-						room.Leave <- client
-					}
-				}
+			_, ok := h.Clients[client]
+			if ok {
 				delete(h.Clients, client)
 				delete(h.ClientsConnected, client.UserID)
-				close(client.SendChan)
 			}
 			h.Mu.Unlock()
+
+			if ok {
+				h.Mu.RLock()
+				for _, room := range client.Rooms {
+					select {
+						case room.Leave <- client:
+						default:
+					}
+				}
+				h.Mu.RUnlock()
+			}
 		case roomID := <-h.CloseRooms:
 			h.Mu.Lock()
 			if _, ok := h.Rooms[roomID]; ok {
@@ -67,31 +73,7 @@ func (h *Hub) Run() {
 				}
 			}
 			h.Mu.Unlock()
-
-			// case client := <-h.Register:
-			// 				h.Mu.Lock()
-			// 				h.Clients[client] = true
-			// 				h.ClientsConnected[client.UserID] = client
-			// 				h.Mu.Unlock()
-
-			// 			case client := <-h.Unregister:
-			// 				h.Mu.Lock()
-			// 				_, ok := h.Clients[client]
-			// 				if ok {
-			// 					delete(h.Clients, client)
-			// 					delete(h.ClientsConnected, client.UserID)
-			// 				}
-			// 				h.Mu.Unlock()
-
-			// 				if ok {
-			// 					client.Mu.RLock()
-			// 					for _, room := range client.Rooms {
-			// 						select {
-			// 						case room.Leave <- client:
-			// 						default:
-			// 						}
-			// 					}
-			// 					client.Mu.RUnlock()
+		
 		}
 	}
 }
