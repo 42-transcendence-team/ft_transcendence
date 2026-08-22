@@ -32,10 +32,13 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.Register:
+			h.Mu.Lock()
 			h.Clients[client] = true
 			h.ClientsConnected[client.UserID] = client
+			h.Mu.Unlock()
 
 		case client := <-h.Unregister:
+			h.Mu.Lock()
 			if _, ok := h.Clients[client]; ok {
 				for _, room := range h.Rooms {
 					if _, ok := room.Clients[client]; ok {
@@ -46,6 +49,7 @@ func (h *Hub) Run() {
 				delete(h.ClientsConnected, client.UserID)
 				close(client.SendChan)
 			}
+			h.Mu.Unlock()
 		case roomID := <-h.CloseRooms:
 			h.Mu.Lock()
 			if _, ok := h.Rooms[roomID]; ok {
