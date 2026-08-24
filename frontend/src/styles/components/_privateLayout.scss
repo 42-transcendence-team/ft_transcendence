@@ -1,151 +1,303 @@
 @use '../abstracts/variables' as *;
 
 .privateLayout {
-  height: 100dvh;
-  box-sizing: border-box;
-  width: 100%;
-  display: grid;
-  min-width: 410px;
-  
-  /* 
-     DISEÑO MÓVIL (Mobile First)
-     1 sola columna. Ocultamos paneles laterales.*/
-  padding: 0; // Quitamos el padding para aprovechar toda la pantalla en móvil
-  gap: 0;
-  
-  grid-template-columns: 1fr;
-  grid-template-rows: 60px 1fr;
-  grid-template-areas:
-    "header"
-    "content";
+    height: 100dvh;
+    width: 100%;
+    min-width: 410px;
+    box-sizing: border-box;
 
-  &__leftPanel,
-  &__rightPanel {
-    display: none; // Ocultamos los paneles en móvil
-  }
+    display: grid;
 
-  /* DISEÑO ESCRITORIO / TABLET GRANDE (>= 768px)
-     Volvemos a tu diseño de 3 columnas*/
-  @media (min-width: 768px) {
-    padding: 6px;
-    gap: 6px;
-    
-    grid-template-columns: 25% minmax(0, 1fr) 76px;
-    grid-template-rows: 60px minmax(0, 1fr) auto;
-    
+    // ==============================
+    // DISEÑO MÓVIL (Mobile First)
+    // ==============================
+
+    padding: 0;
+    gap: 0;
+
+    grid-template-columns: 1fr;
+    grid-template-rows: 60px 1fr;
     grid-template-areas:
-      "left header header"
-      "left content right"
-      "left footer right";
+        "header"
+        "content";
+
+    // Ocultamos los paneles laterales en móvil
+    &__leftPanel,
+    &__rightPanel {
+        display: none;
+    }
+
+    // ==============================
+    // ÁREAS COMUNES
+    // ==============================
 
     &__leftPanel {
-      display: flex; // Volvemos a mostrar el panel izquierdo
+        grid-area: left;
+        padding: 1rem;
+
+        background-color: $dark-purple-background-light;
+        border-radius: 10px;
+        color: $dark-purple-main-text-light;
+
+        flex-direction: column;
+        justify-content: flex-end;
+
+        .leftPanel__wrapper {
+            display: flex;
+            flex-direction: column;
+
+            height: 100%;
+            gap: 16px;
+            box-sizing: border-box;
+
+            .leftPanel__section {
+                width: 100%;
+            }
+
+            // Secciones superior e inferior
+            .leftPanel__section--top,
+            .leftPanel__section--bottom {
+                flex-shrink: 0;
+            }
+
+            // Sección central: notificaciones
+            .leftPanel__section--middle {
+                flex-grow: 1;
+                min-height: 0;
+
+                display: flex;
+                flex-direction: column;
+            }
+        }
+    }
+
+    &__header {
+        grid-area: header;
+    }
+
+    &__content {
+        position: relative;
+        grid-area: content;
+
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    &__contentFrame {
+        width: 100%;
+        height: 100%;
+
+        display: flex;
+        flex-direction: column;
+
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    &__contentInner {
+        flex: 1;
+
+        min-height: 0;
+        padding: 0;
+        padding-bottom: 70px;
+
+        overflow-y: auto;
+
+        background-color: $light-gray-common-components;
+
+        // Ocultar barra de scroll
+        &::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            display: none;
+        }
+
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+
+        @media (min-width: 768px) {
+            padding: 1rem;
+            border-radius: 10px;
+        }
     }
 
     &__rightPanel {
-      display: block; // Volvemos a mostrar el panel derecho
+        grid-area: right;
+
+        padding: 1rem;
+
+        background-color: $light-gray-common-components;
+        border-radius: 10px;
+        color: black;
     }
-  }
 
-  /* ESTILOS DE LAS ÁREAS (Comunes)*/
-  &__leftPanel {
-    grid-area: left;
-    background-color: $dark-purple-background-light;
-    border-radius: 10px;
-    color: $dark-purple-main-text-light;
-    padding: 1rem;
-    flex-direction: column;
-    justify-content: flex-end;
+    &__footer {
+        grid-area: footer;
 
-    .leftPanel__wrapper {
-      display: flex;
-      flex-direction: column;
-      height: 100%; 
-      gap: 16px; // Separación entre los 3 bloques
-      // padding: 1rem; // El padding que antes estaba en el leftPanel
-      box-sizing: border-box;
+        min-width: 0;
+        min-height: 0;
+        padding: 0;
 
-      .leftPanel__section {
-        width: 100%;
-      }
+        overflow: hidden;
 
-      // Secciones superior (Filtros) e inferior (Perfil)
-      .leftPanel__section--top,
-      .leftPanel__section--bottom {
-        flex-shrink: 0; // evita que se encojan con notificaciones
-      }
+        background: transparent;
 
-      // Sección central (Notificaciones)
-      .leftPanel__section--middle {
-        flex-grow: 1;
-        min-height: 0;//para q haga scroll
-        display: flex;
-        flex-direction: column;
-      }
+        @media (min-width: 768px) {
+            border-radius: 10px;
+        }
     }
-  }
 
-  &__header {
-    grid-area: header;
-  }
+    // ==============================
+    // ESCRITORIO / TABLET GRANDE
+    // ==============================
 
-  &__content {
-    grid-area: content;
-    min-width: 0;
-    min-height: 0;
-    overflow: hidden;
-  }
+    @media (min-width: 768px) {
+        padding: 6px;
+        gap: 6px;
 
-  &__contentFrame {
-    height: 100%;
-    width: 100%;
-    background-color: rgba(255, 255, 255, 0.05);
+        grid-template-columns: 25% minmax(0, 1fr) 76px;
+        grid-template-rows: 60px minmax(0, 1fr) auto;
+
+        grid-template-areas:
+            "left header header"
+            "left content right"
+            "left footer right";
+
+        &__leftPanel {
+            display: flex;
+        }
+
+        &__rightPanel {
+            display: block;
+        }
+    }
+}
+
+// ==========================================
+// BÚSQUEDA AVANZADA
+// ==========================================
+
+.advancedSearchOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+
     display: flex;
-    flex-direction: column;
-  }
+    align-items: flex-start;
+    justify-content: center;
 
-  &__contentInner {
-    flex: 1;
-    min-height: 0;
+    padding: 24px;
+
+    box-sizing: border-box;
+
+    background-color: rgba(0, 0, 0, 0.12);
+}
+
+.advancedSearchPanel {
+    position: relative;
+
+    width: min(760px, 100%);
+    max-height: calc(100% - 20px);
+
+    padding: 20px;
+
     overflow-y: auto;
-    padding: 0;
-    padding-bottom: 70px;
-    background-color: $light-gray-common-components;
-    
-    @media (min-width: 768px) {
-      border-radius: 10px; // Solo redondeamos en escritorio
-      padding: 1rem;
-    }
 
-    // Ocultar barra de scroll
+    box-sizing: border-box;
+
+    background-color: $light-gray-common-components;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
+
+    box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.24),
+        0 4px 12px rgba(0, 0, 0, 0.12);
+
+    // Ocultar scrollbar
     &::-webkit-scrollbar {
-      width: 0 !important;
-      height: 0 !important;
-      display: none !important;
-      background: transparent !important;
+        width: 0;
+        height: 0;
+        display: none;
     }
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
 
-  &__rightPanel {
-    grid-area: right;
-    background-color: $light-gray-common-components;
-    border-radius: 10px;
-    color: black;
-    padding: 1rem;
-  }
+    scrollbar-width: none;
 
-  &__footer {
-    grid-area: footer;
-    min-width: 0;
-    min-height: 0;
-    padding: 0;
-    background: transparent;
-    overflow: hidden;
-    
-    @media (min-width: 768px) {
-      border-radius: 10px;
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 12px;
+
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     }
-  }
+
+    &__title {
+        margin: 0;
+
+        color: $main-text-light;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    &__close {
+        width: 34px;
+        height: 34px;
+
+        padding: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        flex-shrink: 0;
+
+        border: none;
+        border-radius: 50%;
+
+        background-color: rgba(0, 0, 0, 0.06);
+        color: $main-text-light;
+
+        cursor: pointer;
+
+        font-size: 1.3rem;
+        font-weight: 600;
+        line-height: 1;
+
+        transition:
+            background-color 0.2s ease,
+            transform 0.2s ease;
+
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.12);
+            transform: scale(1.06);
+        }
+
+        &:focus-visible {
+            outline: 2px solid $main-text-light;
+            outline-offset: 2px;
+        }
+    }
+}
+
+// ==========================================
+// BÚSQUEDA AVANZADA - PANTALLAS PEQUEÑAS
+// ==========================================
+
+@media (max-width: 900px) {
+    .advancedSearchOverlay {
+        padding: 12px;
+    }
+
+    .advancedSearchPanel {
+        width: 100%;
+        max-height: calc(100% - 8px);
+
+        padding: 16px;
+
+        border-radius: 14px;
+    }
 }

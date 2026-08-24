@@ -114,30 +114,16 @@ body {
 		--user-avatar-status-border-color: #{$background-profile};
 	}
 
-	&__user-details {
-		display: flex;
-		flex: 1;
-		flex-direction: column;
-		gap: 5px;
-	}
+	.profile__user-details {
+	min-width: 0;
+	flex: 1;
+}
 
-	&__visits {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		color: $color-visitas-text;
-		font-size: 0.9em;
-	}
-
-	&__visits-icon {
-		font-size: 1.1em;
-	}
-
-	&__user-name {
-		margin: 0;
-		color: #333;
-		font-size: 1.5em;
-		font-weight: bold;
+	.profile__user-name,
+	.profile__username {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	&__feed {
@@ -158,8 +144,26 @@ body {
 	&__posts {
 		display: flex;
 		flex-direction: column;
-		overflow: hidden;
+		gap: 1rem;
+		overflow: visible;
 		border-radius: 10px;
+	}
+	
+	&__posts-state,
+	&__posts-error {
+		padding: 2rem 1rem;
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.5);
+		text-align: center;
+	}
+	
+	&__posts-state {
+		color: $color-text-light;
+	}
+	
+	&__posts-error {
+		color: #b91c1c;
+		font-weight: 600;
 	}
 
 	&__empty {
@@ -169,6 +173,83 @@ body {
 		color: $color-text-light;
 		font-style: italic;
 		text-align: center;
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: nowrap;
+		flex-shrink: 0;
+
+		> * {
+			flex-shrink: 0;
+		}
+	}
+
+	&__action-error {
+		margin: 0 15px 12px;
+		padding: 9px 12px;
+		border-radius: 8px;
+		background-color: #fef2f2;
+		color: #b91c1c;
+		font-size: 0.88rem;
+	}
+
+	&__private {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+
+		min-height: 220px;
+		padding: 35px 20px;
+
+		border-radius: 10px;
+		background-color: rgba(255, 255, 255, 0.55);
+		color: $color-text-light;
+		text-align: center;
+
+		i {
+			font-size: 2rem;
+		}
+
+		h3 {
+			margin: 0;
+			color: #333;
+			font-size: 1.1rem;
+		}
+
+		p {
+			max-width: 420px;
+			margin: 0;
+			font-size: 0.9rem;
+			line-height: 1.5;
+		}
+	}
+	
+	&__share {
+		position: relative;
+	}
+
+	&__share-toast {
+		position: absolute;
+		right: 0;
+		bottom: calc(100% + 6px);
+
+		width: max-content;
+		padding: 7px 10px;
+
+		border-radius: 8px;
+		background-color: $background-profile;
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+
+		color: #333;
+		font-size: 0.8rem;
+		font-weight: 600;
+
+		z-index: 10;
 	}
 }
 
@@ -180,8 +261,124 @@ body {
 		}
 
 		&__header {
+			align-items: center;
+			flex-wrap: wrap;
 			gap: 12px;
 			padding-inline: 10px;
+		}
+
+		&__actions {
+			width: 100%;
+			justify-content: flex-start;
+			margin-left: 0;
+		}
+	}
+}
+.profile__status-container {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 6px;
+	margin-bottom: 20px;
+}
+
+.profile__status {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+
+	font-size: 15px;
+	color: var(--text-color);
+}
+
+.profile__status-edit-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	padding: 2px;
+	border: none;
+	background: transparent;
+
+	color: var(--text-secondary);
+	cursor: pointer;
+
+	transition: color 0.2s ease;
+
+	svg {
+		width: 15px;
+		height: 15px;
+	}
+
+	&:hover {
+		color: var(--primary-color);
+	}
+}
+
+.profile__visits {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+
+	font-size: 13px;
+	color: var(--text-secondary);
+
+	svg {
+		width: 14px;
+		height: 14px;
+	}
+}
+
+.profile__status-edit {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+	max-width: 500px;
+
+	input {
+		flex: 1;
+
+		padding: 5px 0;
+
+		border: none;
+		border-bottom: 1px solid var(--text-secondary);
+		outline: none;
+
+		background: transparent;
+		color: var(--text-color);
+
+		font-size: 15px;
+
+		&:focus {
+			border-bottom-color: var(--primary-color);
+		}
+	}
+
+	button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		padding: 4px;
+		border: none;
+		background: transparent;
+
+		color: var(--text-secondary);
+		cursor: pointer;
+
+		svg {
+			width: 16px;
+			height: 16px;
+		}
+
+		&:hover {
+			color: var(--primary-color);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
 		}
 	}
 }

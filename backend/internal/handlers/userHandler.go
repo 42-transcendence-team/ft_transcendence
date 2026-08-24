@@ -206,6 +206,7 @@ func (h *UserHandler) UpdatePersonalData(c *gin.Context) {
 		Code:    req.Code,
 		Name:    req.Name,
 		Surname: req.Surname,
+		Status:  req.Status,
 	}
 
 	if req.Birthday != nil {
@@ -494,6 +495,9 @@ func (h *UserHandler) DeleteBanner(c *gin.Context) {
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	login := c.Param("login")
 	noIncrement := c.Query("no_increment") == "true"
+
+	currentUserID := c.MustGet("userID").(uint)
+
 	user, err := h.UserService.GetUserByLogin(login)
 	if err != nil {
 		c.Error(err)
@@ -504,6 +508,23 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	if exists && callerID.(uint) == user.ID {
 		noIncrement = true
 	}
+
+	relation := "none"
+	var requestID *uint
+
+	if currentUserID != user.ID {
+		relation, requestID, err =
+			h.AdvancedSearchService.GetUserRelation(
+				currentUserID,
+				user.ID,
+			)
+		if err != nil {
+			c.Error(err)
+			c.Abort()
+			return
+		}
+	}
+
 	ctx := c.Request.Context()
 
 	isOnline, err := h.Redis.
@@ -540,15 +561,18 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	}
 
 	profile := dto.UserProfileResponse{
-		ID:         user.ID,
-		Login:      user.Login,
-		Name:       user.Name,
-		Surname:    user.Surname,
-		AvatarPath: user.AvatarPath,
-		BannerPath: user.BannerPath,
-		Status:     user.State,
-		IsOnline:   isOnline,
-		Visits:     visits,
+		ID:             user.ID,
+		Login:          user.Login,
+		Name:           user.Name,
+		Surname:        user.Surname,
+		AvatarPath:     user.AvatarPath,
+		BannerPath:     user.BannerPath,
+		Status:         user.State,
+		IsOnline:       isOnline,
+		Visits:         visits,
+		Relation:       relation,
+		CanSendRequest: currentUserID != user.ID && relation == "none",
+		RequestID:      requestID,
 	}
 
 	c.JSON(http.StatusOK, gin.H{

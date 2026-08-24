@@ -1,32 +1,43 @@
-
+import { AppBrand } from "@components/AppBrand";
+import { UserMenu } from "./UserMenu";
 import { Link } from "react-router-dom";
+import { SearchBar } from "./advancedSearch/SearchBar";
 
 import "../styles/components/_privHeader.scss"
-import logo from "../assets/icons/24_logo.png"
-import { UserMenu } from "./UserMenu";
-import { SearchBar } from "./advancedSearch/SearchBar";
 
 type PrivHeaderProps = {
   onSearch: (query: string) => void;
+  onBrandActivate: () => void;
 }
 
 
-export function PrivHeader({ onSearch }: PrivHeaderProps) {
-
-	return (
-		<header className="privHeader privateLayout__header">
-			<div className="privHeader__left">
-				<Link to="/app" className="privHeader__logo">
-					<img src={logo} alt="logo" className="privHeader__logo-img" />
-					<span className="privHeader__logo-text">Twenty Four</span>
-				</Link>
-			</div>
-			<div className="privHeader__center">
-				<SearchBar onSearch={onSearch} />
-			</div>
-			<div className="privHeader__right">
-				<UserMenu />
-			</div>
-		</header>
-	);
+export function PrivHeader({
+  onSearch,
+  onBrandActivate,
+}: PrivHeaderProps) {
+  return (
+    <header className="privHeader privateLayout__header">
+      <div className="privHeader__left">
+        <AppBrand
+          className="privHeader__brand"
+          logoSize="medium"
+          textSize="small"
+          tone="light"
+          bold
+          onActivate={onBrandActivate}
+        />
+      </div>
+      <div className="privHeader__center">
+        <SearchBar onSearch={onSearch} />
+      </div>
+      <div>
+        <Link to="/app/games" className="privHeader__games-link">
+          Games
+        </Link>
+      </div>
+      <div className="privHeader__right">
+        <UserMenu />
+      </div>
+    </header>
+  );
 }

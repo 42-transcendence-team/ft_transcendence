@@ -14,13 +14,14 @@ import (
 )
 
 const (
-	maxPostImageSize   int64 = 5 << 20 // 5 MB
+	maxPostFileSize    int64 = 5 << 20 // 5 MB
 	maxAvatarImageSize int64 = 5 << 20 // 5 MB
 	maxBannerImageSize int64 = 5 << 20 // 5 MB
 )
 
 // ImageStorage gestiona el almacenamiento local de imágenes a partir de un
 // directorio base común.
+// En posts también permite almacenar documentos PDF.
 type ImageStorage struct {
 	BasePath string
 }
@@ -31,6 +32,10 @@ type SaveImageOptions struct {
 	MaxSize   int64
 }
 
+// allowedExtensionResolver determina la extensión segura que corresponde al
+// tipo MIME detectado en el contenido real del archivo.
+type allowedExtensionResolver func(mimeType string) (string, bool)
+
 func NewImageStorage(basePath string) *ImageStorage {
 	return &ImageStorage{
 		BasePath: basePath,
@@ -39,13 +44,18 @@ func NewImageStorage(basePath string) *ImageStorage {
 
 // SavePostImage mantiene intacto el contrato usado actualmente por los posts
 // y delega el almacenamiento en la implementación común.
+// A diferencia del resto de usos, los posts admiten imágenes y documentos PDF.
 func (s *ImageStorage) SavePostImage(
 	file *multipart.FileHeader,
 ) (string, error) {
-	return s.SaveImage(file, SaveImageOptions{
-		Directory: "posts",
-		MaxSize:   maxPostImageSize,
-	})
+	return s.saveFile(
+		file,
+		SaveImageOptions{
+			Directory: "posts",
+			MaxSize:   maxPostFileSize,
+		},
+		allowedPostFileExtension,
+	)
 }
 
 // SaveAvatarImage guarda imágenes de perfil dentro del directorio de avatares.
@@ -74,6 +84,20 @@ func (s *ImageStorage) SaveImage(
 	file *multipart.FileHeader,
 	options SaveImageOptions,
 ) (string, error) {
+	return s.saveFile(
+		file,
+		options,
+		allowedImageExtension,
+	)
+}
+
+// saveFile contiene el flujo común de almacenamiento y recibe la política
+// concreta de tipos MIME permitidos para cada funcionalidad.
+func (s *ImageStorage) saveFile(
+	file *multipart.FileHeader,
+	options SaveImageOptions,
+	resolveExtension allowedExtensionResolver,
+) (string, error) {
 	if file == nil {
 		return "", appErr.NewValidation(map[string]string{
 			"image": "required",
@@ -82,13 +106,13 @@ func (s *ImageStorage) SaveImage(
 
 	if options.MaxSize <= 0 {
 		return "", appErr.NewInternal(
-			fmt.Errorf("image max size must be greater than zero"),
+			fmt.Errorf("file max size must be greater than zero"),
 		)
 	}
 
 	if !isSafeDirectoryName(options.Directory) {
 		return "", appErr.NewInternal(
-			fmt.Errorf("invalid image directory"),
+			fmt.Errorf("invalid upload directory"),
 		)
 	}
 
@@ -111,7 +135,7 @@ func (s *ImageStorage) SaveImage(
 		return "", appErr.NewInternal(err)
 	}
 
-	ext, ok := allowedImageExtension(mimeType)
+	ext, ok := resolveExtension(mimeType)
 	if !ok {
 		return "", appErr.NewValidation(map[string]string{
 			"image": "invalid_type",
@@ -167,6 +191,7 @@ func (s *ImageStorage) SaveImage(
 
 // Delete elimina una imagen únicamente cuando su ruta pertenece al directorio
 // base configurado. La operación es idempotente si el archivo ya no existe.
+// En posts también puede eliminar documentos PDF.
 func (s *ImageStorage) Delete(relativePath string) error {
 	cleanPath := filepath.Clean(relativePath)
 	cleanBasePath := filepath.Clean(s.BasePath)
@@ -226,6 +251,20 @@ func detectMimeType(file multipart.File) (string, error) {
 	}
 
 	return http.DetectContentType(buffer[:n]), nil
+}
+
+// allowedPostFileExtension permite las imágenes habituales y documentos PDF
+// únicamente dentro del sistema de publicaciones.
+func allowedPostFileExtension(mimeType string) (string, bool) {
+	if ext, ok := allowedImageExtension(mimeType); ok {
+		return ext, true
+	}
+
+	if mimeType == "application/pdf" {
+		return ".pdf", true
+	}
+
+	return "", false
 }
 
 // allowedImageExtension traduce los tipos MIME permitidos a una extensión

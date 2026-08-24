@@ -1,0 +1,117 @@
+@use "../abstracts/variables" as *;
+
+.addChatModal__backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+
+.addChatModal {
+	background: $light-gray-common-components;
+	border-radius: 12px;
+	width: 320px;
+	max-height: 70vh;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.addChatModal__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.7rem 1rem;
+	border-bottom: 1px solid #ddd;
+	font-weight: 600;
+	color: $dark-purple-background-light;
+}
+
+.addChatModal__close {
+	background: none;
+	border: none;
+	font-size: 1.1rem;
+	cursor: pointer;
+	color: #666;
+
+	&:hover {
+		color: $dark-purple-background-light;
+	}
+}
+
+.addChatModal__search {
+	width: calc(100% - 2rem);
+	margin: 0.7rem 1rem;
+	padding: 0.5rem 0.7rem;
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	font-size: 0.9rem;
+	outline: none;
+
+	&:focus {
+		border-color: $dark-purple-background-light;
+	}
+}
+
+.addChatModal__results {
+	flex: 1;
+	overflow-y: auto;
+	padding: 0 1rem 0.7rem;
+}
+
+.addChatModal__loading,
+.addChatModal__empty,
+.addChatModal__hint {
+	text-align: center;
+	color: #888;
+	font-size: 0.85rem;
+	padding: 1.5rem 0;
+}
+
+.addChatModal__userCard {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	width: 100%;
+	padding: 0.5rem 0.6rem;
+	border: none;
+	border-radius: 8px;
+	background: transparent;
+	cursor: pointer;
+	text-align: left;
+	color: inherit;
+
+	&:hover {
+		background: rgba($dark-purple-background-light, 0.1);
+	}
+}
+
+.addChatModal__avatar {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	object-fit: cover;
+	flex-shrink: 0;
+}
+
+.addChatModal__userInfo {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.addChatModal__name {
+	font-weight: 600;
+	font-size: 0.9rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.addChatModal__login {
+	font-size: 0.75rem;
+	color: #666;
+}

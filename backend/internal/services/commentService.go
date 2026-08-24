@@ -25,27 +25,27 @@ func NewCommentService(commentRepo *repository.CommentRepository, postRepo *repo
 	}
 }
 
-func (s *CommentService) CreateComment(input dto.CreateCommentInput) (*dto.CommentResponse, error) {
+func (s *CommentService) CreateComment(input dto.CreateCommentInput) (*dto.CommentResponse, uint, error) {
 	content := strings.TrimSpace(input.Content)
 
 	if content == "" {
-		return nil, appErr.NewValidation(map[string]string{
+		return nil, 0, appErr.NewValidation(map[string]string{
 			"content": "required",
 		})
 	}
 
 	if len([]rune(content)) > maxCommentContentLength {
-		return nil, appErr.NewValidation(map[string]string{
+		return nil, 0, appErr.NewValidation(map[string]string{
 			"content": "max",
 		})
 	}
 
-	_, err := s.postRepo.FindByID(input.PostID)
+	post, err := s.postRepo.FindByID(input.PostID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, appErr.NewNotFound("post_not_found")
+			return nil, 0, appErr.NewNotFound("post_not_found")
 		}
-		return nil, appErr.NewInternal(err)
+		return nil, 0, appErr.NewInternal(err)
 	}
 
 	comment := models.Comment{
@@ -56,11 +56,11 @@ func (s *CommentService) CreateComment(input dto.CreateCommentInput) (*dto.Comme
 
 	createdComment, err := s.commentRepo.Create(&comment)
 	if err != nil {
-		return nil, appErr.NewInternal(err)
+		return nil, 0, appErr.NewInternal(err)
 	}
 
 	response := dto.NewCommentResponse(*createdComment)
-	return &response, nil
+	return &response, post.UserID, nil
 }
 
 func (s *CommentService) ListCommentsByPostID(postID uint) ([]dto.CommentResponse, error) {

@@ -310,12 +310,15 @@ func (s *UserService) ModifyEmail(userID uint, request dto.ModifyInputEmail) err
 
 	return nil
 }
-
-func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error {
+func (s *UserService) ModifyData(
+	userID uint,
+	request dto.ModifyInputData,
+) error {
 	req, err := s.UserRepo.FindById(userID)
 	if err != nil {
 		return err
 	}
+
 	if err := s.require2FA(req, request.Code); err != nil {
 		return err
 	}
@@ -326,6 +329,7 @@ func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error
 				"name": "new_name_must_be_different",
 			})
 		}
+
 		if len(*request.Name) > 50 {
 			return appErr.NewValidation(map[string]string{
 				"name": "name_too_long",
@@ -339,6 +343,7 @@ func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error
 				"surname": "new_surname_must_be_different",
 			})
 		}
+
 		if len(*request.Surname) > 50 {
 			return appErr.NewValidation(map[string]string{
 				"surname": "surname_too_long",
@@ -352,19 +357,30 @@ func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error
 				"birthday": "new_birthday_must_be_different",
 			})
 		}
+
 		if request.Birthday.After(time.Now()) {
 			return appErr.NewValidation(map[string]string{
 				"birthday": "birthday_cannot_be_in_future",
 			})
 		}
+
 		if utils.CalculateAge(*request.Birthday) < 18 {
 			return appErr.NewValidation(map[string]string{
 				"birthday": "user_must_be_at_least_18_years_old",
 			})
 		}
+
 		if utils.CalculateAge(*request.Birthday) > 120 {
 			return appErr.NewValidation(map[string]string{
 				"birthday": "user_age_unrealistic",
+			})
+		}
+	}
+
+	if request.Status != nil {
+		if len(*request.Status) > 150 {
+			return appErr.NewValidation(map[string]string{
+				"status": "status_too_long",
 			})
 		}
 	}
@@ -373,6 +389,7 @@ func (s *UserService) ModifyData(userID uint, request dto.ModifyInputData) error
 	if err != nil {
 		return appErr.NewInternal(err)
 	}
+
 	if rows == 0 {
 		return appErr.NewNotFound("user_not_found")
 	}

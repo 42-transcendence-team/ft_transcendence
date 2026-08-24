@@ -10,11 +10,12 @@ import { PostDetailPage } from "@pages/PostDetailPage";
 
 import { settingsLoader } from "../api/Settings";
 import { getAuthenticatedUser } from "../api/Login";
+import { GameRoutes } from "./gameRoutes";
 
 const privateLoader = async () => {
 	try {
-		await getAuthenticatedUser();
-		return null;
+		const data = await getAuthenticatedUser();
+		return data;
 	} catch {
 		throw redirect("/login");
 	}
@@ -30,6 +31,7 @@ export const PrivateRoutes = {
 		{ path: "posts/:postId", element: <PostDetailPage /> },
 		{ path: "profile/:username", element: <Profile /> },
 		{ path: "settings", element: <Settings />, loader: settingsLoader },
-		{ path: "friends/:username", element: <Friends /> },
+    	{ path: "friends/:username", element: <Friends /> },
+		GameRoutes,
 	],
 };

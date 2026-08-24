@@ -37,9 +37,13 @@ type Config struct {
 	Issuer2FA     string
 	Expiration2FA int
 
-	RedisHost		string
-	RedisPort		string
-	RedisPassword	string
+	RedisHost     string
+	RedisPort     string
+	RedisPassword string
+
+	OAuth42ClientID     string
+	OAuth42ClientSecret string
+	OAuth42RedirectURI  string
 }
 
 func Load() (*Config, error) {
@@ -97,6 +101,11 @@ func Load() (*Config, error) {
 	c.RedisHost = strings.TrimSpace(os.Getenv("REDIS_HOST"))
 	c.RedisPort = strings.TrimSpace(os.Getenv("REDIS_PORT"))
 	c.RedisPassword = strings.TrimSpace(os.Getenv("REDIS_PASSWORD"))
+
+	// OAuth 42
+	c.OAuth42ClientID = strings.TrimSpace(os.Getenv("OAUTH42_CLIENT_ID"))
+	c.OAuth42ClientSecret = strings.TrimSpace(os.Getenv("OAUTH42_CLIENT_SECRET"))
+	c.OAuth42RedirectURI = strings.TrimSpace(os.Getenv("OAUTH42_REDIRECT_URI"))
 
 	// Pool (si no existen, luego tunePool mete defaults también)
 	c.DBMaxOpenConns = envIntOrDefault("DB_MAX_OPEN_CONNS", 25)

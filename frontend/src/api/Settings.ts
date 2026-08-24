@@ -13,6 +13,7 @@ export type DataSettings = {
 	name?: string;
 	surname?: string;
 	birthday?: string;
+	status?: string;
 };
 
 export async function updateData(settings: DataSettings) {
