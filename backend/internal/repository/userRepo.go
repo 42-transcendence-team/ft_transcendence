@@ -218,20 +218,33 @@ func (r *UserRepository) UpdateUserPassword(userID uint, request dto.ModifyInput
 	result := r.db.Model(&models.User{}).Where("id = ?", userID).Updates(updates)
 	return result.RowsAffected, result.Error
 }
-
-func (r *UserRepository) UpdateUserData(userID uint, request dto.ModifyInputData) (int64, error) {
+func (r *UserRepository) UpdateUserData(
+	userID uint,
+	request dto.ModifyInputData,
+) (int64, error) {
 	updates := make(map[string]interface{})
+
 	if request.Name != nil && *request.Name != "" {
 		updates["Name"] = *request.Name
 	}
+
 	if request.Surname != nil && *request.Surname != "" {
 		updates["Surname"] = *request.Surname
 	}
+
 	if request.Birthday != nil && !request.Birthday.IsZero() {
 		updates["Birthday"] = *request.Birthday
 	}
 
-	result := r.db.Model(&models.User{}).Where("id = ?", userID).Updates(updates)
+	if request.Status != nil {
+		updates["State"] = *request.Status
+	}
+
+	result := r.db.
+		Model(&models.User{}).
+		Where("id = ?", userID).
+		Updates(updates)
+
 	return result.RowsAffected, result.Error
 }
 

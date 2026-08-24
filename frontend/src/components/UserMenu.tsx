@@ -1,22 +1,21 @@
-import "../styles/components/_userMenu.scss"
+import "../styles/components/_userMenu.scss";
 import { FiUser, FiSettings, FiLogOut, FiMenu } from "react-icons/fi";
 import { useState } from "react";
 import { Logout } from "api/Logout";
 import { useAuth } from "@components/auth-router/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { useLoaderData } from "react-router-dom";
+import { useNavigate, useLoaderData } from "react-router-dom";
 
 export const UserMenu = () => {
 	const [isOpen, setIsOpen] = useState(false);
 
-	const user = useLoaderData()
+	const user = useLoaderData();
 	const { refreshAuth } = useAuth();
 
 	const navigate = useNavigate();
 
 	const handleLogoutClick = async () => {
 		try {
-			await Logout()
+			await Logout();
 			await refreshAuth();
 			setIsOpen(false);
 			navigate("/login");
@@ -26,14 +25,16 @@ export const UserMenu = () => {
 		}
 	};
 
-	const handleSettings = async () => {
+	const handleSettings = () => {
+		setIsOpen(false);
 		navigate("settings");
 		console.log("setting button");
 	};
 
 	const handleProfile = () => {
-		navigate(`profile/${user.user.login}`)
-	}
+		setIsOpen(false);
+		navigate(`profile/${user.user.login}`);
+	};
 
 	return (
 		<div className="userMenu">
@@ -44,16 +45,27 @@ export const UserMenu = () => {
 			>
 				<FiMenu className="userMenu__icon" />
 			</button>
+
 			{isOpen && (
 				<div className="userMenu__dropdown">
-					<button className="userMenu__item" type="button" onClick={handleProfile}>
+					<button
+						className="userMenu__item"
+						type="button"
+						onClick={handleProfile}
+					>
 						<FiUser className="userMenu__item-icon" />
 						<span>Perfil</span>
 					</button>
-					<button className="userMenu__item" type="button" onClick={handleSettings}>
+
+					<button
+						className="userMenu__item"
+						type="button"
+						onClick={handleSettings}
+					>
 						<FiSettings className="userMenu__item-icon" />
 						<span>Configuración</span>
 					</button>
+
 					<button
 						className="userMenu__item userMenu__item--logout"
 						type="button"

@@ -14,7 +14,7 @@ import { EmptyFriendsState } from "../components/EmptyFriendsState"
 export const Friends = () => {
     const [activeTab, setActiveTab] = useState<"friends" | "sent" | "received">("friends");
     const [friendsRequests, setFriendsRequest] = useState<Friend[]>([]);
-    const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
+    const [receiveskullLogodRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
     const [sentRequests, setSentRequest] = useState<FriendRequest[]>([]);
 
     useEffect(() => {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { SearchResults } from "./SearchResults";
 import { SearchPagination } from "./SearchPagination";
@@ -26,11 +27,18 @@ export function AdvancedSearchPanel({
 	search,
 	onClose,
 }: AdvancedSearchPanelProps) {
+	const navigate = useNavigate();
+
 	const [pendingConfirmation, setPendingConfirmation] =
 		useState<PendingConfirmation | null>(null);
 
 	const [isConfirming, setIsConfirming] =
 		useState(false);
+
+	const handleOpenProfile = (login: string) => {
+		onClose();
+		navigate(`/app/profile/${login}`);
+	};
 
 	const requestConfirmation = (
 		action: ConfirmAction,
@@ -144,6 +152,7 @@ export function AdvancedSearchPanel({
 
 						<SearchResults
 							results={search.searchResults}
+							onOpenProfile={handleOpenProfile}
 							onSendFriendRequest={
 								search.handleSendFriendRequest
 							}

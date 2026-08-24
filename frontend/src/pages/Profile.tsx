@@ -853,10 +853,22 @@ export const Profile = () => {
 
 				<ProfileContent
 					status={profileUser.status}
+					visits={profileUser.visits}
 					isOwnProfile={isOwnProfile}
-					canViewPrivateContent={
-						canViewPrivateContent
-					}
+					canViewPrivateContent={canViewPrivateContent}
+					onStatusUpdated={(newStatus) => {
+						setProfileUser((currentProfile) => {
+							if (!currentProfile) {
+								return currentProfile;
+							}
+
+							return {
+								...currentProfile,
+								status: newStatus,
+							};
+						});
+					}}
+				
 					onCreatePost={() =>
 						navigate("/app/posts/new")
 					}
@@ -935,7 +947,7 @@ export const Profile = () => {
 							isAvatarEditorOpen
 						}
 						currentAvatarPath={
-							profileUser.avatarPath
+							profileUser.avatarPath 
 						}
 						onClose={() =>
 							setIsAvatarEditorOpen(

@@ -77,6 +77,7 @@ type ModifyInputData struct {
 	Name     *string
 	Surname  *string
 	Birthday *time.Time
+	Status   *string
 }
 
 type UserModifyData struct {
@@ -85,6 +86,7 @@ type UserModifyData struct {
 	Name     *string `json:"name"`
 	Surname  *string `json:"surname"`
 	Birthday *string `json:"birthday"`
+	Status   *string `json:"status"`
 }
 
 type ModifyInputPass struct {

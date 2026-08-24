@@ -206,6 +206,7 @@ func (h *UserHandler) UpdatePersonalData(c *gin.Context) {
 		Code:    req.Code,
 		Name:    req.Name,
 		Surname: req.Surname,
+		Status:  req.Status,
 	}
 
 	if req.Birthday != nil {

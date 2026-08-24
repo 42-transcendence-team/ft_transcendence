@@ -1,7 +1,5 @@
-import { useNavigate } from "react-router-dom";
-
 import { type UserSearch } from "../../api/UserSearch.tsx";
-import skullLogo from "../../assets/icons/skull_logo.png";
+import { UserAvatar } from "@components/users/UserAvatar.tsx";
 
 import { RelationsActionsMenu } from "@components/RelationsActionsMenu.tsx";
 
@@ -10,6 +8,7 @@ import "../../styles/components/_relationsActionsMenu.scss";
 
 type SearchResultsProps = {
 	results: UserSearch[];
+	onOpenProfile: (login: string) => void;
 	onSendFriendRequest: (userId: number) => void;
 	onAcceptFriendRequest: (requestId: number) => void;
 	onRejectFriendRequest: (requestId: number) => void;
@@ -20,6 +19,7 @@ type SearchResultsProps = {
 
 export const SearchResults = ({
 	results,
+	onOpenProfile,
 	onSendFriendRequest,
 	onAcceptFriendRequest,
 	onRejectFriendRequest,
@@ -27,12 +27,6 @@ export const SearchResults = ({
 	onBlockUser,
 	onUnblockUser,
 }: SearchResultsProps) => {
-	const navigate = useNavigate();
-
-	const handleOpenProfile = (login: string) => {
-		navigate(`/app/profile/${login}`);
-	};
-
 	return (
 		<div className="searchResults">
 			{results.map((user) => (
@@ -42,9 +36,10 @@ export const SearchResults = ({
 				>
 					<div className="searchResults__left">
 						<div className="searchResults__avatar">
-							<img
-								src={user.avatar_url || skullLogo}
-								alt={`${user.login} avatar`}
+							<UserAvatar
+								avatarPath={user.avatar_url}
+								username={user.login}
+								size="medium"
 							/>
 						</div>
 
@@ -135,7 +130,7 @@ export const SearchResults = ({
 									<button
 										type="button"
 										onClick={() =>
-											handleOpenProfile(
+											onOpenProfile(
 												user.login,
 											)
 										}

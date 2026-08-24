@@ -114,18 +114,16 @@ body {
 		--user-avatar-status-border-color: #{$background-profile};
 	}
 
-	&__user-details {
-		display: flex;
-		flex: 1;
-		flex-direction: column;
-		gap: 5px;
-	}
+	.profile__user-details {
+	min-width: 0;
+	flex: 1;
+}
 
-	&__user-name {
-		margin: 0;
-		color: #333;
-		font-size: 1.5em;
-		font-weight: bold;
+	.profile__user-name,
+	.profile__username {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	&__feed {
@@ -180,10 +178,13 @@ body {
 	&__actions {
 		display: flex;
 		align-items: center;
-		justify-content: flex-end;
-		flex-wrap: wrap;
 		gap: 8px;
-		margin-left: auto;
+		flex-wrap: nowrap;
+		flex-shrink: 0;
+
+		> * {
+			flex-shrink: 0;
+		}
 	}
 
 	&__action-error {
@@ -270,6 +271,114 @@ body {
 			width: 100%;
 			justify-content: flex-start;
 			margin-left: 0;
+		}
+	}
+}
+.profile__status-container {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 6px;
+	margin-bottom: 20px;
+}
+
+.profile__status {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+
+	font-size: 15px;
+	color: var(--text-color);
+}
+
+.profile__status-edit-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	padding: 2px;
+	border: none;
+	background: transparent;
+
+	color: var(--text-secondary);
+	cursor: pointer;
+
+	transition: color 0.2s ease;
+
+	svg {
+		width: 15px;
+		height: 15px;
+	}
+
+	&:hover {
+		color: var(--primary-color);
+	}
+}
+
+.profile__visits {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+
+	font-size: 13px;
+	color: var(--text-secondary);
+
+	svg {
+		width: 14px;
+		height: 14px;
+	}
+}
+
+.profile__status-edit {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+	max-width: 500px;
+
+	input {
+		flex: 1;
+
+		padding: 5px 0;
+
+		border: none;
+		border-bottom: 1px solid var(--text-secondary);
+		outline: none;
+
+		background: transparent;
+		color: var(--text-color);
+
+		font-size: 15px;
+
+		&:focus {
+			border-bottom-color: var(--primary-color);
+		}
+	}
+
+	button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		padding: 4px;
+		border: none;
+		background: transparent;
+
+		color: var(--text-secondary);
+		cursor: pointer;
+
+		svg {
+			width: 16px;
+			height: 16px;
+		}
+
+		&:hover {
+			color: var(--primary-color);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
 		}
 	}
 }
