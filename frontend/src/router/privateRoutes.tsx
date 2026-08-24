@@ -10,6 +10,7 @@ import { PostDetailPage } from "@pages/PostDetailPage";
 
 import { settingsLoader } from "../api/Settings";
 import { getAuthenticatedUser } from "../api/Login";
+import { GameRoutes } from "./gameRoutes";
 
 const privateLoader = async () => {
 	try {
@@ -31,5 +32,6 @@ export const PrivateRoutes = {
 		{ path: "profile/:username", element: <Profile /> },
 		{ path: "settings", element: <Settings />, loader: settingsLoader },
     	{ path: "friends/:username", element: <Friends /> },
+		GameRoutes,
 	],
 };

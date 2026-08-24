@@ -20,10 +20,11 @@ import (
 type WebsocketHandler struct {
 	hub              *ws.Hub
 	websocketService *services.WebsocketService
+	gameHandler      *GameHandler
 }
 
-func NewWebsocketHandler(hub *ws.Hub, websocketService *services.WebsocketService) *WebsocketHandler {
-	return &WebsocketHandler{hub: hub, websocketService: websocketService}
+func NewWebsocketHandler(hub *ws.Hub, websocketService *services.WebsocketService, gameHandler *GameHandler) *WebsocketHandler {
+	return &WebsocketHandler{hub: hub, websocketService: websocketService, gameHandler: gameHandler}
 }
 
 var upgrader = websocket.Upgrader{
@@ -194,6 +195,8 @@ func (h *WebsocketHandler) HandleMessage(c ws.ClientConn, msg *dto.IncomingMessa
 		h.LeaveRoom(c, msg)
 	case "message":
 		h.SendMessage(c, msg)
+	case "game":
+		h.gameHandler.HandleGameMessage(c, msg)
 	default:
 		log.Printf("Unknown message type: %s", msg.Type)
 	}

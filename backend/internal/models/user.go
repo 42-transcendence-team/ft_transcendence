@@ -34,6 +34,6 @@ type User struct {
 	Status uint   // Estado de presencia que muestra el usuario (ej.: 0 = offline, 1 = online, 2 = ausente...)
 	State  string // Mensaje de estado similar al de WhatsApp (ej.: "En una reunión", "Cago en todo", ...)
 
+	Friends []*User     `gorm:"many2many:user_friends;"` // Relación de amigos entre usuarios (muchos a muchos)
 	Chats   []*ChatRoom `gorm:"many2many:user_rooms;"`   // Relación de salas de chat a las que pertenece el usuario (muchos a muchos)
-	Friends []*User `gorm:"many2many:user_friends;"` // Relación de amistad entre usuarios (muchos a muchos)
 }

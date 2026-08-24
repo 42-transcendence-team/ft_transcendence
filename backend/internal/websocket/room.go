@@ -14,23 +14,22 @@ type Room struct {
 
 	Join  chan *Client
 	Leave chan *Client
-	destroy chan struct{}
-	Broadcast chan []byte
-	hub       *Hub
-	mu 	sync.RWMutex
+
+	Broadcast    chan []byte
+	hubCloseRoom chan uint
+	mu           sync.RWMutex
 }
 
-func NewRoom(id uint, name string, private bool, hub *Hub) *Room {
+func NewRoom(id uint, name string, private bool, hubCloseChan chan uint) *Room {
 	return &Room{
-		ID:        id,
-		Name:      name,
-		Private:   private,
-		Clients:   make(map[*Client]bool),
-		Join:      make(chan *Client, 1),
-		Leave:     make(chan *Client, 1),
-		destroy:     make(chan struct{}, 1),
-		Broadcast: make(chan []byte),
-		hub:       hub,
+		ID:           id,
+		Name:         name,
+		Private:      private,
+		Clients:      make(map[*Client]bool),
+		Join:         make(chan *Client),
+		Leave:        make(chan *Client),
+		Broadcast:    make(chan []byte),
+		hubCloseRoom: hubCloseChan,
 	}
 }
 
@@ -40,89 +39,62 @@ func (r *Room) broadcast(message []byte) {
 		case client.SendChan <- message:
 		default:
 			r.mu.Lock()
+			close(client.SendChan)
 			delete(r.Clients, client)
-			client.Mu.Lock()
 			delete(client.Rooms, r.ID)
-			client.Mu.Unlock()
 			r.mu.Unlock()
 		}
-	}
-
-	r.mu.RLock()
-	if len(r.Clients) == 0 {
-		r.mu.RUnlock()
-		r.hub.Mu.Lock()
-		delete(r.hub.Rooms, r.ID)
-		r.hub.Mu.Unlock()
-		select {
-			case r.destroy <- struct{}{}:
-			default:
-		}
-	} else {
-		r.mu.RUnlock()
 	}
 }
 
 func (r *Room) Run() {
 	for {
 		select {
-			case client := <-r.Join:
-				r.mu.Lock()
-				r.Clients[client] = true
-				client.Mu.Lock()
-				client.Rooms[r.ID] = r
-				log.Printf("Client %s joined room %s", client.Username, r.Name)
-				client.Mu.Unlock()
-				joinMsg := client.Username + " se ha unido a la sala."
-				msg, err := json.Marshal(joinMsg)
-				r.mu.Unlock()
+		case client := <-r.Join:
+			r.mu.Lock()
+			r.Clients[client] = true
+			client.Rooms[r.ID] = r
+			r.mu.Unlock()
+			joinMsg := client.Username + " se ha unido a la sala " + r.Name + "."
+			msg, err := json.Marshal(joinMsg)
+			if err != nil {
+				log.Printf("Error marshaling join message: %v", err)
+				continue
+			}
+			r.broadcast(msg)
+
+		case client := <-r.Leave:
+			r.mu.Lock()
+			if _, ok := r.Clients[client]; ok {
+				delete(r.Clients, client)
+				delete(client.Rooms, r.ID)
+
+				leaveMsg := map[string]any{
+					"type":    "system",
+					"content": client.Username + " abandonó la sala.",
+				}
+
+				msg, err := json.Marshal(leaveMsg)
 				if err != nil {
-					log.Printf("Error marshaling join message: %v", err)
+					r.mu.Unlock()
+					log.Printf("Error marshaling leave message: %v", err)
 					continue
 				}
 				r.broadcast(msg)
+			}
+			if len(r.Clients) == 0 {
+				r.mu.Unlock()
 
-			case client := <-r.Leave:
-				r.mu.Lock()
-				if _, ok := r.Clients[client]; ok {
-					delete(r.Clients, client)
-					client.Mu.Lock()
-					delete(client.Rooms, r.ID)
-					client.Mu.Unlock()
+				log.Printf("Sala %d vacía. Iniciando proceso de autodestrucción...", r.ID)
 
-					leaveMsg := map[string]any{
-						"type":    "system",
-						"content": client.Username + " abandonó la sala.",
-					}
-					msg, err := json.Marshal(leaveMsg)
-					if err != nil {
-						log.Printf("Error marshaling leave message: %v", err)
-						r.mu.Unlock()
-						continue
-					}
-					r.mu.Unlock()
-					r.broadcast(msg)
+				r.hubCloseRoom <- r.ID
 
-					r.mu.RLock()
-					if len(r.Clients) == 0 {
-						log.Printf("Room %s is empty, destroying...", r.Name)
-						r.mu.RUnlock()
-						r.hub.Mu.Lock()
-						delete(r.hub.Rooms, r.ID)
-						r.hub.Mu.Unlock()
-						return
-					}
-					r.mu.RUnlock()
-				} else {
-					r.mu.Unlock()
-				}
-
-			case <-r.destroy:
 				return
+			}
+			r.mu.Unlock()
 
-			case message := <-r.Broadcast:
-				log.Printf("Room %s is empty, destroying...", r.Name)
-				r.broadcast(message)
+		case message := <-r.Broadcast:
+			r.broadcast(message)
 		}
 	}
 }

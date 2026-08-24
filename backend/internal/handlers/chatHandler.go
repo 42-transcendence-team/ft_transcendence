@@ -41,6 +41,20 @@ func (h *ChatHandler) UpdateLastTimeOpenedChat(c *gin.Context) {
 		return
 	}
 	log.Printf("get opened: %d %d", userID, req)
+	if h.hub.Rooms[req.RoomID] == nil {
+		log.Printf("Room %d not found in hub, creating it...", req.RoomID)
+		room, err := h.chatService.GetRoomByID(req.RoomID)
+		if err != nil {
+			c.Error(err)
+			c.Abort()
+			return
+		}
+		log.Printf("get opened: %d %v", userID, room)
+		h.hub.CreateRoom(room.ID, room.Name, room.Private)
+	} else {
+		log.Printf("Room %d already exists in hub", req.RoomID)
+	}
+
 	c.JSON(200, gin.H{})
 }
 

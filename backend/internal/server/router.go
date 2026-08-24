@@ -18,10 +18,10 @@ import (
 // añadir el enpoint con un comantario encima describiendo lo que hace para el swagger
 func (srv *HTTPServer) Router() {
 	routes.HealthRoutes(srv.Engine)
-	srv.Engine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	hub := websocket.NewHub()
 	go hub.Run()
+	srv.Engine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	srv.Engine.MaxMultipartMemory = 8 << 20 // 8 MB
 	srv.Engine.Static("/uploads", "./uploads")
@@ -48,17 +48,13 @@ func (srv *HTTPServer) Router() {
 	postService := services.NewPostService(postRepo, postLikeRepo)
 	commentService := services.NewCommentService(commentRepo, postRepo)
 	postLikeService := services.NewPostLikeService(postRepo, postLikeRepo)
+	gameManager := services.NewGameManager()
 	notificationService := services.NewNotificationService(notifRepo, hub)
 
+	gameHandler := handlers.NewGameHandler(gameManager, hub)
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
-	userHandler := handlers.NewUserHandler(
-		userService,
-		srv.Redis,
-		imageStorage,
-		advancedSearchService,
-	)
+	userHandler := handlers.NewUserHandler(userService, srv.Redis, imageStorage, advancedSearchService)
 	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
-	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService)
 	chatHandler := handlers.NewChatHandler(hub, chatService)
 	postHandler := handlers.NewPostHandler(friendService, hub, postService, imageStorage, notificationService)
 	commentHandler := handlers.NewCommentHandler(hub, commentService, notificationService)
@@ -66,6 +62,7 @@ func (srv *HTTPServer) Router() {
 	friendHandler := handlers.NewFriendHandler(friendService, blockService, hub, websocketService)
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
 	notificationsHandler := handlers.NewNotificationsHandler(friendService, websocketService, chatService, notificationService)
+	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService, gameHandler)
 
 	api := srv.Engine.Group("/api/v1")
 
@@ -93,7 +90,6 @@ func (srv *HTTPServer) Router() {
 	protected := api.Group("/")
 	protected.Use(middlewares.AuthMiddleware(srv.Conf, srv.Redis))
 	{
-
 		routes.TestRoute(protected)
 		routes.AuthRoutesPrivate(protected, authHandler)
 		routes.FriendsRoutes(protected, friendHandler)
