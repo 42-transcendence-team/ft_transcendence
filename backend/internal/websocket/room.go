@@ -76,6 +76,7 @@ func (r *Room) Run() {
 
 				msg, err := json.Marshal(leaveMsg)
 				if err != nil {
+					r.mu.Unlock()
 					log.Printf("Error marshaling leave message: %v", err)
 					continue
 				}

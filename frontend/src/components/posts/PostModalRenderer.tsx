@@ -1,4 +1,8 @@
-import { FiTrash2 } from "react-icons/fi";
+import {
+	FiDownload,
+	FiFileText,
+	FiTrash2,
+} from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 import { ReactionButtons } from "@components/posts/ReactionButtons";
@@ -9,7 +13,10 @@ import { UserAvatar } from "@components/users/UserAvatar";
 import type { Comment } from "api/Comments";
 import type { Post, PostReactionState } from "api/Posts";
 
-import { getPostVariant } from "@utils/postVariant";
+import {
+	getPostVariant,
+	isPdfPostFile,
+} from "@utils/postVariant";
 
 type PostModalRendererProps = {
 	post: Post;
@@ -37,6 +44,21 @@ function getPublicPath(path: string): string {
 	return `/${path}`;
 }
 
+function getAttachmentName(post: Post): string {
+	const originalName = post.fileName?.trim();
+
+	if (originalName) {
+		return originalName;
+	}
+
+	const storedName = post.imagePath
+		?.split("/")
+		.pop()
+		?.trim();
+
+	return storedName || "document.pdf";
+}
+
 function formatPostDate(value: string): string {
 	return new Intl.DateTimeFormat("es-ES", {
 		dateStyle: "medium",
@@ -60,12 +82,21 @@ export const PostModalRenderer = ({
 	onImageClick,
 }: PostModalRendererProps) => {
 	const variant = getPostVariant(post);
-	const imageSrc = post.imagePath
+	const isPdf = isPdfPostFile(post.imagePath);
+
+	const fileSrc = post.imagePath
 		? getPublicPath(post.imagePath)
 		: null;
+
+	const imageSrc = fileSrc && !isPdf
+		? fileSrc
+		: null;
+
 	const authorProfilePath =
 		`/app/profile/${encodeURIComponent(post.author.login)}`;
+	const attachmentName = getAttachmentName(post);
 	const hasText = Boolean(post.content?.trim());
+	const hasPostBody = hasText || isPdf;
 
 	return (
 		<article
@@ -164,14 +195,39 @@ export const PostModalRenderer = ({
 						</p>
 					)}
 					
+					{isPdf && fileSrc && (
+						<a
+							className="post-modal-renderer__attachment"
+							href={fileSrc}
+							download={attachmentName}
+						>
+							<FiFileText
+								className="post-modal-renderer__attachment-icon"
+								aria-hidden="true"
+							/>
+
+							<span className="post-modal-renderer__attachment-name">
+								{attachmentName}
+							</span>
+					
+							<FiDownload
+								className="post-modal-renderer__attachment-download"
+								aria-hidden="true"
+							/>
+						</a>
+					)}
+
 					{deletePostError && (
 						<p className="post-modal-renderer__error">
 							{deletePostError}
 						</p>
 					)}
 					
-					{hasText && (
-						<div className="post-modal-renderer__divider" aria-hidden="true" />
+					{hasPostBody && (
+						<div
+							className="post-modal-renderer__divider"
+							aria-hidden="true"
+						/>
 					)}
 				
 					<section className="post-modal-renderer__comments" aria-label="Comments">

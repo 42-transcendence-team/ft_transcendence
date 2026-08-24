@@ -12,7 +12,17 @@ type PostLikeRepository struct {
 	db *gorm.DB
 }
 
-func NewPostLikeRepository(db *gorm.DB) *PostLikeRepository {
+// PostReactionCounts contiene los contadores agrupados de un post.
+// Se utiliza en listados para no ejecutar dos consultas por cada tarjeta.
+type PostReactionCounts struct {
+	PostID       uint  `gorm:"column:post_id"`
+	LikeCount    int64 `gorm:"column:like_count"`
+	DislikeCount int64 `gorm:"column:dislike_count"`
+}
+
+func NewPostLikeRepository(
+	db *gorm.DB,
+) *PostLikeRepository {
 	return &PostLikeRepository{
 		db: db,
 	}
@@ -37,10 +47,14 @@ func (r *PostLikeRepository) SetReaction(
 				{Name: "post_id"},
 				{Name: "user_id"},
 			},
-			DoUpdates: clause.Assignments(map[string]interface{}{
-				"reaction":   reaction,
-				"updated_at": gorm.Expr("CURRENT_TIMESTAMP"),
-			}),
+			DoUpdates: clause.Assignments(
+				map[string]interface{}{
+					"reaction": reaction,
+					"updated_at": gorm.Expr(
+						"CURRENT_TIMESTAMP",
+					),
+				},
+			),
 		}).
 		Create(&postReaction).
 		Error
@@ -73,11 +87,75 @@ func (r *PostLikeRepository) CountByPostIDAndReaction(
 
 	err := r.db.
 		Model(&models.PostLike{}).
-		Where("post_id = ? AND reaction = ?", postID, reaction).
+		Where(
+			"post_id = ? AND reaction = ?",
+			postID,
+			reaction,
+		).
 		Count(&count).
 		Error
 
 	return count, err
+}
+
+// CountGroupedByPostIDs obtiene likes y dislikes de todos los posts
+// de una página mediante una única consulta agrupada.
+func (r *PostLikeRepository) CountGroupedByPostIDs(
+	postIDs []uint,
+) (map[uint]PostReactionCounts, error) {
+	countsByPostID := make(
+		map[uint]PostReactionCounts,
+		len(postIDs),
+	)
+
+	// Los posts sin reacciones también deben disponer de contadores a cero.
+	for _, postID := range postIDs {
+		countsByPostID[postID] = PostReactionCounts{
+			PostID: postID,
+		}
+	}
+
+	if len(postIDs) == 0 {
+		return countsByPostID, nil
+	}
+
+	var groupedCounts []PostReactionCounts
+
+	err := r.db.
+		Model(&models.PostLike{}).
+		Select(
+			`
+				post_id,
+				SUM(
+					CASE
+						WHEN reaction = ? THEN 1
+						ELSE 0
+					END
+				) AS like_count,
+				SUM(
+					CASE
+						WHEN reaction = ? THEN 1
+						ELSE 0
+					END
+				) AS dislike_count
+			`,
+			models.PostReactionLike,
+			models.PostReactionDislike,
+		).
+		Where("post_id IN ?", postIDs).
+		Group("post_id").
+		Scan(&groupedCounts).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, counts := range groupedCounts {
+		countsByPostID[counts.PostID] = counts
+	}
+
+	return countsByPostID, nil
 }
 
 // GetReactionByPostAndUser devuelve:
@@ -91,7 +169,11 @@ func (r *PostLikeRepository) GetReactionByPostAndUser(
 	var postReaction models.PostLike
 
 	err := r.db.
-		Where("post_id = ? AND user_id = ?", postID, userID).
+		Where(
+			"post_id = ? AND user_id = ?",
+			postID,
+			userID,
+		).
 		First(&postReaction).
 		Error
 
@@ -107,13 +189,17 @@ func (r *PostLikeRepository) GetReactionByPostAndUser(
 }
 
 // Métodos de compatibilidad con el sistema actual de likes.
-// Se retirarán o sustituirán cuando adaptemos el servicio.
+// Se mantienen mientras otros componentes continúen utilizándolos.
 
 func (r *PostLikeRepository) CreateIfNotExists(
 	postID uint,
 	userID uint,
 ) error {
-	return r.SetReaction(postID, userID, models.PostReactionLike)
+	return r.SetReaction(
+		postID,
+		userID,
+		models.PostReactionLike,
+	)
 }
 
 func (r *PostLikeRepository) DeleteByPostAndUser(
@@ -140,10 +226,16 @@ func (r *PostLikeRepository) ExistsByPostAndUser(
 	postID uint,
 	userID uint,
 ) (bool, error) {
-	reaction, exists, err := r.GetReactionByPostAndUser(postID, userID)
+	reaction, exists, err :=
+		r.GetReactionByPostAndUser(
+			postID,
+			userID,
+		)
+
 	if err != nil {
 		return false, err
 	}
 
-	return exists && reaction == models.PostReactionLike, nil
+	return exists &&
+		reaction == models.PostReactionLike, nil
 }

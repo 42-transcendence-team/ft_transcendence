@@ -53,11 +53,16 @@ func (s *AdvancedSearchService) SearchUsers(userID uint, filter *dto.UserFilter)
 			return nil, err
 		}
 
+		avatarURL := ""
+		if user.AvatarPath != nil {
+			avatarURL = *user.AvatarPath
+		}
 		item := dto.UserSearch{
 			ID:         user.ID,
 			Login:      user.Login,
 			Name:       user.Name,
 			Surname:    user.Surname,
+			AvatarURL:  avatarURL,
 			Relation:   relation,
 			CanSendReq: relation == "none",
 			RequestID:  requestID,
@@ -135,4 +140,11 @@ func (s *AdvancedSearchService) getUserRelation(currentUserID uint, otherUserID 
 	}
 
 	return "none", nil, nil
+}
+
+func (s *AdvancedSearchService) GetUserRelation(
+	currentUserID uint,
+	otherUserID uint,
+) (string, *uint, error) {
+	return s.getUserRelation(currentUserID, otherUserID)
 }

@@ -7,19 +7,22 @@ import (
 	"strconv"
 	ws "backend/internal/websocket"
 	"github.com/gin-gonic/gin"
+	"encoding/json"
 )
 
 type FriendHandler struct {
 	FriendRequestService *services.FriendRequestService
 	BlockUserService     *services.BlockUserService
+	websocketService     *services.WebsocketService
 	hub				  *ws.Hub
 }
 
-func NewFriendHandler(friendService *services.FriendRequestService, blockService *services.BlockUserService, hub *ws.Hub) *FriendHandler {
+func NewFriendHandler(friendService *services.FriendRequestService, blockService *services.BlockUserService, hub *ws.Hub, websocketService *services.WebsocketService) *FriendHandler {
 	return &FriendHandler{
 		FriendRequestService: friendService,
 		BlockUserService:     blockService,
-		hub: hub,
+		hub:                  hub,
+		websocketService:     websocketService,
 	}
 }
 
@@ -39,7 +42,6 @@ func (h *FriendHandler) ListFriends(c *gin.Context) {
 		"data": ListFriends,
 	})
 }
-
 func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 
 	var req dto.SendFriendRequest
@@ -59,6 +61,28 @@ func (h *FriendHandler) SendFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
+	payload, perr:=
+		json.Marshal(dto.FriendRequestPayload{
+			SenderID: userID,
+			ReceiverID: req.ReceiverID,
+		})
+	if (perr != nil) {
+		c.Error(perr)
+		c.Abort()
+		return
+	}
+	message, merr :=
+		json.Marshal(dto.NotificationMessage{
+			Type : "FRIEND_REQUEST",
+			Payload: payload,
+		})
+	if (merr != nil) {
+		c.Error(merr)
+		c.Abort()
+		return
+	}
+	
+	h.hub.SendMessagesToUser(req.ReceiverID, []byte(message))
 	
 	c.JSON(201, gin.H{
 		"message": "friend request sent successfully",
@@ -124,7 +148,36 @@ func (h *FriendHandler) AcceptFriendRequest(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	
+
+	login, _ := c.Get("login")
+	username := ""
+	if login != nil {
+		username = login.(string)
+	}
+
+	payload, perr :=
+		json.Marshal(dto.FriendRequestAcceptedPayload{
+			SenderID:   userID,
+			ReceiverID: req.SenderID,
+			Username:   username,
+		})
+	if (perr != nil){
+		c.Error(perr)
+		c.Abort()
+		return
+	}
+	message, merr :=
+		json.Marshal(dto.NotificationMessage{
+			Type : "FRIEND_REQUEST_ACCEPTED",
+			Payload: payload,
+		})
+	if (merr != nil){
+		c.Error(merr)
+		c.Abort()
+		return
+	}
+	h.hub.SendMessagesToUser(req.SenderID, []byte(message))
+	h.hub.SendMessagesToUser(userID, []byte(message))
 	c.JSON(200, gin.H{
 		"request-accepted": gin.H{
 			"id":       req.ID,
@@ -187,6 +240,8 @@ func (h *FriendHandler) DeleteFriend(c *gin.Context) {
 		return
 	}
 
+	h.notifyRoomBlocked(userID, deleteFriendID)
+
 	c.JSON(204, gin.H{})
 }
 
@@ -225,6 +280,8 @@ func (h *FriendHandler) BlockUser(c *gin.Context) {
 		return
 	}
 
+	h.notifyRoomBlocked(BlockerID, req.BlockedID)
+
 	c.JSON(200, gin.H{"message": "user blocked"})
 }
 
@@ -249,4 +306,27 @@ func (h *FriendHandler) UnblockUser(c *gin.Context) {
 	}
 
 	c.JSON(204, gin.H{})
+}
+
+// notifyRoomBlocked busca la sala compartida entre dos usuarios. Si existe,
+// envia un mensaje WS de tipo ROOM_BLOCKED a ambos para que el frontend oculte el chat.
+func (h *FriendHandler) notifyRoomBlocked(userID1 uint, userID2 uint) {
+	roomID, err := h.websocketService.GetSharedRoom(userID1, userID2)
+	if err != nil || roomID == 0 {
+		return
+	}
+
+	payload, err := json.Marshal(dto.RoomPayload{RoomID: roomID})
+	if err != nil {
+		return
+	}
+	message, err := json.Marshal(dto.NotificationMessage{
+		Type:    "ROOM_BLOCKED",
+		Payload: payload,
+	})
+	if err != nil {
+		return
+	}
+
+	h.hub.SendMessagesToUsers([]uint{userID1, userID2}, message)
 }

@@ -1,23 +1,84 @@
-.action-buttons {
-	display: flex;
-	gap: 15px;
+@use "../abstracts/variables" as *;
 
-	button {
-		padding: 10px 20px;
-		border: none;
-		border-radius: 5px;
-		cursor: pointer;
-		color: white;
-		font-weight: bold;
-		font-size: 0.9em;
-		transition: background-color 0.3s ease;
+.button1 {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 
-		&:hover {
-			opacity: 0.9;
+	min-height: 38px;
+	padding: 9px 16px;
+
+	border: 1px solid transparent;
+	border-radius: 9px;
+
+	font: inherit;
+	font-size: 0.88rem;
+	font-weight: 600;
+	line-height: 1;
+
+	cursor: pointer;
+
+	transition:
+		background-color 0.2s ease,
+		border-color 0.2s ease,
+		color 0.2s ease,
+		transform 0.15s ease,
+		box-shadow 0.2s ease;
+
+	&:hover:not(:disabled) {
+		transform: translateY(-1px);
+		box-shadow: 0 3px 8px rgba(0, 0, 0, 0.14);
+	}
+
+	&:active:not(:disabled) {
+		transform: translateY(0);
+		box-shadow: none;
+	}
+
+	&:focus-visible {
+		outline: 3px solid rgba(37, 99, 235, 0.25);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		cursor: default;
+		box-shadow: none;
+	}
+
+	&--primary {
+		background-color: $color-btn-share;
+		color: #fff;
+
+		&:hover:not(:disabled) {
+			filter: brightness(0.94);
 		}
 	}
 
-	.share-btn {
-		background-color: $color-btn-share;
+	&--secondary {
+		border-color: #d1d5db;
+		background-color: #fff;
+		color: #374151;
+
+		&:hover:not(:disabled) {
+			background-color: #f3f4f6;
+			border-color: #9ca3af;
+		}
+	}
+
+	&--danger {
+		border-color: #fecaca;
+		background-color: #fff;
+		color: #dc2626;
+
+		&:hover:not(:disabled) {
+			border-color: #dc2626;
+			background-color: #fef2f2;
+		}
+	}
+
+	&--disabled {
+		border-color: #e5e7eb;
+		background-color: #f3f4f6;
+		color: #9ca3af;
 	}
 }

@@ -1,69 +1,55 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import {
+	useEffect,
+	useRef,
+	useState,
+} from "react";
+import {
+	useNavigate,
+	useParams,
+} from "react-router-dom";
 
 import type { ApiError } from "../api/ApiRequest";
 import {
+	getPostsByUserId,
+	type PostReactionState,
+	type PostSummary,
+} from "../api/Posts";
+import {
 	getUserPresence,
 	getUserProfile,
-	type UserProfile,
 } from "../api/UserProfile";
-
-import "../styles/pages/_profile.scss";
+import type { UserProfile } from "../api/UserProfile";
 import {
-	UserAvatar,
-	type UserPresence,
-} from "../components/users/UserAvatar";
+	acceptFriendRequest,
+	blockUser,
+	rejectFriendRequest,
+	removeFriend,
+	sendFriendRequest,
+	unblockUser,
+} from "../api/Friends";
 
-import photo1 from "../assets/img/choni1.png";
-import photo2 from "../assets/img/choni2.png";
-import photo3 from "../assets/img/choni3.png";
-import { Post } from "../components/Post";
-import { Button1 } from "../components/Button1";
-import { NotFound } from "./NotFound";
+import { useAuth } from "../context/AuthContext";
+
+import { ProfileBanner } from "../components/profile/ProfileBanner";
+import { ProfileHeader } from "../components/profile/ProfileHeader";
+import { ProfileContent } from "../components/profile/ProfileContent";
+
+import type { UserPresence } from "../components/users/UserAvatar";
 import { AvatarEditorModal } from "../components/users/AvatarEditorModal";
 import { BannerEditorModal } from "../components/users/BannerEditorModal";
 import { PostImageModal } from "../components/posts/PostImageModal";
+import { PostList } from "../components/posts/PostList";
+import { ConfirmModal } from "../components/ConfirmModal";
 
-// Todo cambiar los datos y que lleguen de la BD.
-const postsData = [
-	{
-		id: 1,
-		username: "lore",
-		time: "Ahora mismo",
-		message: " TODO BORRAR",
-		isHighlighted: false,
-	},
-	{
-		id: 2,
-		username: "yoni",
-		time: "2 min",
-		message: "Listo pal roneitoooo",
-		images: [photo1, photo2, photo3, photo3],
-		isHighlighted: true,
-	},
-	{
-		id: 3,
-		username: "lore",
-		time: "Ahora mismo",
-		message: " TODO BORRAR",
-		isHighlighted: false,
-	},
-	{
-		id: 4,
-		username: "lore",
-		time: "Ahora mismo",
-		message: " TODO BORRAR",
-		isHighlighted: false,
-	},
-	{
-		id: 5,
-		username: "lore",
-		time: "Ahora mismo",
-		message: " TODO BORRAR",
-		isHighlighted: false,
-	},
-];
+import { NotFound } from "./NotFound";
+
+import "../styles/pages/_profile.scss";
+
+type ConfirmAction =
+	| "remove-friend"
+	| "block"
+	| "unblock"
+	| null;
 
 function getImageSource(imagePath: string): string {
 	return imagePath.startsWith("/")
@@ -80,8 +66,33 @@ function isApiError(error: unknown): error is ApiError {
 	);
 }
 
+function appendUniquePosts(
+	currentPosts: PostSummary[],
+	incomingPosts: PostSummary[],
+): PostSummary[] {
+	const knownPostIDs = new Set(
+		currentPosts.map((post) => post.id),
+	);
+
+	return [
+		...currentPosts,
+		...incomingPosts.filter(
+			(post) => !knownPostIDs.has(post.id),
+		),
+	];
+}
+
 export const Profile = () => {
-	const { username } = useParams<{ username: string }>();
+	const { username } =
+		useParams<{ username: string }>();
+
+	const navigate = useNavigate();
+
+	console.log("PROFILE username:", username);
+	console.log(
+		"PROFILE SE HA RENDERIZADO:",
+		username,
+	);
 
 	const {
 		user: authenticatedUser,
@@ -91,34 +102,90 @@ export const Profile = () => {
 
 	const [profileUser, setProfileUser] =
 		useState<UserProfile | null>(null);
+
 	const [isLoadingProfile, setIsLoadingProfile] =
 		useState(true);
+
 	const [profileError, setProfileError] =
 		useState<string | null>(null);
+
 	const [profileNotFound, setProfileNotFound] =
 		useState(false);
 
-	const [isAvatarEditorOpen, setIsAvatarEditorOpen] =
-		useState(false);
-	const [isBannerEditorOpen, setIsBannerEditorOpen] =
-		useState(false);
-	const [isAvatarViewerOpen, setIsAvatarViewerOpen] =
+	const [
+		relationActionError,
+		setRelationActionError,
+	] = useState<string | null>(null);
+
+	const [
+		isAvatarEditorOpen,
+		setIsAvatarEditorOpen,
+	] = useState(false);
+
+	const [
+		isBannerEditorOpen,
+		setIsBannerEditorOpen,
+	] = useState(false);
+
+	const [
+		isAvatarViewerOpen,
+		setIsAvatarViewerOpen,
+	] = useState(false);
+
+	const [
+		avatarImageFailed,
+		setAvatarImageFailed,
+	] = useState(false);
+
+	const [
+		bannerImageFailed,
+		setBannerImageFailed,
+	] = useState(false);
+
+	const [profilePosts, setProfilePosts] =
+		useState<PostSummary[]>([]);
+
+	const [postsPage, setPostsPage] =
+		useState(1);
+
+	const [postsTotalPages, setPostsTotalPages] =
+		useState(0);
+
+	const [isLoadingPosts, setIsLoadingPosts] =
 		useState(false);
 
-	const [avatarImageFailed, setAvatarImageFailed] =
-		useState(false);
-	const [bannerImageFailed, setBannerImageFailed] =
-		useState(false);
+	const [
+		isLoadingMorePosts,
+		setIsLoadingMorePosts,
+	] = useState(false);
+
+	const [postsError, setPostsError] =
+		useState<string | null>(null);
 
 	/*
-	 * Carga inicial del perfil indicado en la ruta.
-	 * Esta petición incrementa el contador de visitas una sola vez.
+	 * Permite ignorar respuestas de posts pertenecientes al perfil
+	 * anterior cuando la ruta cambia mientras había una petición activa.
 	 */
+	const postsOwnerIDRef =
+		useRef<number | null>(null);
+
+	const [confirmAction, setConfirmAction] =
+		useState<ConfirmAction>(null);
+
+	const [isConfirming, setIsConfirming] =
+		useState(false);
+
 	useEffect(() => {
+		console.log(
+			"PROFILE useEffect:",
+			username,
+		);
+
 		let cancelled = false;
 
 		setProfileUser(null);
 		setProfileError(null);
+		setRelationActionError(null);
 		setProfileNotFound(false);
 		setIsLoadingProfile(true);
 
@@ -170,16 +237,117 @@ export const Profile = () => {
 	}, [username]);
 
 	/*
-	 * Consulta únicamente el estado almacenado en Redis.
-	 * No vuelve a cargar el perfil completo y, por tanto,
-	 * no incrementa artificialmente el contador de visitas.
+	 * Carga la primera página de publicaciones del perfil visitado.
+	 * Cada cambio de perfil limpia antes las tarjetas anteriores.
 	 */
 	useEffect(() => {
-		if (!profileUser?.login || profileNotFound) {
+		const ownerID =
+			profileUser?.id ?? null;
+
+		postsOwnerIDRef.current = ownerID;
+
+		setProfilePosts([]);
+		setPostsPage(1);
+		setPostsTotalPages(0);
+		setPostsError(null);
+		setIsLoadingMorePosts(false);
+
+		/*
+		 * ProfileContent oculta el contenido privado a usuarios
+		 * que no son amigos. Evitamos también solicitar sus posts.
+		 */
+		const canLoadPosts = Boolean(
+			profileUser &&
+				authenticatedUser &&
+				(
+					authenticatedUser.login ===
+						profileUser.login ||
+					profileUser.relation === "friends"
+				),
+		);
+
+		if (
+			ownerID === null ||
+			!canLoadPosts
+		) {
+			setIsLoadingPosts(false);
 			return;
 		}
 
-		const profileLogin = profileUser.login;
+		let cancelled = false;
+
+		const loadInitialPosts = async () => {
+			try {
+				setIsLoadingPosts(true);
+
+				const response =
+					await getPostsByUserId(
+						ownerID,
+						1,
+						20,
+					);
+
+				if (
+					cancelled ||
+					postsOwnerIDRef.current !== ownerID
+				) {
+					return;
+				}
+
+				setProfilePosts(response.data);
+
+				setPostsPage(
+					response.pagination.page,
+				);
+
+				setPostsTotalPages(
+					response.pagination.totalPages,
+				);
+			} catch {
+				if (
+					!cancelled &&
+					postsOwnerIDRef.current === ownerID
+				) {
+					setPostsError(
+						"The posts could not be loaded.",
+					);
+				}
+			} finally {
+				if (
+					!cancelled &&
+					postsOwnerIDRef.current === ownerID
+				) {
+					setIsLoadingPosts(false);
+				}
+			}
+		};
+
+		void loadInitialPosts();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [
+		profileUser?.id,
+		profileUser?.login,
+		profileUser?.relation,
+		authenticatedUser?.login,
+	]);
+
+	/*
+	 * Actualiza únicamente la presencia del usuario sin
+	 * volver a cargar el perfil completo.
+	 */
+	useEffect(() => {
+		if (
+			!profileUser?.login ||
+			profileNotFound
+		) {
+			return;
+		}
+
+		const profileLogin =
+			profileUser.login;
 
 		let cancelled = false;
 		let requestInFlight = false;
@@ -193,59 +361,68 @@ export const Profile = () => {
 
 			try {
 				const isOnline =
-					await getUserPresence(profileLogin);
+					await getUserPresence(
+						profileLogin,
+					);
 
 				if (cancelled) {
 					return;
 				}
 
-				setProfileUser((currentProfile) => {
-					if (
-						!currentProfile ||
-						currentProfile.login !== profileLogin ||
-						currentProfile.isOnline === isOnline
-					) {
-						return currentProfile;
-					}
+				setProfileUser(
+					(currentProfile) => {
+						if (
+							!currentProfile ||
+							currentProfile.login !==
+								profileLogin ||
+							currentProfile.isOnline ===
+								isOnline
+						) {
+							return currentProfile;
+						}
 
-					return {
-						...currentProfile,
-						isOnline,
-					};
-				});
+						return {
+							...currentProfile,
+							isOnline,
+						};
+					},
+				);
 			} catch {
 				/*
 				 * Si falla una comprobación puntual, se conserva
-				 * el último estado conocido del usuario.
+				 * el último estado conocido.
 				 */
 			} finally {
 				requestInFlight = false;
 			}
 		};
 
-		// Actualiza inmediatamente tras cargar el perfil.
 		void refreshPresence();
 
-		const intervalId = window.setInterval(() => {
-			void refreshPresence();
-		}, 30_000);
+		const intervalId =
+			window.setInterval(() => {
+				void refreshPresence();
+			}, 30_000);
 
 		return () => {
 			cancelled = true;
 			window.clearInterval(intervalId);
 		};
-	}, [profileUser?.login, profileNotFound]);
+	}, [
+		profileUser?.login,
+		profileNotFound,
+	]);
 
 	/*
-	 * Los editores actualizan primero AuthContext. Cuando el perfil
-	 * abierto es el propio, sincronizamos aquí las rutas nuevas sin
-	 * tener que repetir la petición completa de perfil.
+	 * Sincroniza el perfil propio después de editar
+	 * avatar, banner o datos personales.
 	 */
 	useEffect(() => {
 		if (
 			!profileUser ||
 			!authenticatedUser ||
-			profileUser.login !== authenticatedUser.login
+			profileUser.login !==
+				authenticatedUser.login
 		) {
 			return;
 		}
@@ -264,9 +441,11 @@ export const Profile = () => {
 					authenticatedUser.surname ??
 					currentProfile.surname,
 				avatarPath:
-					authenticatedUser.avatarPath ?? null,
+					authenticatedUser.avatarPath ??
+					null,
 				bannerPath:
-					authenticatedUser.bannerPath ?? null,
+					authenticatedUser.bannerPath ??
+					null,
 			};
 		});
 	}, [
@@ -276,10 +455,6 @@ export const Profile = () => {
 		authenticatedUser?.bannerPath,
 	]);
 
-	/*
-	 * UserAvatar ya gestiona su propio fallback, pero Profile también
-	 * necesita saber si la imagen existe para no abrir un visor roto.
-	 */
 	useEffect(() => {
 		setAvatarImageFailed(false);
 
@@ -296,7 +471,9 @@ export const Profile = () => {
 			}
 		};
 
-		image.src = getImageSource(profileUser.avatarPath);
+		image.src = getImageSource(
+			profileUser.avatarPath,
+		);
 
 		return () => {
 			active = false;
@@ -306,6 +483,185 @@ export const Profile = () => {
 	useEffect(() => {
 		setBannerImageFailed(false);
 	}, [profileUser?.bannerPath]);
+
+	const handleLoadMorePosts = async () => {
+		if (
+			!profileUser ||
+			isLoadingMorePosts ||
+			postsPage >= postsTotalPages
+		) {
+			return;
+		}
+
+		const ownerID = profileUser.id;
+		const nextPage = postsPage + 1;
+
+		try {
+			setIsLoadingMorePosts(true);
+			setPostsError(null);
+
+			const response =
+				await getPostsByUserId(
+					ownerID,
+					nextPage,
+					20,
+				);
+
+			if (
+				postsOwnerIDRef.current !== ownerID
+			) {
+				return;
+			}
+
+			setProfilePosts((currentPosts) =>
+				appendUniquePosts(
+					currentPosts,
+					response.data,
+				),
+			);
+
+			setPostsPage(
+				response.pagination.page,
+			);
+
+			setPostsTotalPages(
+				response.pagination.totalPages,
+			);
+		} catch {
+			if (
+				postsOwnerIDRef.current === ownerID
+			) {
+				setPostsError(
+					"More posts could not be loaded.",
+				);
+			}
+		} finally {
+			if (
+				postsOwnerIDRef.current === ownerID
+			) {
+				setIsLoadingMorePosts(false);
+			}
+		}
+	};
+
+	const handlePostDeleted = (
+		postId: number,
+	) => {
+		setProfilePosts((currentPosts) =>
+			currentPosts.filter(
+				(post) => post.id !== postId,
+			),
+		);
+	};
+
+	const handlePostReactionUpdated = (
+		reactionState: PostReactionState,
+	) => {
+		setProfilePosts((currentPosts) =>
+			currentPosts.map((post) =>
+				post.id === reactionState.postId
+					? {
+							...post,
+							likeCount:
+								reactionState.likeCount,
+							dislikeCount:
+								reactionState.dislikeCount,
+						}
+					: post,
+			),
+		);
+	};
+
+	/*
+	 * Ejecuta una acción de amistad y después vuelve a cargar
+	 * el perfil para obtener relation y request_id actualizados.
+	 */
+	const executeRelationAction = async (
+		action: () => Promise<unknown>,
+	) => {
+		if (!username) {
+			return;
+		}
+
+		setRelationActionError(null);
+
+		try {
+			await action();
+
+			const updatedProfile =
+				await getUserProfile(username);
+
+			setProfileUser(updatedProfile);
+		} catch {
+			setRelationActionError(
+				"No se ha podido completar la acción.",
+			);
+		}
+	};
+
+	const handleAddFriend = () => {
+		if (!profileUser) {
+			return;
+		}
+
+		void executeRelationAction(() =>
+			sendFriendRequest(profileUser.id),
+		);
+	};
+
+	const handleAcceptRequest = () => {
+		if (!profileUser?.request_id) {
+			return;
+		}
+
+		void executeRelationAction(() =>
+			acceptFriendRequest(
+				profileUser.request_id!,
+			),
+		);
+	};
+
+	const handleRejectRequest = () => {
+		if (!profileUser?.request_id) {
+			return;
+		}
+
+		void executeRelationAction(() =>
+			rejectFriendRequest(
+				profileUser.request_id!,
+			),
+		);
+	};
+
+	const handleRemoveFriend = async () => {
+		if (!profileUser) {
+			return;
+		}
+
+		await executeRelationAction(() =>
+			removeFriend(profileUser.id),
+		);
+	};
+
+	const handleBlockUser = async () => {
+		if (!profileUser) {
+			return;
+		}
+
+		await executeRelationAction(() =>
+			blockUser(profileUser.id),
+		);
+	};
+
+	const handleUnblockUser = async () => {
+		if (!profileUser) {
+			return;
+		}
+
+		await executeRelationAction(() =>
+			unblockUser(profileUser.id),
+		);
+	};
 
 	if (authLoading || isLoadingProfile) {
 		return (
@@ -337,10 +693,13 @@ export const Profile = () => {
 	}
 
 	const isOwnProfile =
-		authenticatedUser.login === profileUser.login;
+		authenticatedUser.login ===
+		profileUser.login;
 
 	const profilePresence: UserPresence =
-		profileUser.isOnline ? "online" : "offline";
+		profileUser.isOnline
+			? "online"
+			: "offline";
 
 	const hasCustomAvatar =
 		Boolean(profileUser.avatarPath) &&
@@ -356,169 +715,299 @@ export const Profile = () => {
 			? () => setIsAvatarViewerOpen(true)
 			: undefined;
 
-	const avatarOverlay = isOwnProfile ? (
-		<i className="fas fa-camera" />
-	) : hasCustomAvatar ? (
-		<i className="fas fa-expand" />
-	) : undefined;
+	const canViewPrivateContent =
+		isOwnProfile ||
+		profileUser.relation === "friends";
 
-	const bannerContent = (
-		<>
-			{hasCustomBanner && profileUser.bannerPath ? (
-				<img
-					className="profile__banner-image"
-					src={getImageSource(
-						profileUser.bannerPath,
-					)}
-					alt={`${profileUser.login} profile banner`}
-					onError={() =>
-						setBannerImageFailed(true)
-					}
-				/>
-			) : (
-				<span className="profile__banner-placeholder" />
-			)}
+	const handleConfirmRelationAction =
+		async () => {
+			if (!confirmAction) {
+				return;
+			}
 
-			{isOwnProfile && (
-				<span
-					className="profile__banner-overlay"
-					aria-hidden="true"
-				>
-					<i className="fas fa-camera" />
-					<span>Edit banner</span>
-				</span>
-			)}
-		</>
-	);
+			setIsConfirming(true);
+
+			try {
+				switch (confirmAction) {
+					case "remove-friend":
+						await handleRemoveFriend();
+						break;
+
+					case "block":
+						await handleBlockUser();
+						break;
+
+					case "unblock":
+						await handleUnblockUser();
+						break;
+				}
+
+				setConfirmAction(null);
+			} finally {
+				setIsConfirming(false);
+			}
+		};
+
+	const confirmationConfig = {
+		"remove-friend": {
+			title: "Eliminar amigo",
+			message:
+				"¿Seguro que quieres eliminar a este usuario de tus amigos?",
+			confirmLabel: "Eliminar",
+			confirmingLabel: "Eliminando...",
+		},
+		block: {
+			title: "Bloquear usuario",
+			message:
+				"¿Seguro que quieres bloquear a este usuario?",
+			confirmLabel: "Bloquear",
+			confirmingLabel: "Bloqueando...",
+		},
+		unblock: {
+			title: "Desbloquear usuario",
+			message:
+				"¿Seguro que quieres desbloquear a este usuario?",
+			confirmLabel: "Desbloquear",
+			confirmingLabel: "Desbloqueando...",
+		},
+	};
+
+	const currentConfirmation = confirmAction
+		? confirmationConfig[confirmAction]
+		: null;
 
 	return (
 		<div className="profile">
 			<div className="profile__container">
-				{isOwnProfile ? (
-					<button
-						className={[
-							"profile__banner",
-							"profile__banner--interactive",
-						].join(" ")}
-						type="button"
-						aria-label="Edit profile banner"
-						onClick={() =>
-							setIsBannerEditorOpen(true)
-						}
-					>
-						{bannerContent}
-					</button>
-				) : (
-					<div className="profile__banner">
-						{bannerContent}
-					</div>
+				<ProfileBanner
+					bannerPath={
+						profileUser.bannerPath
+					}
+					username={profileUser.login}
+					isOwnProfile={isOwnProfile}
+					hasCustomBanner={
+						hasCustomBanner
+					}
+					onEdit={() =>
+						setIsBannerEditorOpen(
+							true,
+						)
+					}
+					onImageError={() =>
+						setBannerImageFailed(
+							true,
+						)
+					}
+				/>
+
+				<ProfileHeader
+					userId={profileUser.id}
+					username={profileUser.login}
+					name={profileUser.name}
+					surname={profileUser.surname}
+					avatarPath={
+						profileUser.avatarPath
+					}
+					presence={profilePresence}
+					isOwnProfile={isOwnProfile}
+					hasCustomAvatar={
+						hasCustomAvatar
+					}
+					relation={profileUser.relation}
+					canSendRequest={
+						profileUser.can_send_request
+					}
+					requestId={
+						profileUser.request_id
+					}
+					onAvatarClick={
+						handleAvatarClick
+					}
+					onAddFriend={handleAddFriend}
+					onAcceptRequest={
+						handleAcceptRequest
+					}
+					onRejectRequest={
+						handleRejectRequest
+					}
+					onRemoveFriend={() =>
+						setConfirmAction(
+							"remove-friend",
+						)
+					}
+					onBlockUser={() =>
+						setConfirmAction("block")
+					}
+					onUnblockUser={() =>
+						setConfirmAction(
+							"unblock",
+						)
+					}
+				/>
+
+				{relationActionError && (
+					<p className="profile__action-error">
+						{relationActionError}
+					</p>
 				)}
 
-				<div className="profile__header">
-					<UserAvatar
-						avatarPath={profileUser.avatarPath}
-						username={profileUser.login}
-						size="large"
-						status={profilePresence}
-						className="profile__avatar"
-						ariaLabel={
-							isOwnProfile
-								? "Edit profile image"
-								: `Open ${profileUser.login} profile image`
-						}
-						overlay={avatarOverlay}
-						onClick={handleAvatarClick}
-					/>
-
-					<div className="profile__user-details">
-						<div className="profile__visits">
-							<i className="fas fa-chart-line profile__visits-icon" />
-
-							<span>
-								Nº Visitas al perfil{" "}
-								{profileUser.visits}
-							</span>
-						</div>
-
-						<h4 className="profile__user-name">
-							{profileUser.name &&
-							profileUser.surname
-								? `${profileUser.name} ${profileUser.surname}`
-								: profileUser.login}
-						</h4>
-					</div>
-
-					<Button1 label="Share" />
-				</div>
-
-				<div className="profile__feed">
-					<p className="profile__status">
-						{profileUser.status ||
-							"Sin estado disponible"}
-					</p>
-
+				<ProfileContent
+					status={profileUser.status}
+					isOwnProfile={isOwnProfile}
+					canViewPrivateContent={
+						canViewPrivateContent
+					}
+					onCreatePost={() =>
+						navigate("/app/posts/new")
+					}
+				>
 					<div className="profile__posts">
-						{postsData.length > 0 ? (
-							postsData.map((post) => (
-								<Post
-									key={post.id}
-									username={post.username}
-									time={post.time}
-									message={post.message}
-									images={post.images}
-									isHighlighted={
-										post.isHighlighted
-									}
-								/>
-							))
-						) : (
-							<div className="profile__empty">
-								Aún no hay roneos por aquí...
+						{isLoadingPosts && (
+							<div className="profile__posts-state">
+								Loading posts.
 							</div>
 						)}
+
+						{!isLoadingPosts &&
+							profilePosts.length === 0 &&
+							postsError && (
+								<div className="profile__posts-error">
+									{postsError}
+								</div>
+							)}
+
+						{!isLoadingPosts &&
+							profilePosts.length === 0 &&
+							!postsError && (
+								<div className="profile__empty">
+									This user has not posted
+									anything yet.
+								</div>
+							)}
+
+						{profilePosts.length > 0 && (
+							<>
+								{postsError && (
+									<div className="profile__posts-error">
+										{postsError}
+									</div>
+								)}
+
+								<PostList
+									posts={
+										profilePosts
+									}
+									onPostDeleted={
+										handlePostDeleted
+									}
+									onPostReactionUpdated={
+										handlePostReactionUpdated
+									}
+								/>
+
+								{postsPage <
+									postsTotalPages && (
+									<button
+										className="post-list__load-more"
+										type="button"
+										disabled={
+											isLoadingMorePosts
+										}
+										onClick={() =>
+											void handleLoadMorePosts()
+										}
+									>
+										{isLoadingMorePosts
+											? "Loading..."
+											: "Load more"}
+									</button>
+								)}
+							</>
+						)}
 					</div>
-				</div>
+				</ProfileContent>
 			</div>
 
 			{isOwnProfile && (
 				<>
 					<AvatarEditorModal
-						open={isAvatarEditorOpen}
+						open={
+							isAvatarEditorOpen
+						}
 						currentAvatarPath={
 							profileUser.avatarPath
 						}
 						onClose={() =>
-							setIsAvatarEditorOpen(false)
+							setIsAvatarEditorOpen(
+								false,
+							)
 						}
 						onUpdated={refreshUser}
 					/>
 
 					<BannerEditorModal
-						open={isBannerEditorOpen}
+						open={
+							isBannerEditorOpen
+						}
 						currentBannerPath={
 							profileUser.bannerPath
 						}
 						onClose={() =>
-							setIsBannerEditorOpen(false)
+							setIsBannerEditorOpen(
+								false,
+							)
 						}
 						onUpdated={refreshUser}
 					/>
 				</>
 			)}
 
-			{!isOwnProfile && hasCustomAvatar && (
-				<PostImageModal
-					open={isAvatarViewerOpen}
-					imageSrc={
-						profileUser.avatarPath
-							? getImageSource(
-									profileUser.avatarPath,
-								)
-							: null
+			{!isOwnProfile &&
+				hasCustomAvatar && (
+					<PostImageModal
+						open={
+							isAvatarViewerOpen
+						}
+						imageSrc={
+							profileUser.avatarPath
+								? getImageSource(
+										profileUser.avatarPath,
+									)
+								: null
+						}
+						alt={`${profileUser.login} profile image`}
+						onClose={() =>
+							setIsAvatarViewerOpen(
+								false,
+							)
+						}
+					/>
+				)}
+
+			{currentConfirmation && (
+				<ConfirmModal
+					open={
+						confirmAction !== null
 					}
-					alt={`${profileUser.login} profile image`}
+					title={
+						currentConfirmation.title
+					}
+					message={
+						currentConfirmation.message
+					}
+					confirmLabel={
+						currentConfirmation.confirmLabel
+					}
+					confirmingLabel={
+						currentConfirmation.confirmingLabel
+					}
+					cancelLabel="Cancelar"
+					isConfirming={isConfirming}
+					onConfirm={
+						handleConfirmRelationAction
+					}
 					onClose={() =>
-						setIsAvatarViewerOpen(false)
+						setConfirmAction(null)
 					}
 				/>
 			)}

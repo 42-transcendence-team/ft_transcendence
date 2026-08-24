@@ -18,8 +18,22 @@ func PostRoutes(
 ) {
 	posts := api.Group("/posts")
 	{
-		// Crea un post con texto, imagen o ambos.
+		// Crea un post con texto, imagen, PDF o una combinación válida.
 		posts.POST("", postHandler.CreatePost)
+
+		/*
+		 * Las rutas estáticas deben registrarse antes de /:id
+		 * para que feed y user no se interpreten como IDs de post.
+		 */
+
+		// Lista los posts de las amistades del usuario autenticado.
+		posts.GET("/feed", postHandler.ListFeed)
+
+		// Lista las publicaciones pertenecientes a un usuario.
+		posts.GET(
+			"/user/:userId",
+			postHandler.ListPostsByUserID,
+		)
 
 		post := posts.Group("/:id")
 		{
@@ -32,28 +46,46 @@ func PostRoutes(
 			postComments := post.Group("/comments")
 			{
 				// Lista los comentarios de un post.
-				postComments.GET("", commentHandler.ListCommentsByPostID)
+				postComments.GET(
+					"",
+					commentHandler.ListCommentsByPostID,
+				)
 
 				// Crea un comentario en un post.
-				postComments.POST("", commentHandler.CreateComment)
+				postComments.POST(
+					"",
+					commentHandler.CreateComment,
+				)
 			}
 
 			likes := post.Group("/likes")
 			{
 				// Crea un like o sustituye un dislike existente.
-				likes.POST("", postLikeHandler.LikePost)
+				likes.POST(
+					"",
+					postLikeHandler.LikePost,
+				)
 
 				// Elimina el like del usuario autenticado.
-				likes.DELETE("", postLikeHandler.UnlikePost)
+				likes.DELETE(
+					"",
+					postLikeHandler.UnlikePost,
+				)
 			}
 
 			dislikes := post.Group("/dislikes")
 			{
 				// Crea un dislike o sustituye un like existente.
-				dislikes.POST("", postLikeHandler.DislikePost)
+				dislikes.POST(
+					"",
+					postLikeHandler.DislikePost,
+				)
 
 				// Elimina el dislike del usuario autenticado.
-				dislikes.DELETE("", postLikeHandler.UndislikePost)
+				dislikes.DELETE(
+					"",
+					postLikeHandler.UndislikePost,
+				)
 			}
 		}
 	}
@@ -61,6 +93,9 @@ func PostRoutes(
 	comments := api.Group("/comments")
 	{
 		// Borra un comentario propio.
-		comments.DELETE("/:id", commentHandler.DeleteComment)
+		comments.DELETE(
+			"/:id",
+			commentHandler.DeleteComment,
+		)
 	}
 }

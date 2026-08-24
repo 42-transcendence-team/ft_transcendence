@@ -30,6 +30,17 @@
         justify-content: space-between;
     }
 
+    &__headerUser {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        span {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+    }
+
     &__body {
         flex: 1;
         padding: 1rem;
