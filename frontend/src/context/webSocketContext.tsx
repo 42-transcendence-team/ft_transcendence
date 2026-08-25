@@ -45,73 +45,66 @@ export function useHandleWebsocket(user: AuthUser | null) {
 	}, []);
 
 	useEffect(() => {
-		if (!user){
-			return;
-		}
+		if (!user) { return; }
 
 		shouldReconnect.current = true;
 
 		const connect = () => {
+			if (!shouldReconnect.current) { return; }
+
 			const ws = new WebSocket(webSocketURL);
+
 			websocket.current = ws;
 
 			ws.onopen = () => {
-				if (websocket.current?.readyState === WebSocket.OPEN) {
+				if (websocket.current === ws) {
 					setIsConnected(true);
 				}
 			};
 
-			ws.onmessage = (event) => {
-				const message = JSON.parse(event.data);
-				const { type } = message;
-				const typeListeners = listeners.current.get(type);
-
-				console.log("Mensaje recibido:", message);
-
-				if (typeListeners) {
-					typeListeners.forEach(listener => {
-						try {
-							listener(message);
-						} catch (e) {
-							console.error(e);
-						}
-					});
-				}
-			};
-
 			ws.onclose = (e) => {
-				console.log("WebSocket cerrado");
-				setIsConnected(false);
-				console.log("WS close:", {
-					code: e.code,
-					reason: e.reason,
-					wasClean: e.wasClean,
-				});
-				if (websocket.current) {
-					websocket.current?.close();
-				}
-				if (!shouldReconnect.current){
-					return
-				}
+				console.log("WS CLOSE", {code: e.code,reason: e.reason});
 
-				reconnectTimeout.current = window.setTimeout(connect, 2000);
+				if (websocket.current !== ws) { return; }
+
+				websocket.current = null;
+				setIsConnected(false);
+
+				if (!shouldReconnect.current) { return; }
+
+				if (reconnectTimeout.current !== null) { return; }
+
+				reconnectTimeout.current = window.setTimeout(() => {
+					reconnectTimeout.current = null;
+					if (!shouldReconnect.current) { return; }
+					connect();
+				}, 2000);
 			};
 
 			ws.onerror = (error) => {
-				console.error("WebSocket error:", error);
-			}
+				console.error(error);
+			};
 		};
 
 		connect();
 
 		return () => {
 			shouldReconnect.current = false;
-			listeners.current.clear();
 
-			if (reconnectTimeout.current)
+			if (reconnectTimeout.current !== null) {
 				clearTimeout(reconnectTimeout.current);
+				reconnectTimeout.current = null;
+			}
 
-			websocket.current?.close();
+			const ws = websocket.current;
+
+			if (ws) {
+				ws.onerror = null;
+				ws.close();
+				websocket.current = null;
+			}
+
+			setIsConnected(false);
 		};
 	}, [user?.id]);
 
