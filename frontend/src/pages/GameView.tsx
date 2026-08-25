@@ -7,6 +7,12 @@ import { GameProvider, useGame } from '../context/gameContext';
 import { games } from './Games';
 import { useOutletContext } from "react-router-dom";
 
+const LOCAL_PLAYER_NAMES: Record<string, Record<number, string>> = {
+	TICTACTOE: { 1: "X", 2: "O" },
+	CONNECTFOUR: { 1: "Rojo", 2: "Amarillo" },
+	GOOSE: { 1: "Rojo", 2: "Azul", 3: "Amarillo", 4: "Verde", 5: "Morado", 6: "Naranja" },
+};
+
 // TODO - Ponerlo bonico en general, quiza añadir un boton para volver a la lista de juegos, y un boton para salir de la partida
 
 export default function GameView() {
@@ -29,31 +35,83 @@ export default function GameView() {
 
 function GameViewMenu() {
 	const { gameState, createGame, setGameStatus } = useGame();
+	const [playerSelection, setPlayerSelection] = useState<"local" | "online" | null>(null);
+
+	const isMultiPlayerGame = gameState.game_type === "GOOSE";
+
+	const create = (mode: "local" | "online", numPlayers: number = 2) => {
+		createGame(gameState.game_type, mode, numPlayers);
+
+		if (mode === "online") {
+			setGameStatus("LOBBY");
+		}
+	};
+
+	if (playerSelection !== null) {
+		return (
+			<div className="game-menu">
+				<h3 className="game-menu__subtitle">Numero de Jugadores</h3>
+				<div className="game-menu__player">
+				{[2, 3, 4, 5, 6].map((numPlayers) => (
+					<button
+						key={numPlayers}
+						onClick={() => {
+							create(playerSelection, numPlayers);
+							setPlayerSelection(null);
+						}}
+						className="game-menu__button"
+					>
+						{numPlayers}
+					</button>
+				))}
+				</div>
+
+				<button
+					onClick={() => setPlayerSelection(null)}
+					className="game-menu__button"
+				>
+					Volver
+				</button>
+			</div>
+		);
+	}
+
 	return (
 		<div className="game-menu">
-			<button 
-				onClick={() => {createGame(gameState.game_type, "local")}}
-				className="game-menu__button"
-			>
-					Local
-			</button>
-			<button 
+			<button
 				onClick={() => {
-					createGame(gameState.game_type, "online")
-					setGameStatus("LOBBY");
+					if (isMultiPlayerGame) {
+						setPlayerSelection("local");
+					} else {
+						create("local");
+					}
 				}}
 				className="game-menu__button"
 			>
-					Online
+				Local
 			</button>
-						<button 
-				onClick={() => { setGameStatus("JOIN"); }}
+
+			<button
+				onClick={() => {
+					if (isMultiPlayerGame) {
+						setPlayerSelection("online");
+					} else {
+						create("online");
+					}
+				}}
 				className="game-menu__button"
 			>
-					Unirse
+				Online
+			</button>
+
+			<button
+				onClick={() => setGameStatus("JOIN")}
+				className="game-menu__button"
+			>
+				Unirse
 			</button>
 		</div>
-	)
+	);
 }
 
 function GameViewLobby() {
@@ -108,7 +166,7 @@ function getWinnerName() {
 	if (!gameState.winner) return null;
 
 	if (gameState.mode === "local") {
-		return gameState.winner === 1 ? "X" : "O";
+		return LOCAL_PLAYER_NAMES[gameState.game_type]?.[gameState.winner] || "Jugador desconocido";
 	}
 
 	return winnerPlayer?.username || "Jugador desconocido";
@@ -150,7 +208,7 @@ function getPlayerName() {
 	if (!player) return "Jugador desconocido";
 
 	if (gameState.mode === "local") {
-		return player.id === 1 ? "X" : "O";
+		return LOCAL_PLAYER_NAMES[gameState.game_type]?.[player.token] || "Jugador desconocido";
 	}
 
 	return player.username || "Jugador desconocido";
@@ -176,7 +234,7 @@ function GameViewTimeout() {
 	const { returnMenu } = useGame();
 	return (
 		<div className="game-menu">
-			<h2 className="game-menu__title">El jugador ha perdido por tiempo.</h2>
+			<h2 className="game-menu__title">El jugador ha perdido por abandono.</h2>
 			<button 
 				onClick={() => returnMenu()}
 				className="game-menu__button"

@@ -17,11 +17,12 @@ func (c *ConnectFour) Init() {
 	c.Turn = 1
 }
 
-func NewConnectFour(id uint, mode, gameType string, events chan dto.GameEvent) *ConnectFour {
+func NewConnectFour(id, players uint, mode, gameType string, events chan dto.GameEvent) *ConnectFour {
 	c := &ConnectFour{
 		Game: Game{
 			Turn:           1,
-			Players:        make([]Player, 0, 2),
+			Players:        make([]Player, 0, players),
+			MaxPlayers:     int(players),
 			Mode:           mode,
 			ID:             id,
 			Type:           gameType,
@@ -114,21 +115,25 @@ func (c *ConnectFour) GetWinner() (int, interface{}) {
 			if col <= 3 && player == c.Board[row][col+1] && player == c.Board[row][col+2] && player == c.Board[row][col+3] {
 				winningLine := [][2]int{{row, col}, {row, col + 1}, {row, col + 2}, {row, col + 3}}
 				c.Winner = player
+				c.Finished = true
 				return player, winningLine
 			}
 			if row <= 2 && player == c.Board[row+1][col] && player == c.Board[row+2][col] && player == c.Board[row+3][col] {
 				winningLine := [][2]int{{row, col}, {row + 1, col}, {row + 2, col}, {row + 3, col}}
 				c.Winner = player
+				c.Finished = true
 				return player, winningLine
 			}
 			if row >= 3 && col <= 3 && player == c.Board[row-1][col+1] && player == c.Board[row-2][col+2] && player == c.Board[row-3][col+3] {
 				winningLine := [][2]int{{row, col}, {row - 1, col + 1}, {row - 2, col + 2}, {row - 3, col + 3}}
 				c.Winner = player
+				c.Finished = true
 				return player, winningLine
 			}
 			if row <= 2 && col <= 3 && player == c.Board[row+1][col+1] && player == c.Board[row+2][col+2] && player == c.Board[row+3][col+3] {
 				winningLine := [][2]int{{row, col}, {row + 1, col + 1}, {row + 2, col + 2}, {row + 3, col + 3}}
 				c.Winner = player
+				c.Finished = true
 				return player, winningLine
 			}
 		}

@@ -20,12 +20,14 @@ export interface GameState {
     game_type: string;
     status: GameStatus;
     players: Player[];
-    winner?: string | number;
+    winner?: number;
     board?: unknown;
     last_dice_roll?: number;
     turn?: number;
     mode?: GameMode;
     error?: string;
+    playerstate?: Record<string, any>;
+    actions?: any[];
 }
 
 interface GameContextType {
@@ -39,7 +41,7 @@ interface GameContextType {
     setGameStatus: (status: GameStatus) => void;
     setGameType: (gameType: GameState['game_type']) => void;
     returnMenu: () => void;
-    createGame: (gameType: GameState['game_type'], mode: GameMode ) => void;
+    createGame: (gameType: GameState['game_type'], mode: GameMode, players: number ) => void;
     joinGame: (gameId: number) => void;
     makeMove: (moveData: any) => void;
     rollDice: () => void;
@@ -95,8 +97,6 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
         }
 
         const unsubscribeGameUpdate = subscribe("game_update", (message: any) => {
-            console.log('Received game_update message:', message);
-            console.log('User ID:', user?.id);
 			if (!message.status) return;
 			setGameState(prevState => ({
 				...prevState,
@@ -107,6 +107,8 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 				last_dice_roll: message.state?.last_dice_roll ?? prevState.last_dice_roll,
 				turn: message.state?.turn ?? prevState.turn,
                 mode: message.state?.mode ?? prevState.mode,
+                playerstate: message.state?.playerstate ?? prevState.playerstate,
+                actions: message.state?.actions ?? prevState.actions,
 			}));
         });
 
@@ -251,14 +253,16 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
         navigate(`/app/games/${gameType}`, { replace: true });
     }, [navigate, gameState.game_type]);
 
-    const createGame = useCallback((gameType: GameState['game_type'], mode: GameMode) => {
+    const createGame = useCallback((gameType: GameState['game_type'], mode: GameMode, players: number) => {
         if (!user) return;
+        console.log(`Creating game of type: ${gameType} with mode: ${mode} and players: ${players}`);
         send({
             type: "game",
             payload: {
                 action: "create",
                 game_type: gameType,
-                mode: mode
+                mode: mode,
+                players: players
             },
         });
     }, [user, send]);

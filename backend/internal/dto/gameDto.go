@@ -18,6 +18,7 @@ type CreateGame struct {
 	Action   string `json:"action"`
 	GameType string `json:"game_type"`
 	Mode     string `json:"mode"`
+	Players  uint   `json:"players"`
 }
 
 type JoinGame struct {

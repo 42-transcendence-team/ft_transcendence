@@ -4,7 +4,6 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"encoding/json"
-	"log"
 	"time"
 )
 
@@ -18,11 +17,12 @@ func (t *TicTacToe) Init() {
 	t.Turn = 1
 }
 
-func NewTicTacToe(id uint, mode, gameType string, events chan dto.GameEvent) *TicTacToe {
+func NewTicTacToe(id, players uint, mode, gameType string, events chan dto.GameEvent) *TicTacToe {
 	t := &TicTacToe{
 		Game: Game{
 			Turn:           1,
-			Players:        make([]Player, 0, 2),
+			Players:        make([]Player, 0, players),
+			MaxPlayers:     int(players),
 			Mode:           mode,
 			ID:             id,
 			Type:           gameType,
@@ -141,7 +141,6 @@ func (t *TicTacToe) IsFull() bool {
 func (t *TicTacToe) PlayerTimeout(userID uint) (interface{}, error) {
 	player := t.FindPlayerByID(userID)
 	if player == nil {
-		log.Printf("Jugador %d no encontrado en el juego %d", userID, t.ID)
 		return nil, appErr.NewNotFound("jugador no encontrado")
 	}
 

@@ -1,115 +1,154 @@
 import React, { useRef, useCallback, useEffect } from "react";
 import { useTicTacToe } from "./useTicTacToe";
-import { drawBoard } from "./components/board";
+import { drawBoard, drawWinningLine } from "./components/board";
+import { drawPiece } from "./components/tokens";
 
 // TODO - Ponerlo bonico y hacer alguna animacion 
 
+function getPieceFromTurn(turn: number): "X" | "O" {
+	return turn % 2 === 0 ? "O" : "X";
+}
+
 export function TicTacToe() {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const { play, line, draw: isDraw, gameState, backendBoard } = useTicTacToe();
+	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const { play, line, gameState, backendBoard } = useTicTacToe();
+	const mouseRef = useRef({ x: -1, y: -1 });
 
-    const mouseRef = useRef({ x: -1, y: -1, clicked: false });
+	const draw = useCallback(() => {
+		const canvas = canvasRef.current;
 
-    const draw = useCallback(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+		if (!canvas) { return; }
 
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
+		const ctx = canvas.getContext("2d");
 
-        if (gameState.status !== "PLAY" && gameState.status !== "FINISH") {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+		if (!ctx) { return; }
 
-        const size = canvas.width;
-        const cell = size / 3;
+		const size = canvas.width;
+		const cell = size / 3;
 
-        ctx.clearRect(0, 0, size, size);
+		ctx.clearRect(0, 0, size, size);
 
-        drawBoard(ctx, backendBoard, cell);
+		drawBoard(ctx, cell);
 
-        if (line) {
-            const start = line[0];
-            const end = line[2];
-            ctx.strokeStyle = "red";
-            ctx.lineWidth = 15;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            ctx.moveTo(start[1] * cell + cell / 2, start[0] * cell + cell / 2);
-            ctx.lineTo(end[1] * cell + cell / 2, end[0] * cell + cell / 2);
-            ctx.stroke();
-        }
+		backendBoard.forEach((row, rowIndex) => {
+			row.forEach((value, columnIndex) => {
+				if (!value) { return; }
 
-    }, [backendBoard, line, gameState, isDraw]);
+				const x = columnIndex * cell + cell / 2;
+				const y = rowIndex * cell + cell / 2;
 
-    useEffect(() => {
-        draw();
-    }, [draw]);
+				drawPiece({ctx, x, y, size: cell, type: value});
+			});
+		});
 
-    useEffect(() => {
-        if (gameState.status !== "MENU" && gameState.status !== "LOBBY") return;
+		if (gameState.status === "PLAY" && mouseRef.current.x >= 0 && mouseRef.current.y >= 0) {
+			const column = Math.floor(mouseRef.current.x / cell);
 
-        let animationFrameId: number;
-        const renderLoop = () => {
-            draw();
-            animationFrameId = requestAnimationFrame(renderLoop);
-        };
+			const row = Math.floor(mouseRef.current.y / cell);
 
-        renderLoop();
-        return () => cancelAnimationFrame(animationFrameId);
-    }, [gameState.status, draw]);
+			if (row >= 0 && row < 3 && column >= 0 && column < 3) {
+				if (!backendBoard[row][column]) {
+					const x = column * cell + cell / 2;
+					const y = row * cell + cell / 2;
 
-    const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement>) => {
-        const canvas = canvasRef.current;
-        if (!canvas) return { x: 0, y: 0 };
+					drawPiece({ctx, x, y, size: cell, type: getPieceFromTurn(gameState.turn), preview: true});
+				}
+			}
+		}
 
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+		if (line) {
+			drawWinningLine(ctx, line[0], line[2], cell);
+		}
 
-        return {
-            x: (e.clientX - rect.left) * scaleX,
-            y: (e.clientY - rect.top) * scaleY,
-        };
-    };
+	}, [ backendBoard, line, gameState.status, gameState.turn ]);
 
-    function handleClick(e: React.MouseEvent<HTMLCanvasElement>) {
-        const { x, y } = getCanvasCoords(e);
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+	useEffect(() => {
+		draw();
+	}, [draw]);
 
-        const cell = canvas.width / 3;
-        const col = Math.floor(x / cell);
-        const row = Math.floor(y / cell);
+	useEffect(() => {
+		if (gameState.status !== "MENU" && gameState.status !== "LOBBY") {
+			return;
+		}
 
-        play(row, col);
-    }
+		let animationFrameId: number;
 
-    function handleMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
-        const { x, y } = getCanvasCoords(e);
-        mouseRef.current.x = x;
-        mouseRef.current.y = y;
-    }
+		const renderLoop = () => {
+			draw();
 
-    function handleMouseLeave() {
-        mouseRef.current.x = -1;
-        mouseRef.current.y = -1;
-        mouseRef.current.clicked = false;
-    }
+			animationFrameId =
+				requestAnimationFrame(renderLoop);
+		};
 
-    return (
-		<>
-			<canvas
-				ref={canvasRef}
-				width={900}
-				height={900}
-				onClick={handleClick}
-				onMouseMove={handleMouseMove}
-				onMouseLeave={handleMouseLeave}
-				onMouseDown={() => { mouseRef.current.clicked = true; }}
-				onMouseUp={() => { mouseRef.current.clicked = false; }}
-				style={{ width: "100%", height: "100%", display: "block", position: "absolute", top: 0, left: 0 }}
-			/>
-		</>
-    );
+		renderLoop();
+
+		return () => {
+			cancelAnimationFrame(
+				animationFrameId
+			);
+		};
+	}, [gameState.status, draw]);
+
+	const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement>) => {
+		const canvas = canvasRef.current;
+
+		if (!canvas) {
+			return { x: 0, y: 0 };
+		}
+
+		const rect = canvas.getBoundingClientRect();
+
+		const scaleX = canvas.width / rect.width;
+
+		const scaleY = canvas.height / rect.height;
+
+		return {
+			x: (e.clientX - rect.left) * scaleX,
+			y: (e.clientY - rect.top) * scaleY,
+		};
+	};
+
+	function handleClick(e: React.MouseEvent<HTMLCanvasElement>) {
+		if (gameState.status !== "PLAY") { return; }
+
+		const { x, y } = getCanvasCoords(e);
+
+		const canvas = canvasRef.current;
+
+		if (!canvas) { return; }
+
+		const cell = canvas.width / 3;
+		const column = Math.floor(x / cell);
+		const row = Math.floor(y / cell);
+
+		if (backendBoard[row]?.[column]) { return; }
+
+		play(row, column);
+	}
+
+	function handleMouseMove( e: React.MouseEvent<HTMLCanvasElement>) {
+		const { x, y } = getCanvasCoords(e);
+
+		mouseRef.current.x = x;
+		mouseRef.current.y = y;
+
+		draw();
+	}
+
+	function handleMouseLeave() {
+		mouseRef.current.x = -1;
+		mouseRef.current.y = -1;
+
+		draw();
+	}
+
+	return (
+		<canvas ref={canvasRef} width={900} height={900} onClick={handleClick} 
+			onMouseMove={handleMouseMove}
+			onMouseLeave={handleMouseLeave}
+			style={{ width: "100%", height: "100%", display: "block", position: "absolute", top: 0, left: 0,
+				cursor: gameState.status === "PLAY" ? "pointer" : "default",
+			}}
+		/>
+	);
 }

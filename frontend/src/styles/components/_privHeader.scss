@@ -36,6 +36,20 @@
 	&__brand {
 		max-width: 100%;
 	}
+
+    &__games-link {
+        text-decoration: none;
+        color: $dark-purple-main-text-light;
+        font-size: 1rem;
+        font-weight: bold;
+        background-color: $orange-background-light;
+        padding: 0.5rem 0.8rem;
+        border-radius: 10px;
+
+        &:hover {
+            color: $actions-light;
+        }
+    }
 }
 
 @media screen and (max-width: 700px) {

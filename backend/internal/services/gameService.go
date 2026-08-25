@@ -20,7 +20,7 @@ func NewGameManager() *GameManager {
 	}
 }
 
-func (gm *GameManager) CreateGame(id uint, gameType, mode string, events chan dto.GameEvent) error {
+func (gm *GameManager) CreateGame(id, players uint, gameType, mode string, events chan dto.GameEvent) error {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 
@@ -28,12 +28,13 @@ func (gm *GameManager) CreateGame(id uint, gameType, mode string, events chan dt
 
 	switch gameType {
 	case "TICTACTOE":
-		engine = games.NewTicTacToe(id, mode, gameType, events)
+		engine = games.NewTicTacToe(id, players, mode, gameType, events)
 	case "CONNECTFOUR":
-		engine = games.NewConnectFour(id, mode, gameType, events)
+		engine = games.NewConnectFour(id, players, mode, gameType, events)
+	case "GOOSE":
+		engine = games.NewGoose(id, players, mode, gameType, events)
 	default:
-		log.Printf("Tipo de juego desconocido: %s", gameType)
-		return fmt.Errorf("tipo de juego desconocido: %s", gameType)
+		return appErr.NewBadRequest(fmt.Sprintf("tipo de juego desconocido: %s", gameType))
 	}
 
 	gm.ActiveGames[id] = engine
