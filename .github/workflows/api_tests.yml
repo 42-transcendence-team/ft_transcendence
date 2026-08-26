@@ -19,7 +19,7 @@ jobs:
           MY_SECRETS: ${{ secrets.ACTIONS_SECRETS }}
         run: |
           cat <<EOF > .env
-          REDIS_PORT=6379
+          REDIS_PORT=7777
           ENV=local
           BACKEND_PORT=8080
           GO_SERVICE_HOST=0.0.0.0

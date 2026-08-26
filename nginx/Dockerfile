@@ -7,7 +7,7 @@ COPY ./ssl/nginx.crt /etc/ssl/certs/nginx.crt
 COPY ./ssl/nginx.key /etc/ssl/private/nginx.key
 
 EXPOSE 80
-EXPOSE 443
+EXPOSE 4433
 
 CMD ["nginx", "-g", "daemon off;"]
 

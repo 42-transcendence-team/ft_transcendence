@@ -66,7 +66,7 @@ func (c *Config) Validate() error {
 		if c.Env == "prod" {
 			return fmt.Errorf("GO_ALLOWED_URLS is required in production")
 		}
-		c.GoAllowedURLs = []string{"http://localhost:3000"} // Default si en .env esta vacia
+		c.GoAllowedURLs = []string{"http://localhost:4433"} // Default si en .env esta vacia
 	}
 
 	// Pool:
