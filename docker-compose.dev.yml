@@ -209,7 +209,7 @@ services:
         - /:/rootfs:ro
         - /var/run:/var/run:ro
         - /sys:/sys:ro
-        - /goinfre/smeixoei/docker:/var/lib/docker:ro
+        - /goinfre/smeixoei/docker:/var/lib/docker:ro # docker info --format '{{.DockerRootDir}}'
 
 
     elastic-setup:
@@ -284,7 +284,7 @@ services:
           - metricbeat_data:/usr/share/metricbeat/data
           - certs_data:/usr/share/metricbeat/certs
           - ./elastic/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
-          - /run/user/8415/docker.sock:/var/run/docker.sock:ro
+          - /run/user/8415/docker.sock:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
           - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
           - /proc:/hostfs/proc:ro
           - /:/hostfs:ro
@@ -307,8 +307,8 @@ services:
           - certs_data:/usr/share/filebeat/certs
           - ./elastic/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
           - ./elastic/filebeat/ingest_data:/usr/share/filebeat/ingest_data:ro
-          - /run/user/8415/docker.sock:/var/run/docker.sock:ro
-          - /goinfre/smeixoei/docker/containers:/var/lib/docker/containers:ro
+          - /run/user/8415/docker.sock:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
+          - /goinfre/smeixoei/docker/containers:/var/lib/docker/containers:ro # docker info --format '{{.DockerRootDir}}'
         #   - api-logs:/usr/share/filebeat/ingest_data:ro
         networks:
           - elastic
@@ -348,7 +348,7 @@ services:
     portainer:
         image: portainer/portainer-ce:sts
         volumes:
-            - /run/user/8415/docker.sock:/var/run/docker.sock
+            - /run/user/8415/docker.sock:/var/run/docker.sock # docker context inspect --format '{{.Endpoints.docker.Host}}'
             - portainer_data:/data
         expose:
             - "9443"
