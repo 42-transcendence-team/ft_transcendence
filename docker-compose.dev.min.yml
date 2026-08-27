@@ -89,7 +89,7 @@ services:
         build:
           context: ./nginx
         ports:
-          - "80:80"
+          - "8080:80"
           - "443:443"
         volumes:
           # Config mínima: sin server blocks de grafana/kibana/pgadmin/etc.,
