@@ -13,7 +13,7 @@ interface AuthUser {
 
 const WebSocketContext =  createContext<WebSocketContextType | undefined>(undefined)
 
-const webSocketURL = "wss://localhost/api/v1/websocket/ws"
+const webSocketURL = "wss://localhost:6969/api/v1/websocket/ws"
 
 type MessageHandler = (message: any) => void;
 
@@ -59,6 +59,24 @@ export function useHandleWebsocket(user: AuthUser | null) {
 			ws.onopen = () => {
 				if (websocket.current === ws) {
 					setIsConnected(true);
+				}
+			};
+
+			ws.onmessage = (event) => {
+				const message = JSON.parse(event.data);
+				const { type } = message;
+				const typeListeners = listeners.current.get(type);
+
+				console.log("Mensaje recibido:", message);
+
+				if (typeListeners) {
+					typeListeners.forEach(listener => {
+						try {
+							listener(message);
+						} catch (e) {
+							console.error(e);
+						}
+					});
 				}
 			};
 
