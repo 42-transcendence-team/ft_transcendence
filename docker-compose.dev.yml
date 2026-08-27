@@ -307,8 +307,8 @@ services:
           - certs_data:/usr/share/filebeat/certs
           - ./elastic/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
           - ./elastic/filebeat/ingest_data:/usr/share/filebeat/ingest_data:ro
-          - /run/user/8415/docker.sock:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
-          - /goinfre/smeixoei/docker/containers:/var/lib/docker/containers:ro # docker info --format '{{.DockerRootDir}}'
+          - /run/user/9940/docker.sock:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
+          - /goinfre/abarrio-/docker/containers:/var/lib/docker/containers:ro # docker info --format '{{.DockerRootDir}}'
         #   - api-logs:/usr/share/filebeat/ingest_data:ro
         networks:
           - elastic
