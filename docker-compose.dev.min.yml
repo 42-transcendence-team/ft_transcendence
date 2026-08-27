@@ -73,7 +73,7 @@ services:
         image: redis:latest
         command: redis-server --requirepass ${REDIS_PASSWORD}
         ports:
-            - "${REDIS_PORT}:6379"
+            - "7777:6379"
         restart: always
         volumes:
             - redis_data:/data
@@ -89,8 +89,8 @@ services:
         build:
           context: ./nginx
         ports:
-          - "8080:80"
-          - "443:443"
+          - "1312:80"
+          - "6969:443"
         volumes:
           # Config mínima: sin server blocks de grafana/kibana/pgadmin/etc.,
           # que no existen en este compose y harían fallar a nginx al arrancar.
