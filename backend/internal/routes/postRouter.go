@@ -26,7 +26,7 @@ func PostRoutes(
 		 * para que feed y user no se interpreten como IDs de post.
 		 */
 
-		// Lista los posts de las amistades del usuario autenticado.
+		// Lista los posts del usuario autenticado y de sus amistades.
 		posts.GET("/feed", postHandler.ListFeed)
 
 		// Lista las publicaciones pertenecientes a un usuario.

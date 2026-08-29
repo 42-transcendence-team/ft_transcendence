@@ -170,15 +170,15 @@ func (s *PostService) GetPostByID(
 	return &response, nil
 }
 
-// ListFeed devuelve exclusivamente publicaciones de las amistades
-// registradas del usuario autenticado.
+// ListFeed devuelve las publicaciones del usuario autenticado
+// y de sus amistades al usar ListFeedForUser.
 func (s *PostService) ListFeed(
 	currentUserID uint,
 	page int,
 	limit int,
 ) (*dto.PostListResponse, error) {
 	posts, total, err :=
-		s.postRepo.ListFeedByFriendships(
+		s.postRepo.ListFeedForUser(
 			currentUserID,
 			page,
 			limit,

@@ -80,7 +80,7 @@ services:
         networks:
             - redis
         healthcheck:
-            test: ["CMD", "redis-cli", "ping"]
+            test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
             interval: 5s
             timeout: 3s
             retries: 5
