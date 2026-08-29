@@ -6,6 +6,7 @@ import { FormField } from "../FormField";
 import { updateEmail, type EmailSettings } from "api/Settings";
 import { Modal } from "../Modal";
 import { Footer2FA, OtpInput } from "../TwoFactorUI";
+import { FiMail, FiShield, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 
 type SettingsFields = {
 	email: string;
@@ -140,12 +141,23 @@ export function ModifyEmail({ user, onUpdate }: { user: any; onUpdate: () => voi
 		}, [show2FA]);
 
 	return (
-		<div className="settings__section">
-			<h2 className="settings__title">Cambio de email</h2>
+		<div className="settings__card">
+			<header className="settings__header">
+				<div className="settings__icon-wrapper">
+					<FiMail />
+				</div>
+				<div>
+					<h2 className="settings__title">Cambio de email</h2>
+					<p className="settings__subtitle">
+						Actualiza la dirección de correo electrónico vinculada a tu cuenta.
+					</p>
+				</div>
+			</header>
+
 			<form onSubmit={handleSubmit} className="settings__form">
-				{inputsConfig.map((field) => (
-					<Fragment key={field.id}>
-						<div className="settings__field">
+				<div className="settings__grid">
+					{inputsConfig.map((field) => (
+						<div className="settings__field" key={field.id}>
 							<FormField
 								id={field.id}
 								label={field.label}
@@ -153,48 +165,67 @@ export function ModifyEmail({ user, onUpdate }: { user: any; onUpdate: () => voi
 								value={formData[field.id]}
 								onChange={(value) => handleInputChange(field.id, value)}
 								placeholder={user[field.id] || undefined}
-								className="form-field"
 							/>
 
 							{formErrors[field.id] && (
 								<div className="settings__field-tooltip" onClick={() => clearError(field.id)}>
-									{formErrors[field.id]}
+									<FiAlertCircle /> {formErrors[field.id]}
 								</div>
 							)}
 						</div>
-					</Fragment>
-				))}
-				<button type="submit" className="settings__button">
-					Guardar cambios
-				</button>
+					))}
+				</div>
+
+				<div className="settings__actions">
+					<button type="submit" className="settings__button">
+						Guardar cambios
+					</button>
+				</div>
 			</form>
 
+			{/* Modal 2FA */}
 			<Modal
 				open={show2FA}
 				onClose={() => setShow2FA(false)}
-				title="Confirmar cambios"
-				onSubmit={() => executeUpdate(otpCode.join(""))}
-				submitDisabled={!isComplete}
+				title="Confirmar con 2FA"
 			>
-				<p className="modal__content">
-					Para completar los cambios, introduce el código de verificación.
-				</p>
+				<div className="modal-2fa">
+					<div className="modal-2fa__icon">
+						<FiShield />
+					</div>
+					<p className="modal-2fa__text">
+						Para actualizar tu email introduce el código de 6 dígitos de tu app de autenticación.
+					</p>
 
-				<OtpInput onChange={setOtpCode} />
+					<OtpInput onChange={setOtpCode} />
 
-				<Footer2FA
-					onClose={() => setShow2FA(false)}
-					onVerify={() => executeUpdate(otpCode.join(""))}
-					disabled={!isComplete}
-				/>
-			</Modal >
+					<Footer2FA
+						onClose={() => setShow2FA(false)}
+						onVerify={() => executeUpdate(otpCode.join(""))}
+						disabled={!isComplete}
+					/>
+				</div>
+			</Modal>
 
+			{/* Modal Estado */}
 			<Modal
 				open={openModal}
 				onClose={() => setOpenModal(false)}
-				title={requestStatus?.type === "success" ? "Cambios guardados" : "Error"}
+				title={requestStatus?.type === "success" ? "Operación exitosa" : "Atención"}
 			>
-				<p>{requestStatus?.message}</p>
+				<div className="modal-status">
+					<div className={`modal-status__icon modal-status__icon--${requestStatus?.type}`}>
+						{requestStatus?.type === "success" ? <FiCheckCircle /> : <FiAlertCircle />}
+					</div>
+					<p className="modal-status__message">{requestStatus?.message}</p>
+					<button
+						type="button"
+						className="settings__button settings__button--modal"
+						onClick={() => setOpenModal(false)}
+					>
+						Entendido
+					</button>
+				</div>
 			</Modal>
 		</div>
 	);

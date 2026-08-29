@@ -1,4 +1,6 @@
 import { useRef } from "react";
+import { FiCalendar, FiAlertCircle } from "react-icons/fi";
+
 
 type DateInputProps = {
 	label: string;
@@ -34,17 +36,18 @@ export function DateInput(props: DateInputProps) {
             ? formatDate(props.placeholder) 
             : "Selecciona una fecha";
 
+	const isCustomValue = Boolean(props.value);
+	
 	return (
-		<div className={`settings__field ${props.className ? `${props.className}-container` : "container-date"}`}>
-			<label className={props.className ? `${props.className}-label` : "date-label"}>
-				{props.label}
-			</label>
+		<div className="settings__field">
+			<label className="settings__label">{props.label}</label>
 
 			<div
 				onClick={() => inputRef.current?.showPicker()}
-				className={props.className ? `${props.className}-date` : "date-field"}
+				className={`settings__date-trigger ${isCustomValue ? "is-active" : ""}`}
 			>
-				{displayValue}
+				<FiCalendar className="settings__date-icon" />
+				<span className="settings__date-value">{displayValue}</span>
 			</div>
 
 			<input
@@ -55,16 +58,15 @@ export function DateInput(props: DateInputProps) {
 				style={{
 					position: "absolute",
 					opacity: 0,
-					pointerEvents: "none"
+					pointerEvents: "none",
+					width: 0,
+					height: 0,
 				}}
 			/>
 
 			{props.error && (
-				<div
-					className={props.className ? `${props.className}-tooltip` : "date-tooltip"}
-					onClick={props.onClearError}
-				>
-					{props.error}
+				<div className="settings__field-tooltip" onClick={props.onClearError}>
+					<FiAlertCircle /> {props.error}
 				</div>
 			)}
 		</div>

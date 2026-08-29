@@ -1,17 +1,19 @@
 import "../styles/components/_userMenu.scss";
 import { FiUser, FiSettings, FiLogOut, FiMenu } from "react-icons/fi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Logout } from "api/Logout";
 import { useAuth } from "@components/auth-router/AuthContext";
+import { useAuth as useAuthProfile} from "../context/AuthContext";
+import { getUserProfile, type UserProfile } from "../api/UserProfile";
 import { useNavigate, useLoaderData } from "react-router-dom";
 
 export const UserMenu = () => {
 	const [isOpen, setIsOpen] = useState(false);
-
 	const user = useLoaderData();
 	const { refreshAuth } = useAuth();
-
 	const navigate = useNavigate();
+	const { user: authenticatedUser } = useAuthProfile();
+	const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
 
 	const handleLogoutClick = async () => {
 		try {
@@ -25,16 +27,30 @@ export const UserMenu = () => {
 		}
 	};
 
-	const handleSettings = () => {
-		setIsOpen(false);
-		navigate("settings");
-		console.log("setting button");
-	};
+	useEffect(() => {
+        if (!authenticatedUser?.login)
+			return;
+        let cancelled = false;
 
-	const handleProfile = () => {
-		setIsOpen(false);
-		navigate(`profile/${user.user.login}`);
-	};
+        getUserProfile(authenticatedUser.login, { noIncrement: true })
+            .then((profile) => {
+                if (!cancelled) {
+                    setProfileUser(profile);
+                }
+            })
+            .catch((error) => {
+                console.error("Error cargando perfil en UserMenu", error);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [authenticatedUser?.login]);
+
+	const handleNavigation = (path: string) => {
+        setIsOpen(false);
+        navigate(path);
+    };
 
 	return (
 		<div className="userMenu">
@@ -51,7 +67,7 @@ export const UserMenu = () => {
 					<button
 						className="userMenu__item"
 						type="button"
-						onClick={handleProfile}
+						onClick={() => handleNavigation(`/app/profile/${authenticatedUser?.login}`)}
 					>
 						<FiUser className="userMenu__item-icon" />
 						<span>Perfil</span>
@@ -60,7 +76,7 @@ export const UserMenu = () => {
 					<button
 						className="userMenu__item"
 						type="button"
-						onClick={handleSettings}
+						onClick={() => handleNavigation("/app/settings")}
 					>
 						<FiSettings className="userMenu__item-icon" />
 						<span>Configuración</span>
