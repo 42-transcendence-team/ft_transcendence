@@ -114,11 +114,11 @@ export function useHandleWebsocket(user: AuthUser | null) {
 
 			const ws = websocket.current;
 
-			if (ws) {
+			if (ws && ws.readyState !== WebSocket.CONNECTING) {
 				ws.onerror = null;
 				ws.close();
-				websocket.current = null;
 			}
+			websocket.current = null;
 
 			setIsConnected(false);
 		};
