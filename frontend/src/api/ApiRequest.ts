@@ -93,18 +93,14 @@ export async function apiRequest<T = unknown>(props: ApiRequestProps,): Promise<
 	const data = await parseResponseBody(res);
 
 	/*
+	 * HE CAMBIADO ESTO PQ NO ENTIENDO PQ FUNCIOABA ASI ESTABA MAL TIRABA GUEST COMO ESTADO Y POR ESO NO FGUNCIONA EL /APP /LOGIN DEL HEADER
 	 * auth/me tiene un comportamiento especial.
 	 * La sesión solo es válida cuando authenticated es true.
 	 */
 	if (endpoint === "auth/me") {
-		const authData = data as
-			| { authenticated?: boolean }
-			| undefined;
-
-		if (res.ok && authData?.authenticated === true) {
-			return data as T;
-		}
-
+		const authData = data as { user?: unknown } | undefined;
+		if (res.ok && authData?.user)
+            return data as T;
 		throw buildApiError(res, data);
 	}
 

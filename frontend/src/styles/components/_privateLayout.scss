@@ -1,105 +1,127 @@
 @use '../abstracts/variables' as *;
 
 .privateLayout {
-	height: 100vh;
-	width: 100%;
-	padding: 6px;
+    height: 100vh;
+    width: 100%;
+    padding: 6px;
 
-	display: grid;
-	gap: 6px;
+    display: grid;
+    gap: 6px;
 
-	box-sizing: border-box;
+    box-sizing: border-box;
 
-	grid-template-columns: 25% minmax(0, 1fr) 76px;
-	grid-template-rows: 60px minmax(0, 1fr) auto;
+    grid-template-columns: 25% minmax(0, 1fr) 76px;
+    grid-template-rows: 60px minmax(0, 1fr) auto;
 
-	grid-template-areas:
-		"left header header"
-		"left content right"
-		"left footer right";
+    grid-template-areas:
+        "left header header"
+        "left content right"
+        "left footer right";
 
-	&__leftPanel {
-		grid-area: left;
+    &__leftPanel {
+        grid-area: left;
+        padding: 1rem;
+        
+        background-color: $dark-purple-background-light;
+        border-radius: 10px;
+        color: $dark-purple-main-text-light;
 
-		padding: 1rem;
+        // IMPORTANTE: Flex y overflow hidden para que el grid no se desborde
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; 
 
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
+        /* ESTRUCTURA INTERNA DEL PANEL IZQUIERDO */
+        .leftPanel__wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%; 
+            gap: 16px; // Separación entre Buscador, Notificaciones y Perfil
+            box-sizing: border-box;
 
-		background-color: $dark-purple-background-light;
-		border-radius: 10px;
+            .leftPanel__section {
+                width: 100%;
+            }
 
-		color: $dark-purple-main-text-light;
-	}
+            // Top (Buscador) y Bottom (Perfil): fijos, no encogen
+            .leftPanel__section--top,
+            .leftPanel__section--bottom {
+                flex-shrink: 0;
+            }
 
-	&__header {
-		grid-area: header;
-	}
+            // Middle (Notificaciones): se estira y hace scroll interno
+            .leftPanel__section--middle {
+                flex-grow: 1;
+                min-height: 0; // Clave para que Flexbox permita el scroll
+                display: flex;
+				justify-content: center;
+                flex-direction: column;
+                overflow-y: auto; // Aparece scroll solo aquí si hay muchas notificaciones
 
-	&__content {
-		position: relative;
+                // Ocultar la barra de scroll visualmente (opcional, como en content)
+                &::-webkit-scrollbar {
+                    width: 0 !important;
+                    display: none !important;
+                }
+                scrollbar-width: none !important;
+                -ms-overflow-style: none !important;
+            }
+        }
+    }
 
-		grid-area: content;
-		position: relative;
-		min-width: 0;
-		min-height: 0;
+    &__header {
+        grid-area: header;
+    }
 
-		overflow: hidden;
-	}
+    &__content {
+        position: relative;
+        grid-area: content;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+    }
 
-	&__contentFrame {
-		width: 100%;
-		height: 100%;
+    &__contentFrame {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background-color: rgba(255, 255, 255, 0.05);
+    }
 
-		display: flex;
-		flex-direction: column;
+    &__contentInner {
+        flex: 1;
+        min-height: 0;
+        padding: 1rem;
+        overflow-y: auto;
+        background-color: $light-gray-common-components;
+        border-radius: 10px;
 
-		background-color: rgba(255, 255, 255, 0.05);
-	}
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
 
-	&__contentInner {
-		flex: 1;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
 
-		min-height: 0;
-		padding: 1rem;
+    &__rightPanel {
+        grid-area: right;
+        padding: 1rem;
+        background-color: $light-gray-common-components;
+        border-radius: 10px;
+        color: black;
+    }
 
-		overflow-y: auto;
-
-		background-color: $light-gray-common-components;
-		border-radius: 10px;
-
-		&::-webkit-scrollbar {
-			width: 6px;
-		}
-
-		scrollbar-width: none !important;
-		-ms-overflow-style: none !important;
-	}
-
-	&__rightPanel {
-		grid-area: right;
-
-		padding: 1rem;
-
-		background-color: $light-gray-common-components;
-		border-radius: 10px;
-
-		color: black;
-	}
-
-	&__footer {
-		grid-area: footer;
-
-		min-width: 0;
-		min-height: 0;
-		padding: 0;
-
-		overflow: hidden;
-
-		background: transparent;
-		border-radius: 10px;
-	}
+    &__footer {
+        grid-area: footer;
+        min-width: 0;
+        min-height: 0;
+        padding: 0;
+        overflow: hidden;
+        background: transparent;
+        border-radius: 10px;
+    }
 }
 
 /*
@@ -107,125 +129,100 @@
  * de la página que queda debajo.
  */
 .advancedSearchOverlay {
-	position: absolute;
-	inset: 0;
-
-	z-index: 40;
-
-	display: flex;
-	align-items: flex-start;
-	justify-content: center;
-
-	padding: 24px;
-
-	background-color: rgba(0, 0, 0, 0.12);
-
-	box-sizing: border-box;
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px;
+    background-color: rgba(0, 0, 0, 0.12);
+    box-sizing: border-box;
 }
 
 /*
  * Ventana flotante de búsqueda avanzada.
  */
 .advancedSearchPanel {
-	position: relative;
+    position: relative;
+    width: min(760px, 100%);
+    max-height: calc(100% - 20px);
+    padding: 20px;
+    overflow-y: auto;
+    background-color: $light-gray-common-components;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
 
-	width: min(760px, 100%);
-	max-height: calc(100% - 20px);
+    box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.24),
+        0 4px 12px rgba(0, 0, 0, 0.12);
 
-	padding: 20px;
+    box-sizing: border-box;
 
-	overflow-y: auto;
+    &::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
+    }
 
-	background-color: $light-gray-common-components;
+    scrollbar-width: none;
 
-	border: 1px solid rgba(0, 0, 0, 0.08);
-	border-radius: 18px;
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
 
-	box-shadow:
-		0 18px 45px rgba(0, 0, 0, 0.24),
-		0 4px 12px rgba(0, 0, 0, 0.12);
+    &__title {
+        margin: 0;
+        color: $main-text-light;
+        font-size: 1rem;
+        font-weight: 700;
+    }
 
-	box-sizing: border-box;
+    &__close {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: none;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.06);
+        color: $main-text-light;
+        cursor: pointer;
+        font-size: 1.3rem;
+        font-weight: 600;
+        line-height: 1;
+        transition: background-color 0.2s ease, transform 0.2s ease;
 
-	&::-webkit-scrollbar {
-		width: 0;
-		height: 0;
-		display: none;
-	}
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.12);
+            transform: scale(1.06);
+        }
 
-	scrollbar-width: none;
-
-	&__header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12px;
-
-		margin-bottom: 14px;
-		padding-bottom: 10px;
-
-		border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-	}
-
-	&__title {
-		margin: 0;
-
-		color: $main-text-light;
-
-		font-size: 1rem;
-		font-weight: 700;
-	}
-
-	&__close {
-		width: 34px;
-		height: 34px;
-		padding: 0;
-
-		display: flex;
-		align-items: center;
-		justify-content: center;
-
-		flex-shrink: 0;
-
-		border: none;
-		border-radius: 50%;
-
-		background-color: rgba(0, 0, 0, 0.06);
-		color: $main-text-light;
-
-		cursor: pointer;
-
-		font-size: 1.3rem;
-		font-weight: 600;
-		line-height: 1;
-
-		transition:
-			background-color 0.2s ease,
-			transform 0.2s ease;
-
-		&:hover {
-			background-color: rgba(0, 0, 0, 0.12);
-			transform: scale(1.06);
-		}
-
-		&:focus-visible {
-			outline: 2px solid $main-text-light;
-			outline-offset: 2px;
-		}
-	}
+        &:focus-visible {
+            outline: 2px solid $main-text-light;
+            outline-offset: 2px;
+        }
+    }
 }
 
 @media (max-width: 900px) {
-	.advancedSearchOverlay {
-		padding: 12px;
-	}
+    .advancedSearchOverlay {
+        padding: 12px;
+    }
 
-	.advancedSearchPanel {
-		width: 100%;
-		max-height: calc(100% - 8px);
-
-		padding: 16px;
-
-		border-radius: 14px;
-	}
+    .advancedSearchPanel {
+        width: 100%;
+        max-height: calc(100% - 8px);
+        padding: 16px;
+        border-radius: 14px;
+    }
 }

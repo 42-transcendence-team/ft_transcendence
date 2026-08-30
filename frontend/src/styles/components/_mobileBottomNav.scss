@@ -1,0 +1,58 @@
+@use '../abstracts/variables' as *;
+
+.mobileBottomNav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 60px;
+  background-color: white;
+  border-top: 1px solid #e0e0e0;
+  width: 100%;
+
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+
+  // En pantallas de escritorio, ocultamos esta barra
+  @media (min-width: 768px) {
+    display: none;
+  }
+
+  &__link {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+    color: #5b75e6; // Azul por defecto (basado en tu imagen)
+    transition: color 0.2s ease;
+
+    svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    // Botón central destacado (verde)
+    &.main-action {
+      color: #38e4b7; // Verde agua de tu imagen
+      svg {
+        width: 34px;
+        height: 34px;
+      }
+    }
+
+    // Estado activo
+    &.active {
+      color: #2ed573; // Color cuando estás en esa ruta
+    }
+  }
+
+  &__icon-img {
+    width: 39px;
+    height: 39px;
+    object-fit: cover;
+    
+    display: block;
+  }
+}

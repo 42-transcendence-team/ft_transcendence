@@ -58,9 +58,6 @@ export const Profile = () => {
 
   const navigate = useNavigate();
 
-  console.log("PROFILE username:", username);
-  console.log("PROFILE SE HA RENDERIZADO:", username);
-
   const {
     user: authenticatedUser,
     loading: authLoading,
@@ -70,9 +67,7 @@ export const Profile = () => {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileNotFound, setProfileNotFound] = useState(false);
-  const [relationActionError, setRelationActionError] = useState<string | null>(
-    null,
-  );
+  const [relationActionError, setRelationActionError] = useState<string | null>(null);
   const [isAvatarEditorOpen, setIsAvatarEditorOpen] = useState(false);
   const [isBannerEditorOpen, setIsBannerEditorOpen] = useState(false);
   const [isAvatarViewerOpen, setIsAvatarViewerOpen] = useState(false);
@@ -121,9 +116,8 @@ export const Profile = () => {
 
     getUserProfile(username)
       .then((profile) => {
-        if (!cancelled) {
+        if (!cancelled)
           setProfileUser(profile);
-        }
       })
       .catch((error: unknown) => {
         if (cancelled) return;
