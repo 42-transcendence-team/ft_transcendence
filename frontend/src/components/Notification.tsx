@@ -2,11 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { useNotification, type Notification } from '../context/notificationsContext';
 import "../styles/components/_notification.scss";
 
-const NotificationItem: React.FC<{ 
-  notification: Notification; 
+const NotificationItem: React.FC<{
+  notification: Notification;
   onMarkAsRead: (id: string | number) => void;
   onChatOpen: (roomId: number) => void;
-}> = ({ notification, onMarkAsRead, onChatOpen }) => {
+  onOpenReceivedRequests: () => void;
+}> = ({ notification, onMarkAsRead, onChatOpen, onOpenReceivedRequests }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -14,6 +15,10 @@ const NotificationItem: React.FC<{
 
     if (notification.type === 'UNREAD_MESSAGES' && notification.payload?.room_id) {
       onChatOpen(Number(notification.payload.room_id));
+      return;
+    }
+    if (notification.type === 'FRIEND_REQUEST') {
+      onOpenReceivedRequests();
       return;
     }
     if ((notification.type === 'POST' || notification.type === 'LIKE' || notification.type === 'COMMENT') && notification.payload?.post_id) {
@@ -125,7 +130,7 @@ const NotificationItem: React.FC<{
 };
 
 export const Notification: React.FC = () => {
-  const { notifications, markAsRead, openChat } = useNotification();
+  const { notifications, markAsRead, openChat, openReceivedRequests } = useNotification();
   const safeNotifications = Array.isArray(notifications) ? notifications : [];
   if (safeNotifications.length === 0) {
     return (
@@ -143,6 +148,7 @@ export const Notification: React.FC = () => {
           notification={notification}
           onMarkAsRead={markAsRead}
           onChatOpen={openChat}
+          onOpenReceivedRequests={openReceivedRequests}
         />
       ))}
     </div>

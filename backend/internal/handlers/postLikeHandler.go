@@ -4,7 +4,6 @@ import (
 	"backend/internal/dto"
 	appErr "backend/internal/errors"
 	"backend/internal/services"
-	"encoding/json"
 	"net/http"
 	"github.com/gin-gonic/gin"
 	ws "backend/internal/websocket"
@@ -53,14 +52,11 @@ func (h *PostLikeHandler) LikePost(c *gin.Context) {
 		if login != nil {
 			username = login.(string)
 		}
-		payload, err := json.Marshal(dto.LikePayload{
+		h.notificationService.NotifyLikeOnce(postOwnerID, dto.LikePayload{
 			PostID:   postID,
 			UserID:   userID,
 			Username: username,
 		})
-		if err == nil {
-			h.notificationService.Notify(postOwnerID, "LIKE", payload)
-		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
