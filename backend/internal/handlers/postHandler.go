@@ -54,6 +54,7 @@ func NewPostHandler(
 		notificationService: notificationService,
 	}
 }
+
 /*
 type PostPayload struct {
 	PostID uint `json:"post_id"`
@@ -275,7 +276,7 @@ func (h *PostHandler) GetPostByID(
 	)
 }
 
-// ListFeed devuelve los posts de las amistades del usuario autenticado.
+// ListFeed devuelve los posts del usuario autenticado y de sus amistades.
 func (h *PostHandler) ListFeed(
 	c *gin.Context,
 ) {

@@ -184,8 +184,7 @@ export const HomePage = () => {
 					posts.length === 0 &&
 					!error && (
 						<p className="home-page__state">
-							Your friends have not posted
-							anything yet.
+							There are no posts in your feed yet.
 						</p>
 					)}
 
