@@ -55,3 +55,30 @@ func (s *NotificationService) Notify(userID uint, notifType string, payload json
 
 	return notif, nil
 }
+
+// NotifyLikeOnce crea una notificacion LIKE solo si no existe ya otra sin
+// leer del mismo post y misma persona (evita spam al alternar like/unlike).
+func (s *NotificationService) NotifyLikeOnce(userID uint, payload dto.LikePayload) (*models.Notification, error) {
+	unread, err := s.repo.ListUnreadByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, n := range unread {
+		if n.Type != "LIKE" {
+			continue
+		}
+		var prev dto.LikePayload
+		if err := json.Unmarshal([]byte(n.Payload), &prev); err == nil &&
+			prev.PostID == payload.PostID && prev.UserID == payload.UserID {
+			return nil, nil
+		}
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.Notify(userID, "LIKE", data)
+}

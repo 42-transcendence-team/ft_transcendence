@@ -159,6 +159,23 @@ export function useAdvancedSearch() {
 		setHasSearched(false);
 	};
 
+	// Abre el panel de resultados con un filtro de relacion concreto, sin
+	// arrastrar la query de la busqueda anterior (p.ej. al venir de una
+	// notificacion de solicitud de amistad).
+	const openWithRelations = async (
+		newRelations: UserRelation[],
+	) => {
+		setRelations(newRelations);
+		setCurrentQuery("");
+
+		await executeSearch(
+			"",
+			newRelations,
+			sort,
+			1,
+		);
+	};
+
 	const handleSendFriendRequest = async (
 		userId: number,
 	) => {
@@ -334,6 +351,7 @@ export function useAdvancedSearch() {
 		handleNextPage,
 		handlePreviousPage,
 		handleCloseSearch,
+		openWithRelations,
 
 		handleSendFriendRequest,
 		handleAcceptFriendRequest,
