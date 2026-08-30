@@ -7,6 +7,7 @@ import { ChatProvider} from "context/chatContext";
 import { NotificationProvider} from "context/notificationsContext";
 import { ChatPanel } from "@components/ChatPanel";
 import { ChatModal } from "@components/ChatModal";
+import { ChatRejectionModal } from "@components/ChatRejectionModal";
 import { Notification } from "@components/Notification";
 import { useState } from "react";
 import { SearchFilters } from "@components/advancedSearch/SearchFilters";
@@ -39,7 +40,7 @@ export function PrivateLayout() {
                 <div className="privateLayout">
 
                         <WebSocketProvider user={data.user}>
-                                <NotificationProvider activeChat={activeChat} user={data.user} onChatOpen={toggleChat}>
+	                                <NotificationProvider activeChat={activeChat} user={data.user} onChatOpen={toggleChat} onOpenReceivedRequests={() => search.openWithRelations(["pending_received"])}>
                                         <ChatProvider user={data.user}>
                                                 <header className="privateLayout__header">
                                                         <PrivHeader
@@ -84,6 +85,8 @@ export function PrivateLayout() {
                                                 </main>
 
                                                 <ChatPanel onChatClick={toggleChat} activeChatId={activeChat} />
+
+                                                <ChatRejectionModal />
 
                                                 <footer className="privateLayout__footer">
                                                         <Footer
