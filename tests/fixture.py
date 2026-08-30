@@ -7,7 +7,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 fake = Faker()
-#http://localhost:8080 
+#https://localhost:6969 (nginx ssl) 
 API_URL = os.getenv("API_URL", "http://localhost:8080/api/v1")
 
 @pytest.fixture
