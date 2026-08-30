@@ -14,7 +14,12 @@ services:
                 condition: service_healthy
             redis:
                 condition: service_healthy
-        # Falta hacer el healthcheck para el backend, para que el frontend dependa de el.
+        healthcheck:
+            test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
         volumes:
           - ./backend:/app
           - ./elastic/filebeat/ingest_data:/var/log/api
@@ -41,6 +46,12 @@ services:
         restart: unless-stopped
         depends_on:
             - backend
+        healthcheck:
+            test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
         networks:
             - back-front
         environment:
@@ -124,9 +135,9 @@ services:
 
         depends_on:
           backend:
-            condition: service_started
+            condition: service_healthy
           frontend:
-            condition: service_started
+            condition: service_healthy
           docusaurus:
             condition: service_started
           kibana:
