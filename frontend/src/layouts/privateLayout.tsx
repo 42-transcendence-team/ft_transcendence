@@ -3,8 +3,8 @@ import { Outlet, useLoaderData } from "react-router-dom";
 import { Footer } from "@components/Footer";
 import { PrivHeader } from "@components/PrivHeader";
 import { WebSocketProvider } from "context/webSocketContext";
-import { ChatProvider} from "context/chatContext";
-import { NotificationProvider} from "context/notificationsContext";
+import { ChatProvider } from "context/chatContext";
+import { NotificationProvider } from "context/notificationsContext";
 import { ChatPanel } from "@components/ChatPanel";
 import { ChatModal } from "@components/ChatModal";
 import { ChatRejectionModal } from "@components/ChatRejectionModal";
@@ -17,82 +17,82 @@ import { AdvancedSearchPanel } from "@components/advancedSearch/AdvancedSearchPa
 import { PrivateLeftPanel } from "@components/layout/PrivateLeftPanel";
 
 function useHandleChat() {
-        const [activeChat, setActiveChat] = useState<number | null>(null);
+	const [activeChat, setActiveChat] = useState<number | null>(null);
 
-        const toggleChat = (id: number) => {
-                setActiveChat((prev) => {return (prev === id ? null : id)});
-        };
+	const toggleChat = (id: number) => {
+		setActiveChat((prev) => { return (prev === id ? null : id) });
+	};
 
-        return { activeChat, toggleChat };
+	return { activeChat, toggleChat };
 }
 
 export function PrivateLayout() {
-        const data = useLoaderData();
-        const {activeChat, toggleChat} = useHandleChat();
-        const search = useAdvancedSearch();
+	const data = useLoaderData();
+	const { activeChat, toggleChat } = useHandleChat();
+	const search = useAdvancedSearch();
 
-        const handleBrandActivate = () => {
-                search.handleCloseSearch();
-        };
+	const handleBrandActivate = () => {
+		search.handleCloseSearch();
+	};
 
-        return (
-                <div className="privateLayout">
+	return (
+		<div className="privateLayout">
 
-                        <WebSocketProvider user={data.user}>
-	                                <NotificationProvider activeChat={activeChat} user={data.user} onChatOpen={toggleChat} onOpenReceivedRequests={() => search.openWithRelations(["pending_received"])}>
-                                        <ChatProvider user={data.user}>
-                                                <header className="privateLayout__header">
-                                                        <PrivHeader
-                                                                onSearch={search.handleSearch}
-                                                                onBrandActivate={handleBrandActivate}
-                                                        />
-                                                </header>
+			<WebSocketProvider user={data.user}>
+				<NotificationProvider activeChat={activeChat} user={data.user} onChatOpen={toggleChat} onOpenReceivedRequests={() => search.openWithRelations(["pending_received"])}>
+					<ChatProvider user={data.user}>
+						<header className="privateLayout__header">
+							<PrivHeader
+								onSearch={search.handleSearch}
+								onBrandActivate={handleBrandActivate}
+							/>
+						</header>
 
-                                                <aside className="privateLayout__leftPanel">
-                                                        <div className="leftPanel__content">
-                                                                <div className="leftPanel__actions">
-                                                                        <Notification/>
-                                                                        <PrivateLeftPanel>
-                                                                                <SearchFilters
-                                                                                  selectedRelations={search.relations}
-                                                                                  onRelationsChange={search.handleRelationsChange}
-                                                                                  selectedSort={search.sort}
-                                                                                  onSortChange={search.handleSortChange}
-                                                                                />
-                                                                        </PrivateLeftPanel>
-                                                                </div>
-                                                        </div>
-                                                </aside>
+						<aside className="privateLayout__leftPanel">
+							<div className="leftPanel__content">
+								<div className="leftPanel__actions">
+									<Notification />
+									<PrivateLeftPanel>
+										<SearchFilters
+											selectedRelations={search.relations}
+											onRelationsChange={search.handleRelationsChange}
+											selectedSort={search.sort}
+											onSortChange={search.handleSortChange}
+										/>
+									</PrivateLeftPanel>
+								</div>
+							</div>
+						</aside>
 
-                                                <main className="privateLayout__content">
-                                                        <div className="privateLayout__contentFrame">
-                                                                <div className="privateLayout__contentInner">
-                                                                         <Outlet context={{ user: data.user }} />
-                                                                </div>
-                                                                {search.hasSearched && (
-                                                                <AdvancedSearchPanel
-                                                                        search={search}
-                                                                        onClose={search.handleCloseSearch}
-                                                                />
-                                                                )}
-                                                        </div>
-                                                        {activeChat && (
-                                                                <ChatModal id={activeChat} onClose={() => toggleChat(activeChat)} />
-                                                        )}
-                                                </main>
+						<main className="privateLayout__content">
+							<div className="privateLayout__contentFrame">
+								<div className="privateLayout__contentInner">
+									<Outlet context={{ user: data.user }} />
+								</div>
+								{search.hasSearched && (
+									<AdvancedSearchPanel
+										search={search}
+										onClose={search.handleCloseSearch}
+									/>
+								)}
+							</div>
+							{activeChat && (
+								<ChatModal id={activeChat} onClose={() => toggleChat(activeChat)} />
+							)}
+						</main>
 
-                                                <ChatPanel onChatClick={toggleChat} activeChatId={activeChat} />
+						<ChatPanel onChatClick={toggleChat} activeChatId={activeChat} />
 
-                                                <ChatRejectionModal />
+						<ChatRejectionModal />
 
-                                                <footer className="privateLayout__footer">
-                                                        <Footer
-                                                                onBrandActivate={handleBrandActivate}
-                                                        />
-                                                </footer>
-                                        </ChatProvider>
-                                </NotificationProvider>
-                        </WebSocketProvider>
-                </div>
-        );
+						<footer className="privateLayout__footer">
+							<Footer
+								onBrandActivate={handleBrandActivate}
+							/>
+						</footer>
+					</ChatProvider>
+				</NotificationProvider>
+			</WebSocketProvider>
+		</div>
+	);
 }
