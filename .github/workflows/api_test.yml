@@ -20,34 +20,48 @@ jobs:
         run: |
           cat <<EOF > .env
           REDIS_PORT=6379
+          REDIS_HOST=redis
+          REDIS_PASSWORD=redispass
           ENV=local
           BACKEND_PORT=8080
           GO_SERVICE_HOST=0.0.0.0
           GO_SERVICE_PORT=8080
           FRONTEND_PORT=3000
+          DB_HOST=postgres
           DB_PORT=5432
+          DB_NAME=transcendence
+          DB_USER=postgres
+          DB_PASSWORD=postgrespass
           DB_SSLMODE=disable
           DB_TIMEZONE=Europe/Madrid
           PGADMIN_PORT=5050
+          JWT_SECRET=uwu-super-mega-secret-for-jwt-auth
           JWT_EXPIRATION=86400
-          GO_ALLOWED_URLS=
+          PUBLIC_API_URL=https://localhost:6969/api/v1
           ISSUER_2FA=Tuentifour
           EXPIRATION_2FA=300
-          $MY_SECRETS
+          NGINX_HOST=localhost
+          NGINX_HTTP_PORT=1312
+          NGINX_HTTPS_PORT=6969
+          ENCRYPTION_KEY=c34d38b3a14956121ff2170e5030b471551370178f43e5626eec58b04a30fae2
+          LICENSE=basic
+          PGADMIN_DEFAULT_EMAIL=admin@admin.com
+          PGADMIN_DEFAULT_PASSWORD=admin123
+          PROJECT_NAME=ft_transcendence
+          GO_ALLOWED_URLS=https://localhost:6969
+          OAUTH42_CLIENT_ID=u-s4t2ud-57171ab2dde0c79802a8a9c94cc45db0e12e55ceea450c8191e4e7e54f2f1b35
+          OAUTH42_CLIENT_SECRET=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
+          OAUTH42_REDIRECT_URI=https://localhost/api/v1/auth/42/callback
           EOF
 
       - name: Install dependencies
         run: |
           make -C tests config
 
-      - name: delete old version
-        run: |
-          make full-remove
-
       - name: Run app
         run: |
-          make
-          timeout 120s bash -c 'until curl -s -k http://localhost:8080/api/v1/test; do sleep 2; done' || true
+          make dev-min-demon
+          timeout 180s bash -c 'until curl -sk http://localhost:8080/api/v1/test; do sleep 3; done'
       # - name: Ver logs de Postgres si el arranque falla
       #   if: failure()
       #   run: |
