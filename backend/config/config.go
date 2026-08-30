@@ -44,6 +44,8 @@ type Config struct {
 	OAuth42ClientID     string
 	OAuth42ClientSecret string
 	OAuth42RedirectURI  string
+
+	Url string
 }
 
 func Load() (*Config, error) {
@@ -111,6 +113,9 @@ func Load() (*Config, error) {
 	c.DBMaxOpenConns = envIntOrDefault("DB_MAX_OPEN_CONNS", 25)
 	c.DBMaxIdleConns = envIntOrDefault("DB_MAX_IDLE_CONNS", 25)
 	c.DBConnMaxLifetimeMin = envIntOrDefault("DB_CONN_MAX_LIFETIME_MIN", 5)
+
+	// url app
+	c.Url = strings.TrimSpace(os.Getenv("URL"))
 
 	// Validar que la configuracion sea valida
 	if err := c.Validate(); err != nil {
