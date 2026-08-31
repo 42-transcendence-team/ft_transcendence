@@ -1,12 +1,43 @@
 import { NavLink } from "react-router-dom";
 import "@styles/components/_mobileBottomNav.scss";
+import { useState, useEffect } from "react";
 import  new_post  from "../assets/icons/new_post.png";
 import  chat  from "../assets/icons/chat.png";
 import  home  from "../assets/icons/home.png";
 import  skull  from "../assets/icons/skull_logo.png";
 import  search  from "../assets/icons/search.png";
+import { useAuth as useAuthProfile} from "../context/AuthContext";
+import { getUserProfile, type UserProfile } from "../api/UserProfile";
+
 
 export const MobileBottomNav = () => {
+
+  const { user: authenticatedUser } = useAuthProfile();
+  const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
+
+
+  useEffect(() => {
+        if (!authenticatedUser?.login)
+      return;
+        let cancelled = false;
+
+        getUserProfile(authenticatedUser.login, { noIncrement: true })
+            .then((profile) => {
+                if (!cancelled) {
+                    setProfileUser(profile);
+                }
+            })
+            .catch((error) => {
+                console.error("Error cargando perfil en UserMenu", error);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [authenticatedUser?.login]);
+
+    console.log("asdasdasdasd", authenticatedUser)
+
   return (
     <nav className="mobileBottomNav">
       {/* 1. Inicio / Feed */}
@@ -26,7 +57,7 @@ export const MobileBottomNav = () => {
 
       {/* 2. Búsqueda */}
       <NavLink 
-        to="/XXXXXXX" // aqui iria la peticion para subir un post 
+        to="/XXXXXXX"
         className={
           ({ isActive }) => isActive 
           ? "mobileBottomNav__link active" : "mobileBottomNav__link"
@@ -42,7 +73,7 @@ export const MobileBottomNav = () => {
 
       {/* 3. Botón Central (Añadir/Crear) */}
       <NavLink 
-        to="/post" // aqui iria la peticion para subir un post 
+        to="app/posts/new"
         className={
           ({ isActive }) => isActive 
           ? "mobileBottomNav__link active" : "mobileBottomNav__link"
@@ -57,7 +88,7 @@ export const MobileBottomNav = () => {
 
       {/* 4. Mensajes / Chat */}
       <NavLink 
-        to="/chat" // aqui iria la peticion para subir un post 
+        to="/chat" //
         className={
           ({ isActive }) => isActive 
           ? "mobileBottomNav__link active" : "mobileBottomNav__link"
@@ -72,7 +103,7 @@ export const MobileBottomNav = () => {
 
       {/* 5. Perfil (Puedes sustituir el SVG por un <img src={tuAvatar} /> si lo prefieres) */}
       <NavLink 
-        to="/profile" // aqui iria la peticion para subir un post 
+        to={`app/profile/${authenticatedUser?.login}`}
         className={
           ({ isActive }) => isActive 
           ? "mobileBottomNav__link active" : "mobileBottomNav__link"

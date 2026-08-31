@@ -15,7 +15,7 @@
   z-index: 1000;
 
   // En pantallas de escritorio, ocultamos esta barra
-  @media (min-width: 768px) {
+  @media (min-width: 900px) {
     display: none;
   }
 

@@ -155,9 +155,9 @@ export function PrivateLayout() {
                 />
               )}
             </main>
-
-            <ChatPanel onChatClick={toggleChat} activeChatId={activeChat} />
-
+            <div className="privateLayout__rightPanel">
+              <ChatPanel onChatClick={toggleChat} activeChatId={activeChat} />
+            </div>
             <footer className="privateLayout__footer">
               <Footer onBrandActivate={handleBrandActivate} />
             </footer>

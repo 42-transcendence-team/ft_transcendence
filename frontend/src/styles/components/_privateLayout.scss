@@ -18,6 +18,20 @@
         "left content right"
         "left footer right";
 
+    @media (max-width: 900px) {
+        /* Pasamos a 1 sola columna que ocupa todo el ancho */
+        grid-template-columns: 1fr;
+        /* El header mide 60px, el contenido el resto, y el footer se ajusta */
+        grid-template-rows: 60px minmax(0, 1fr) auto;
+        
+        /* Redefinimos las áreas para que solo salgan el centro y el header */
+        grid-template-areas:
+            "header"
+            "content"
+            "footer";
+            
+        padding: 0;
+    }
     &__leftPanel {
         grid-area: left;
         padding: 1rem;
@@ -30,6 +44,9 @@
         display: flex;
         flex-direction: column;
         overflow: hidden; 
+        @media (max-width: 900px) {
+            display: none;
+        }
 
         /* ESTRUCTURA INTERNA DEL PANEL IZQUIERDO */
         .leftPanel__wrapper {
@@ -111,6 +128,9 @@
         background-color: $light-gray-common-components;
         border-radius: 10px;
         color: black;
+        @media (max-width: 900px) {
+            display: none;
+        }
     }
 
     &__footer {
