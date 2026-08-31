@@ -67,6 +67,8 @@ export function useHandleWebsocket(user: AuthUser | null) {
 				const { type } = message;
 				const typeListeners = listeners.current.get(type);
 
+				console.log("WS MESSAGE", { type, message });
+
 				if (typeListeners) {
 					typeListeners.forEach(listener => {
 						try {

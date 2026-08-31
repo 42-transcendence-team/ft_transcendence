@@ -1,29 +1,15 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useGoose } from "games/goose/useGoose";
+import { useGoose, type GooseAction } from "games/goose/useGoose";
 import { drawBoard, drawPlayers } from "./components/board";
-
-export function getPosition(number: number, cellSize: number) {
-	if (number === 0) {
-		return null;
-	}
-
-	const position = number - 1;
-
-	const row = Math.floor(position / 9);
-	const column = position % 9;
-
-	const visualColumn = row % 2 === 0 ? column : 8 - column;
-
-	return {
-		x: visualColumn * cellSize,
-		y: row * cellSize,
-	};
-}
+import { drawDice } from "./components/dice";
+import { playActions, type GooseAnimationState } from "./components/actions";
 
 export function Goose() {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
-
-	const { board, rollDice, gameState } = useGoose();
+	const {board, rollDice, gameState} = useGoose();
+	const animationStateRef = useRef<GooseAnimationState | null>(null);
+	const lastActionsRef = useRef<GooseAction[] | null>(null);
+	const isAnimatingRef = useRef(false);
 
 	const draw = useCallback(() => {
 		const canvas = canvasRef.current;
@@ -43,20 +29,100 @@ export function Goose() {
 		const cellSize = canvas.width / 9;
 
 		drawBoard(ctx, board, cellSize);
-		drawPlayers(ctx, gameState.playerstate ?? {}, cellSize);
-	}, [board, gameState.playerstate]);
+
+		const animationState = animationStateRef.current;
+
+		const players = animationState?.players ?? gameState.playerstate ?? {};
+
+		drawPlayers(ctx, players, cellSize);
+
+		if (animationState) {
+			drawDice(ctx, animationState.dice1, animationState.dice2, canvas.width, canvas.height);
+		}
+	}, [board,gameState.playerstate]);
+
 
 	useEffect(() => {
 		draw();
 	}, [draw]);
 
+	useEffect(() => {
+		const actions = gameState.actions;
+
+		if (!actions || actions.length === 0) {
+			return;
+		}
+		if (
+			lastActionsRef.current === actions
+		) {
+			return;
+		}
+		if (isAnimatingRef.current) {
+			return;
+		}
+
+		lastActionsRef.current = actions;
+
+		isAnimatingRef.current = true;
+
+		const players =
+			structuredClone(
+				gameState.playerstate ?? {},
+			);
+
+		for (const action of actions) {
+			if (action.from === undefined || action.token === undefined) {
+				continue;
+			}
+
+			const player =
+				Object.values(players)
+					.find(
+						(player) => player.token === action.token,
+					);
+
+			if (!player) {
+				continue;
+			}
+
+			player.position =
+				action.from;
+		}
+
+		animationStateRef.current = {
+			players,
+			dice1: null,
+			dice2: null,
+			message: null,
+		};
+
+		playActions(
+			actions,
+			{
+				state: animationStateRef.current,
+				render: draw,
+			},
+		)
+			.then(() => {
+				animationStateRef.current = null;
+				draw();
+			})
+			.finally(() => {
+				isAnimatingRef.current = false;
+			});
+
+	}, [gameState.actions,gameState.playerstate,draw]);
+
 	function handleClick() {
+		if (isAnimatingRef.current) {
+			return;
+		}
 		rollDice();
 	}
 
 	return (
 		<canvas ref={canvasRef} width={1000} height={900} onClick={handleClick}
 			style={{width: "100%", height: "100%", display: "block", position: "absolute", top: 0, left: 0}}
-/>
+		/>
 	);
 }

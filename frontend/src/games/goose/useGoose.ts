@@ -17,6 +17,9 @@ export interface GoosePlayerState {
 	in_well: boolean;
 	in_prison: boolean;
 	token: number;
+
+	visualX?: number;
+	visualY?: number;
 }
 
 export interface GooseAction {
