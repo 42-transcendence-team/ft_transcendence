@@ -62,7 +62,7 @@ services:
 
     postgres:
         env_file: .env
-        image: postgres:latest
+        image: postgres:16
         environment:
             POSTGRES_USER: "${DB_USER}"
             POSTGRES_PASSWORD: "${DB_PASSWORD}"
@@ -101,6 +101,8 @@ services:
         build:
           context: ./nginx
         ports:
+          - "80:80"
+          - "443:8443"
           - "1312:80"
           - "6969:443"
         volumes:

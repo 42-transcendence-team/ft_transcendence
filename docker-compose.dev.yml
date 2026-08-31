@@ -59,7 +59,7 @@ services:
 
     postgres:
         env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
-        image: postgres:latest # Por definir que version de postgres usar
+        image: postgres:16 # Alineado con docker-compose.yml. postgres:latest (18+) rechaza el layout de datos existente (PG16)
         environment:
             POSTGRES_USER: "${DB_USER}"
             POSTGRES_PASSWORD: "${DB_PASSWORD}"
@@ -130,6 +130,8 @@ services:
           context: ./nginx
 
         ports:
+          - "80:80"
+          - "443:8443"
           - "1312:80"
           - "6969:443"
 

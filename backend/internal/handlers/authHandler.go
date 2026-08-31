@@ -378,7 +378,7 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 
 		c.Redirect(
 			http.StatusFound,
-			"https://localhost/42register",
+			"https://localhost:6969/42register",
 		)
 		return
 	}
