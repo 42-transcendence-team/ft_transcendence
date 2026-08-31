@@ -55,20 +55,6 @@ export const MobileBottomNav = () => {
         />
       </NavLink>
 
-      {/* 2. Búsqueda */}
-      <NavLink 
-        to="/XXXXXXX"
-        className={
-          ({ isActive }) => isActive 
-          ? "mobileBottomNav__link active" : "mobileBottomNav__link"
-        }
-      >
-        <img 
-          src={search}
-          alt="Home" 
-          className="mobileBottomNav__icon-img" 
-        />
-      </NavLink>
 
 
       {/* 3. Botón Central (Añadir/Crear) */}
@@ -88,7 +74,7 @@ export const MobileBottomNav = () => {
 
       {/* 4. Mensajes / Chat */}
       <NavLink 
-        to="/chat" //
+        to="app/mobile-chat" //
         className={
           ({ isActive }) => isActive 
           ? "mobileBottomNav__link active" : "mobileBottomNav__link"

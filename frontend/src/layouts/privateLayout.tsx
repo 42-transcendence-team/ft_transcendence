@@ -29,69 +29,7 @@ export function PrivateLayout() {
   const handleBrandActivate = () => {search.handleCloseSearch();};
 
   return (
-//     <div className="privateLayout">
-//       <WebSocketProvider user={data.user}>
-//         <NotificationProvider
-//           activeChat={activeChat}
-//           user={data.user}
-//           onChatOpen={toggleChat}
-//         >
-//           <ChatProvider user={data.user}>
-//             <header className="privateLayout__header">
-//               <PrivHeader
-//                 onSearch={search.handleSearch}
-//                 onBrandActivate={handleBrandActivate}
-//               />
-//             </header>
-
-//             <aside className="privateLayout__leftPanel">
-//               <div className="leftPanel__content">
-//                 <div className="leftPanel__actions">
-//                 <PrivateLeftPanel>
-//                     <Notification />
-//                     <SearchFilters
-//                       selectedRelations={search.relations}
-//                       onRelationsChange={search.handleRelationsChange}
-//                       selectedSort={search.sort}
-//                       onSortChange={search.handleSortChange}
-//                     />
-//                   </PrivateLeftPanel>
-//                 </div>
-//               </div>
-//             </aside>
-
-//             <main className="privateLayout__content">
-//               <div className="privateLayout__contentFrame">
-//                 <div className="privateLayout__contentInner">
-//                   <PrivateMainContent>
-//                     <Outlet context={{ user: data.user }} />
-//                   </PrivateMainContent>
-//                 </div>
-//                 {search.hasSearched && (
-//                   <AdvancedSearchPanel
-//                     search={search}
-//                     onClose={search.handleCloseSearch}
-//                   />
-//                 )}
-//               </div>
-//               {activeChat && (
-//                 <ChatModal
-//                   id={activeChat}
-//                   onClose={() => toggleChat(activeChat)}
-//                 />
-//               )}
-//             </main>
-
-//             <ChatPanel onChatClick={toggleChat} activeChatId={activeChat} />
-
-//             <footer className="privateLayout__footer">
-//               <Footer onBrandActivate={handleBrandActivate} />
-//             </footer>
-//           </ChatProvider>
-//         </NotificationProvider>
-//       </WebSocketProvider>
-//     </div>
-        <div className="privateLayout">
+    <div className="privateLayout">
       <WebSocketProvider user={data.user}>
         <NotificationProvider
           activeChat={activeChat}

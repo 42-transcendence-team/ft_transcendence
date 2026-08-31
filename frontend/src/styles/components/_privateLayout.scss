@@ -120,6 +120,13 @@
 
         scrollbar-width: none !important;
         -ms-overflow-style: none !important;
+        &:has(.mobile-chat-room),
+        &:has(.mobile-chat-list) {
+            display: contents;
+            padding: 0;
+            background-color: transparent;
+            overflow: visible;
+        }
     }
 
     &__rightPanel {
