@@ -55,7 +55,20 @@ export const MobileBottomNav = () => {
         />
       </NavLink>
 
-
+      {/* 2.  */}
+      <NavLink 
+        to="app/mobile-search-notify" // aqui iria la peticion para subir un post 
+        className={
+          ({ isActive }) => isActive 
+          ? "mobileBottomNav__link active" : "mobileBottomNav__link"
+        }
+      >
+        <img 
+          src={home}
+          alt="Home" 
+          className="mobileBottomNav__icon-img" 
+        />
+      </NavLink>
 
       {/* 3. Botón Central (Añadir/Crear) */}
       <NavLink 
@@ -74,7 +87,7 @@ export const MobileBottomNav = () => {
 
       {/* 4. Mensajes / Chat */}
       <NavLink 
-        to="app/mobile-chat" //
+        to="app/mobile-chat"
         className={
           ({ isActive }) => isActive 
           ? "mobileBottomNav__link active" : "mobileBottomNav__link"
