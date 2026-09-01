@@ -92,8 +92,6 @@ export function MobileChat() {
                 <button onClick={() => navigate("/app")} className="mobile-chat-list__home-btn">
                     <FaHome style={{ fontSize: "1.2rem" }} />
                 </button>
-                <i className="fas fa-camera" />
-
                 <h1>Mensajes</h1>
             </header>
 
