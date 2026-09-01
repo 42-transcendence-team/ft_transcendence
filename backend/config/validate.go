@@ -91,6 +91,10 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("EXPIRATION_2FA must be > 0")
 	}
 
+	if c.Url == "" {
+		c.Url = "https://localhost:6969"
+	}
+
 	return nil
 }
 
