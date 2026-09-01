@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useChat } from "../context/chatContext";
 import { useNavigate } from "react-router-dom";
+import { UserAvatar } from "../components/users/UserAvatar";
+import { FaHome } from "react-icons/fa";
 import "@styles/components/_mobileChat.scss";
 
 export function MobileChat() {
@@ -30,10 +32,10 @@ export function MobileChat() {
                     >
                         ←
                     </button>
-                    <img 
-                        src={otherUser?.avatar_url || "/default-avatar.png"} 
-                        alt="Avatar" 
-                        className="mobile-chat-room__avatar"
+                    <UserAvatar 
+                        avatarPath={otherUser?.avatar_url || null} 
+                        username={otherUser?.login || "Chat"} 
+                        size="small" 
                     />
                     <div className="mobile-chat-room__user-info">
                         <h3>{otherUser?.login || "Chat"}</h3>
@@ -43,7 +45,7 @@ export function MobileChat() {
                 <div className="mobile-chat-room__messages-container">
                     {currentMessages.length === 0 ? (
                         <div className="mobile-chat-room__empty">
-                            <p>No hay mensajes aún. ¡Di hola!</p>
+                            <p>No hay mensajes aún.</p>
                         </div>
                     ) : (
                         currentMessages.map((msg, index) => {
@@ -88,8 +90,10 @@ export function MobileChat() {
         <div className="mobile-chat-list">
             <header className="mobile-chat-list__header">
                 <button onClick={() => navigate("/app")} className="mobile-chat-list__home-btn">
-                    🏠
+                    <FaHome style={{ fontSize: "1.2rem" }} />
                 </button>
+                <i className="fas fa-camera" />
+
                 <h1>Mensajes</h1>
             </header>
 
@@ -112,10 +116,10 @@ export function MobileChat() {
                                 onClick={() => setActiveRoomId(roomId)}
                                 className="mobile-chat-card"
                             >
-                                <img 
-                                    src={chatUser?.avatar_url || "/default-avatar.png"} 
-                                    alt="Avatar" 
-                                    className="mobile-chat-card__avatar"
+                                <UserAvatar 
+                                    avatarPath={chatUser?.avatar_url || null} 
+                                    username={chatUser?.login || "Usuario"} 
+                                    size="small" 
                                 />
                                 <div className="mobile-chat-card__content">
                                     <div className="mobile-chat-card__top">
