@@ -61,7 +61,7 @@ jobs:
       - name: Run app
         run: |
           make dev-min-demon
-          timeout 180s bash -c 'until curl -sk http://localhost:8080/health; do sleep 3; done'
+          timeout 600s bash -c 'until curl -sk --connect-timeout 2 --max-time 10 http://localhost:8080/health; do sleep 3; done'
       - name: Debug de contenedores si falla
         if: failure()
         run: |
