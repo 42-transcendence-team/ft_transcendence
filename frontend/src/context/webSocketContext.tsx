@@ -13,7 +13,7 @@ interface AuthUser {
 
 const WebSocketContext =  createContext<WebSocketContextType | undefined>(undefined)
 
-const webSocketURL = "wss://localhost:6969/api/v1/websocket/ws"
+const webSocketURL = "wss://localhost:6969/api/v1/websocket/ws" // TODO - Cambiar por puesto en 42
 
 type MessageHandler = (message: any) => void;
 
