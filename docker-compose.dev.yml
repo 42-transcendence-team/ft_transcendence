@@ -14,7 +14,12 @@ services:
                 condition: service_healthy
             redis:
                 condition: service_healthy
-        # Falta hacer el healthcheck para el backend, para que el frontend dependa de el.
+        healthcheck:
+            test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
         volumes:
           - ./backend:/app
           - ./elastic/filebeat/ingest_data:/var/log/api
@@ -41,6 +46,12 @@ services:
         restart: unless-stopped
         depends_on:
             - backend
+        healthcheck:
+            test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
         networks:
             - back-front
         environment:
@@ -48,7 +59,7 @@ services:
 
     postgres:
         env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
-        image: postgres:17.11 # Por definir que version de postgres usar
+        image: postgres:17.11 # Alineado con docker-compose.yml. postgres:latest (18+) rechaza el layout de datos existente (PG16)
         environment:
             POSTGRES_USER: "${DB_USER}"
             POSTGRES_PASSWORD: "${DB_PASSWORD}"
@@ -96,7 +107,7 @@ services:
         networks:
             - redis
         healthcheck:
-            test: ["CMD", "redis-cli", "ping"]
+            test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
             interval: 5s
             timeout: 3s
             retries: 5
@@ -119,14 +130,16 @@ services:
           context: ./nginx
 
         ports:
+          - "8081:80"
+          - "8443:8443"
           - "1312:80"
           - "6969:443"
 
         depends_on:
           backend:
-            condition: service_started
+            condition: service_healthy
           frontend:
-            condition: service_started
+            condition: service_healthy
           docusaurus:
             condition: service_started
           kibana:
@@ -209,7 +222,7 @@ services:
         - /:/rootfs:ro
         - /var/run:/var/run:ro
         - /sys:/sys:ro
-        - /goinfre/smeixoei/docker:/var/lib/docker:ro # docker info --format '{{.DockerRootDir}}'
+        - ${DOCKER_ROOT:-/var/lib/docker}:/var/lib/docker:ro # docker info --format '{{.DockerRootDir}}'
 
 
     elastic-setup:
@@ -284,7 +297,7 @@ services:
           - metricbeat_data:/usr/share/metricbeat/data
           - certs_data:/usr/share/metricbeat/certs
           - ./elastic/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
-          - /run/user/8415/docker.sock:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
+          - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
           - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
           - /proc:/hostfs/proc:ro
           - /:/hostfs:ro
@@ -307,8 +320,8 @@ services:
           - certs_data:/usr/share/filebeat/certs
           - ./elastic/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
           - ./elastic/filebeat/ingest_data:/usr/share/filebeat/ingest_data:ro
-          - /run/user/8415/docker.sock:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
-          - /goinfre/smeixoei/docker/containers:/var/lib/docker/containers:ro # docker info --format '{{.DockerRootDir}}'
+          - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
+          - ${DOCKER_ROOT:-/var/lib/docker}/containers:/var/lib/docker/containers:ro # docker info --format '{{.DockerRootDir}}'
         #   - api-logs:/usr/share/filebeat/ingest_data:ro
         networks:
           - elastic
@@ -348,7 +361,7 @@ services:
     portainer:
         image: portainer/portainer-ce:sts
         volumes:
-            - /run/user/8415/docker.sock:/var/run/docker.sock # docker context inspect --format '{{.Endpoints.docker.Host}}'
+            - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock # docker context inspect --format '{{.Endpoints.docker.Host}}'
             - portainer_data:/data
         expose:
             - "9443"

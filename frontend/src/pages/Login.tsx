@@ -30,7 +30,7 @@ export const Login = () => {
         }, [searchParams, setSearchParams]);
 
         const handle42Login = () => {
-                window.location.href = "https://localhost:6969/api/v1/auth/42/login";
+                window.location.href = `${window.location.origin}/api/v1/auth/42/login`;
         };
 
         const handleModalClose = () => {

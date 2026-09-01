@@ -2,14 +2,14 @@ DC		= docker compose
 DEV 	= docker-compose.dev.yml
 DEV_MIN	= docker-compose.dev.min.yml
 
-.PHONY: all start stop logs logs-all daemon remove full-remove shell restart re dev dev-demon dev-stop dev-remove dev-logs-all dev-logs dev-min dev-min-demon dev-min-stop dev-min-remove dev-min-logs-all dev-min-logs
+.PHONY: all start stop logs logs-all daemon remove full-remove shell restart re dev dev-demon dev-stop dev-remove dev-logs-all dev-logs dev-min dev-min-demon dev-min-stop dev-min-remove dev-min-logs-all dev-min-logs detect
 
 all: daemon
 
 build: 
 	$(DC) build
 
-start: build
+start: detect
 	$(DC) up
 
 stop:
@@ -18,7 +18,7 @@ stop:
 status:
 	$(DC) ps
 
-daemon: build
+daemon: detect
 	$(DC) up -d
 
 logs-all:
@@ -52,6 +52,10 @@ dev-logs-all:
 
 dev-logs:
 	$(DC) -f $(DEV) logs -f $(s)
+
+# Detección automática de rutas de Docker (socket y data-root) -> escribe .env
+detect:
+	./scripts/detect-docker-paths.sh
 
 # Desarrollo ligero: solo backend, frontend, nginx, postgres y redis.
 # Sin Elastic/Prometheus/Grafana/Portainer para ahorrar RAM.
