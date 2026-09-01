@@ -318,7 +318,7 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 
 		c.Redirect(
 			http.StatusFound,
-			"https://localhost/login?oauth_error=access_denied",
+			h.cfg.Url+"/login?oauth_error=access_denied",
 		)
 		return
 	}
@@ -378,7 +378,7 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 
 		c.Redirect(
 			http.StatusFound,
-			"https://localhost:6969/42register",
+			h.cfg.Url+"/42register",
 		)
 		return
 	}
@@ -407,7 +407,7 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 		h.SetTempToken(c, final.TempToken, final.ExpTime)
 		c.Redirect(
 			http.StatusFound,
-			"https://localhost/login?requires_2fa=true&temp_token="+final.TempToken,
+			h.cfg.Url+"/login?requires_2fa=true&temp_token="+final.TempToken,
 		)
 		return
 	}
@@ -422,7 +422,7 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 	h.Redis.SAdd(ctx, "online_users", user.ID)
 	c.Redirect(
 		http.StatusFound,
-		"https://localhost/app",
+		h.cfg.Url+"/app",
 	)
 }
 
