@@ -61,14 +61,17 @@ jobs:
       - name: Run app
         run: |
           make dev-min-demon
-          timeout 180s bash -c 'until curl -sk http://localhost:8080/api/v1/test; do sleep 3; done'
-      # - name: Ver logs de Postgres si el arranque falla
-      #   if: failure()
-      #   run: |
-      #     echo "LOGS DE POSTGRES"
-      #     docker logs ft_transcendence-postgres-1 || true
-      #     echo "ESTADO DE LOS CONTENEDORES"
-      #     docker ps -a
+          timeout 180s bash -c 'until curl -sk http://localhost:8080/health; do sleep 3; done'
+      - name: Debug de contenedores si falla
+        if: failure()
+        run: |
+          docker compose -f docker-compose.dev.min.yml ps -a || true
+          echo "=== LOGS BACKEND ==="
+          docker logs ft_transcendence-backend-1 || true
+          echo "=== LOGS REDIS ==="
+          docker logs ft_transcendence-redis-1 || true
+          echo "=== LOGS POSTGRES ==="
+          docker logs ft_transcendence-postgres-1 || true
 
       - name: Run Tests
         run: make -C tests

@@ -279,7 +279,7 @@ services:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
-      - /goinfre/smeixoei/docker:/var/lib/docker:ro
+      - ${DOCKER_ROOT:-/var/lib/docker}:/var/lib/docker:ro
 
 
   elastic-setup:
@@ -395,7 +395,7 @@ services:
       - metricbeat_data:/usr/share/metricbeat/data
       - certs_data:/usr/share/metricbeat/certs
       - ./elastic/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
-      - /run/user/9940/docker.sock:/var/run/docker.sock:ro
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro
       - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
       - /proc:/hostfs/proc:ro
       - /:/hostfs:ro
@@ -430,8 +430,8 @@ services:
       - certs_data:/usr/share/filebeat/certs
       - ./elastic/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - ./elastic/filebeat/ingest_data:/usr/share/filebeat/ingest_data:ro
-      - /run/user/9940/docker.sock:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
-      - /goinfre/abarrio-/docker/containers:/var/lib/docker/containers:ro # docker info --format '{{.DockerRootDir}}'
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
+      - ${DOCKER_ROOT:-/var/lib/docker}/containers:/var/lib/docker/containers:ro # docker info --format '{{.DockerRootDir}}'
 
     networks:
       - elastic
@@ -488,7 +488,7 @@ services:
     image: portainer/portainer-ce:sts
 
     volumes:
-      - /run/user/9940/docker.sock:/var/run/docker.sock
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
       - portainer_data:/data
 
     expose:
