@@ -299,13 +299,42 @@ func (h *AuthHandler) ClearTempToken(c *gin.Context) {
 	h.SetTempToken(c, "", time.Unix(0, 0))
 }
 
+// requestBaseURL devuelve la URL base (scheme://host) de la peticion entrante.
+// Detecta el esquema a traves de X-Forwarded-Proto (lo inyecta nginx) o, en su
+// defecto, por TLS. Asi las redirecciones apuntan a la maquina/host real y no a
+// localhost cuando nos conectamos desde otro ordenador.
+func (h *AuthHandler) requestBaseURL(c *gin.Context) string {
+	scheme := c.Request.Header.Get("X-Forwarded-Proto")
+	if scheme == "" {
+		if c.Request.TLS != nil {
+			scheme = "https"
+		} else {
+			scheme = "http"
+		}
+	}
+	if c.Request.Host == "" {
+		return h.cfg.Url
+	}
+	return scheme + "://" + c.Request.Host
+}
+
+// oauth42RedirectURI devuelve la redirect_uri de OAuth 42 para la peticion actual.
+// Se construye a partir del host real de la peticion; debe estar registrada en
+// la intra (https://<host>:6969/api/v1/auth/42/callback).
+func (h *AuthHandler) oauth42RedirectURI(c *gin.Context) string {
+	return h.requestBaseURL(c) + "/api/v1/auth/42/callback"
+}
+
 // Redirige al usuario a la URL de autenticacion de 42, que se genera con la funcion Build42AuthURL()
 func (h *AuthHandler) Login42(c *gin.Context) {
-	authURL := h.AuthService.Build42AuthURL()
+	authURL := h.AuthService.Build42AuthURL(h.oauth42RedirectURI(c))
 	c.Redirect(http.StatusFound, authURL)
 }
 
 func (h *AuthHandler) Login42Callback(c *gin.Context) {
+	baseURL := h.requestBaseURL(c)
+	redirectURI := h.oauth42RedirectURI(c)
+
 	oauthError := c.Query("error")
 	if oauthError != "" {
 		description := c.Query("error_description")
@@ -318,7 +347,7 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 
 		c.Redirect(
 			http.StatusFound,
-			h.cfg.Url+"/login?oauth_error=access_denied",
+			baseURL+"/login?oauth_error=access_denied",
 		)
 		return
 	}
@@ -330,7 +359,7 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 		return
 	}
 
-	token, err := h.AuthService.Exchange42Code(code)
+	token, err := h.AuthService.Exchange42Code(code, redirectURI)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -378,7 +407,7 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 
 		c.Redirect(
 			http.StatusFound,
-			h.cfg.Url+"/42register",
+			baseURL+"/42register",
 		)
 		return
 	}
@@ -407,7 +436,7 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 		h.SetTempToken(c, final.TempToken, final.ExpTime)
 		c.Redirect(
 			http.StatusFound,
-			h.cfg.Url+"/login?requires_2fa=true&temp_token="+final.TempToken,
+			baseURL+"/login?requires_2fa=true&temp_token="+final.TempToken,
 		)
 		return
 	}
@@ -422,7 +451,7 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 	h.Redis.SAdd(ctx, "online_users", user.ID)
 	c.Redirect(
 		http.StatusFound,
-		h.cfg.Url+"/app",
+		baseURL+"/app",
 	)
 }
 
@@ -501,7 +530,7 @@ func (h *AuthHandler) Register42(c *gin.Context) {
 
 	// TODO - Crear token de sesion y redirigir al perfil/home
 	h.Redis.Del(c, "42_register:"+token)
-	c.SetCookie("42_token", "", -1, "/", "localhost", false, true)
+	c.SetCookie("42_token", "", -1, "/", "", false, true)
 
 	strToken, expTime, err := utils.CreateJwtToken(user, h.cfg)
 	if err != nil {
