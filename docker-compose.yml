@@ -187,10 +187,10 @@ services:
       - .env
 
     ports:
-      - "${NGINX_REDIRECT_PORT:-80}:80"
-      - "${NGINX_HTTPS_REDIRECT_PORT:-443}:8443"
-      - "${NGINX_HTTP_PORT}:80"
-      - "${NGINX_HTTPS_PORT}:443"
+      - "${NGINX_REDIRECT_PORT:-8081}:80"
+      - "${NGINX_HTTPS_REDIRECT_PORT:-8443}:8443"
+      - "${NGINX_HTTP_PORT:-1312}:80"
+      - "${NGINX_HTTPS_PORT:-6969}:443"
 
     restart: unless-stopped
 
