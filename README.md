@@ -229,20 +229,13 @@ The following modules were selected from the subject. **Major = 2 points**,
 | Advanced search functionality | USER EXPERIENCE | Minor | 1 | Users must find each other efficiently | Backend search service with filters/order + frontend panel with pagination | abarrio- |
 | File upload and management system | WEB | Minor | 1 | Users need to personalize their profiles and attach media | `storage/` package (image validation/saving), uploads served via Nginx | davidga2 |
 | OAuth 2.0 | USER MANAGEMENT | Minor | 1 | Seamless 42-campus login, avoids onboarding friction | Authorization-code flow against `api.intra.42.fr` | smeixoei |
-| Two-factor authentication | USER MANAGEMENT | Minor | 1 | Strong security for the auth module | TOTP with `pquerna/otp`, QR provisioning, temp-token login step | smeixoei |
-| Standard user management & authentication | WEB | Major | 2 | Provides the complete user management and authentication system required by the project | JWT authentication with register/login and protected routes; users can update their profile information, upload a custom avatar or use the default avatar, add and manage friends, view their friends' online status, and access a dedicated profile page with their information | abario-, ancarvaj |
-
-| Real-time multiplayer online games | GAME | Major | 2 | Showcases WebSockets and concurrency; the "wow" feature | Game engines (`ticTacToe.go`, `connectFour.go`, `goose.go`), game manager, WS `game` message type, canvas frontends | smeixoei |
-| ELK Stack | DEVOPS | Major | 2 | Centralized logging and debugging across services | Elasticsearch + Kibana + Logstash + Filebeat + Metricbeat in Docker Compose | ancarvaj, smeixoei |
-| Prometheus & Grafana | DEVOPS | Major | 2 | Observability of the whole stack | `/metrics` endpoint (promhttp), Prometheus scraping, Grafana dashboards, node-exporter, cAdvisor | ancarvaj, smeixoei |
-
-
-| Live chat (advanced chat features) | GAME | Minor | 1 | Real-time interaction between users with persistence | WebSocket rooms, message history, block-aware sending, optimistic UI | ancarvaj |
-
-
-| Two-factor authentication | USER MANAGEMENT | Minor | 1 | Strong security for the auth module | TOTP with `pquerna/otp`, QR provisioning, temp-token login step | igvisera |
-
-| Custom-made design system | USER EXPERIENCE | Minor | 1 | Cohesive branding, reuse across pages | SCSS BEM architecture, variables/mixins, reusable components (Header, Footer, Modal, cards…) | davidga2, abarrio- |
+| Two-factor authentication | USER MANAGEMENT | Minor | 1 | Strong security for the auth module | TOTP with `pquerna/otp`, QR provisioning, temp-token login step | smeixoei. igvisera |
+| Standard user management & authentication | WEB | Major | 2 | Provides the complete user management and authentication system required by the project | JWT authentication with register/login and protected routes; users can update their profile information, upload a custom avatar or use the default avatar, add and manage friends, view their friends' online status, and access a dedicated profile page with their information | abario-, ancarvaj, igvisera |
+| Complete web-based game | GAME | Major | 2 | Provides a complete playable multiplayer game with clear rules and win/loss conditions | Multiple browser-based games including Tic-Tac-Toe, Connect Four and Goose, with game engines, game state management, matchmaking and real-time gameplay through WebSockets | sxamiedu |
+| Remote players | GAME | Major | 2 | Allows players on separate computers to participate in the same match in real time | WebSocket-based remote gameplay with synchronized game state, real-time event broadcasting, connection/disconnection handling and reconnection support | sxamiedu |
+| Multiplayer game (more than two players) | GAME | Major | 2 | Extends gameplay beyond two players while keeping all participants synchronized and gameplay fair | Multiplayer game rooms supporting three or more players, synchronized game state across clients, turn management and server-side game logic | sxamiedu |
+| ELK Stack | DEVOPS | Major | 2 | Centralized logging and debugging across services | Elasticsearch + Kibana + Logstash + Filebeat + Metricbeat in Docker Compose | smeixoei |
+| Prometheus & Grafana | DEVOPS | Major | 2 | Observability of the whole stack | `/metrics` endpoint (promhttp), Prometheus scraping, Grafana dashboards, node-exporter, cAdvisor | smeixoei |
 
 
 ---
