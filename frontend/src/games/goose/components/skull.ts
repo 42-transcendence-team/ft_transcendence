@@ -12,8 +12,7 @@ export async function animateSkull(action: GooseAction, context: GooseAnimationC
 	await animateSpecialEffect("skull", action, context);
 
 	const player = Object.values(context.state.players).find(
-		(player) =>
-			player.token === action.token,
+		(player) => player.token === action.token,
 	);
 
 	if (player) {
@@ -25,7 +24,6 @@ export async function animateSkull(action: GooseAction, context: GooseAnimationC
 	await wait(600);
 
 	context.state.message = null;
-
 	context.render();
 }
 
@@ -44,78 +42,22 @@ export function drawSkullAnimation(ctx: CanvasRenderingContext2D,
 		canvasHeight,
 	);
 
-	/*
-	 * Entrada y salida suave.
-	 */
-	const alpha = Math.sin(
-		progress * Math.PI,
-	);
+	const alpha = Math.sin(progress * Math.PI);
 
-	/*
-	 * ============================================================
-	 * OSCURECER TODO EL TABLERO
-	 * ============================================================
-	 */
-
-	ctx.globalAlpha =
-		alpha * 0.45;
-
+	ctx.globalAlpha = alpha * 0.45;
 	ctx.fillStyle = "#100d0b";
+	ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-	ctx.fillRect(
-		0,
-		0,
-		canvasWidth,
-		canvasHeight,
-	);
+	const pulse = Math.sin(progress * Math.PI * 8) * 0.5 + 0.5;
 
-	/*
-	 * ============================================================
-	 * PULSO ROJO
-	 * ============================================================
-	 *
-	 * El fondo pulsa cuando la calavera aparece.
-	 */
-
-	const pulse =
-		Math.sin(
-			progress * Math.PI * 8,
-		) *
-		0.5 +
-		0.5;
-
-	ctx.globalAlpha =
-		alpha *
-		pulse *
-		0.12;
-
+	ctx.globalAlpha = alpha * pulse * 0.12;
 	ctx.fillStyle = "#7a1717";
+	ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-	ctx.fillRect(
-		0,
-		0,
-		canvasWidth,
-		canvasHeight,
-	);
-
-	/*
-	 * ============================================================
-	 * GRIETAS
-	 * ============================================================
-	 */
-
-	const crackProgress = Math.min(
-		progress * 1.5,
-		1,
-	);
+	const crackProgress = Math.min(progress * 1.5, 1);
 
 	ctx.strokeStyle = "#5c4b40";
-
-	ctx.lineWidth = Math.max(
-		2,
-		minDimension * 0.008,
-	);
-
+	ctx.lineWidth = Math.max(2, minDimension * 0.008);
 	ctx.lineCap = "round";
 	ctx.lineJoin = "round";
 
@@ -162,55 +104,25 @@ export function drawSkullAnimation(ctx: CanvasRenderingContext2D,
 		],
 	];
 
-	for (
-		let crackIndex = 0;
-		crackIndex < cracks.length;
-		crackIndex++
-	) {
+	for (let crackIndex = 0; crackIndex < cracks.length; crackIndex++) {
 		const crack = cracks[crackIndex];
+		const delay = crackIndex * 0.06;
 
-		/*
-		 * Cada grieta aparece con un pequeño retraso.
-		 */
-		const delay =
-			crackIndex * 0.06;
-
-		const localProgress = Math.max(
-			0,
-			Math.min(
-				1,
-				(crackProgress - delay) /
-					(1 - delay),
-			),
-		);
+		const localProgress = Math.max(0, Math.min(1, (crackProgress - delay) / (1 - delay)));
 
 		if (localProgress <= 0) {
 			continue;
 		}
 
-		const points = Math.max(
-			2,
-			Math.ceil(
-				localProgress *
-					crack.length,
-			),
-		);
+		const points = Math.max( 2, Math.ceil(localProgress * crack.length),);
 
-		ctx.globalAlpha =
-			alpha *
-			(0.5 + localProgress * 0.5);
-
+		ctx.globalAlpha = alpha * (0.5 + localProgress * 0.5);
 		ctx.beginPath();
 
 		for (let i = 0; i < points; i++) {
-			const point =
-				crack[i];
-
-			const px =
-				canvasWidth * point[0];
-
-			const py =
-				canvasHeight * point[1];
+			const point =crack[i];
+			const px =canvasWidth * point[0];
+			const py =canvasHeight * point[1];
 
 			if (i === 0) {
 				ctx.moveTo(px, py);
@@ -219,54 +131,22 @@ export function drawSkullAnimation(ctx: CanvasRenderingContext2D,
 			}
 		}
 
-		/*
-		 * Si estamos a mitad de un segmento,
-		 * lo interpolamos para que la grieta crezca
-		 * suavemente.
-		 */
-		const exactPoint =
-			localProgress *
-			(crack.length - 1);
+		const exactPoint = localProgress * (crack.length - 1);
+		const segment = Math.floor(exactPoint);
+		const segmentProgress = exactPoint - segment;
 
-		const segment =
-			Math.floor(exactPoint);
+		if (segment >= 0 && segment < crack.length - 1) {
+			const a = crack[segment];
+			const b = crack[segment + 1];
 
-		const segmentProgress =
-			exactPoint - segment;
-
-		if (
-			segment >= 0 &&
-			segment < crack.length - 1
-		) {
-			const a =
-				crack[segment];
-
-			const b =
-				crack[segment + 1];
-
-			const px =
-				canvasWidth *
-				(a[0] +
-					(b[0] - a[0]) *
-						segmentProgress);
-
-			const py =
-				canvasHeight *
-				(a[1] +
-					(b[1] - a[1]) *
-						segmentProgress);
+			const px = canvasWidth * (a[0] + (b[0] - a[0]) * segmentProgress);
+			const py = canvasHeight * (a[1] + (b[1] - a[1]) * segmentProgress);
 
 			ctx.lineTo(px, py);
 		}
 
 		ctx.stroke();
 	}
-
-	/*
-	 * ============================================================
-	 * PEQUEÑAS GRIETAS SECUNDARIAS
-	 * ============================================================
-	 */
 
 	const secondaryCracks = [
 		[
@@ -291,30 +171,17 @@ export function drawSkullAnimation(ctx: CanvasRenderingContext2D,
 		],
 	];
 
-	ctx.globalAlpha =
-		alpha * 0.65;
+	ctx.globalAlpha = alpha * 0.65;
 
-	ctx.lineWidth = Math.max(
-		1.5,
-		minDimension * 0.005,
-	);
+	ctx.lineWidth = Math.max(1.5, minDimension * 0.005);
 
 	for (const crack of secondaryCracks) {
 		ctx.beginPath();
 
-		for (
-			let i = 0;
-			i < crack.length;
-			i++
-		) {
-			const point =
-				crack[i];
-
-			const px =
-				canvasWidth * point[0];
-
-			const py =
-				canvasHeight * point[1];
+		for (let i = 0; i < crack.length; i++) {
+			const point = crack[i];
+			const px = canvasWidth * point[0];
+			const py = canvasHeight * point[1];
 
 			if (i === 0) {
 				ctx.moveTo(px, py);
@@ -326,186 +193,58 @@ export function drawSkullAnimation(ctx: CanvasRenderingContext2D,
 		ctx.stroke();
 	}
 
-	/*
-	 * ============================================================
-	 * CALAVERA
-	 * ============================================================
-	 *
-	 * La dibujamos manualmente para evitar el aspecto de emoji.
-	 */
+	const skullProgress = Math.min( Math.max((progress - 0.10) / 0.45, 0), 1);
 
-	const skullProgress =
-		Math.min(
-			Math.max(
-				(progress - 0.10) /
-					0.45,
-				0,
-			),
-			1,
-		);
+	const skullScale = 0.55 + skullProgress * 0.45;
+	const skullWidth = minDimension * 0.24 * skullScale;
+	const skullHeight = minDimension * 0.27 * skullScale;
 
-	const skullScale =
-		0.55 +
-		skullProgress * 0.45;
+	const shake = progress > 0.25 &&
+		progress < 0.75 ? Math.sin( progress * Math.PI * 24, ) * minDimension * 0.006 : 0;
 
-	const skullWidth =
-		minDimension *
-		0.24 *
-		skullScale;
+	const skullX = centerX + shake;
+	const skullY = centerY;
 
-	const skullHeight =
-		minDimension *
-		0.27 *
-		skullScale;
+	ctx.globalAlpha = alpha * skullProgress;
 
-	/*
-	 * Pequeño temblor.
-	 */
-
-	const shake =
-		progress > 0.25 &&
-		progress < 0.75
-			? Math.sin(
-					progress *
-						Math.PI *
-						24,
-				) *
-				minDimension *
-				0.006
-			: 0;
-
-	const skullX =
-		centerX + shake;
-
-	const skullY =
-		centerY;
-
-	ctx.globalAlpha =
-		alpha *
-		skullProgress;
-
-	/*
-	 * Halo detrás de la calavera
-	 */
-
-	const glowRadius =
-		skullWidth * 0.85;
-
+	const glowRadius = skullWidth * 0.85;
 	const gradient =
-		ctx.createRadialGradient(
-			skullX,
-			skullY,
-			0,
-			skullX,
-			skullY,
-			glowRadius,
-		);
+		ctx.createRadialGradient(skullX, skullY, 0, skullX, skullY, glowRadius);
 
-	gradient.addColorStop(
-		0,
-		"rgba(180, 20, 20, 0.35)",
-	);
-
-	gradient.addColorStop(
-		1,
-		"rgba(180, 20, 20, 0)",
-	);
+	gradient.addColorStop(0, "rgba(180, 20, 20, 0.35)");
+	gradient.addColorStop(1, "rgba(180, 20, 20, 0)");
 
 	ctx.fillStyle = gradient;
 
 	ctx.beginPath();
 
-	ctx.arc(
-		skullX,
-		skullY,
-		glowRadius,
-		0,
-		Math.PI * 2,
-	);
-
+	ctx.arc(skullX, skullY, glowRadius, 0, Math.PI * 2);
 	ctx.fill();
-
-	/*
-	 * ============================================================
-	 * CRÁNEO
-	 * ============================================================
-	 */
 
 	ctx.fillStyle = "#ded8c9";
 
 	ctx.beginPath();
 
-	ctx.moveTo(
-		skullX -
-			skullWidth * 0.43,
-		skullY -
-			skullHeight * 0.18,
-	);
+	ctx.moveTo( skullX - skullWidth * 0.43, skullY - skullHeight * 0.18);
 
-	ctx.quadraticCurveTo(
-		skullX -
-			skullWidth * 0.46,
-		skullY -
-			skullHeight * 0.50,
+	ctx.quadraticCurveTo( skullX - skullWidth * 0.46, skullY - skullHeight * 0.50,
+		skullX, skullY - skullHeight * 0.52);
 
-		skullX,
-		skullY -
-			skullHeight * 0.52,
-	);
+	ctx.quadraticCurveTo( skullX + skullWidth * 0.46, skullY - skullHeight * 0.50,
+		skullX + skullWidth * 0.43, skullY - skullHeight * 0.18);
 
-	ctx.quadraticCurveTo(
-		skullX +
-			skullWidth * 0.46,
-		skullY -
-			skullHeight * 0.50,
-
-		skullX +
-			skullWidth * 0.43,
-		skullY -
-			skullHeight * 0.18,
-	);
-
-	ctx.lineTo(
-		skullX +
-			skullWidth * 0.34,
-		skullY +
-			skullHeight * 0.22,
-	);
-
-	ctx.lineTo(
-		skullX +
-			skullWidth * 0.20,
-		skullY +
-			skullHeight * 0.38,
-	);
-
-	ctx.lineTo(
-		skullX -
-			skullWidth * 0.20,
-		skullY +
-			skullHeight * 0.38,
-	);
-
-	ctx.lineTo(
-		skullX -
-			skullWidth * 0.34,
-		skullY +
-			skullHeight * 0.22,
-	);
+	ctx.lineTo(skullX + skullWidth * 0.34, skullY + skullHeight * 0.22);
+	ctx.lineTo(skullX + skullWidth * 0.20, skullY + skullHeight * 0.38);
+	ctx.lineTo(skullX - skullWidth * 0.20, skullY + skullHeight * 0.38);
+	ctx.lineTo(skullX - skullWidth * 0.34, skullY + skullHeight * 0.22);
 
 	ctx.closePath();
-
 	ctx.fill();
-
 	ctx.fillStyle = "#171311";
-
 	ctx.beginPath();
-
 	ctx.ellipse(
-		skullX -
-			skullWidth * 0.20,
-		skullY -
-			skullHeight * 0.17,
+		skullX - skullWidth * 0.20,
+		skullY - skullHeight * 0.17,
 		skullWidth * 0.13,
 		skullHeight * 0.15,
 		-0.15,
@@ -514,122 +253,49 @@ export function drawSkullAnimation(ctx: CanvasRenderingContext2D,
 	);
 
 	ctx.fill();
-
 	ctx.beginPath();
-
-	ctx.ellipse(
-		skullX +
-			skullWidth * 0.20,
-		skullY -
-			skullHeight * 0.17,
-		skullWidth * 0.13,
-		skullHeight * 0.15,
-		0.15,
-		0,
-		Math.PI * 2,
-	);
+	ctx.ellipse( skullX + skullWidth * 0.20, skullY - skullHeight * 0.17,
+		skullWidth * 0.13, skullHeight * 0.15, 0.15, 0, Math.PI * 2);
 
 	ctx.fill();
-
-	/*
-	 * ============================================================
-	 * NARIZ
-	 * ============================================================
-	 */
-
 	ctx.beginPath();
+	ctx.moveTo(skullX, skullY - skullHeight * 0.04);
 
-	ctx.moveTo(
-		skullX,
-		skullY -
-			skullHeight * 0.04,
-	);
-
-	ctx.lineTo(
-		skullX -
-			skullWidth * 0.07,
-		skullY +
-			skullHeight * 0.12,
-	);
-
-	ctx.lineTo(
-		skullX +
-			skullWidth * 0.07,
-		skullY +
-			skullHeight * 0.12,
-	);
-
+	ctx.lineTo( skullX - skullWidth * 0.07, skullY + skullHeight * 0.12);
+	ctx.lineTo( skullX + skullWidth * 0.07, skullY + skullHeight * 0.12);
 	ctx.closePath();
-
 	ctx.fill();
-
 	ctx.fillStyle = "#c7c0b2";
-
 	ctx.beginPath();
-
 	ctx.roundRect(
-		skullX -
-			skullWidth * 0.20,
-		skullY +
-			skullHeight * 0.16,
+		skullX - skullWidth * 0.20,
+		skullY + skullHeight * 0.16,
 		skullWidth * 0.40,
 		skullHeight * 0.23,
 		skullWidth * 0.04,
 	);
 
 	ctx.fill();
-
 	ctx.fillStyle = "#171311";
 
 	const teeth = 6;
 
 	for (let i = 0; i < teeth; i++) {
-		const toothWidth =
-			skullWidth * 0.055;
+		const toothWidth = skullWidth * 0.055;
+		const toothHeight = skullHeight * 0.10;
+		const toothX = skullX - skullWidth * 0.14 + i * skullWidth * 0.055;
 
-		const toothHeight =
-			skullHeight * 0.10;
-
-		const toothX =
-			skullX -
-			skullWidth * 0.14 +
-			i *
-				skullWidth *
-				0.055;
-
-		ctx.fillRect(
-			toothX,
-			skullY +
-				skullHeight * 0.20,
-			toothWidth,
-			toothHeight,
-		);
+		ctx.fillRect(toothX, skullY + skullHeight * 0.20, toothWidth, toothHeight);
 	}
 
 	if (progress > 0.70) {
-		const flashProgress =
-			(progress - 0.70) /
-			0.30;
+		const flashProgress = (progress - 0.70) / 0.30;
 
-		ctx.globalAlpha =
-			alpha *
-			flashProgress *
-			0.20;
-
+		ctx.globalAlpha = alpha * flashProgress * 0.20;
 		ctx.fillStyle = "#ffffff";
-
 		ctx.beginPath();
 
-		ctx.arc(
-			centerX,
-			centerY,
-			minDimension *
-				(0.12 +
-					flashProgress *
-						0.20),
-			0,
-			Math.PI * 2,
-		);
+		ctx.arc(centerX, centerY, minDimension * (0.12 + flashProgress * 0.20), 0, Math.PI * 2);
 
 		ctx.fill();
 	}

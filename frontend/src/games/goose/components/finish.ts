@@ -20,9 +20,7 @@ export async function animateFinish(action: GooseAction, context: GooseAnimation
 	console.log("animateFinish", action, player);
 	player.position = action.to;
 
-	context.state.message =
-		action.payload ??
-		"¡Has llegado a la meta!";
+	context.state.message = action.payload ?? "¡Has llegado a la meta!";
 
 	context.state.specialAnimation = {
 		type: "finish",
@@ -36,19 +34,9 @@ export async function animateFinish(action: GooseAction, context: GooseAnimation
 	const startTime = performance.now();
 
 	await new Promise<void>((resolve) => {
-		function animate(
-			currentTime: number,
-		) {
-			const elapsed =
-				currentTime -
-				startTime;
-
-			const progress =
-				Math.min(
-					elapsed /
-						duration,
-					1,
-				);
+		function animate(currentTime: number) {
+			const elapsed = currentTime - startTime;
+			const progress = Math.min(elapsed / duration, 1);
 
 			context.state.specialAnimation =
 				{
@@ -61,9 +49,7 @@ export async function animateFinish(action: GooseAction, context: GooseAnimation
 			context.render();
 
 			if (progress < 1) {
-				requestAnimationFrame(
-					animate,
-				);
+				requestAnimationFrame(animate);
 				return;
 			}
 
@@ -74,428 +60,134 @@ export async function animateFinish(action: GooseAction, context: GooseAnimation
 	});
 
 	context.state.specialAnimation = null;
-
 	context.state.message = null;
-
 	context.render();
 }
 
-export function drawFinishAnimation(
-	ctx: CanvasRenderingContext2D,
-	progress: number,
-	players: Record<string, GoosePlayerState>,
-	token: number,
-	cellSize: number,
-) {
+export function drawFinishAnimation(ctx: CanvasRenderingContext2D,
+	progress: number, players: Record<string, GoosePlayerState>, token: number, cellSize: number) {
 	ctx.save();
 
-	const canvasWidth =
-		ctx.canvas.width;
-
-	const canvasHeight =
-		ctx.canvas.height;
-
-	const centerX =
-		canvasWidth / 2;
-
-	const centerY =
-		canvasHeight / 2;
-
-	const minDimension =
-		Math.min(
-			canvasWidth,
-			canvasHeight,
-		);
-
-	console.log("Mira que bonico la animacion")
+	const canvasWidth = ctx.canvas.width;
+	const canvasHeight = ctx.canvas.height;
+	const centerX = canvasWidth / 2;
+	const centerY = canvasHeight / 2;
+	const minDimension = Math.min(canvasWidth, canvasHeight);
 
 	const player =
 		Object.values(players).find(
-			(player) =>
-				player.token === token,
+			(player) => player.token === token,
 		);
 
 	let playerX = centerX;
 	let playerY = centerY;
 
 	if (player) {
-		const position =
-			getPosition(
-				player.position,
-				cellSize,
-			);
+		const position = getPosition(player.position, cellSize);
 
 		if (position) {
-			playerX =
-				position.x +
-				cellSize / 2;
-
-			playerY =
-				position.y +
-				cellSize * 0.65;
+			playerX = position.x + cellSize / 2;
+			playerY = position.y + cellSize * 0.65;
 		}
 	}
 
-	/*
-	 * ============================================================
-	 * FASES
-	 * ============================================================
-	 */
+	const fadeIn = Math.min(progress / 0.18, 1);
+	const fadeOut = progress > 0.78 ? 1 - (progress - 0.78) / 0.22 : 1;
+	const alpha = fadeIn * fadeOut;
 
-	/*
-	 * 0.00 - 0.20
-	 * Explosión inicial
-	 *
-	 * 0.20 - 0.75
-	 * Celebración
-	 *
-	 * 0.75 - 1.00
-	 * Desaparición
-	 */
-
-	const fadeIn =
-		Math.min(
-			progress / 0.18,
-			1,
-		);
-
-	const fadeOut =
-		progress > 0.78
-			? 1 -
-				(progress - 0.78) /
-					0.22
-			: 1;
-
-	const alpha =
-		fadeIn * fadeOut;
-
-	/*
-	 * ============================================================
-	 * OSCURECER LIGERAMENTE EL TABLERO
-	 * ============================================================
-	 */
-
-	ctx.globalAlpha =
-		alpha * 0.30;
-
+	ctx.globalAlpha = alpha * 0.30;
 	ctx.fillStyle = "#120f0b";
+	ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-	ctx.fillRect(
-		0,
-		0,
-		canvasWidth,
-		canvasHeight,
-	);
+	const pulse = 0.85 + Math.sin(progress * Math.PI * 8) * 0.15;
+	const haloRadius = minDimension * (0.10 + Math.min(progress * 1.5, 1) * 0.45);
+	const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, haloRadius);
 
-	/*
-	 * ============================================================
-	 * HALO DORADO
-	 * ============================================================
-	 */
+	gradient.addColorStop(0, "rgba(255, 230, 130, 0.35)");
+	gradient.addColorStop(0.35, "rgba(255, 200, 70, 0.16)");
+	gradient.addColorStop(1, "rgba(255, 190, 40, 0)");
 
-	const pulse =
-		0.85 +
-		Math.sin(
-			progress *
-				Math.PI *
-				8,
-		) *
-			0.15;
-
-	const haloRadius =
-		minDimension *
-		(
-			0.10 +
-			Math.min(
-				progress * 1.5,
-				1,
-			) *
-				0.45
-		);
-
-	const gradient =
-		ctx.createRadialGradient(
-			centerX,
-			centerY,
-			0,
-			centerX,
-			centerY,
-			haloRadius,
-		);
-
-	gradient.addColorStop(
-		0,
-		"rgba(255, 230, 130, 0.35)",
-	);
-
-	gradient.addColorStop(
-		0.35,
-		"rgba(255, 200, 70, 0.16)",
-	);
-
-	gradient.addColorStop(
-		1,
-		"rgba(255, 190, 40, 0)",
-	);
-
-	ctx.globalAlpha =
-		alpha * pulse;
-
-	ctx.fillStyle =
-		gradient;
-
+	ctx.globalAlpha = alpha * pulse;
+	ctx.fillStyle = gradient;
 	ctx.beginPath();
-
-	ctx.arc(
-		centerX,
-		centerY,
-		haloRadius,
-		0,
-		Math.PI * 2,
-	);
-
+	ctx.arc(centerX, centerY, haloRadius, 0, Math.PI * 2);
 	ctx.fill();
 
-	const rayProgress =
-		Math.min(
-			progress * 1.4,
-			1,
-		);
+	const rayProgress = Math.min(progress * 1.4, 1);
 
-	ctx.globalAlpha =
-		alpha *
-		(1 - progress * 0.35) *
-		0.30;
-
+	ctx.globalAlpha = alpha * (1 - progress * 0.35) * 0.30;
 	ctx.fillStyle = "#ffe38a";
 
 	const rayCount = 16;
 
 	for (let i = 0; i < rayCount; i++) {
-		const angle =
-			(i / rayCount) *
-				Math.PI *
-				2 +
-			progress *
-				0.4;
+		const angle = (i / rayCount) * Math.PI * 2 + progress * 0.4;
 
-		const innerRadius =
-			minDimension * 0.12;
+		const innerRadius = minDimension * 0.12;
+		const outerRadius = minDimension * (0.25 + rayProgress * 0.40);
 
-		const outerRadius =
-			minDimension *
-			(0.25 +
-				rayProgress *
-					0.40);
-
-		const spread =
-			0.025;
+		const spread = 0.025;
 
 		ctx.beginPath();
 
 		ctx.moveTo(
-			centerX +
-				Math.cos(
-					angle -
-						spread,
-				) *
-					innerRadius,
-
-			centerY +
-				Math.sin(
-					angle -
-						spread,
-				) *
-					innerRadius,
+			centerX + Math.cos(angle - spread) * innerRadius,
+			centerY + Math.sin(angle - spread) * innerRadius,
 		);
 
 		ctx.lineTo(
-			centerX +
-				Math.cos(angle) *
-					outerRadius,
-
-			centerY +
-				Math.sin(angle) *
-					outerRadius,
+			centerX + Math.cos(angle) * outerRadius,
+			centerY + Math.sin(angle) * outerRadius,
 		);
 
 		ctx.lineTo(
-			centerX +
-				Math.cos(
-					angle +
-						spread,
-				) *
-					innerRadius,
-
-			centerY +
-				Math.sin(
-					angle +
-						spread,
-				) *
-					innerRadius,
+			centerX + Math.cos(angle + spread) * innerRadius,
+			centerY + Math.sin(angle + spread) * innerRadius,
 		);
 
 		ctx.closePath();
-
 		ctx.fill();
 	}
-
-	/*
-	 * ============================================================
-	 * ESTRELLAS / DESTELLOS
-	 * ============================================================
-	 */
 
 	const sparkleCount = 24;
 
-	for (
-		let i = 0;
-		i < sparkleCount;
-		i++
-	) {
-		const angle =
-			(i / sparkleCount) *
-				Math.PI *
-				2 +
-			i * 1.7;
+	for (let i = 0; i < sparkleCount; i++) {
+		const angle = (i / sparkleCount) * Math.PI * 2 + i * 1.7;
+		const distance = minDimension * (0.08 + ((i * 0.37) % 1) * 0.42);
 
-		const distance =
-			minDimension *
-			(
-				0.08 +
-				((i * 0.37) % 1) *
-					0.42
-			);
+		const x = centerX + Math.cos(angle) * distance;
+		const y = centerY + Math.sin(angle) * distance;
 
-		const x =
-			centerX +
-			Math.cos(angle) *
-				distance;
+		const sparklePhase = (progress * 2.5 + i * 0.13) % 1;
+		const sparkleAlpha = Math.sin(sparklePhase * Math.PI);
+		const size = minDimension * (0.008 + 0.018 * sparkleAlpha);
 
-		const y =
-			centerY +
-			Math.sin(angle) *
-				distance;
-
-		const sparklePhase =
-			(
-				progress * 2.5 +
-				i * 0.13
-			) % 1;
-
-		const sparkleAlpha =
-			Math.sin(
-				sparklePhase *
-					Math.PI,
-			);
-
-		const size =
-			minDimension *
-			(
-				0.008 +
-				0.018 *
-					sparkleAlpha
-			);
-
-		ctx.globalAlpha =
-			alpha *
-			sparkleAlpha *
-			0.95;
-
-		ctx.fillStyle =
-			"#fff3b0";
+		ctx.globalAlpha = alpha * sparkleAlpha * 0.95;
+		ctx.fillStyle = "#fff3b0";
 
 		ctx.beginPath();
-
-		ctx.moveTo(
-			x,
-			y - size * 2,
-		);
-
-		ctx.lineTo(
-			x + size * 0.55,
-			y,
-		);
-
-		ctx.lineTo(
-			x,
-			y + size * 2,
-		);
-
-		ctx.lineTo(
-			x - size * 0.55,
-			y,
-		);
-
+		ctx.moveTo(x, y - size * 2);
+		ctx.lineTo( x + size * 0.55, y);
+		ctx.lineTo(x, y + size * 2);
+		ctx.lineTo(x - size * 0.55, y);
 		ctx.closePath();
-
 		ctx.fill();
 	}
 
-	/*
-	 * ============================================================
-	 * CONFETI
-	 * ============================================================
-	 */
-
 	const confettiCount = 45;
 
-	for (
-		let i = 0;
-		i < confettiCount;
-		i++
-	) {
-		const seed =
-			i * 17.31;
-
-		const x =
-			(
-				seed * 37
-			) %
-			canvasWidth;
-
-		const fall =
-			(
-				progress *
-					(0.7 +
-						(seed %
-							0.5)) +
-				(seed %
-					1)
-			) % 1;
-
-		const y =
-			-canvasHeight *
-				0.1 +
-			fall *
-				canvasHeight *
-				1.2;
-
-		const size =
-			minDimension *
-			0.012;
-
-		const rotation =
-			progress *
-				Math.PI *
-				4 +
-			seed;
+	for (let i = 0; i < confettiCount; i++) {
+		const seed = i * 17.31;
+		const x = (seed * 37) % canvasWidth;
+		const fall = (progress * (0.7 + (seed % 0.5)) + (seed % 1)) % 1;
+		const y = -canvasHeight * 0.1 + fall * canvasHeight * 1.2;
+		const size = minDimension * 0.012;
+		const rotation = progress * Math.PI * 4 + seed;
 
 		ctx.save();
-
-		ctx.translate(
-			x,
-			y,
-		);
-
+		ctx.translate(x, y);
 		ctx.rotate(rotation);
-
-		ctx.globalAlpha =
-			alpha * 0.9;
-
-		/*
-		 * Alternamos varios tonos festivos.
-		 */
+		ctx.globalAlpha = alpha * 0.9;
 
 		const confettiColors = [
 			"#e53935",
@@ -506,147 +198,46 @@ export function drawFinishAnimation(
 			"#fb8c00",
 		];
 
-		ctx.fillStyle =
-			confettiColors[
-				i %
-					confettiColors.length
-			];
-
-		ctx.fillRect(
-			-size / 2,
-			-size,
-			size,
-			size * 2,
-		);
-
+		ctx.fillStyle = confettiColors[i % confettiColors.length];
+		ctx.fillRect(-size / 2, -size, size, size * 2);
 		ctx.restore();
 	}
 
-	const impactProgress =
-		Math.min(
-			progress / 0.35,
-			1,
-		);
+	const impactProgress = Math.min(progress / 0.35, 1);
 
-	ctx.globalAlpha =
-		alpha *
-		(1 -
-			impactProgress) *
-		0.9;
-
-	ctx.strokeStyle =
-		"#ffe38a";
-
-	ctx.lineWidth =
-		minDimension * 0.012;
+	ctx.globalAlpha = alpha * (1 - impactProgress) * 0.9;
+	ctx.strokeStyle = "#ffe38a";
+	ctx.lineWidth = minDimension * 0.012;
 
 	ctx.beginPath();
 
-	ctx.arc(
-		playerX,
-		playerY,
-		minDimension *
-			0.05 +
-			impactProgress *
-				minDimension *
-				0.35,
-		0,
-		Math.PI * 2,
-	);
+	ctx.arc(playerX, playerY, minDimension * 0.05 + impactProgress * minDimension * 0.35, 0, Math.PI * 2);
 
 	ctx.stroke();
 
-	/*
-	 * ============================================================
-	 * TEXTO CENTRAL
-	 * ============================================================
-	 */
-
 	if (progress > 0.18) {
-		const textProgress =
-			Math.min(
-				(progress - 0.18) /
-					0.25,
-				1,
-			);
+		const textProgress = Math.min( (progress - 0.18) / 0.25, 1);
 
-		const textAlpha =
-			Math.sin(
-				textProgress *
-					Math.PI *
-					0.5,
-			);
+		const textAlpha = Math.sin( textProgress * Math.PI * 0.5);
+		const textScale = 0.75 + textProgress * 0.25;
 
-		const textScale =
-			0.75 +
-			textProgress *
-				0.25;
+		ctx.globalAlpha = alpha * textAlpha;
+		ctx.translate(centerX, centerY);
+		ctx.scale( textScale, textScale);
 
-		ctx.globalAlpha =
-			alpha *
-			textAlpha;
+		ctx.textAlign ="center";
+		ctx.textBaseline = "middle";
+		ctx.font = `bold ${minDimension * 0.075}px Arial`;
+		ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
 
-		ctx.translate(
-			centerX,
-			centerY,
-		);
+		ctx.fillText("¡META!", 0, -minDimension * 0.025 + minDimension * 0.012);
+		ctx.fillStyle = "#ffe38a";
+		ctx.fillText("¡META!", 0, -minDimension * 0.025);
 
-		ctx.scale(
-			textScale,
-			textScale,
-		);
+		ctx.font = `bold ${minDimension * 0.035}px Arial`;
+		ctx.fillStyle ="#fff8e7";
 
-		ctx.textAlign =
-			"center";
-
-		ctx.textBaseline =
-			"middle";
-
-		/*
-		 * Sombra.
-		 */
-
-		ctx.font = `bold ${
-			minDimension *
-			0.075
-		}px Arial`;
-
-		ctx.fillStyle =
-			"rgba(0, 0, 0, 0.5)";
-
-		ctx.fillText(
-			"¡META!",
-			0,
-			-minDimension *
-				0.025 +
-				minDimension *
-					0.012,
-		);
-
-		ctx.fillStyle =
-			"#ffe38a";
-
-		ctx.fillText(
-			"¡META!",
-			0,
-			-minDimension *
-				0.025,
-		);
-
-		ctx.font = `bold ${
-			minDimension *
-			0.035
-		}px Arial`;
-
-		ctx.fillStyle =
-			"#fff8e7";
-
-		ctx.fillText(
-			"¡HAS GANADO!",
-			0,
-			minDimension *
-				0.065,
-		);
+		ctx.fillText("¡HAS GANADO!", 0, minDimension * 0.065);
 	}
 
 	ctx.restore();

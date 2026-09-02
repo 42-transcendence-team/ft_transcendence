@@ -112,13 +112,9 @@ export function drawWellAnimation(ctx: CanvasRenderingContext2D,
 
 		for (let i = 0; i < points; i++) {
 			const t = i / (points - 1);
-
 			const angle = t * Math.PI * 2 * turns + progress * Math.PI * 5 + offset;
-
 			const spiralRadius = radius * 0.92 * t;
-
 			const px = x + Math.cos(angle) * spiralRadius;
-
 			const py = centerY + Math.sin(angle) * spiralRadius * 0.72;
 
 			if (i === 0) {

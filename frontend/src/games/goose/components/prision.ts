@@ -84,15 +84,12 @@ export function drawPrisonAnimation(ctx: CanvasRenderingContext2D,
 
 	for (let i = 0; i <= barCount; i++) {
 		const x = i * spacing + shake;
-
 		const topY = -(canvasHeight * (1 - visibleProgress));
-
 		const bottomY = canvasHeight + canvasHeight * (1 - visibleProgress);
 
 		ctx.globalAlpha = visibleProgress * 0.95;
 
 		ctx.beginPath();
-
 		ctx.moveTo(x, topY);
 		ctx.lineTo(x, bottomY);
 

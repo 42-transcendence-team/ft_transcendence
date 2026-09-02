@@ -105,12 +105,7 @@ export function drawInnAnimation(ctx: CanvasRenderingContext2D,
 	for (let i = 0; i < stars.length; i++) {
 		const star = stars[i];
 
-		const twinkle =
-			0.65 +
-			Math.sin(
-				progress * Math.PI * 6 + i,
-			) *
-				0.35;
+		const twinkle = 0.65 + Math.sin(progress * Math.PI * 6 + i) * 0.35;
 
 		const size = minDimension * star.size * twinkle;
 
@@ -154,51 +149,34 @@ export function drawInnAnimation(ctx: CanvasRenderingContext2D,
 	ctx.arc(moonX + moonSize * 0.35, moonY - moonSize * 0.15, moonSize * 0.92, 0, Math.PI * 2);
 	ctx.fill();
 
-	ctx.globalCompositeOperation =
-		"source-over";
+	ctx.globalCompositeOperation = "source-over";
 
 	const bedScale = 0.85 + Math.sin(progress * Math.PI) *	0.20;
-
 	const bedWidth = minDimension * 0.32 * bedScale;
-
 	const bedHeight = minDimension * 0.095 * bedScale;
-
 	const headboardWidth = bedWidth * 0.10;
-
 	const mattressY = centerY + bedHeight * 0.15;
 
 	ctx.globalAlpha = alpha;
 
 	ctx.fillStyle = "#6f472f";
-
 	ctx.beginPath();
-
 	ctx.roundRect(centerX - bedWidth / 2, centerY - bedHeight * 0.75, headboardWidth, bedHeight * 1.8, headboardWidth * 0.3);
-
 	ctx.fill();
 
 	ctx.fillStyle = "#8b5e3c";
-
 	ctx.beginPath();
-
 	ctx.roundRect(centerX - bedWidth / 2, mattressY, bedWidth, bedHeight, bedHeight * 0.25,);
-
 	ctx.fill();
 
 	ctx.fillStyle = "#fff8e7";
-
 	ctx.beginPath();
-
 	ctx.roundRect(centerX - bedWidth * 0.30, mattressY - bedHeight * 0.12, bedWidth * 0.62, bedHeight * 0.78, bedHeight * 0.2);
-
 	ctx.fill();
 
 	ctx.fillStyle = "#ffffff";
-
 	ctx.beginPath();
-
 	ctx.roundRect(centerX - bedWidth * 0.42, mattressY - bedHeight * 0.16, bedWidth * 0.24, bedHeight * 0.68, bedHeight * 0.2);
-
 	ctx.fill();
 
 	const personX = centerX + bedWidth * 0.10;
@@ -212,11 +190,8 @@ export function drawInnAnimation(ctx: CanvasRenderingContext2D,
 	ctx.fill();
 
 	ctx.fillStyle = "#b88ac4";
-
 	ctx.beginPath();
-
 	ctx.roundRect(personX - bedWidth * 0.16, personY + personRadius * 0.35, bedWidth * 0.30, bedHeight * 0.40, bedHeight * 0.18);
-
 	ctx.fill();
 
 	const zPositions = [
@@ -246,39 +221,28 @@ export function drawInnAnimation(ctx: CanvasRenderingContext2D,
 
 	for (let i = 0; i < zPositions.length; i++) {
 		const z = zPositions[i];
-
 		const localProgress = (progress - z.delay + 1) % 1;
-
 		const float = Math.sin(localProgress * Math.PI) * minDimension * 0.025;
-
 		const opacity = Math.sin(localProgress * Math.PI);
-
 		const size = minDimension * z.scale;
 
 		ctx.globalAlpha = alpha * opacity;
-
 		ctx.font = `bold ${size}px Arial`;
-
 		ctx.fillStyle = "#ffffff";
-
 		ctx.fillText("Z", z.x, z.y - float);
 	}
 
 	const cloudAlpha = alpha * (0.15 + sceneProgress * 0.20);
 
 	ctx.globalAlpha = cloudAlpha;
-
 	ctx.fillStyle = "#ffffff";
 
 	const cloudY = centerY + bedHeight * 0.95;
-
 	const cloudSize = minDimension * 0.035;
 
 	for (const offset of [-1, 0, 1]) {
 		ctx.beginPath();
-
 		ctx.arc(centerX + offset * cloudSize * 1.2, cloudY, cloudSize * (0.7 + Math.abs(offset) * 0.2), 0, Math.PI * 2);
-
 		ctx.fill();
 	}
 
