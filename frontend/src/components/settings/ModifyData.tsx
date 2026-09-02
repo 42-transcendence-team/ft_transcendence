@@ -2,7 +2,7 @@ import "@styles/_settingsSection.scss";
 
 import { useState, Fragment, useEffect } from "react";
 import { useFormErrors } from "@hooks/useFormErrors";
-import { calculateAge } from "../RegisterForm";
+import { calculateAge } from "../../utils/calculateAge";
 import { updateData, type DataSettings } from "api/Settings";
 import { FormField } from "../FormField";
 import { DateInput } from "../DateInput";

@@ -19,6 +19,8 @@ type Client struct {
 	Username string // Nombre de usuario del cliente
 	Rooms map[uint]*Room // Salas a las que el cliente está unido
 	Mu sync.RWMutex // Protege Rooms (se accede desde hub y desde las salas)
+
+	closeOnce sync.Once // Garantiza que SendChan solo se cierre una vez (kick de clientes lentos)
 }
 
 func NewClient(conn *websocket.Conn, hub *Hub, userID uint, username string) *Client {
@@ -58,15 +60,36 @@ func (c *Client) GetUsername() string {
 }
 
 func (c *Client) Send(message []byte) {
-	c.SendChan <- message
+	select {
+	case c.SendChan <- message:
+	default:
+		// Canal lleno o cerrado: se descarta el mensaje para no bloquear ni panicar.
+	}
+}
+
+// closeSendChan cierra SendChan exactamente una vez. El WritePump detecta el
+// cierre (ok == false), envía un CloseMessage y cierra la conexión TCP. Usar
+// sync.Once evita el panic de doble close cuando varias salas expulsan al
+// mismo cliente lento.
+func (c *Client) closeSendChan() {
+	c.closeOnce.Do(func() {
+		close(c.SendChan)
+	})
 }
 
 func (c *Client) JoinRoom(room *Room) {
-	room.Join <- c
+	select {
+	case room.Join <- c:
+	default:
+		// La sala está muriendo o ya se destruyó: no bloquear al ReadPump.
+	}
 }
 
 func (c *Client) LeaveRoom(room *Room) {
-	room.Leave <- c
+	select {
+	case room.Leave <- c:
+	default:
+	}
 }
 
 func (c *Client) SendMessage(roomID uint, message []byte) error {
@@ -77,7 +100,10 @@ func (c *Client) SendMessage(roomID uint, message []byte) error {
 		return fmt.Errorf("send message Room with ID %d doesn't exists", roomID)
 	}
 
-	room.Broadcast <- message
+	select {
+	case room.Broadcast <- message:
+	default:
+	}
 	return nil
 }
 

@@ -24,7 +24,7 @@ func NewHub() *Hub {
 		Register:         make(chan *Client),
 		Unregister:       make(chan *Client),
 		Rooms:            make(map[uint]*Room),
-		CloseRooms:       make(chan uint),
+		CloseRooms:       make(chan uint, 16),
 	}
 }
 
@@ -33,29 +33,38 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.Register:
 			h.Mu.Lock()
+			if prev, ok := h.ClientsConnected[client.UserID]; ok && prev != client {
+				// El mismo usuario abrió una nueva conexión: se expulsa la
+				// anterior. La conexión vieja hará que su ReadPump falle y
+				// acabe en Unregister, donde se limpia sin tocar a la nueva.
+				log.Printf("Nueva conexión para el usuario %d: cerrando la conexión anterior.", client.UserID)
+				prev.Conn.Close()
+			}
 			h.Clients[client] = true
 			h.ClientsConnected[client.UserID] = client
 			h.Mu.Unlock()
 
 		case client := <-h.Unregister:
 			h.Mu.Lock()
-			_, ok := h.Clients[client]
-			if ok {
-				delete(h.Clients, client)
+			// Solo se elimina de ClientsConnected si sigue apuntando a ESTE
+			// cliente. Si el usuario se reconectó, la entrada pertenece a la
+			// conexión nueva y no debe borrarse.
+			if stored, ok := h.ClientsConnected[client.UserID]; ok && stored == client {
 				delete(h.ClientsConnected, client.UserID)
+			}
+			if _, ok := h.Clients[client]; ok {
+				delete(h.Clients, client)
 			}
 			h.Mu.Unlock()
 
-			if ok {
-				client.Mu.RLock()
-				for _, room := range client.Rooms {
-					select {
-					case room.Leave <- client:
-					default:
-					}
+			client.Mu.RLock()
+			for _, room := range client.Rooms {
+				select {
+				case room.Leave <- client:
+				default:
 				}
-				client.Mu.RUnlock()
 			}
+			client.Mu.RUnlock()
 
 		case roomID := <-h.CloseRooms:
 			h.Mu.Lock()
@@ -121,10 +130,18 @@ func (h *Hub) SendMessagesToUser(userID uint, message []byte) {
 
 func (h *Hub) BroadcastToRoom(roomID uint, message []byte) {
 	h.Mu.RLock()
-	defer h.Mu.RUnlock()
+	room, ok := h.Rooms[roomID]
+	h.Mu.RUnlock()
+	if !ok {
+		return
+	}
 
-	if room, ok := h.Rooms[roomID]; ok {
-		room.Broadcast <- message
+	// Envío no bloqueante y SIN coger h.Mu: una sala vacía que se está
+	// autodestruyendo puede dejar de leer room.Broadcast, y bloquear aquí
+	// mientras se mantiene el RLock provocaría un deadlock con hub.Run.
+	select {
+	case room.Broadcast <- message:
+	default:
 	}
 }
 
