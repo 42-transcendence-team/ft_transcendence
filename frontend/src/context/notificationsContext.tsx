@@ -28,6 +28,7 @@ interface NotificationContextType {
   clearRoomNotifications: (roomId: number | string) => void;
   markAsRead: (notificationId: string | number) => void;
   openChat: (roomId: number) => void;
+  openReceivedRequests: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -88,6 +89,7 @@ export const useHandleNotification = (
 	activeChat: number | null,
 	subscribe: (type: string, handler: (message: any) => void) => () => void,
 	onChatOpen: (roomId: number) => void,
+	onOpenReceivedRequests: () => void,
 ) => {
 	const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -269,19 +271,21 @@ export const useHandleNotification = (
 		clearRoomNotifications,
 		markAsRead,
 		openChat: onChatOpen,
+		openReceivedRequests: onOpenReceivedRequests,
 	};
 };
 
-export function NotificationProvider({ children, activeChat, user, onChatOpen }: {
+export function NotificationProvider({ children, activeChat, user, onChatOpen, onOpenReceivedRequests }: {
 	children: React.ReactNode;
 	activeChat: number | null;
 	user: any;
 	onChatOpen: (roomId: number) => void;
+	onOpenReceivedRequests: () => void;
 }) {
 	const { subscribe} = useWebSocket();
-	const { notifications, clearRoomNotifications, markAsRead, openChat } = useHandleNotification(user, activeChat, subscribe, onChatOpen);
+	const { notifications, clearRoomNotifications, markAsRead, openChat, openReceivedRequests } = useHandleNotification(user, activeChat, subscribe, onChatOpen, onOpenReceivedRequests);
 
-	const value = { notifications, clearRoomNotifications, markAsRead, openChat };
+	const value = { notifications, clearRoomNotifications, markAsRead, openChat, openReceivedRequests };
 
 	return (
 		<NotificationContext.Provider value={value}>
@@ -299,6 +303,7 @@ export const useNotification = () => {
 			clearRoomNotifications: () => {},
 			markAsRead: () => {},
 			openChat: () => {},
+			openReceivedRequests: () => {},
 		};
 	}
 	return context;

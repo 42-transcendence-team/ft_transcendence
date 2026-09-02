@@ -33,7 +33,7 @@ export const PrivateRoutes = {
 		{ path: "settings", element: <Settings />, loader: settingsLoader },
     	{ path: "friends/:username", element: <Friends /> },
     	{ path: "mobile-chat", element: <MobileChat /> },
-    	{ path: "mobile-search-notify", element: <MobileSearchAndNotify /> },
+    	// { path: "mobile-search-notify", element: <MobileSearchAndNotify /> },
 		GameRoutes,
 	],
 };

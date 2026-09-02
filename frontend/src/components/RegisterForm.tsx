@@ -2,6 +2,8 @@ import { NavLink, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { registerUser } from "../api/Register"
 import { FormField } from "./FormField"
+import { useAuth as useRouterAuth } from "@components/auth-router/AuthContext";
+import { useAuth as useUserAuth } from "../context/AuthContext";
 
 type FormErrors = {
 	username: string
@@ -60,6 +62,8 @@ export const RegisterForm = () => {
 	// useNavigate() devuelve la función navigate que permite
 	// redirigir programáticamente a otra ruta.
 	const navigate = useNavigate()
+	const { refreshAuth } = useRouterAuth()
+	const { refreshUser } = useUserAuth()
 	const validateForm = () => {
 		const newErrors: FormErrors = {
 			username: "",
@@ -167,6 +171,9 @@ export const RegisterForm = () => {
 			await registerUser(payload)
 
 			setServerMessage("User created successfully.")
+
+			await refreshAuth()
+			await refreshUser()
 			navigate("/app")
 			return
 		} catch (error) {

@@ -10,6 +10,8 @@ RUN go mod download
 
 COPY . .
 
+RUN go build -o /dev/null ./cmd/api
+
 EXPOSE 8080
 
 CMD ["air", "-c", ".air.toml"]

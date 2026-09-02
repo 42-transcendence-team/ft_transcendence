@@ -37,7 +37,7 @@ const (
 	writeWait      = 10 * time.Second    // Tiempo permitido para escribir un mensaje
 	pongWait       = 60 * time.Second    // Tiempo permitido para recibir el pong
 	pingPeriod     = (pongWait * 9) / 10 // Enviar pings un poco antes del timeout
-	maxMessageSize = 512                 // Tamaño máximo de mensaje
+	maxMessageSize = 1024                 // Tamaño máximo de mensaje
 )
 
 type ClientConn interface {

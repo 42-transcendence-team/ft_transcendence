@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import type { ApiError } from "../api/ApiRequest";
-import {getPostsByUserId, type PostReactionState, type PostSummary} from "../api/Posts";
+import {
+  getPostsByUserId,
+  type PostReactionState,
+  type PostSummary,
+} from "../api/Posts";
 import { getUserPresence, getUserProfile } from "../api/UserProfile";
 import type { UserProfile } from "../api/UserProfile";
 import {
@@ -30,6 +34,13 @@ type ConfirmAction = "remove-friend" | "block" | "unblock" | null;
 
 function getImageSource(imagePath: string): string {
   return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+}
+
+function getVersionedImageSource(imagePath: string, version: number): string {
+  const source = getImageSource(imagePath);
+  const separator = source.includes("?") ? "&" : "?";
+
+  return `${source}${separator}v=${version}`;
 }
 
 function isApiError(error: unknown): error is ApiError {
@@ -63,6 +74,7 @@ export const Profile = () => {
     loading: authLoading,
     refreshUser,
   } = useAuth();
+
   const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -73,6 +85,8 @@ export const Profile = () => {
   const [isAvatarViewerOpen, setIsAvatarViewerOpen] = useState(false);
   const [avatarImageFailed, setAvatarImageFailed] = useState(false);
   const [bannerImageFailed, setBannerImageFailed] = useState(false);
+  const [avatarVersion, setAvatarVersion] = useState(0);
+  const [bannerVersion, setBannerVersion] = useState(0);
   const [profilePosts, setProfilePosts] = useState<PostSummary[]>([]);
   const [postsPage, setPostsPage] = useState(1);
   const [postsTotalPages, setPostsTotalPages] = useState(0);
@@ -116,11 +130,14 @@ export const Profile = () => {
 
     getUserProfile(username)
       .then((profile) => {
-        if (!cancelled)
+        if (!cancelled) {
           setProfileUser(profile);
+        }
       })
       .catch((error: unknown) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
         if (isApiError(error) && error.status === 404) {
           setProfileNotFound(true);
@@ -130,7 +147,9 @@ export const Profile = () => {
         setProfileError("The profile could not be loaded.");
       })
       .finally(() => {
-        if (!cancelled) setIsLoadingProfile(false);
+        if (!cancelled) {
+          setIsLoadingProfile(false);
+        }
       });
 
     return () => {
@@ -169,22 +188,30 @@ export const Profile = () => {
     }
 
     let cancelled = false;
+
     const loadInitialPosts = async () => {
       try {
         setIsLoadingPosts(true);
+
         const response = await getPostsByUserId(ownerID, 1, 20);
 
-        if (cancelled || postsOwnerIDRef.current !== ownerID) return;
+        if (cancelled || postsOwnerIDRef.current !== ownerID) {
+          return;
+        }
 
         setProfilePosts(response.data);
+
         setPostsPage(response.pagination.page);
+
         setPostsTotalPages(response.pagination.totalPages);
       } catch {
-        if (!cancelled && postsOwnerIDRef.current === ownerID)
+        if (!cancelled && postsOwnerIDRef.current === ownerID) {
           setPostsError("No se pudieron cargar las publicaciones.");
+        }
       } finally {
-        if (!cancelled && postsOwnerIDRef.current === ownerID)
+        if (!cancelled && postsOwnerIDRef.current === ownerID) {
           setIsLoadingPosts(false);
+        }
       }
     };
 
@@ -205,28 +232,42 @@ export const Profile = () => {
    * volver a cargar el perfil completo.
    */
   useEffect(() => {
-    if (!profileUser?.login || profileNotFound) return;
+    if (!profileUser?.login || profileNotFound) {
+      return;
+    }
 
     const profileLogin = profileUser.login;
+
     let cancelled = false;
     let requestInFlight = false;
 
     const refreshPresence = async () => {
-      if (requestInFlight) return;
+      if (requestInFlight) {
+        return;
+      }
 
       requestInFlight = true;
+
       try {
         const isOnline = await getUserPresence(profileLogin);
-        if (cancelled) return;
+
+        if (cancelled) {
+          return;
+        }
 
         setProfileUser((currentProfile) => {
           if (
             !currentProfile ||
             currentProfile.login !== profileLogin ||
             currentProfile.isOnline === isOnline
-          )
+          ) {
             return currentProfile;
-          return { ...currentProfile, isOnline };
+          }
+
+          return {
+            ...currentProfile,
+            isOnline,
+          };
         });
       } catch {
         /*
@@ -239,9 +280,11 @@ export const Profile = () => {
     };
 
     void refreshPresence();
+
     const intervalId = window.setInterval(() => {
       void refreshPresence();
     }, 30_000);
+
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
@@ -257,11 +300,14 @@ export const Profile = () => {
       !profileUser ||
       !authenticatedUser ||
       profileUser.login !== authenticatedUser.login
-    )
+    ) {
       return;
+    }
 
     setProfileUser((currentProfile) => {
-      if (!currentProfile) return currentProfile;
+      if (!currentProfile) {
+        return currentProfile;
+      }
 
       return {
         ...currentProfile,
@@ -281,13 +327,17 @@ export const Profile = () => {
   useEffect(() => {
     setAvatarImageFailed(false);
 
-    if (!profileUser?.avatarPath) return;
+    if (!profileUser?.avatarPath) {
+      return;
+    }
 
     let active = true;
     const image = new Image();
 
     image.onerror = () => {
-      if (active) setAvatarImageFailed(true);
+      if (active) {
+        setAvatarImageFailed(true);
+      }
     };
 
     image.src = getImageSource(profileUser.avatarPath);
@@ -301,28 +351,63 @@ export const Profile = () => {
     setBannerImageFailed(false);
   }, [profileUser?.bannerPath]);
 
+  const handleAvatarUpdated = async () => {
+    await refreshUser();
+
+    if (username) {
+      const updatedProfile = await getUserProfile(username);
+      setProfileUser(updatedProfile);
+    }
+
+    setAvatarImageFailed(false);
+    setAvatarVersion(Date.now());
+  };
+
+  const handleBannerUpdated = async () => {
+    await refreshUser();
+
+    if (username) {
+      const updatedProfile = await getUserProfile(username);
+      setProfileUser(updatedProfile);
+    }
+
+    setBannerImageFailed(false);
+    setBannerVersion(Date.now());
+  };
+
   const handleLoadMorePosts = async () => {
-    if (!profileUser || isLoadingMorePosts || postsPage >= postsTotalPages)
+    if (!profileUser || isLoadingMorePosts || postsPage >= postsTotalPages) {
       return;
+    }
 
     const ownerID = profileUser.id;
     const nextPage = postsPage + 1;
+
     try {
       setIsLoadingMorePosts(true);
       setPostsError(null);
+
       const response = await getPostsByUserId(ownerID, nextPage, 20);
-      if (postsOwnerIDRef.current !== ownerID) return;
+
+      if (postsOwnerIDRef.current !== ownerID) {
+        return;
+      }
 
       setProfilePosts((currentPosts) =>
         appendUniquePosts(currentPosts, response.data),
       );
+
       setPostsPage(response.pagination.page);
+
       setPostsTotalPages(response.pagination.totalPages);
     } catch {
-      if (postsOwnerIDRef.current === ownerID)
+      if (postsOwnerIDRef.current === ownerID) {
         setPostsError("More posts could not be loaded.");
+      }
     } finally {
-      if (postsOwnerIDRef.current === ownerID) setIsLoadingMorePosts(false);
+      if (postsOwnerIDRef.current === ownerID) {
+        setIsLoadingMorePosts(false);
+      }
     }
   };
 
@@ -351,7 +436,9 @@ export const Profile = () => {
    * el perfil para obtener relation y request_id actualizados.
    */
   const executeRelationAction = async (action: () => Promise<unknown>) => {
-    if (!username) return;
+    if (!username) {
+      return;
+    }
 
     setRelationActionError(null);
 
@@ -367,13 +454,17 @@ export const Profile = () => {
   };
 
   const handleAddFriend = () => {
-    if (!profileUser) return;
+    if (!profileUser) {
+      return;
+    }
 
     void executeRelationAction(() => sendFriendRequest(profileUser.id));
   };
 
   const handleAcceptRequest = () => {
-    if (!profileUser?.request_id) return;
+    if (!profileUser?.request_id) {
+      return;
+    }
 
     void executeRelationAction(() =>
       acceptFriendRequest(profileUser.request_id!),
@@ -381,25 +472,35 @@ export const Profile = () => {
   };
 
   const handleRejectRequest = () => {
-    if (!profileUser?.request_id) return;
+    if (!profileUser?.request_id) {
+      return;
+    }
+
     void executeRelationAction(() =>
       rejectFriendRequest(profileUser.request_id!),
     );
   };
 
   const handleRemoveFriend = async () => {
-    if (!profileUser) return;
+    if (!profileUser) {
+      return;
+    }
 
     await executeRelationAction(() => removeFriend(profileUser.id));
   };
 
   const handleBlockUser = async () => {
-    if (!profileUser) return;
+    if (!profileUser) {
+      return;
+    }
+
     await executeRelationAction(() => blockUser(profileUser.id));
   };
 
   const handleUnblockUser = async () => {
-    if (!profileUser) return;
+    if (!profileUser) {
+      return;
+    }
 
     await executeRelationAction(() => unblockUser(profileUser.id));
   };
@@ -414,7 +515,9 @@ export const Profile = () => {
     );
   }
 
-  if (profileNotFound) return <NotFound />;
+  if (profileNotFound) {
+    return <NotFound />;
+  }
 
   if (profileError || !profileUser) {
     return (
@@ -429,18 +532,32 @@ export const Profile = () => {
   const profilePresence: UserPresence = profileUser.isOnline
     ? "online"
     : "offline";
+
   const hasCustomAvatar = Boolean(profileUser.avatarPath) && !avatarImageFailed;
+
   const hasCustomBanner = Boolean(profileUser.bannerPath) && !bannerImageFailed;
+
+  const avatarPath = profileUser.avatarPath
+    ? getVersionedImageSource(profileUser.avatarPath, avatarVersion)
+    : null;
+
+  const bannerPath = profileUser.bannerPath
+    ? getVersionedImageSource(profileUser.bannerPath, bannerVersion)
+    : null;
+
   const handleAvatarClick = isOwnProfile
     ? () => setIsAvatarEditorOpen(true)
     : hasCustomAvatar
       ? () => setIsAvatarViewerOpen(true)
       : undefined;
+
   const canViewPrivateContent =
     isOwnProfile || profileUser.relation === "friends";
 
   const handleConfirmRelationAction = async () => {
-    if (!confirmAction) return;
+    if (!confirmAction) {
+      return;
+    }
 
     setIsConfirming(true);
 
@@ -494,7 +611,7 @@ export const Profile = () => {
     <div className="profile">
       <div className="profile__container">
         <ProfileBanner
-          bannerPath={profileUser.bannerPath}
+          bannerPath={bannerPath}
           username={profileUser.login}
           isOwnProfile={isOwnProfile}
           hasCustomBanner={hasCustomBanner}
@@ -507,7 +624,7 @@ export const Profile = () => {
           username={profileUser.login}
           name={profileUser.name}
           surname={profileUser.surname}
-          avatarPath={profileUser.avatarPath}
+          avatarPath={avatarPath}
           presence={profilePresence}
           isOwnProfile={isOwnProfile}
           hasCustomAvatar={hasCustomAvatar}
@@ -534,8 +651,14 @@ export const Profile = () => {
           canViewPrivateContent={canViewPrivateContent}
           onStatusUpdated={(newStatus) => {
             setProfileUser((currentProfile) => {
-              if (!currentProfile) return currentProfile;
-              return { ...currentProfile, status: newStatus };
+              if (!currentProfile) {
+                return currentProfile;
+              }
+
+              return {
+                ...currentProfile,
+                status: newStatus,
+              };
             });
           }}
           onCreatePost={() => navigate("/app/posts/new")}
@@ -589,14 +712,14 @@ export const Profile = () => {
             open={isAvatarEditorOpen}
             currentAvatarPath={profileUser.avatarPath}
             onClose={() => setIsAvatarEditorOpen(false)}
-            onUpdated={refreshUser}
+            onUpdated={handleAvatarUpdated}
           />
 
           <BannerEditorModal
             open={isBannerEditorOpen}
             currentBannerPath={profileUser.bannerPath}
             onClose={() => setIsBannerEditorOpen(false)}
-            onUpdated={refreshUser}
+            onUpdated={handleBannerUpdated}
           />
         </>
       )}
@@ -604,11 +727,7 @@ export const Profile = () => {
       {!isOwnProfile && hasCustomAvatar && (
         <PostImageModal
           open={isAvatarViewerOpen}
-          imageSrc={
-            profileUser.avatarPath
-              ? getImageSource(profileUser.avatarPath)
-              : null
-          }
+          imageSrc={avatarPath}
           alt={`${profileUser.login} profile image`}
           onClose={() => setIsAvatarViewerOpen(false)}
         />

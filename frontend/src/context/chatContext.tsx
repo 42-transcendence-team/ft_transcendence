@@ -24,7 +24,13 @@ export type WebSocketMessage =
 	| { type: "message"; room_id: number; username?: string; user_id?: string; content: string; message_id?: string; timestamp?: string }
 	| { type: "join_room"; room_id: number }
 	| { type: "join"; room_id: number; messages: ChatMessage[] }
-	| { type: "CREATE_ROOM"; payload: { room_id: number } };
+	| { type: "CREATE_ROOM"; payload: { room_id: number } }
+	| { type: "message_rejected"; room_id: number; content: string; reason?: string };
+
+export interface SendRejection {
+	roomId: number;
+	reason: string;
+}
 
 interface MessagesState {
 	[roomId: number]: ChatMessage[]; 
@@ -39,6 +45,8 @@ interface ChatContextType {
 	lastActivity: Record<number, number>;
 	addChat: (otherUserId: number, otherLogin?: string, otherAvatar?: string) => Promise<number | null>;
 	user: AuthUser | null;
+	sendRejection: SendRejection | null;
+	dismissSendRejection: () => void;
 }
 
 const chatContext = createContext<ChatContextType | undefined>(undefined);
@@ -67,9 +75,13 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 	const [ rooms, setRooms ] = useState<number[]>([]);
 	const [ lastActivity, setLastActivity ] = useState<Record<number, number>>({});
 	const [ roomMembers, setRoomMembers ] = useState<Record<number, RoomMember[]>>({});
-	const blockedRoomIdsRef = useRef<Set<number>>(new Set());
 	const fetchRoomsRef = useRef<() => Promise<void>>();
+	const [ sendRejection, setSendRejection ] = useState<SendRejection | null>(null);
 	useJoinRooms(rooms);
+
+	const dismissSendRejection = useCallback(() => {
+		setSendRejection(null);
+	}, []);
 
 	const sendMessage = useCallback((roomId: number, content: string) => {
 		if (!user || !user.login)
@@ -100,7 +112,6 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 			return;
 		}
 		send({ type: "join_room", room_id: roomId });
-		console.log(`Joining room ${roomId}`);
 	}, [messagesByRoom, send]);
 
 
@@ -117,8 +128,6 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 				);
 				if (ids.includes(currentUserId) && ids.includes(otherUserId)) {
 					const roomId: number = r.ID ?? r.id;
-					// Si la sala estaba bloqueada, la desbloqueamos al re-abrirla explicitamente
-					blockedRoomIdsRef.current.delete(roomId);
 					setLastActivity(prev => ({...prev, [roomId]: Date.now()}));
 					joinRoom(roomId);
 					return roomId;
@@ -167,7 +176,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 			try {
 				const data = await apiRequest({ endpoint: "websocket/rooms", method: "GET" });
 				const allIds = data.map((r: any) => r.ID ?? r.id);
-				setRooms(allIds.filter((id: number) => !blockedRoomIdsRef.current.has(id)));
+				setRooms(allIds);
 				const members: Record<number, RoomMember[]> = {};
 				for (const r of (data || [])) {
 					const roomId = r.ID ?? r.id;
@@ -210,7 +219,6 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 					}
 				}
 			}
-			console.log('mensaje aqui: ', message)
 		});
 		const unsubscribeMessage = subscribe("message", (message: any) => {
 			const { room_id } = message;
@@ -271,8 +279,6 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 		const unsubscribeCreateRoom = subscribe("CREATE_ROOM", (message: any) => {
 			const roomId = message.payload?.room_id;
 			if (roomId) {
-				// No reincorporar salas bloqueadas por WS
-				if (blockedRoomIdsRef.current.has(roomId)) return;
 				setRooms((prev) => (prev.includes(roomId) ? prev : [...prev, roomId]));
 				joinRoom(roomId);
 				fetchRoomsRef.current?.();
@@ -280,9 +286,9 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 		});
 
 		// El servidor rechazo el mensaje (no eres amigo o hay bloqueo):
-		// eliminar el mensaje optimista pendiente.
+		// eliminar el mensaje optimista pendiente y avisar al usuario con el motivo.
 		const unsubscribeRejected = subscribe("message_rejected", (message: any) => {
-			const { room_id, content } = message;
+			const { room_id, content, reason } = message;
 			if (!room_id) return;
 			setMessagesByRoom(prev => {
 				const msgs = prev[room_id] || [];
@@ -293,20 +299,11 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 				if (cleaned.length === msgs.length) return prev;
 				return {...prev, [room_id]: cleaned};
 			});
+			setSendRejection({ roomId: room_id, reason: reason ?? "No puedes enviar este mensaje" });
 		});
 
-		// Fin de amistad o bloqueo: ocultar la sala compartida del panel
-		const unsubscribeBlocked = subscribe("ROOM_BLOCKED", (message: any) => {
-			const roomId = message.payload?.room_id;
-			if (!roomId) return;
-			blockedRoomIdsRef.current.add(roomId);
-			setRooms(prev => prev.filter(r => r !== roomId));
-			setLastActivity(prev => {
-				const copy = {...prev};
-				delete copy[roomId];
-				return copy;
-			});
-		});
+		// Fin de amistad o bloqueo: la burbuja permanece visible en el panel
+		const unsubscribeBlocked = subscribe("ROOM_BLOCKED", () => {});
 
 		return () => {
 			unsubscribeMessage();
@@ -319,7 +316,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 
 
 	return (
-		<chatContext.Provider value={{ messagesByRoom, joinRoom, sendMessage, rooms, roomMembers, lastActivity, addChat, user }}>
+		<chatContext.Provider value={{ messagesByRoom, joinRoom, sendMessage, rooms, roomMembers, lastActivity, addChat, user, sendRejection, dismissSendRejection }}>
 			{children}
 		</chatContext.Provider>
 	);

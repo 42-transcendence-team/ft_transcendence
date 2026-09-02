@@ -3,10 +3,11 @@ import { Outlet, useLoaderData } from "react-router-dom";
 import { Footer } from "@components/Footer";
 import { PrivHeader } from "@components/PrivHeader";
 import { WebSocketProvider } from "context/webSocketContext";
-import { ChatProvider} from "context/chatContext";
-import { NotificationProvider} from "context/notificationsContext";
+import { ChatProvider } from "context/chatContext";
+import { NotificationProvider } from "context/notificationsContext";
 import { ChatPanel } from "@components/ChatPanel";
 import { ChatModal } from "@components/ChatModal";
+import { ChatRejectionModal } from "@components/ChatRejectionModal";
 import { Notification } from "@components/Notification";
 import { useState } from "react";
 import { SearchFilters } from "@components/advancedSearch/SearchFilters";
@@ -35,6 +36,7 @@ export function PrivateLayout() {
           activeChat={activeChat}
           user={data.user}
           onChatOpen={toggleChat}
+          onOpenReceivedRequests={() => search.openWithRelations(["pending_received"])}
         >
           <ChatProvider user={data.user}>
             
@@ -99,6 +101,8 @@ export function PrivateLayout() {
             <footer className="privateLayout__footer">
               <Footer onBrandActivate={handleBrandActivate} />
             </footer>
+
+            <ChatRejectionModal />
 
           </ChatProvider>
         </NotificationProvider>
