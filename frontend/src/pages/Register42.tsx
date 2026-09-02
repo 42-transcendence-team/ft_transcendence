@@ -6,6 +6,8 @@ import { calculateAge } from "../utils/calculateAge"
 import { get42UserInfo } from "../api/Register"
 import { useEffect } from "react"
 import { AppBrand } from "@components/AppBrand";
+import { useAuth as useRouterAuth } from "@components/auth-router/AuthContext";
+import { useAuth as useUserAuth } from "../context/AuthContext";
 
 type FormFields = {
     login: string
@@ -46,6 +48,8 @@ export default function Register42() {
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const navigate = useNavigate()
+    const { refreshAuth } = useRouterAuth()
+    const { refreshUser } = useUserAuth()
 
     const validateForm = (): boolean => {
         const newErrors = { ...INITIAL_ERRORS }
@@ -122,6 +126,8 @@ export default function Register42() {
             setIsSubmitting(true)
             await register42User(formData)
             setServerMessage("User created successfully.")
+            await refreshAuth()
+            await refreshUser()
             navigate("/app")
         } catch (error) {
  			if (

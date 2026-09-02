@@ -1,10 +1,26 @@
 import type { GooseAction, GoosePlayerState } from "../useGoose";
 
+import { animateWell } from "./well";
+import { animateInn } from "./inn";
+import { animatePrison } from "./prision";
+import { animateMaze } from "./maze";
+import { animateSkull } from "./skull";
+import { animateBridge } from "./bridge";
+import { animateDice } from "./dice";
+import { animateGoose } from "./goose";
+import { animateFinish } from "./finish";
+
 export interface GooseAnimationState {
 	players: Record<string, GoosePlayerState>;
 	dice1: number | null;
 	dice2: number | null;
 	message: string | null;
+	gooseAnimation: number | null;
+	specialAnimation: {
+		type: "bridge" | "dice" | "maze" | "skull" | "inn" | "well" | "prison" | "skip_turn" | "finish";
+		progress: number;
+		token: number;
+	} | null;
 }
 
 export interface GooseAnimationContext {
@@ -33,7 +49,7 @@ export function getPosition(number: number, cellSize: number) {
 	return {x: visualColumn * cellSize, y: row * cellSize};
 }
 
-function wait(ms: number): Promise<void> {
+export function wait(ms: number): Promise<void> {
 	return new Promise((resolve) => {
 		setTimeout(resolve, ms);
 	});
@@ -54,7 +70,6 @@ async function playAction(action: GooseAction, context: GooseAnimationContext): 
 		case "roll":
 			await animateRoll(action, context);
 			break;
-
 		case "move":
 			await animateMove(action, context);
 			break;
@@ -62,20 +77,32 @@ async function playAction(action: GooseAction, context: GooseAnimationContext): 
 			await animateGoose(action, context);
 			break;
 		case "bridge":
+			await animateBridge(action, context);
+			break;
 		case "dice":
+			await animateDice(action, context);
+			break;
 		case "maze":
+			await animateMaze(action, context);
+			break;
 		case "skull":
+			await animateSkull(action, context);
+			break;
 		case "finish":
 			await animateFinish(action, context);
 			break;
-
 		case "inn":
+			await animateInn(action, context);
+			break;
 		case "well":
+			await animateWell(action, context);
+			break;
 		case "prison":
+			await animatePrison(action, context);
+			break;
 		case "skip_turn":
 			await showActionMessage(action, context);
 			break;
-
 		default:
 			break;
 	}
@@ -87,9 +114,7 @@ async function animateRoll(action: GooseAction, context: GooseAnimationContext):
 	const hasDice1 = action.dice1 !== undefined;
 	const hasDice2 = action.dice2 !== undefined;
 
-	if (!hasDice1) {
-		return;
-	}
+	if (!hasDice1) { return; }
 
 	state.dice1 = null;
 	state.dice2 = null;
@@ -109,7 +134,6 @@ async function animateRoll(action: GooseAction, context: GooseAnimationContext):
 		}
 
 		render();
-
 		await wait(50);
 	}
 
@@ -117,11 +141,10 @@ async function animateRoll(action: GooseAction, context: GooseAnimationContext):
 	state.dice2 = action.dice2 ?? null;
 
 	render();
-
 	await wait(300);
 }
 
-async function animateMove(action: GooseAction, context: GooseAnimationContext): Promise<void> {
+export async function animateMove(action: GooseAction, context: GooseAnimationContext): Promise<void> {
 	if (action.from === undefined || action.to === undefined) {
 		return;
 	}
@@ -129,9 +152,7 @@ async function animateMove(action: GooseAction, context: GooseAnimationContext):
 	const foundPlayer = Object.values(context.state.players)
 		.find((player) => player.token === action.token);
 
-	if (!foundPlayer) {
-		return;
-	}
+	if (!foundPlayer) { return; }
 
 	const player: GoosePlayerState = foundPlayer;
 
@@ -169,91 +190,52 @@ async function animateMove(action: GooseAction, context: GooseAnimationContext):
 
 				resolve();
 			}
-
 			requestAnimationFrame(animate);
 		});
 	}
-
 	player.position = to;
 	context.render();
 }
 
 async function showActionMessage(action: GooseAction, context: GooseAnimationContext): Promise<void> {
 	const message = action.payload ?? action.payload;
-
-	if (!message) {
-		return;
-	}
+	if (!message) { return; }
 
 	context.state.message = message;
-
 	context.render();
 
 	await wait(ANIMATION_DURATION.message);
 
 	context.state.message = null;
-
 	context.render();
 }
 
-async function animateFinish(action: GooseAction, context: GooseAnimationContext): Promise<void> {
-	if (action.to === undefined) {
-		return;
-	}
+export async function animateSpecialEffect(type: "bridge" | "dice" | "maze" | "skull" | "inn" | "well" | "prison" | "skip_turn",
+	action: GooseAction, context: GooseAnimationContext, duration = 900): Promise<void> {
+	const startTime = performance.now();
 
-	const player = Object.values(context.state.players).find(
-		(player) => player.token === action.token,
-	);
+	await new Promise<void>((resolve) => {
+		function animate(currentTime: number) {
+			const elapsed = currentTime - startTime;
+			const progress = Math.min(elapsed / duration, 1);
 
-	if (!player) {
-		return;
-	}
+			context.state.specialAnimation = {
+				type,
+				progress,
+				token: action.token,
+			};
 
-	player.position = action.to;
+			context.render();
 
-	context.render();
+			if (progress < 1) {
+				requestAnimationFrame(animate);
+				return;
+			}
 
-	context.state.message =
-		action.payload ?? "¡Has llegado a la meta!";
-
-	context.render();
-
-	await wait(1500);
-
-	context.state.message = null;
-
-	context.render();
-}
-
-async function animateGoose(action: GooseAction, context: GooseAnimationContext,): Promise<void> {
-	if (action.from === undefined || action.to === undefined) {
-		return;
-	}
-
-	const player = Object.values(context.state.players).find(
-		(player) => player.token === action.token,
-	);
-
-	if (!player) {
-		return;
-	}
-
-	await wait(150);
-
-	context.state.message =
-		action.payload ?? "¡De oca a oca y tiro porque me toca!";
-
-	context.render();
-
-	await wait(700);
-
-	context.state.message = null;
-
-	await animateMove(
-		{
-			...action,
-			type: "move",
-		},
-		context,
-	);
+			context.state.specialAnimation = null;
+			context.render();
+			resolve();
+		}
+		requestAnimationFrame(animate);
+	});
 }

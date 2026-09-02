@@ -1,6 +1,6 @@
 import "../styles/components/_addChatModal.scss";
 import { searchUsers, type UserSearch } from "api/UserSearch";
-import skullLogo from "assets/icons/skull_logo.png";
+import { UserAvatar } from "./users/UserAvatar";
 import { useEffect, useState, useRef } from "react";
 
 interface AddChatModalProps {
@@ -84,11 +84,13 @@ export function AddChatModal({ onSelect, onClose }: AddChatModalProps) {
 							className="addChatModal__userCard"
 								onClick={() => handleSelect(user)}
 						>
-							<img
-								src={user.avatar_url || skullLogo}
-								alt={user.login}
-								className="addChatModal__avatar"
-							/>
+							<div className="addChatModal__avatar">
+								<UserAvatar
+									avatarPath={user.avatar_url}
+									username={user.login}
+									size="small"
+								/>
+							</div>
 							<div className="addChatModal__userInfo">
 								<span className="addChatModal__name">
 									{user.name || user.login} {user.surname}

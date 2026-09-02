@@ -50,6 +50,13 @@ services:
 
     restart: unless-stopped
 
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
     depends_on:
       backend:
         condition: service_healthy
@@ -61,8 +68,7 @@ services:
   postgres:
     env_file:
       - .env
-
-    image: postgres:16
+    image: postgres:17.11
 
     environment:
       POSTGRES_USER: "${DB_USER}"
@@ -177,10 +183,14 @@ services:
   nginx:
     build:
       context: ./nginx
+    env_file:
+      - .env
 
     ports:
-      - "${NGINX_HTTP_PORT}:80"
-      - "${NGINX_HTTPS_PORT}:443"
+      - "${NGINX_REDIRECT_PORT:-8081}:80"
+      - "${NGINX_HTTPS_REDIRECT_PORT:-8443}:8443"
+      - "${NGINX_HTTP_PORT:-1312}:80"
+      - "${NGINX_HTTPS_PORT:-6969}:443"
 
     restart: unless-stopped
 
@@ -188,7 +198,7 @@ services:
       backend:
         condition: service_healthy
       frontend:
-        condition: service_started
+        condition: service_healthy
       kibana:
         condition: service_healthy
       grafana:
@@ -270,7 +280,7 @@ services:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
-      - /goinfre/smeixoei/docker:/var/lib/docker:ro
+      - ${DOCKER_ROOT:-/var/lib/docker}:/var/lib/docker:ro
 
 
   elastic-setup:
@@ -386,7 +396,7 @@ services:
       - metricbeat_data:/usr/share/metricbeat/data
       - certs_data:/usr/share/metricbeat/certs
       - ./elastic/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
-      - /run/user/9940/docker.sock:/var/run/docker.sock:ro
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro
       - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
       - /proc:/hostfs/proc:ro
       - /:/hostfs:ro
@@ -421,8 +431,8 @@ services:
       - certs_data:/usr/share/filebeat/certs
       - ./elastic/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - ./elastic/filebeat/ingest_data:/usr/share/filebeat/ingest_data:ro
-      - /run/user/9940/docker.sock:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
-      - /goinfre/abarrio-/docker/containers:/var/lib/docker/containers:ro # docker info --format '{{.DockerRootDir}}'
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
+      - ${DOCKER_ROOT:-/var/lib/docker}/containers:/var/lib/docker/containers:ro # docker info --format '{{.DockerRootDir}}'
 
     networks:
       - elastic
@@ -479,7 +489,7 @@ services:
     image: portainer/portainer-ce:sts
 
     volumes:
-      - /run/user/9940/docker.sock:/var/run/docker.sock
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
       - portainer_data:/data
 
     expose:

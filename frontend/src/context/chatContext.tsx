@@ -75,7 +75,6 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 	const [ rooms, setRooms ] = useState<number[]>([]);
 	const [ lastActivity, setLastActivity ] = useState<Record<number, number>>({});
 	const [ roomMembers, setRoomMembers ] = useState<Record<number, RoomMember[]>>({});
-	const blockedRoomIdsRef = useRef<Set<number>>(new Set());
 	const fetchRoomsRef = useRef<() => Promise<void>>();
 	const [ sendRejection, setSendRejection ] = useState<SendRejection | null>(null);
 	useJoinRooms(rooms);
@@ -129,8 +128,6 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 				);
 				if (ids.includes(currentUserId) && ids.includes(otherUserId)) {
 					const roomId: number = r.ID ?? r.id;
-					// Si la sala estaba bloqueada, la desbloqueamos al re-abrirla explicitamente
-					blockedRoomIdsRef.current.delete(roomId);
 					setLastActivity(prev => ({...prev, [roomId]: Date.now()}));
 					joinRoom(roomId);
 					return roomId;
@@ -179,7 +176,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 			try {
 				const data = await apiRequest({ endpoint: "websocket/rooms", method: "GET" });
 				const allIds = data.map((r: any) => r.ID ?? r.id);
-				setRooms(allIds.filter((id: number) => !blockedRoomIdsRef.current.has(id)));
+				setRooms(allIds);
 				const members: Record<number, RoomMember[]> = {};
 				for (const r of (data || [])) {
 					const roomId = r.ID ?? r.id;
@@ -282,8 +279,6 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 		const unsubscribeCreateRoom = subscribe("CREATE_ROOM", (message: any) => {
 			const roomId = message.payload?.room_id;
 			if (roomId) {
-				// No reincorporar salas bloqueadas por WS
-				if (blockedRoomIdsRef.current.has(roomId)) return;
 				setRooms((prev) => (prev.includes(roomId) ? prev : [...prev, roomId]));
 				joinRoom(roomId);
 				fetchRoomsRef.current?.();
@@ -307,18 +302,8 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 			setSendRejection({ roomId: room_id, reason: reason ?? "No puedes enviar este mensaje" });
 		});
 
-		// Fin de amistad o bloqueo: ocultar la sala compartida del panel
-		const unsubscribeBlocked = subscribe("ROOM_BLOCKED", (message: any) => {
-			const roomId = message.payload?.room_id;
-			if (!roomId) return;
-			blockedRoomIdsRef.current.add(roomId);
-			setRooms(prev => prev.filter(r => r !== roomId));
-			setLastActivity(prev => {
-				const copy = {...prev};
-				delete copy[roomId];
-				return copy;
-			});
-		});
+		// Fin de amistad o bloqueo: la burbuja permanece visible en el panel
+		const unsubscribeBlocked = subscribe("ROOM_BLOCKED", () => {});
 
 		return () => {
 			unsubscribeMessage();

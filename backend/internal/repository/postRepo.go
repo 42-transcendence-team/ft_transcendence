@@ -105,6 +105,67 @@ func (r *PostRepository) ListFeedByFriendships(
 	return posts, total, nil
 }
 
+// ListFeedForUser obtiene las publicaciones del usuario autenticado
+// y de los usuarios con los que tiene una amistad registrada.
+func (r *PostRepository) ListFeedForUser(
+	currentUserID uint,
+	page int,
+	limit int,
+) ([]models.Post, int64, error) {
+	var posts []models.Post
+	var total int64
+
+	feedCondition := `
+		posts.user_id = ?
+		OR EXISTS (
+			SELECT 1
+			FROM friendships
+			WHERE (
+				friendships.user1_id = ?
+				AND friendships.user2_id = posts.user_id
+			)
+			OR (
+				friendships.user2_id = ?
+				AND friendships.user1_id = posts.user_id
+			)
+		)
+	`
+
+	countQuery := r.db.
+		Model(&models.Post{}).
+		Where(
+			feedCondition,
+			currentUserID,
+			currentUserID,
+			currentUserID,
+		)
+
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := r.db.
+		Model(&models.Post{}).
+		Where(
+			feedCondition,
+			currentUserID,
+			currentUserID,
+			currentUserID,
+		).
+		Preload("User").
+		Order("posts.created_at DESC, posts.id DESC").
+		Offset(postPaginationOffset(page, limit)).
+		Limit(limit).
+		Find(&posts).
+		Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return posts, total, nil
+}
+
 func (r *PostRepository) ListByUserID(
 	userID uint,
 	page int,
