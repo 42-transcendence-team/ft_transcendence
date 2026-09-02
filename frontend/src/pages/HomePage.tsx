@@ -1,15 +1,16 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-
+import { PostList } from '@components/posts/PostList';
 import {
   getFeedPosts,
   type PostReactionState,
   type PostSummary,
-} from "api/Posts";
+} from 'api/Posts';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
-import { PostList } from "@components/posts/PostList";
-
-function appendUniquePosts(currentPosts: PostSummary[], incomingPosts: PostSummary[]): PostSummary[] {
+function appendUniquePosts(
+  currentPosts: PostSummary[],
+  incomingPosts: PostSummary[],
+): PostSummary[] {
   const knownPostIDs = new Set(currentPosts.map((post) => post.id));
 
   return [
@@ -35,9 +36,7 @@ export const HomePage = () => {
         setError(null);
 
         const response = await getFeedPosts(1, 20);
-        if (cancelled)
-          return;
-
+        if (cancelled) return;
 
         setPosts(response.data);
         setPage(response.pagination.page);
@@ -45,17 +44,18 @@ export const HomePage = () => {
       } catch {
         if (!cancelled) {
           setPosts([]);
-          setError("The feed could not be loaded.");
+          setError('The feed could not be loaded.');
         }
       } finally {
-        if (!cancelled)
-          setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     void loadInitialFeed();
 
-    return () => {cancelled = true;};
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleLoadMore = async () => {
@@ -68,11 +68,13 @@ export const HomePage = () => {
       setError(null);
 
       const response = await getFeedPosts(nextPage, 20);
-      setPosts((currentPosts) => appendUniquePosts(currentPosts, response.data));
+      setPosts((currentPosts) =>
+        appendUniquePosts(currentPosts, response.data),
+      );
       setPage(response.pagination.page);
       setTotalPages(response.pagination.totalPages);
     } catch {
-      setError("More posts could not be loaded.");
+      setError('More posts could not be loaded.');
     } finally {
       setIsLoadingMore(false);
     }
@@ -102,7 +104,6 @@ export const HomePage = () => {
     <section className="home-page">
       <header className="home-page__header">
         <h2></h2> {/* no borra es para el diseño */}
-
         <Link className="home-page__new-post-button" to="/app/posts/new">
           Nuevo post
         </Link>
@@ -116,7 +117,9 @@ export const HomePage = () => {
         )}
 
         {!isLoading && posts.length === 0 && !error && (
-          <p className="home-page__state">Aún no hay publicaciones en tu feed.</p>
+          <p className="home-page__state">
+            Aún no hay publicaciones en tu feed.
+          </p>
         )}
 
         {posts.length > 0 && (
@@ -136,7 +139,7 @@ export const HomePage = () => {
                 disabled={isLoadingMore}
                 onClick={() => void handleLoadMore()}
               >
-                {isLoadingMore ? "Loading..." : "Load more"}
+                {isLoadingMore ? 'Loading...' : 'Load more'}
               </button>
             )}
           </>
