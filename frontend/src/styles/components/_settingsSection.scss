@@ -162,6 +162,8 @@
 	/* Botones */
 	&__actions {
 		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
 		justify-content: flex-end;
 		margin-top: 0.5rem;
 	}
@@ -204,6 +206,7 @@
 /* 2FA & OTP */
 .otp {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 0.5rem;
 	justify-content: center;
 	align-items: center;

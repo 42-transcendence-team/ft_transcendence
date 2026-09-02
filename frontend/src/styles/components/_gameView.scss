@@ -45,6 +45,8 @@
 	&__player {
 		display: flex;
 		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
 		gap: 1rem;
 	}
 
@@ -75,5 +77,26 @@
 		font-size: 1.5rem;
 		font-weight: normal;
 		pointer-events: auto;
+	}
+}
+
+@media (max-width: 480px) {
+	.game-view {
+		min-height: 320px;
+		padding: 0.5rem;
+	}
+
+	.game-menu__button,
+	.game-menu__input {
+		padding: 0.7rem;
+		font-size: 1.4rem;
+	}
+
+	.game-menu__title {
+		font-size: 1.5rem;
+	}
+
+	.game-menu__subtitle {
+		font-size: 1.2rem;
 	}
 }

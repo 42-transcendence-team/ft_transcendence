@@ -2,6 +2,7 @@
 
 .privateLayout {
     height: 100vh;
+    height: 100dvh;
     width: 100%;
     padding: 6px;
 
@@ -31,6 +32,13 @@
             "footer";
             
         padding: 0;
+
+        /* La MobileBottomNav (fija, 60px) tapa el final del contenido:
+           reservamos ese espacio en el área scrolleable */
+        &__contentInner {
+            padding-bottom: calc(60px + env(safe-area-inset-bottom));
+            scroll-padding-bottom: calc(60px + env(safe-area-inset-bottom));
+        }
     }
     &__leftPanel {
         grid-area: left;

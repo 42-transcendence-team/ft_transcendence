@@ -61,54 +61,9 @@
 .desktop-footer {
   display: none !important; // oculto por defecto en mobile
 
-  @media (min-width: 768px) {
-    display: flex !important; // solo se muestra en escritorio/tablet
+  // Solo se muestra en desktop (901px), para no solaparse con la
+  // MobileBottomNav (visible hasta 900px)
+  @media (min-width: 901px) {
+    display: flex !important;
   }
-}
-
-@media screen and (max-width: 900px) {
-  .footer {
-    display: grid;
-    // grid-template-columns: 1fr auto;
-    // align-items: center;
-    // gap: 20px;
-    // padding: 20px 24px;
-  }
-
-  // .footer__nav {
-  //   min-width: 0;
-  //   max-width: 100%;
-  // }
-
-  // .footer__list {
-  //   display: flex;
-  //   flex-wrap: wrap;
-  //   gap: 12px 16px;
-  //   justify-content: flex-start;
-  // }
-
-  // .footer__list li {
-  //   flex: 0 0 auto;
-  // }
-
-  // .footer__brand {
-  //   display: flex;
-  //   flex-direction: row;
-  //   align-items: center;
-  //   justify-content: flex-end;
-  //   gap: 10px;
-  //   align-self: center;
-  //   white-space: nowrap;
-  // }
-
-  // .footer__brand img {
-  //   width: 52px;
-  //   height: auto;
-  // }
-
-  // .footer__brand span {
-  //   font-size: 0.95rem;
-  //   line-height: 1.1;
-  //   text-align: left;
-  // }
 }
