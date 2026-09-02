@@ -46,7 +46,7 @@ export const MobileBottomNav = ({
 
         {/* 2. Búsqueda avanzada */}
         <NavLink
-          to="app/mobile-search-notify"
+          to="/app/mobile-search-notify"
           className={({ isActive }) =>
             isActive ? 'mobileBottomNav__link active' : 'mobileBottomNav__link'
           }
