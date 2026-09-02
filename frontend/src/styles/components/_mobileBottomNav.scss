@@ -28,6 +28,12 @@
     color: #5b75e6; // Azul por defecto (basado en tu imagen)
     transition: color 0.2s ease;
 
+    // Cuando el enlace es un <button> en lugar de un <NavLink>
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+
     svg {
       width: 28px;
       height: 28px;

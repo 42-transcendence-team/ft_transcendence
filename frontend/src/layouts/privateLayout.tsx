@@ -1,25 +1,30 @@
-import "../styles/components/_privateLayout.scss"
-import { Outlet, useLoaderData } from "react-router-dom";
-import { Footer } from "@components/Footer";
-import { PrivHeader } from "@components/PrivHeader";
-import { WebSocketProvider } from "context/webSocketContext";
-import { ChatProvider } from "context/chatContext";
-import { NotificationProvider } from "context/notificationsContext";
-import { ChatPanel } from "@components/ChatPanel";
-import { ChatModal } from "@components/ChatModal";
-import { ChatRejectionModal } from "@components/ChatRejectionModal";
-import { Notification } from "@components/Notification";
-import { useState } from "react";
-import { SearchFilters } from "@components/advancedSearch/SearchFilters";
-import { useAdvancedSearch } from "@components/advancedSearch/useAdvancedSearch";
-import { AdvancedSearchPanel } from "@components/advancedSearch/AdvancedSearchPanel";
-import { PrivateLeftPanel } from "@components/layout/PrivateLeftPanel";
-import { PrivateMainContent } from "@components/layout/PrivateMainContent";
-import { MiniProfile } from "@components/miniProfile";
+import '../styles/components/_privateLayout.scss';
+import { AdvancedSearchPanel } from '@components/advancedSearch/AdvancedSearchPanel';
+import { SearchFilters } from '@components/advancedSearch/SearchFilters';
+import { useAdvancedSearch } from '@components/advancedSearch/useAdvancedSearch';
+import { ChatModal } from '@components/ChatModal';
+import { ChatPanel } from '@components/ChatPanel';
+import { ChatRejectionModal } from '@components/ChatRejectionModal';
+import { Footer } from '@components/Footer';
+import { PrivateLeftPanel } from '@components/layout/PrivateLeftPanel';
+import { PrivateMainContent } from '@components/layout/PrivateMainContent';
+import { MobileBottomNav } from '@components/MobileBottomNav';
+import { MiniProfile } from '@components/miniProfile';
+import { Notification } from '@components/Notification';
+import { PrivHeader } from '@components/PrivHeader';
+import { ChatProvider } from 'context/chatContext';
+import { NotificationProvider } from 'context/notificationsContext';
+import { WebSocketProvider } from 'context/webSocketContext';
+import { useState } from 'react';
+import { Outlet, useLoaderData } from 'react-router-dom';
 
 function useHandleChat() {
   const [activeChat, setActiveChat] = useState<number | null>(null);
-  const toggleChat = (id: number) => {setActiveChat((prev) => {return prev === id ? null : id;});};
+  const toggleChat = (id: number) => {
+    setActiveChat((prev) => {
+      return prev === id ? null : id;
+    });
+  };
   return { activeChat, toggleChat };
 }
 
@@ -27,7 +32,9 @@ export function PrivateLayout() {
   const data = useLoaderData();
   const { activeChat, toggleChat } = useHandleChat();
   const search = useAdvancedSearch();
-  const handleBrandActivate = () => {search.handleCloseSearch();};
+  const handleBrandActivate = () => {
+    search.handleCloseSearch();
+  };
 
   return (
     <div className="privateLayout">
@@ -36,10 +43,11 @@ export function PrivateLayout() {
           activeChat={activeChat}
           user={data.user}
           onChatOpen={toggleChat}
-          onOpenReceivedRequests={() => search.openWithRelations(["pending_received"])}
+          onOpenReceivedRequests={() =>
+            search.openWithRelations(['pending_received'])
+          }
         >
           <ChatProvider user={data.user}>
-            
             {/* ESTRUCTURA DEL PANEL IZQUIERDO (DISEÑO ANTIGUO + LÓGICA NUEVA) */}
             <PrivateLeftPanel>
               <div className="leftPanel__wrapper">
@@ -79,7 +87,7 @@ export function PrivateLayout() {
                     <Outlet context={{ user: data.user }} />
                   </PrivateMainContent>
                 </div>
-                
+
                 {search.hasSearched && (
                   <AdvancedSearchPanel
                     search={search}
@@ -87,7 +95,7 @@ export function PrivateLayout() {
                   />
                 )}
               </div>
-              
+
               {activeChat && (
                 <ChatModal
                   id={activeChat}
@@ -104,6 +112,10 @@ export function PrivateLayout() {
 
             <ChatRejectionModal />
 
+            <MobileBottomNav
+              onChatClick={toggleChat}
+              activeChatId={activeChat}
+            />
           </ChatProvider>
         </NotificationProvider>
       </WebSocketProvider>

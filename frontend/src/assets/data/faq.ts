@@ -12,27 +12,27 @@ export type FAQGroup = {
 export const faqGroups: FAQGroup[] = [
 	{
 		id: "account",
-		title: "Account",
+		title: "Cuenta",
 		items: [
 			{
-				question: "How do I create an account?",
+				question: "¿Cómo creo una cuenta?",
 				answer:
-					"Complete the registration form with a valid username, email address, secure password and the requested personal information.",
+					"Completa el formulario de registro con un nombre de usuario válido, una dirección de correo electrónico, una contraseña segura y la información personal solicitada.",
 			},
 			{
-				question: "Why must I be at least 18 years old?",
+				question: "¿Por qué debo ser mayor de 18 años?",
 				answer:
-					"Twenty Four currently requires users to be at least 18 years old before creating an account.",
+					"Twenty Four actualmente requiere que los usuarios tengan al menos 18 años antes de crear una cuenta.",
 			},
 			{
-				question: "Can I change my personal information?",
+				question: "¿Puedo cambiar mi información personal?",
 				answer:
-					"Yes. Supported personal and security information can be updated from the account settings.",
+					"Sí. La información personal y de seguridad admitida puede actualizarse desde los ajustes de la cuenta.",
 			},
 			{
-				question: "How do I delete my account?",
+				question: "¿Cómo elimino mi cuenta?",
 				answer:
-					"Open the danger zone in account settings. Your password and, when enabled, a two-factor authentication code will be required.",
+					"Abre la zona de peligro en los ajustes de la cuenta. Se te pedirán tu contraseña y, si está activada, un código de autenticación de dos factores (2FA).",
 			},
 		],
 	},

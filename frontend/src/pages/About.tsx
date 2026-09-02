@@ -14,58 +14,58 @@ import { InformationSection } from "../components/information/InformationSection
 
 const capabilities = [
 	{
-		title: "Create your profile",
+		title: "Crea tu perfil",
 		description:
-			"Build your identity with a personal profile, avatar and banner.",
+			"Construye tu identidad con un perfil personal, avatar y banner.",
 		icon: FiUser,
 	},
 	{
-		title: "Connect with friends",
+		title: "Conecta con amigos",
 		description:
-			"Send requests and maintain your own network of contacts.",
+			"Envía solicitudes y mantén tu propia red de contactos.",
 		icon: FiUsers,
 	},
 	{
-		title: "Share posts and files",
+		title: "Comparte publicaciones y archivos",
 		description:
-			"Publish text, images and supported documents.",
+			"Publica texto, imágenes y documentos compatibles.",
 		icon: FiFileText,
 	},
 	{
-		title: "Join the conversation",
+		title: "Únete a la conversación",
 		description:
-			"Comment on publications and react to shared content.",
+			"Comenta las publicaciones y reacciona al contenido compartido.",
 		icon: FiMessageCircle,
 	},
 	{
-		title: "Protect your account",
+		title: "Protege tu cuenta",
 		description:
-			"Manage your session, password and two-factor authentication.",
+			"Gestiona tu sesión, tu contraseña y la autenticación de dos factores.",
 		icon: FiShield,
 	},
 	{
-		title: "Use one connected space",
+		title: "Usa un espacio conectado",
 		description:
-			"Access social and interactive features from the same application.",
+			"Accede a las funciones sociales e interactivas desde la misma aplicación.",
 		icon: FiActivity,
 	},
 ];
 
 const principles = [
 	{
-		title: "Usability",
+		title: "Usabilidad",
 		description:
-			"Clear interfaces and predictable interactions.",
+			"Interfaces claras e interacciones predecibles.",
 	},
 	{
-		title: "Security",
+		title: "Seguridad",
 		description:
-			"Account protection and controlled access to user data.",
+			"Protección de la cuenta y acceso controlado a los datos de los usuarios.",
 	},
 	{
-		title: "Teamwork",
+		title: "Trabajo en equipo",
 		description:
-			"A shared project designed and built by five developers.",
+			"Un proyecto compartido diseñado y construido por cinco desarrolladores.",
 	},
 ];
 

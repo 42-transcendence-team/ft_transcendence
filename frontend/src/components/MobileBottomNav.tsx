@@ -1,120 +1,114 @@
-import { NavLink } from "react-router-dom";
-import "@styles/components/_mobileBottomNav.scss";
-import { useState, useEffect } from "react";
-import  new_post  from "../assets/icons/new_post.png";
-import  chat  from "../assets/icons/chat.png";
-import  home  from "../assets/icons/home.png";
-import  skull  from "../assets/icons/skull_logo.png";
-import  search  from "../assets/icons/search.png";
-import { useAuth as useAuthProfile} from "../context/AuthContext";
-import { getUserProfile, type UserProfile } from "../api/UserProfile";
+import { NavLink } from 'react-router-dom';
+import '@styles/components/_mobileBottomNav.scss';
+import { useState } from 'react';
+import chat from '../assets/icons/chat.png';
+import home from '../assets/icons/home.png';
+import new_post from '../assets/icons/new_post.png';
+import search from '../assets/icons/search.png';
+import skull from '../assets/icons/skull_logo.png';
+import { useAuth as useAuthProfile } from '../context/AuthContext';
+import { MobileChatSheet } from './MobileChatSheet';
 
+interface MobileBottomNavProps {
+  onChatClick: (roomId: number) => void;
+  activeChatId: number | null;
+}
 
-export const MobileBottomNav = () => {
-
+export const MobileBottomNav = ({
+  onChatClick,
+  activeChatId,
+}: MobileBottomNavProps) => {
   const { user: authenticatedUser } = useAuthProfile();
-  const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
+  const [chatSheetOpen, setChatSheetOpen] = useState(false);
 
+  const handleChatClick = () => {
+    setChatSheetOpen(true);
+  };
 
-  useEffect(() => {
-        if (!authenticatedUser?.login)
-      return;
-        let cancelled = false;
-
-        getUserProfile(authenticatedUser.login, { noIncrement: true })
-            .then((profile) => {
-                if (!cancelled) {
-                    setProfileUser(profile);
-                }
-            })
-            .catch((error) => {
-                console.error("Error cargando perfil en UserMenu", error);
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [authenticatedUser?.login]);
-
-    console.log("asdasdasdasd", authenticatedUser)
+  const handleSelectRoom = (roomId: number) => {
+    setChatSheetOpen(false);
+    onChatClick(roomId);
+  };
 
   return (
-    <nav className="mobileBottomNav">
-      {/* 1. Inicio / Feed */}
-      <NavLink 
-        to="/app" // aqui iria la peticion para subir un post 
-        className={
-          ({ isActive }) => isActive 
-          ? "mobileBottomNav__link active" : "mobileBottomNav__link"
-        }
-      >
-        <img 
-          src={home}
-          alt="Home" 
-          className="mobileBottomNav__icon-img" 
-        />
-      </NavLink>
+    <>
+      <nav className="mobileBottomNav">
+        {/* 1. Inicio / Feed */}
+        <NavLink
+          to="/app"
+          end
+          className={({ isActive }) =>
+            isActive ? 'mobileBottomNav__link active' : 'mobileBottomNav__link'
+          }
+        >
+          <img src={home} alt="Home" className="mobileBottomNav__icon-img" />
+        </NavLink>
 
-      {/* 2.  */}
-      <NavLink 
-        to="app/mobile-search-notify" // aqui iria la peticion para subir un post 
-        className={
-          ({ isActive }) => isActive 
-          ? "mobileBottomNav__link active" : "mobileBottomNav__link"
-        }
-      >
-        <img 
-          src={home}
-          alt="Home" 
-          className="mobileBottomNav__icon-img" 
-        />
-      </NavLink>
+        {/* 2. Búsqueda avanzada */}
+        <NavLink
+          to="app/mobile-search-notify"
+          className={({ isActive }) =>
+            isActive ? 'mobileBottomNav__link active' : 'mobileBottomNav__link'
+          }
+        >
+          <img
+            src={search}
+            alt="Buscar"
+            className="mobileBottomNav__icon-img"
+          />
+        </NavLink>
 
-      {/* 3. Botón Central (Añadir/Crear) */}
-      <NavLink 
-        to="app/posts/new"
-        className={
-          ({ isActive }) => isActive 
-          ? "mobileBottomNav__link active" : "mobileBottomNav__link"
-        }
-      >
-        <img 
-          src={new_post}
-          alt="New Post" 
-          className="mobileBottomNav__icon-img" 
-        />
-      </NavLink>
+        {/* 3. Botón Central (Crear post) */}
+        <NavLink
+          to="/app/posts/new"
+          className={({ isActive }) =>
+            isActive ? 'mobileBottomNav__link active' : 'mobileBottomNav__link'
+          }
+        >
+          <img
+            src={new_post}
+            alt="Nuevo post"
+            className="mobileBottomNav__icon-img"
+          />
+        </NavLink>
 
-      {/* 4. Mensajes / Chat */}
-      <NavLink 
-        to="app/mobile-chat"
-        className={
-          ({ isActive }) => isActive 
-          ? "mobileBottomNav__link active" : "mobileBottomNav__link"
-        }
-      >
-        <img 
-          src={chat}
-          alt="Chat" 
-          className="mobileBottomNav__icon-img" 
-        />
-      </NavLink>
+        {/* 4. Mensajes */}
+        <button
+          type="button"
+          className={`mobileBottomNav__link mobileBottomNav__link--button${
+            chatSheetOpen || activeChatId !== null ? ' active' : ''
+          }`}
+          onClick={handleChatClick}
+          aria-label="Mensajes"
+        >
+          <img
+            src={chat}
+            alt="Mensajes"
+            className="mobileBottomNav__icon-img"
+          />
+        </button>
 
-      {/* 5. Perfil (Puedes sustituir el SVG por un <img src={tuAvatar} /> si lo prefieres) */}
-      <NavLink 
-        to={`app/profile/${authenticatedUser?.login}`}
-        className={
-          ({ isActive }) => isActive 
-          ? "mobileBottomNav__link active" : "mobileBottomNav__link"
-        }
-      >
-        <img 
-          src={skull}
-          alt="Perfil" 
-          style={{ height: "39px", with: "39px" }}
-          className="mobileBottomNav__icon-img" 
+        {/* 5. Perfil */}
+        <NavLink
+          to={
+            authenticatedUser?.login
+              ? `/app/profile/${authenticatedUser.login}`
+              : '/app'
+          }
+          className={({ isActive }) =>
+            isActive ? 'mobileBottomNav__link active' : 'mobileBottomNav__link'
+          }
+        >
+          <img src={skull} alt="Perfil" className="mobileBottomNav__icon-img" />
+        </NavLink>
+      </nav>
+
+      {chatSheetOpen && (
+        <MobileChatSheet
+          onSelectRoom={handleSelectRoom}
+          onClose={() => setChatSheetOpen(false)}
         />
-      </NavLink>
-    </nav>
+      )}
+    </>
   );
 };
