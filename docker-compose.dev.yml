@@ -1,400 +1,574 @@
 services:
-    backend:
-        env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
-        build:
-            context: ./backend
-            dockerfile: Dockerfile.dev
-        expose:
-            - "8080"
-        ports:
-            - "8080:8080"
-        restart: unless-stopped
-        depends_on:
-            postgres:
-                condition: service_healthy
-            redis:
-                condition: service_healthy
-        healthcheck:
-            test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-            start_period: 10s
-        volumes:
-          - ./backend:/app
-          - ./elastic/filebeat/ingest_data:/var/log/api
-        #   - api-logs:/var/log/api
-          - uploads_data:/app/uploads
-        environment:
-          - GIN_MODE=debug
-        networks:
-            - redis
-            - back-front
-            - db-back
-            - monitoring
-            - api-logs
 
-    frontend:
-        env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
-        build:
-            context: ./frontend
-        expose:
-            - "3000"
-        volumes:
-            - /app/node_modules
-            - ./frontend:/app # Comparte el codigo fuente como volumen, por que los cambios se reflejan directamente en el contenedor
-        restart: unless-stopped
-        depends_on:
-            - backend
-        healthcheck:
-            test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-            start_period: 20s
-        networks:
-            - back-front
-        environment:
-            - PUBLIC_API_URL=${PUBLIC_API_URL}
+  backend:
+    env_file: .env
 
-    postgres:
-        env_file: .env # No se donde se guardara el archivo .env por ahora lo linkea de la raiz del proyecto
-        image: postgres:17.11 # Alineado con docker-compose.yml. postgres:latest (18+) rechaza el layout de datos existente (PG16)
-        environment:
-            POSTGRES_USER: "${DB_USER}"
-            POSTGRES_PASSWORD: "${DB_PASSWORD}"
-            POSTGRES_DB: "${DB_NAME}"
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-        expose:
-            - "5432"
-        restart: unless-stopped
-        volumes:
-            - postgres_data:/var/lib/postgresql # Carpeta temporal para pruebas. Por definir donde se guardaran los datos de postgres
-        networks:
-            - db-view
-            - db-back
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+
+    expose:
+      - "8080"
+
+    ports:
+      - "8080:8080"
+
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    volumes:
+      - ./backend:/app
+      - ./elastic/filebeat/ingest_data:/var/log/api
+      - uploads_data:/app/uploads
+
+    environment:
+      GIN_MODE: debug
+
+    networks:
+      - redis
+      - back-front
+      - db-back
+      - monitoring
+      - api-logs
 
 
-    pgadmin:
-        env_file: .env
-        image: dpage/pgadmin4:latest # Visualizador de base de datos en la web para poder administrarla de forma mas sencilla y visual.
-        environment:
-            PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
-            PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
-        expose:
-            - "80"
-        volumes:
-            - pgadmin_data:/var/lib/pgadmin
-        networks:
-            - db-view
-        restart: unless-stopped
-        depends_on:
-            postgres:
-                condition: service_healthy
-    redis:
-        env_file: .env
-        image: redis:latest
-        command: redis-server --requirepass ${REDIS_PASSWORD}
-        ports:
-            - "7777:6379"
-        restart: always
-        volumes:
-            - redis_data:/data
-        networks:
-            - redis
-        healthcheck:
-            test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-            interval: 5s
-            timeout: 3s
-            retries: 5
 
-    redisinsight:
-        env_file: .env
-        image: redislabs/redisinsight:latest
-        expose:
-            - "5540"
-        restart: unless-stopped
-        depends_on:
-            redis:
-                condition: service_healthy
-        networks:
-            - redis
-            - redis-view
+  frontend:
+    env_file: .env
 
-    nginx:
-        build:
-          context: ./nginx
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
 
-        ports:
-          - "8081:80"
-          - "8443:8443"
-          - "1312:80"
-          - "6969:443"
+    expose:
+      - "3000"
 
-        depends_on:
-          backend:
-            condition: service_healthy
-          frontend:
-            condition: service_healthy
-          docusaurus:
-            condition: service_started
-          kibana:
-            condition: service_started
-          grafana:
-            condition: service_started
+    volumes:
+      - /app/node_modules
+      - ./frontend:/app
 
-        networks:
-          - back-front
-          - db-view
-          - docs-view
-          - monitoring # TODO - Revisar las redes que son compartidas con NGINX
-          - elastic
-          - redis-view
-          - port-nginx
+    restart: unless-stopped
 
-    docusaurus:
-        build:
-          context: ./docusaurus
-        expose:
-            - "3000"
-        volumes:
-          - ./docusaurus:/app
-          - /app/node_modules
-        restart: unless-stopped
-        networks:
-            - docs-view
-            - back-front
+    depends_on:
+      backend:
+        condition: service_healthy
 
-    prometheus:
-        build: 
-            context: ./prometheus
-        volumes:
-            - prometheus_data:/prometheus
-        expose:
-            - "9090"
-        command:
-            - "--config.file=/etc/prometheus/prometheus.yml"
-            - "--storage.tsdb.path=/prometheus"
-        networks:
-            - monitoring
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
-    grafana:
-        env_file: .env
-        build:
-            context: ./grafana
-        volumes:
-            - grafana_data:/var/lib/grafana
-            - ./grafana/dashboards:/etc/grafana/provisioning/dashboards/json
-        expose:
-            - "3000"
-        depends_on:
-            - prometheus
-        networks:
-            - monitoring
+    networks:
+      - back-front
 
-    # 
-    node-exporter:
-        image: prom/node-exporter:latest
-        expose:
-            - "9100"
-        networks:
-            - monitoring
-    # Disabled for WSL compatibility
-    # Required for full host metrics on Linux
-        # command: 
-        #   - '--path.rootfs=/host'
-        # volumes:
-        #   - '/:/host:ro,rslave'
-          
-    cadvisor:
-      image: gcr.io/cadvisor/cadvisor:latest
-      container_name: cadvisor
-      restart: unless-stopped
-      expose:
-        - "8081"
-      networks:
-        - monitoring
-      volumes:
-        - /:/rootfs:ro
-        - /var/run:/var/run:ro
-        - /sys:/sys:ro
-        - ${DOCKER_ROOT:-/var/lib/docker}:/var/lib/docker:ro # docker info --format '{{.DockerRootDir}}'
+    environment:
+      PUBLIC_API_URL: ${PUBLIC_API_URL}
 
 
-    elastic-setup:
-        image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
-        env_file: .env
-        user: "0"
-        volumes:
-          - certs_data:/usr/share/elasticsearch/config/certs
-          - ./elastic/setup/setup.sh:/usr/share/elasticsearch/setup.sh:ro
-        networks:
-          - elastic
-        command: /usr/share/elasticsearch/setup.sh
-        healthcheck:
-          test: ["CMD-SHELL", "[ -f config/certs/elasticsearch/elasticsearch.crt ]"]
-          interval: 2s
-          timeout: 5s
-          retries: 60
-  
-    elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
-        env_file: .env
-        depends_on:
-          elastic-setup:
-            condition: service_started
-        expose:
-          - ${ES_PORT}
-        volumes:
-          - certs_data:/usr/share/elasticsearch/config/certs
-          - elastic_data:/usr/share/elasticsearch/data
-          - ./elastic/elasticsearch/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
-        networks:
-          - elastic
-        mem_limit: ${ES_MEM_LIMIT}
-        # ulimits:
-        #   memlock:
-        #     soft: -1
-        #     hard: -1
-        healthcheck:
-            test:
-              [
-                "CMD-SHELL",
-                "curl -s -k https://localhost:9200 | grep -q 'missing authentication credentials'",
-              ]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-            start_period: 60s
 
-    kibana:
-        image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
-        env_file: .env
-        depends_on:
-          elasticsearch:
-            condition: service_healthy
-        expose:
-          - ${KIBANA_PORT}
-        volumes:
-          - certs_data:/usr/share/kibana/config/certs
-          - kibana_data:/usr/share/kibana/data
-          - ./elastic/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
-        networks:
-          - elastic
-        mem_limit: ${KB_MEM_LIMIT}
+  postgres:
+    env_file: .env
 
-    # Puede dar error por permisos de usuario, en ese caso hacer en terminal "sudo chown root:root ./elastic/metricbeat/metricbeat.yml"
-    metricbeat:
-        image: docker.elastic.co/beats/metricbeat:${STACK_VERSION}
-        env_file: .env
-        user: root
-        restart: on-failure:5
-        volumes:
-          - metricbeat_data:/usr/share/metricbeat/data
-          - certs_data:/usr/share/metricbeat/certs
-          - ./elastic/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
-          - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
-          - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
-          - /proc:/hostfs/proc:ro
-          - /:/hostfs:ro
-        networks:
-          - elastic
-        command: ["metricbeat", "-e", "--strict.perms=false"]
-        depends_on:
-          elasticsearch:
-            condition: service_started
-          kibana:
-            condition: service_started
+    image: postgres:17.11
 
-    filebeat:
-        image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
-        env_file: .env
-        user: root
-        restart: on-failure:5
-        volumes:
-          - filebeat_data:/usr/share/filebeat/data
-          - certs_data:/usr/share/filebeat/certs
-          - ./elastic/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-          - ./elastic/filebeat/ingest_data:/usr/share/filebeat/ingest_data:ro
-          - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro # docker context inspect --format '{{.Endpoints.docker.Host}}'
-          - ${DOCKER_ROOT:-/var/lib/docker}/containers:/var/lib/docker/containers:ro # docker info --format '{{.DockerRootDir}}'
-        #   - api-logs:/usr/share/filebeat/ingest_data:ro
-        networks:
-          - elastic
-          - api-logs
-        command: ["filebeat", "-e", "--strict.perms=false"]
-        depends_on:
-          elasticsearch:
-            condition: service_started
-          kibana:
-            condition: service_started
-          logstash:
-            condition: service_started
-        
-    logstash:
-        image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
-        env_file: .env
-        expose:
-          - 5044
-        group_add:
-          - 0 
-        volumes:
-          - logstash_data:/usr/share/logstash/data
-          - certs_data:/usr/share/logstash/certs:ro
-          - ./elastic/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-          - ./elastic/logstash/ingest_data:/usr/share/logstash/ingest_data:ro
-        networks:
-          - elastic
-          - api-logs
-        environment:
-          - xpack.monitoring.enabled=false
-          - ELASTIC_HOSTS=https://elasticsearch:9200
-        depends_on:
-          elasticsearch:
-            condition: service_started
-          kibana:
-            condition: service_started
-    portainer:
-        image: portainer/portainer-ce:sts
-        volumes:
-            - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock # docker context inspect --format '{{.Endpoints.docker.Host}}'
-            - portainer_data:/data
-        expose:
-            - "9443"
-            - "9000"
-        restart: unless-stopped
-        networks:
-            - port-nginx
+    environment:
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_NAME}"
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER} -d ${DB_NAME}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    expose:
+      - "5432"
+
+    restart: unless-stopped
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    networks:
+      - db-view
+      - db-back
+
+
+
+  pgadmin:
+    env_file: .env
+
+    image: dpage/pgadmin4:latest
+
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
+      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
+
+    expose:
+      - "80"
+
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+    networks:
+      - db-view
+
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+
+  redis:
+    env_file: .env
+
+    image: redis:7
+
+    command:
+      - redis-server
+      - --requirepass
+      - "${REDIS_PASSWORD}"
+
+    ports:
+      - "7777:6379"
+
+    restart: unless-stopped
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - redis
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "-a",
+          "${REDIS_PASSWORD}",
+          "ping"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+
+
+  redisinsight:
+    env_file: .env
+
+    image: redislabs/redisinsight:latest
+
+    expose:
+      - "5540"
+
+    restart: unless-stopped
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    networks:
+      - redis
+      - redis-view
+
+
+  nginx:
+    build:
+      context: ./nginx
+
+    env_file: .env
+
+    ports:
+      - "${NGINX_REDIRECT_PORT:-8081}:80"
+      - "${NGINX_HTTPS_REDIRECT_PORT:-8443}:8443"
+      - "${NGINX_HTTP_PORT:-1312}:80"
+      - "${NGINX_HTTPS_PORT:-6969}:443"
+
+    restart: unless-stopped
+
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+      docusaurus:
+        condition: service_started
+      kibana:
+        condition: service_healthy
+      grafana:
+        condition: service_started
+
+    networks:
+      - back-front
+      - db-view
+      - docs-view
+      - monitoring
+      - elastic
+      - redis-view
+      - port-nginx
+
+
+
+  docusaurus:
+    build:
+      context: ./docusaurus
+
+    expose:
+      - "3000"
+
+    volumes:
+      - ./docusaurus:/app
+      - /app/node_modules
+
+    restart: unless-stopped
+
+    networks:
+      - docs-view
+      - back-front
+
+
+
+  prometheus:
+    build:
+      context: ./prometheus
+
+    volumes:
+      - prometheus_data:/prometheus
+
+    expose:
+      - "9090"
+
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+
+    networks:
+      - monitoring
+
+
+
+  grafana:
+    env_file: .env
+
+    build:
+      context: ./grafana
+
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards/json
+
+    expose:
+      - "3000"
+
+    depends_on:
+      prometheus:
+        condition: service_started
+
+    networks:
+      - monitoring
+
+    restart: unless-stopped
+
+
+  node-exporter:
+    image: prom/node-exporter:latest
+
+    expose:
+      - "9100"
+
+    networks:
+      - monitoring
+
+
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+
+    container_name: cadvisor
+
+    restart: unless-stopped
+
+    expose:
+      - "8081"
+
+    networks:
+      - monitoring
+
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - ${DOCKER_ROOT:-/var/lib/docker}:/var/lib/docker:ro
+
+
+  elastic-setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+
+    env_file: .env
+
+    user: "0"
+
+    volumes:
+      - certs_data:/usr/share/elasticsearch/config/certs
+      - ./elastic/setup/setup.sh:/usr/share/elasticsearch/setup.sh:ro
+
+    networks:
+      - elastic
+
+    command:
+      - /usr/share/elasticsearch/setup.sh
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "[ -f config/certs/elasticsearch/elasticsearch.crt ]"
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+
+    env_file: .env
+
+    depends_on:
+      elastic-setup:
+        condition: service_healthy
+
+    expose:
+      - "9200"
+
+    volumes:
+      - certs_data:/usr/share/elasticsearch/config/certs
+      - elastic_data:/usr/share/elasticsearch/data
+      - ./elastic/elasticsearch/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+
+    networks:
+      - elastic
+
+    mem_limit: ${ES_MEM_LIMIT}
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -k https://localhost:9200 | grep -q 'missing authentication credentials'"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+
+    env_file: .env
+
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+    expose:
+      - "5601"
+
+    volumes:
+      - certs_data:/usr/share/kibana/config/certs
+      - kibana_data:/usr/share/kibana/data
+      - ./elastic/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+
+    networks:
+      - elastic
+
+    mem_limit: ${KB_MEM_LIMIT}
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:5601/api/status"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+
+
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:${STACK_VERSION}
+
+    env_file: .env
+
+    user: root
+
+    restart: on-failure:5
+
+    volumes:
+      - metricbeat_data:/usr/share/metricbeat/data
+      - certs_data:/usr/share/metricbeat/certs
+      - ./elastic/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /proc:/hostfs/proc:ro
+      - /:/hostfs:ro
+
+    networks:
+      - elastic
+
+    command:
+      - metricbeat
+      - -e
+      - --strict.perms=false
+
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+
+    env_file: .env
+
+    user: root
+
+    restart: on-failure:5
+
+    volumes:
+      - filebeat_data:/usr/share/filebeat/data
+      - certs_data:/usr/share/filebeat/certs
+      - ./elastic/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./elastic/filebeat/ingest_data:/usr/share/filebeat/ingest_data:ro
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro
+      - ${DOCKER_ROOT:-/var/lib/docker}/containers:/var/lib/docker/containers:ro
+
+    networks:
+      - elastic
+      - api-logs
+
+    command:
+      - filebeat
+      - -e
+      - --strict.perms=false
+
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+      logstash:
+        condition: service_started
+
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+
+    env_file: .env
+
+    expose:
+      - "5044"
+
+    group_add:
+      - "0"
+
+    volumes:
+      - logstash_data:/usr/share/logstash/data
+      - certs_data:/usr/share/logstash/certs:ro
+      - ./elastic/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./elastic/logstash/ingest_data:/usr/share/logstash/ingest_data:ro
+
+    networks:
+      - elastic
+      - api-logs
+
+    environment:
+      XPACK_MONITORING_ENABLED: "false"
+      ELASTIC_HOSTS: "https://elasticsearch:9200"
+
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+
+
+
+  portainer:
+    image: portainer/portainer-ce:sts
+
+    volumes:
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
+      - portainer_data:/data
+
+    expose:
+      - "9443"
+      - "9000"
+
+    restart: unless-stopped
+
+    networks:
+      - port-nginx
+
 
 volumes:
-    postgres_data:
-    pgadmin_data:
-    redis_data:
-    prometheus_data:
-    grafana_data:
-    uploads_data: # Donde se guardan las imágenes subidas a través de los posts
-    elastic_data:
-    kibana_data:
-    metricbeat_data:
-    filebeat_data:
-    logstash_data:
-    certs_data:
-# TODO - Revisar las redes creadas para la correcta separación y aislamiento entre contenedores
-    portainer_data:
-    # api-logs:
+  postgres_data:
+  pgadmin_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  uploads_data:
+  elastic_data:
+  kibana_data:
+  metricbeat_data:
+  filebeat_data:
+  logstash_data:
+  certs_data:
+  portainer_data:
+
 
 networks:
-    db-view:
-    db-back:
-    back-front: 
-    redis:
-    docs-view:
-    monitoring:
-    elastic:
-    redis-view:
-    port-nginx:
-    api-logs:
+  db-view:
+  db-back:
+  back-front:
+  redis:
+  docs-view:
+  monitoring:
+  elastic:
+  redis-view:
+  port-nginx:
+  api-logs:
