@@ -16,6 +16,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"unicode"
@@ -316,6 +317,14 @@ func (h *PostHandler) ListFeed(
 func (h *PostHandler) ListPostsByUserID(
 	c *gin.Context,
 ) {
+	currentUserID, err :=
+		getUserIDFromContext(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
 	userIDValue, err := strconv.ParseUint(
 		c.Param("userId"),
 		10,
@@ -344,6 +353,7 @@ func (h *PostHandler) ListPostsByUserID(
 	response, err :=
 		h.PostService.ListPostsByUserID(
 			uint(userIDValue),
+			currentUserID,
 			page,
 			limit,
 		)
@@ -425,6 +435,65 @@ func (h *PostHandler) DeletePost(
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+// ServePostImage sirve la imagen o PDF de una publicación únicamente
+// si el usuario autenticado es el autor o un amigo del autor.
+func (h *PostHandler) ServePostImage(
+	c *gin.Context,
+) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	relPath := strings.TrimPrefix(
+		c.Param("filepath"),
+		"/",
+	)
+
+	cleanPath := filepath.Clean(relPath)
+	if cleanPath == "." ||
+		cleanPath == ".." ||
+		strings.HasPrefix(
+			cleanPath,
+			".."+string(filepath.Separator),
+		) {
+		c.Error(
+			appErr.NewNotFound(
+				"post_file_not_found",
+			),
+		)
+		c.Abort()
+		return
+	}
+
+	imagePath := filepath.ToSlash(
+		filepath.Join(
+			"uploads",
+			"posts",
+			cleanPath,
+		),
+	)
+
+	if err := h.PostService.AuthorizePostImage(
+		imagePath,
+		userID,
+	); err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.File(
+		filepath.Join(
+			h.ImageStorage.BasePath,
+			"posts",
+			cleanPath,
+		),
+	)
 }
 
 func parsePostListPagination(

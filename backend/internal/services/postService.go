@@ -19,6 +19,32 @@ import (
 
 const maxPostContentLength = 5000
 
+// requirePostAccess comprueba que el usuario pueda acceder a una publicación:
+// debe ser suya o estar etiquetado como amigo del autor.
+func requirePostAccess(
+	friendRepo *repository.FriendRepository,
+	post *models.Post,
+	currentUserID uint,
+) error {
+	if post.UserID == currentUserID {
+		return nil
+	}
+
+	areFriends, err := friendRepo.AreFriends(
+		post.UserID,
+		currentUserID,
+	)
+	if err != nil {
+		return appErr.NewInternal(err)
+	}
+
+	if !areFriends {
+		return appErr.NewForbidden("not_friends")
+	}
+
+	return nil
+}
+
 type PostService struct {
 	postRepo     *repository.PostRepository
 	postLikeRepo *repository.PostLikeRepository
@@ -124,22 +150,12 @@ func (s *PostService) GetPostByID(
 		return nil, appErr.NewInternal(err)
 	}
 
-	if post.UserID != currentUserID {
-		areFriends, err :=
-			s.friendRepo.AreFriends(
-				post.UserID,
-				currentUserID,
-			)
-
-		if err != nil {
-			return nil, appErr.NewInternal(err)
-		}
-
-		if !areFriends {
-			return nil, appErr.NewForbidden(
-				"not_friends",
-			)
-		}
+	if err := requirePostAccess(
+		s.friendRepo,
+		post,
+		currentUserID,
+	); err != nil {
+		return nil, err
 	}
 
 	likeCount, err :=
@@ -193,6 +209,30 @@ func (s *PostService) GetPostByID(
 
 // ListFeed devuelve las publicaciones del usuario autenticado
 // y de sus amistades al usar ListFeedForUser.
+// AuthorizePostImage localiza el post dueño de una ruta de imagen y
+// comprueba que el usuario actual pueda acceder a él (autor o amigo).
+func (s *PostService) AuthorizePostImage(
+	imagePath string,
+	currentUserID uint,
+) error {
+	post, err := s.postRepo.FindByImagePath(imagePath)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return appErr.NewNotFound(
+				"post_not_found",
+			)
+		}
+
+		return appErr.NewInternal(err)
+	}
+
+	return requirePostAccess(
+		s.friendRepo,
+		post,
+		currentUserID,
+	)
+}
+
 func (s *PostService) ListFeed(
 	currentUserID uint,
 	page int,
@@ -218,11 +258,30 @@ func (s *PostService) ListFeed(
 }
 
 // ListPostsByUserID devuelve los posts del propietario del perfil.
+// Solo puede verlos el propio usuario o un amigo suyo.
 func (s *PostService) ListPostsByUserID(
 	userID uint,
+	currentUserID uint,
 	page int,
 	limit int,
 ) (*dto.PostListResponse, error) {
+	if userID != currentUserID {
+		areFriends, err :=
+			s.friendRepo.AreFriends(
+				userID,
+				currentUserID,
+			)
+		if err != nil {
+			return nil, appErr.NewInternal(err)
+		}
+
+		if !areFriends {
+			return nil, appErr.NewForbidden(
+				"not_friends",
+			)
+		}
+	}
+
 	posts, total, err :=
 		s.postRepo.ListByUserID(
 			userID,

@@ -47,6 +47,24 @@ func (r *PostRepository) FindByID(
 	return &post, nil
 }
 
+// FindByImagePath busca la publicación a la que pertenece una ruta de imagen.
+func (r *PostRepository) FindByImagePath(
+	imagePath string,
+) (*models.Post, error) {
+	var post models.Post
+
+	err := r.db.
+		Where("image_path = ?", imagePath).
+		First(&post).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &post, nil
+}
+
 // ListFeedByFriendships obtiene únicamente publicaciones de usuarios
 // que tienen una relación registrada en la tabla friendships.
 func (r *PostRepository) ListFeedByFriendships(
