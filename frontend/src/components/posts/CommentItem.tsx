@@ -35,7 +35,7 @@ export const CommentItem = ({
 					<Link
 						className="comment-item__avatar-link"
 						to={authorProfilePath}
-						aria-label={`Open ${comment.author.login} profile`}
+						aria-label={`Abrir el perfil de ${comment.author.login}`}
 					>
 						<UserAvatar
 							avatarPath={comment.author.avatarPath}
@@ -71,13 +71,13 @@ export const CommentItem = ({
 						disabled={isDeleting}
 						aria-label={
 							isDeleting
-								? "Deleting comment"
-								: "Delete comment"
+								? "Eliminando comentario"
+								: "Eliminar comentario"
 						}
 						title={
 							isDeleting
-								? "Deleting comment"
-								: "Delete comment"
+								? "Eliminando comentario"
+								: "Eliminar comentario"
 						}
 					>
 						<FiTrash2 size={16} aria-hidden="true" />

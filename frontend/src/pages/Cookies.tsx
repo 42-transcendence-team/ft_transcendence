@@ -11,41 +11,41 @@ const cookies = [
 	{
 		name: "jwt",
 		purpose:
-			"Keeps the user authenticated after a successful login.",
+			"Mantiene la sesión del usuario iniciada después de identificarse correctamente.",
 		duration:
-			"Until the configured session expiration or logout.",
+			"Hasta que caduque la sesión configurada o el usuario cierre sesión.",
 	},
 	{
 		name: "tempToken",
 		purpose:
-			"Temporarily identifies a login attempt while two-factor authentication is completed.",
+			"Identifica temporalmente un intento de inicio de sesión mientras se completa la autenticación en dos pasos.",
 		duration:
-			"Approximately five minutes or until the verification process is completed.",
+			"Aproximadamente cinco minutos o hasta que finalice el proceso de verificación.",
 	},
 ];
 
 export const Cookies = () => {
 	return (
 		<InformationalPageLayout
-			eyebrow="Legal"
-			title="Cookie Policy"
-			subtitle="How Twenty Four uses essential cookies to keep your account secure."
+			eyebrow="Información legal"
+			title="Política de cookies"
+			subtitle="Cómo utiliza Twenty Four las cookies esenciales para proteger tu cuenta."
 			className="information-page--cookies"
 		>
 			<div className="information-callout information-callout--positive">
 				<FiShield aria-hidden="true" />
 
 				<div>
-					<h2>Essential cookies only</h2>
+					<h2>Solo utilizamos cookies esenciales</h2>
 					<p>
-						Twenty Four currently uses cookies required
-						for authentication and account security. It
-						does not use advertising or analytics cookies.
+						Twenty Four utiliza actualmente las cookies necesarias
+						para la autenticación y la seguridad de las cuentas. No
+						utiliza cookies publicitarias ni de análisis.
 					</p>
 				</div>
 			</div>
 
-			<InformationSection title="Cookies used by Twenty Four">
+			<InformationSection title="Cookies utilizadas por Twenty Four">
 				<div className="cookie-grid">
 					{cookies.map((cookie) => (
 						<article
@@ -58,34 +58,34 @@ export const Cookies = () => {
 								</code>
 
 								<span className="cookie-card__badge">
-									Strictly necessary
+									Estrictamente necesaria
 								</span>
 							</header>
 
 							<dl className="cookie-card__details">
 								<div>
-									<dt>Purpose</dt>
+									<dt>Finalidad</dt>
 									<dd>{cookie.purpose}</dd>
 								</div>
 
 								<div>
-									<dt>Browser access</dt>
+									<dt>Acceso desde el navegador</dt>
 									<dd>
-										HttpOnly. Client-side JavaScript
-										cannot read its value.
+										HttpOnly. El código JavaScript del cliente
+										no puede leer su contenido.
 									</dd>
 								</div>
 
 								<div>
-									<dt>Security</dt>
+									<dt>Seguridad</dt>
 									<dd>
-										SameSite=Lax and Secure when the
-										application runs in production.
+										SameSite=Lax y Secure cuando la
+										aplicación se ejecuta en producción.
 									</dd>
 								</div>
 
 								<div>
-									<dt>Duration</dt>
+									<dt>Duración</dt>
 									<dd>{cookie.duration}</dd>
 								</div>
 							</dl>
@@ -94,36 +94,36 @@ export const Cookies = () => {
 				</div>
 			</InformationSection>
 
-			<InformationSection title="Server-side session data">
+			<InformationSection title="Datos de sesión almacenados en el servidor">
 				<div className="information-inline">
 					<FiServer aria-hidden="true" />
 
 					<p>
-						Session identifiers, temporary authentication
-						information and online status may also be stored
-						on the server. This information is not stored as
-						an additional browser cookie.
+						Los identificadores de sesión, la información temporal de autenticación
+						y el estado de conexión también pueden almacenarse
+						en el servidor. Esta información no se guarda como
+						una cookie adicional en el navegador.
 					</p>
 				</div>
 			</InformationSection>
 
-			<InformationSection title="Managing cookies">
+			<InformationSection title="Gestión de las cookies">
 				<div className="information-inline">
 					<FiClock aria-hidden="true" />
 
 					<p>
-						Blocking essential cookies will prevent login
-						and other authenticated features from working
-						correctly.
+						Bloquear las cookies esenciales impedirá iniciar sesión
+						y hará que otras funciones que requieren autenticación no funcionen
+						correctamente.
 					</p>
 				</div>
 			</InformationSection>
 
-			<InformationSection title="Policy changes">
+			<InformationSection title="Cambios en esta política">
 				<p>
-					This page will be updated if Twenty Four adds
-					optional cookies, external analytics or other
-					tracking technologies.
+					Esta página se actualizará si Twenty Four incorpora
+					cookies opcionales, servicios externos de análisis u otras
+					tecnologías de seguimiento.
 				</p>
 			</InformationSection>
 		</InformationalPageLayout>

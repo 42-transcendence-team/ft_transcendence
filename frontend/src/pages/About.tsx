@@ -14,58 +14,58 @@ import { InformationSection } from "../components/information/InformationSection
 
 const capabilities = [
 	{
-		title: "Create your profile",
+		title: "Crea tu perfil",
 		description:
-			"Build your identity with a personal profile, avatar and banner.",
+			"Personaliza tu identidad con un perfil, un avatar y una imagen de cabecera.",
 		icon: FiUser,
 	},
 	{
-		title: "Connect with friends",
+		title: "Conecta con tus amigos",
 		description:
-			"Send requests and maintain your own network of contacts.",
+			"Envía solicitudes y crea tu propia red de contactos.",
 		icon: FiUsers,
 	},
 	{
-		title: "Share posts and files",
+		title: "Comparte publicaciones y archivos",
 		description:
-			"Publish text, images and supported documents.",
+			"Publica textos, imágenes y documentos compatibles.",
 		icon: FiFileText,
 	},
 	{
-		title: "Join the conversation",
+		title: "Participa en la conversación",
 		description:
-			"Comment on publications and react to shared content.",
+			"Comenta las publicaciones y reacciona al contenido compartido.",
 		icon: FiMessageCircle,
 	},
 	{
-		title: "Protect your account",
+		title: "Protege tu cuenta",
 		description:
-			"Manage your session, password and two-factor authentication.",
+			"Gestiona tu sesión, contraseña y autenticación en dos pasos.",
 		icon: FiShield,
 	},
 	{
-		title: "Use one connected space",
+		title: "Todo en un mismo lugar",
 		description:
-			"Access social and interactive features from the same application.",
+			"Accede a todas las funciones sociales e interactivas desde una misma aplicación.",
 		icon: FiActivity,
 	},
 ];
 
 const principles = [
 	{
-		title: "Usability",
+		title: "Usabilidad",
 		description:
-			"Clear interfaces and predictable interactions.",
+			"Interfaces claras e interacciones previsibles.",
 	},
 	{
-		title: "Security",
+		title: "Seguridad",
 		description:
-			"Account protection and controlled access to user data.",
+			"Protección de las cuentas y acceso controlado a los datos de los usuarios.",
 	},
 	{
-		title: "Teamwork",
+		title: "Trabajo en equipo",
 		description:
-			"A shared project designed and built by five developers.",
+			"Un proyecto conjunto diseñado y desarrollado por cinco personas.",
 	},
 ];
 
@@ -73,19 +73,19 @@ export const About = () => {
 	return (
 		<InformationalPageLayout
 			eyebrow="Twenty Four"
-			title="About Twenty Four"
-			subtitle="A social platform built to connect, share and interact."
+			title="Sobre Twenty Four"
+			subtitle="Una plataforma social creada para conectar, compartir e interactuar."
 			className="information-page--about"
 		>
-			<InformationSection title="What is Twenty Four?">
+			<InformationSection title="¿Qué es Twenty Four?">
 				<p>
-					Twenty Four is a social web platform where
-					users can create a profile, connect with other
-					people and share content in a single space.
+					Twenty Four es una plataforma web social donde
+					los usuarios pueden crear un perfil, conectar con
+					otras personas y compartir contenido en un mismo lugar.
 				</p>
 			</InformationSection>
 
-			<InformationSection title="What can you do?">
+			<InformationSection title="¿Qué puedes hacer?">
 				<div className="information-grid information-grid--three">
 					{capabilities.map((capability) => {
 						const Icon = capability.icon;
@@ -112,15 +112,15 @@ export const About = () => {
 				</div>
 			</InformationSection>
 
-			<InformationSection title="Built as a team project">
+			<InformationSection title="Creado como proyecto en equipo">
 				<p>
-					Twenty Four was created by a team of five
-					developers as part of the 42 Common Core final
-					project.
+					Twenty Four fue creado por un equipo de cinco
+					desarrolladores como proyecto final del Common
+					Core de 42.
 				</p>
 			</InformationSection>
 
-			<InformationSection title="Our approach">
+			<InformationSection title="Nuestro enfoque">
 				<div className="information-grid information-grid--three">
 					{principles.map((principle) => (
 						<article
@@ -141,10 +141,10 @@ export const About = () => {
 
 			<div className="information-callout information-callout--action">
 				<div>
-					<h2>Meet the people behind the project</h2>
+					<h2>Conoce a quienes están detrás del proyecto</h2>
 					<p>
-						Learn more about the team that designed and
-						developed Twenty Four.
+						Descubre más sobre el equipo que diseñó y
+						desarrolló Twenty Four.
 					</p>
 				</div>
 
@@ -152,7 +152,7 @@ export const About = () => {
 					className="information-button"
 					to="/developers"
 				>
-					Meet the team
+					Conoce al equipo
 					<FiArrowRight aria-hidden="true" />
 				</NavLink>
 			</div>

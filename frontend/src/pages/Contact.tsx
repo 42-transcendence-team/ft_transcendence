@@ -13,9 +13,9 @@ import { InformationalPageLayout } from "../components/information/Informational
  */
 const contactMethods = [
 	{
-		title: "General enquiries",
+		title: "Consultas generales",
 		description:
-			"Questions about the project, its features or the development team.",
+			"Preguntas sobre el proyecto, sus funciones o el equipo de desarrollo.",
 		icon: FiMessageSquare,
 		links: [
 			{
@@ -31,9 +31,9 @@ const contactMethods = [
 		],
 	},
 	{
-		title: "Privacy requests",
+		title: "Solicitudes sobre privacidad",
 		description:
-			"Questions about access, correction or deletion of personal information.",
+			"Consultas sobre el acceso, la rectificación o la eliminación de datos personales.",
 		icon: FiShield,
 		links: [
 			{
@@ -44,9 +44,9 @@ const contactMethods = [
 		],
 	},
 	{
-		title: "Security reports",
+		title: "Avisos de seguridad",
 		description:
-			"Responsible disclosure of vulnerabilities or other security concerns.",
+			"Comunicación responsable de vulnerabilidades u otros problemas de seguridad.",
 		icon: FiShield,
 		links: [
 			{
@@ -61,9 +61,9 @@ const contactMethods = [
 export const Contact = () => {
 	return (
 		<InformationalPageLayout
-			eyebrow="Support"
-			title="Contact"
-			subtitle="Get in touch with the Twenty Four team."
+			eyebrow="Ayuda"
+			title="Contacto"
+			subtitle="Ponte en contacto con el equipo de Twenty Four."
 			className="information-page--contact"
 		>
 			<div className="contact-grid">
@@ -109,10 +109,10 @@ export const Contact = () => {
 
 			<div className="information-callout">
 				<div>
-					<h2>Student project support</h2>
+					<h2>Atención de un proyecto estudiantil</h2>
 					<p>
-						Twenty Four is maintained by a student
-						development team. Response times may vary.
+						Twenty Four está mantenido por un equipo
+						de estudiantes. Los tiempos de respuesta pueden variar.
 					</p>
 				</div>
 			</div>

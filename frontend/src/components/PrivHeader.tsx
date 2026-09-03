@@ -32,7 +32,7 @@ export function PrivHeader({
       </div>
       <div>
         <Link to="/app/games" className="privHeader__games-link">
-          Games
+          Juegos
         </Link>
       </div>
       <div className="privHeader__right">

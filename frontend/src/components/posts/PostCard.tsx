@@ -166,7 +166,7 @@ export const PostCard = ({
 				className="post-card__open-surface"
 				type="button"
 				aria-label={
-					`Open post by ${post.author.login}`
+					`Abrir la publicación de ${post.author.login}`
 				}
 				onClick={() => onOpen(post.id)}
 			/>
@@ -178,7 +178,7 @@ export const PostCard = ({
 							className="post-card__avatar-link"
 							to={profilePath}
 							aria-label={
-								`Open ${post.author.login} profile`
+								`Abrir el perfil de ${post.author.login}`
 							}
 						>
 							<UserAvatar
@@ -227,7 +227,7 @@ export const PostCard = ({
 							className="post-card__image"
 							src={imageSrc}
 							alt={
-								`Post by ${post.author.login}`
+								`Publicación de ${post.author.login}`
 							}
 							loading="lazy"
 						/>
@@ -257,7 +257,7 @@ export const PostCard = ({
 					<span
 						className="post-card__reaction"
 						aria-label={
-							`${post.likeCount} likes`
+							`${post.likeCount} me gusta`
 						}
 					>
 						<FiThumbsUp aria-hidden="true" />
@@ -267,7 +267,7 @@ export const PostCard = ({
 					<span
 						className="post-card__reaction"
 						aria-label={
-							`${post.dislikeCount} dislikes`
+							`${post.dislikeCount} no me gusta`
 						}
 					>
 						<FiThumbsDown aria-hidden="true" />
