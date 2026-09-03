@@ -54,7 +54,7 @@ func (srv *HTTPServer) Router() {
 	gameHandler := handlers.NewGameHandler(gameManager, hub)
 	authHandler := handlers.NewAuthHandler(authService, srv.Conf, srv.Redis)
 	userHandler := handlers.NewUserHandler(userService, srv.Redis, imageStorage, advancedSearchService)
-	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler)
+	twoFAHandler := handlers.New2FAHandler(twoFAService, authHandler, srv.Redis)
 	chatHandler := handlers.NewChatHandler(hub, chatService)
 	postHandler := handlers.NewPostHandler(friendService, hub, postService, imageStorage, notificationService)
 	commentHandler := handlers.NewCommentHandler(hub, commentService, notificationService)

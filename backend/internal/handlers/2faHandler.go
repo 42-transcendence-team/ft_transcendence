@@ -5,17 +5,25 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"log"
+	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
 type TwoFAHandler struct {
 	TwoFAService *services.TwoFAService
 	AuthHandler  *AuthHandler
+	redis        *redis.Client
 }
 
-func New2FAHandler(twoFAService *services.TwoFAService, authHandler *AuthHandler) *TwoFAHandler {
-	return &TwoFAHandler{TwoFAService: twoFAService, AuthHandler: authHandler}
+func New2FAHandler(twoFAService *services.TwoFAService, authHandler *AuthHandler, redisClient *redis.Client) *TwoFAHandler {
+	return &TwoFAHandler{
+		TwoFAService: twoFAService,
+		AuthHandler:  authHandler,
+		redis:        redisClient,
+	}
 }
 
 // Se hace la peticion para generar una nueva clave TOTP.
@@ -163,6 +171,21 @@ func (h *TwoFAHandler) Login2FA(c *gin.Context) {
 	// Se guarda el token definitivo y se elimina el temporal de las cookies del navegador
 	h.AuthHandler.setCookie(c, token, life)
 	h.AuthHandler.ClearTempToken(c)
+
+	ctx := c.Request.Context()
+	expiration := time.Until(life)
+
+	sessionKey := fmt.Sprintf("session:%d", userID)
+
+	err = h.redis.Set(ctx, sessionKey, token, expiration).Err()
+	if err != nil {
+		log.Printf("Error: registration redis session: %v", err)
+	}
+
+	err = h.redis.SAdd(ctx, "online_users", userID).Err()
+	if err != nil {
+		log.Printf("Error adding user to online_users: %v", err)
+	}
 
 	log.Printf("Login2FA: User ID %d successfully logged in with 2FA, JWT token set in cookie", request.Id)
 	c.JSON(200, gin.H{"message": "2FA verified successfully", "token": token})
