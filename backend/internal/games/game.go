@@ -84,10 +84,11 @@ func (g *Game) ConnectPlayer(userID uint, username string) error {
 		return appErr.NewConflict("no se puede unir a un juego local")
 	}
 
-	if g.Mode == "online" && len(g.Players) >= 2 {
+	if g.Mode == "online" && len(g.Players) >= g.MaxPlayers {
 		if g.Finished {
 			return appErr.NewConflict("el juego ya ha terminado")
 		}
+		log.Printf("Maximo de jugadores: %d", g.MaxPlayers)
 		err := g.reconnectPlayer(userID)
 		if err != nil {
 			newViwer := Player{

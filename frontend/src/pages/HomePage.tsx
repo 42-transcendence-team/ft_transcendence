@@ -1,228 +1,150 @@
+import { PostList } from '@components/posts/PostList';
 import {
-	useEffect,
-	useState,
-} from "react";
-import { Link } from "react-router-dom";
-
-import {
-	getFeedPosts,
-	type PostReactionState,
-	type PostSummary,
-} from "api/Posts";
-
-import { PostList } from "@components/posts/PostList";
+  getFeedPosts,
+  type PostReactionState,
+  type PostSummary,
+} from 'api/Posts';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 function appendUniquePosts(
-	currentPosts: PostSummary[],
-	incomingPosts: PostSummary[],
+  currentPosts: PostSummary[],
+  incomingPosts: PostSummary[],
 ): PostSummary[] {
-	const knownPostIDs = new Set(
-		currentPosts.map((post) => post.id),
-	);
+  const knownPostIDs = new Set(currentPosts.map((post) => post.id));
 
-	return [
-		...currentPosts,
-		...incomingPosts.filter(
-			(post) => !knownPostIDs.has(post.id),
-		),
-	];
+  return [
+    ...currentPosts,
+    ...incomingPosts.filter((post) => !knownPostIDs.has(post.id)),
+  ];
 }
 
 export const HomePage = () => {
-	const [posts, setPosts] =
-		useState<PostSummary[]>([]);
+  const [posts, setPosts] = useState<PostSummary[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-	const [page, setPage] = useState(1);
-	const [totalPages, setTotalPages] =
-		useState(0);
+  useEffect(() => {
+    let cancelled = false;
 
-	const [isLoading, setIsLoading] =
-		useState(true);
-	const [isLoadingMore, setIsLoadingMore] =
-		useState(false);
-	const [error, setError] =
-		useState<string | null>(null);
+    const loadInitialFeed = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-	useEffect(() => {
-		let cancelled = false;
+        const response = await getFeedPosts(1, 20);
+        if (cancelled) return;
 
-		const loadInitialFeed = async () => {
-			try {
-				setIsLoading(true);
-				setError(null);
+        setPosts(response.data);
+        setPage(response.pagination.page);
+        setTotalPages(response.pagination.totalPages);
+      } catch {
+        if (!cancelled) {
+          setPosts([]);
+          setError('No se ha podido cargar el contenido.');
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
 
-				const response =
-					await getFeedPosts(1, 20);
+    void loadInitialFeed();
 
-				if (cancelled) {
-					return;
-				}
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-				setPosts(response.data);
-				setPage(response.pagination.page);
-				setTotalPages(
-					response.pagination.totalPages,
-				);
-			} catch {
-				if (!cancelled) {
-					setPosts([]);
-					setError(
-						"The feed could not be loaded.",
-					);
-				}
-			} finally {
-				if (!cancelled) {
-					setIsLoading(false);
-				}
-			}
-		};
+  const handleLoadMore = async () => {
+    if (isLoadingMore || page >= totalPages) return;
 
-		void loadInitialFeed();
+    const nextPage = page + 1;
 
-		return () => {
-			cancelled = true;
-		};
-	}, []);
+    try {
+      setIsLoadingMore(true);
+      setError(null);
 
-	const handleLoadMore = async () => {
-		if (
-			isLoadingMore ||
-			page >= totalPages
-		) {
-			return;
-		}
+      const response = await getFeedPosts(nextPage, 20);
+      setPosts((currentPosts) =>
+        appendUniquePosts(currentPosts, response.data),
+      );
+      setPage(response.pagination.page);
+      setTotalPages(response.pagination.totalPages);
+    } catch {
+      setError('No se han podido cargar más publicaciones.');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
-		const nextPage = page + 1;
+  const handlePostDeleted = (postId: number) => {
+    setPosts((currentPosts) =>
+      currentPosts.filter((post) => post.id !== postId),
+    );
+  };
 
-		try {
-			setIsLoadingMore(true);
-			setError(null);
+  const handlePostReactionUpdated = (reactionState: PostReactionState) => {
+    setPosts((currentPosts) =>
+      currentPosts.map((post) =>
+        post.id === reactionState.postId
+          ? {
+              ...post,
+              likeCount: reactionState.likeCount,
+              dislikeCount: reactionState.dislikeCount,
+            }
+          : post,
+      ),
+    );
+  };
 
-			const response =
-				await getFeedPosts(
-					nextPage,
-					20,
-				);
+  return (
+    <section className="home-page">
+      <header className="home-page__header">
+        <h2></h2> {/* no borra es para el diseño */}
+        <Link className="home-page__new-post-button" to="/app/posts/new">
+          Nuevo post
+        </Link>
+      </header>
 
-			setPosts((currentPosts) =>
-				appendUniquePosts(
-					currentPosts,
-					response.data,
-				),
-			);
+      <div className="home-page__feed">
+        {isLoading && <p className="home-page__state">Cargando publicaciones.</p>}
 
-			setPage(response.pagination.page);
-			setTotalPages(
-				response.pagination.totalPages,
-			);
-		} catch {
-			setError(
-				"More posts could not be loaded.",
-			);
-		} finally {
-			setIsLoadingMore(false);
-		}
-	};
+        {!isLoading && error && posts.length === 0 && (
+          <p className="home-page__error">{error}</p>
+        )}
 
-	const handlePostDeleted = (
-		postId: number,
-	) => {
-		setPosts((currentPosts) =>
-			currentPosts.filter(
-				(post) => post.id !== postId,
-			),
-		);
-	};
+        {!isLoading && posts.length === 0 && !error && (
+          <p className="home-page__state">
+            Todavía no hay publicaciones en tu inicio.
+          </p>
+        )}
 
-	const handlePostReactionUpdated = (
-		reactionState: PostReactionState,
-	) => {
-		setPosts((currentPosts) =>
-			currentPosts.map((post) =>
-				post.id === reactionState.postId
-					? {
-							...post,
-							likeCount:
-								reactionState.likeCount,
-							dislikeCount:
-								reactionState.dislikeCount,
-						}
-					: post,
-			),
-		);
-	};
+        {posts.length > 0 && (
+          <>
+            {error && <p className="home-page__error">{error}</p>}
 
-	return (
-		<section className="home-page">
-			<header className="home-page__header">
-				<h2>HOME</h2>
+            <PostList
+              posts={posts}
+              onPostDeleted={handlePostDeleted}
+              onPostReactionUpdated={handlePostReactionUpdated}
+            />
 
-				<Link
-					className="home-page__new-post-button"
-					to="/app/posts/new"
-				>
-					Nuevo post
-				</Link>
-			</header>
-
-			<div className="home-page__feed">
-				{isLoading && (
-					<p className="home-page__state">
-						Loading posts.
-					</p>
-				)}
-
-				{!isLoading &&
-					error &&
-					posts.length === 0 && (
-						<p className="home-page__error">
-							{error}
-						</p>
-					)}
-
-				{!isLoading &&
-					posts.length === 0 &&
-					!error && (
-						<p className="home-page__state">
-							There are no posts in your feed yet.
-						</p>
-					)}
-
-				{posts.length > 0 && (
-					<>
-						{error && (
-							<p className="home-page__error">
-								{error}
-							</p>
-						)}
-
-						<PostList
-							posts={posts}
-							onPostDeleted={
-								handlePostDeleted
-							}
-							onPostReactionUpdated={
-								handlePostReactionUpdated
-							}
-						/>
-
-						{page < totalPages && (
-							<button
-								className="post-list__load-more"
-								type="button"
-								disabled={isLoadingMore}
-								onClick={() =>
-									void handleLoadMore()
-								}
-							>
-								{isLoadingMore
-									? "Loading..."
-									: "Load more"}
-							</button>
-						)}
-					</>
-				)}
-			</div>
-		</section>
-	);
+            {page < totalPages && (
+              <button
+                className="post-list__load-more"
+                type="button"
+                disabled={isLoadingMore}
+                onClick={() => void handleLoadMore()}
+              >
+                {isLoadingMore ? 'Cargando...' : 'Cargar más'}
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </section>
+  );
 };

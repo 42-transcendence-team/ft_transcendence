@@ -28,11 +28,11 @@ export const LoginForm = ({ onSuccess, onRequires2FA }: any) => {
 		};
 
 		if (!identifier.trim()) {
-			newErrors.identifier = "Login or email is required.";
+			newErrors.identifier = "Debes introducir el nombre de usuario o el correo electrónico.";
 		}
 
 		if (!password) {
-			newErrors.password = "Password is required.";
+			newErrors.password = "Debes introducir la contraseña.";
 		}
 
 		setErrors(newErrors);
@@ -51,7 +51,7 @@ export const LoginForm = ({ onSuccess, onRequires2FA }: any) => {
 			const data = await Login(identifier, password);
 
 			if (!data) {
-				setServerMessage("Unknown error");
+				setServerMessage("Error desconocido");
 				return;
 			}
 
@@ -62,7 +62,7 @@ export const LoginForm = ({ onSuccess, onRequires2FA }: any) => {
 
 			onSuccess?.(data);
 		} catch (err: any) {
-			setServerMessage(err?.message || "Login failed");
+			setServerMessage(err?.message || "No se ha podido iniciar sesión");
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -73,27 +73,27 @@ export const LoginForm = ({ onSuccess, onRequires2FA }: any) => {
 			<FormField
 				type="text"
 				id="identifier"
-				label="Username or Email"
+				label="Usuario o correo electrónico"
 				value={identifier}
 				onChange={setIdentifier}
 				error={errors.identifier}
 				className="form-field"
-				placeholder="Username or Email"
+				placeholder="Usuario o correo electrónico"
 			/>
 
 			<FormField
 				id="password"
-				label="Password"
+				label="Contraseña"
 				type="password"
 				value={password}
 				onChange={setPassword}
 				error={errors.password}
 				className="form-field"
-				placeholder="Password"
+				placeholder="Contraseña"
 			/>
 
 			<button type="submit" disabled={isSubmitting} className="auth-form__submit">
-				{isSubmitting ? "Logging in..." : "Login"}
+				{isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
 			</button>
 
 			{serverMessage && (

@@ -18,7 +18,7 @@ export const Register = () => {
                                 </div>
 
                                 <p className="auth-card__subtitle">
-                                        New in Twenty Four? Create your free account now!
+                                        ¿Eres nuevo en Twenty Four? Crea ya tu cuenta gratuita.
                                 </p>
 
                                 <RegisterForm />

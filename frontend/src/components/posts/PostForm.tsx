@@ -66,7 +66,7 @@ export const PostForm = ({ onCreated }: PostFormProps) => {
 		<form className="post-form" onSubmit={handleSubmit}>
 			<div className="post-form__field">
 				<label htmlFor="post-content">
-					Post content
+					Contenido de la publicación
 				</label>
 
 				<textarea
@@ -76,18 +76,18 @@ export const PostForm = ({ onCreated }: PostFormProps) => {
 					onChange={(event) =>
 						setContent(event.target.value)
 					}
-					placeholder="Write something."
+					placeholder="Escribe algo."
 					rows={6}
 				/>
 			</div>
 
 			<ImageUploadField
 				id="post-file"
-				label="Image or PDF"
+				label="Imagen o PDF"
 				file={file}
 				accept={ALLOWED_POST_FILE_TYPES.join(",")}
 				disabled={isSubmitting}
-				previewAlt="Post preview"
+				previewAlt="Vista previa de la publicación"
 				validate={validatePostFile}
 				onChange={setFile}
 				onError={setError}
@@ -105,7 +105,7 @@ export const PostForm = ({ onCreated }: PostFormProps) => {
 					type="submit"
 					disabled={isSubmitting}
 				>
-					{isSubmitting ? "Publishing." : "Publish"}
+					{isSubmitting ? "Publicando..." : "Publicar"}
 				</button>
 			</div>
 		</form>

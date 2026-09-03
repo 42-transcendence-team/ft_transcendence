@@ -38,7 +38,7 @@
       position: absolute;
       top: 100%;
       right: 0;
-      width: 380px;
+      width: min(380px, 92vw);
       max-height: 500px;
       background: white;
       border-radius: 8px;

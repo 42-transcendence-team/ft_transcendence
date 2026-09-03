@@ -8,7 +8,7 @@ export const RootRedirect = () => {
 	const { authStatus } = useAuth();
 
 	if (authStatus === "loading") {
-		return <div>Loading...</div>;
+		return <div>Cargando...</div>;
 	}
 
 	if (authStatus === "auth") {

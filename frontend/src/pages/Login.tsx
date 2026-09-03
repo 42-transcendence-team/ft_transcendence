@@ -30,7 +30,7 @@ export const Login = () => {
         }, [searchParams, setSearchParams]);
 
         const handle42Login = () => {
-                window.location.href = "https://localhost:6969/api/v1/auth/42/login";
+                window.location.href = `${window.location.origin}/api/v1/auth/42/login`;
         };
 
         const handleModalClose = () => {
@@ -84,11 +84,11 @@ export const Login = () => {
                         {oauthError && (
                                 <Modal
                                         open={true}
-                                        title="Login Failed"
+                                        title="Error al iniciar sesión"
                                         onClose={handleModalClose}
                                 >
                                         <p>
-                                                Login with 42 failed: {oauthError}
+                                                No se ha podido iniciar sesión con 42: {oauthError}
                                         </p>
                                 </Modal>
                         )}
@@ -105,7 +105,7 @@ export const Login = () => {
                                 </div>
 
                                 <p className="auth-card__subtitle">
-                                        Connect to your account and continue playing.
+                                        Accede a tu cuenta y sigue jugando.
                                 </p>
 
                                 <LoginForm
@@ -114,12 +114,12 @@ export const Login = () => {
                                 />
 
                                 <p className="auth-form__switch">
-                                        Don&apos;t have an account yet? <NavLink to="/register">Register</NavLink>
+                                        ¿Todavía no tienes una cuenta? <NavLink to="/register">Regístrate</NavLink>
                                 </p>
 
                                 <Modal
                                         open={show2FA}
-                                        title="2FA Verification"
+                                        title="Verificación en dos pasos"
                                         onClose={() => setShow2FA(false)}
                                         onSubmit={handleVerify2FA}
                                         submitDisabled={!otpCode.every((d) => d)}
@@ -127,9 +127,9 @@ export const Login = () => {
                                         <OtpInput onChange={setOtpCode} />
                                 </Modal>
 
-                                <h3 className="auth-form__divider">OR</h3>
+                                <h3 className="auth-form__divider">O</h3>
                                         <button className="auth-card__button" onClick={handle42Login}>
-                                                Login with 42
+                                                Iniciar sesión con 42
                                         </button>
 
                         </div>

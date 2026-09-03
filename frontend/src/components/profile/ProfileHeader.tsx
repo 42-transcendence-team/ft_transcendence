@@ -190,8 +190,8 @@ export const ProfileHeader = ({
 				className="profile__avatar"
 				ariaLabel={
 					isOwnProfile
-						? "Edit profile image"
-						: `Open ${username} profile image`
+						? "Editar imagen de perfil"
+						: `Abrir la imagen de perfil de ${username}`
 				}
 				overlay={avatarOverlay}
 				onClick={onAvatarClick}

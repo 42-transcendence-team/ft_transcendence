@@ -44,7 +44,7 @@ export const Post: React.FC<PostProps> = ({
           <img
             className='feed-post__avatar-image'
             src={skullLogo}
-            alt='User logo'
+            alt='Avatar del usuario'
           />
         </div>
 
@@ -70,7 +70,7 @@ export const Post: React.FC<PostProps> = ({
               key={index}
               className='feed-post__gallery-image'
               src={image}
-              alt={`Post content ${index + 1}`}
+              alt={`Contenido de la publicación ${index + 1}`}
             />
           ))}
 

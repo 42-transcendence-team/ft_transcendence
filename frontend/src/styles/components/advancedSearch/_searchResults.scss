@@ -11,7 +11,8 @@
 	box-sizing: border-box;
 
 	&__card {
-		width: 500px;
+		width: 100%;
+		max-width: 500px;
 
 		display: flex;
 		align-items: center;
@@ -191,6 +192,23 @@
 		span {
 			color: #555;
 			font-weight: 600;
+		}
+	}
+
+	@media (max-width: 480px) {
+		&__card {
+			flex-wrap: wrap;
+			gap: 10px;
+		}
+
+		&__actions {
+			width: 100%;
+			justify-content: space-between;
+			flex-wrap: wrap;
+		}
+
+		&__count {
+			padding: 0 0.5rem;
 		}
 	}
 }

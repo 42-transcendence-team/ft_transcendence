@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useEffect, useState, useCallback } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 interface WebSocketContextType {
 	send: (message: any) => void;
@@ -11,9 +11,14 @@ interface AuthUser {
 	login?: string;
 }
 
-const WebSocketContext =  createContext<WebSocketContextType | undefined>(undefined)
+const WebSocketContext = createContext<WebSocketContextType | undefined>(
+	undefined,
+);
 
-const webSocketURL = "wss://localhost:6969/api/v1/websocket/ws"
+const getWebSocketURL = () => {
+	const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+	return `${protocol}//${window.location.host}/api/v1/websocket/ws`;
+};
 
 type MessageHandler = (message: any) => void;
 
@@ -25,8 +30,7 @@ export function useHandleWebsocket(user: AuthUser | null) {
 	const [isConnected, setIsConnected] = useState(false);
 
 	const send = useCallback((message: any): boolean => {
-		if (websocket.current?.readyState !== WebSocket.OPEN)
-			return false;
+		if (websocket.current?.readyState !== WebSocket.OPEN) return false;
 
 		websocket.current.send(JSON.stringify(message));
 		return true;
@@ -45,14 +49,18 @@ export function useHandleWebsocket(user: AuthUser | null) {
 	}, []);
 
 	useEffect(() => {
-		if (!user) { return; }
+		if (!user) {
+			return;
+		}
 
 		shouldReconnect.current = true;
 
 		const connect = () => {
-			if (!shouldReconnect.current) { return; }
+			if (!shouldReconnect.current) {
+				return;
+			}
 
-			const ws = new WebSocket(webSocketURL);
+			const ws = new WebSocket(getWebSocketURL());
 
 			websocket.current = ws;
 
@@ -67,6 +75,8 @@ export function useHandleWebsocket(user: AuthUser | null) {
 				const { type } = message;
 				const typeListeners = listeners.current.get(type);
 
+				console.log("WS MESSAGE", { type, message });
+
 				if (typeListeners) {
 					typeListeners.forEach(listener => {
 						try {
@@ -79,20 +89,28 @@ export function useHandleWebsocket(user: AuthUser | null) {
 			};
 
 			ws.onclose = (e) => {
-				console.log("WS CLOSE", {code: e.code,reason: e.reason});
+				console.log('WS CLOSE', { code: e.code, reason: e.reason });
 
-				if (websocket.current !== ws) { return; }
+				if (websocket.current !== ws) {
+					return;
+				}
 
 				websocket.current = null;
 				setIsConnected(false);
 
-				if (!shouldReconnect.current) { return; }
+				if (!shouldReconnect.current) {
+					return;
+				}
 
-				if (reconnectTimeout.current !== null) { return; }
+				if (reconnectTimeout.current !== null) {
+					return;
+				}
 
 				reconnectTimeout.current = window.setTimeout(() => {
 					reconnectTimeout.current = null;
-					if (!shouldReconnect.current) { return; }
+					if (!shouldReconnect.current) {
+						return;
+					}
 					connect();
 				}, 2000);
 			};
@@ -124,23 +142,29 @@ export function useHandleWebsocket(user: AuthUser | null) {
 		};
 	}, [user?.id]);
 
-	return { send, subscribe, isConnected};
+	return { send, subscribe, isConnected };
 }
 
-export function WebSocketProvider({ children, user }: { children: React.ReactNode; user: AuthUser | null }) {
-	const { send, subscribe, isConnected} = useHandleWebsocket(user)
-	
+export function WebSocketProvider({
+	children,
+	user,
+}: {
+	children: React.ReactNode;
+	user: AuthUser | null;
+}) {
+	const { send, subscribe, isConnected } = useHandleWebsocket(user);
+
 	return (
-		<WebSocketContext.Provider value={ {send, subscribe, isConnected} }>
+		<WebSocketContext.Provider value={{ send, subscribe, isConnected }}>
 			{children}
 		</WebSocketContext.Provider>
-    );
+	);
 }
 
 export const useWebSocket = () => {
 	const context = useContext(WebSocketContext);
-	
+
 	if (!context)
-		throw new Error("useWebContext debe usarse dentro de un WebSocketProvider");
-    return context;
-}
+		throw new Error('useWebContext debe usarse dentro de un WebSocketProvider');
+	return context;
+};

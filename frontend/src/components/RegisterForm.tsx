@@ -64,62 +64,62 @@ export const RegisterForm = () => {
 		const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,64}$/
 		const maxLength = 42
 		if (!username.trim()) {
-			newErrors.username = "Username is required."
+			newErrors.username = "Debes introducir un nombre de usuario."
 		} else if (!usernameRegex.test(username)) {
-			newErrors.username = "Only letters, numbers, hyphens and underscores are allowed."
+			newErrors.username = "Solo se permiten letras, números, guiones y guiones bajos."
 		} else if (username.length > maxLength) {
-			newErrors.username = "Maximum length is 42 characters."
+			newErrors.username = "La longitud máxima es de 42 caracteres."
 		}
 
 		if (!email.trim()) {
-			newErrors.email = "Email is required."
+			newErrors.email = "Debes introducir el correo electrónico."
 		} else if (!emailRegex.test(email)) {
-			newErrors.email = "Enter a valid email address."
+			newErrors.email = "Introduce una dirección de correo electrónico válida."
 		}
 
 		if (!password) {
-			newErrors.password = "Password is required."
+			newErrors.password = "Debes introducir una contraseña."
 		} else if (!passwordRegex.test(password)) {
 			newErrors.password =
-				"Password must be between 8 and 64 characters and include at least one uppercase letter, one number and one symbol."
+				"La contraseña debe tener entre 8 y 64 caracteres e incluir al menos una mayúscula, un número y un símbolo."
 		}
 
 		if (!confirmPassword) {
-			newErrors.confirmPassword = "You must confirm your password."
+			newErrors.confirmPassword = "Debes confirmar la contraseña."
 		} else if (confirmPassword !== password) {
-			newErrors.confirmPassword = "Passwords do not match."
+			newErrors.confirmPassword = "Las contraseñas no coinciden."
 		}
 
 		if (!name.trim()) {
-			newErrors.name = "Name is required."
+			newErrors.name = "Debes introducir el nombre."
 		} else if (!nameRegex.test(name)) {
-			newErrors.name = "Name can only contain letters."
+			newErrors.name = "El nombre solo puede contener letras."
 		} else if (name.length > maxLength) {
-			newErrors.name = "Maximum length is 42 characters."
+			newErrors.name = "La longitud máxima es de 42 caracteres."
 		}
 
 		if (!surname.trim()) {
-			newErrors.surname = "Surname is required."
+			newErrors.surname = "Debes introducir los apellidos."
 		} else if (!nameRegex.test(surname)) {
-			newErrors.surname = "Surname can only contain letters."
+			newErrors.surname = "Los apellidos solo pueden contener letras."
 		} else if (surname.length > maxLength) {
-			newErrors.surname = "Maximum length is 42 characters."
+			newErrors.surname = "La longitud máxima es de 42 caracteres."
 		}
 
 		if (!birthday) {
-			newErrors.birthday = "Birthday is required."
+			newErrors.birthday = "Debes introducir la fecha de nacimiento."
 		} else {
 			const birthDate = new Date(birthday)
 		
 			if (Number.isNaN(birthDate.getTime())) {
-				newErrors.birthday = "Enter a valid birthday."
+				newErrors.birthday = "Introduce una fecha de nacimiento válida."
 			} else {
 				const age = calculateAge(birthday)
 			
 				if (age < 18) {
-					newErrors.birthday = "You must be at least 18 years old to register."
+					newErrors.birthday = "Debes tener al menos 18 años para registrarte."
 				} else if (age > 150) {
-					newErrors.birthday = "Age cannot be greater than 150 years."
+					newErrors.birthday = "La edad no puede superar los 150 años."
 				}
 			}
 		}
@@ -154,7 +154,7 @@ export const RegisterForm = () => {
 
 			await registerUser(payload)
 
-			setServerMessage("User created successfully.")
+			setServerMessage("La cuenta se ha creado correctamente.")
 
 			await refreshAuth()
 			await refreshUser()
@@ -171,22 +171,22 @@ export const RegisterForm = () => {
 				const apiError = error as { status: number }
 
 				if (apiError.status === 400) {
-					setServerMessage("Invalid request.")
+					setServerMessage("La solicitud no es válida.")
 					return
 				}
 
 				if (apiError.status === 422) {
-					setServerMessage("Some fields are invalid. Please check the form.")
+					setServerMessage("Algunos campos no son válidos. Revisa el formulario.")
 					return
 				}
 
 				if (apiError.status === 409) {
-					setServerMessage("Username or email already exists.")
+					setServerMessage("El nombre de usuario o el correo electrónico ya están registrados.")
 					return
 				}
 			}
 
-			setServerMessage("Unexpected error. Please try again.")
+			setServerMessage("Se ha producido un error inesperado. Inténtalo de nuevo.")
 		} finally {
 			setIsSubmitting(false)
 		}
@@ -197,64 +197,64 @@ export const RegisterForm = () => {
 	const accountFields = [
 		{
 			id: "username",
-			label: "Username",
+			label: "Nombre de usuario",
 			type: "text",
 			value: username,
 			onChange: setUsername,
 			error: errors.username,
-			placeholder: "Login",
+			placeholder: "Nombre de usuario",
 		},
 		{
 			id: "email",
-			label: "Email",
+			label: "Correo electrónico",
 			type: "email",
 			value: email,
 			onChange: setEmail,
 			error: errors.email,
-			placeholder: "Email",
+			placeholder: "Correo electrónico",
 		},
 		{
 			id: "password",
-			label: "Password",
+			label: "Contraseña",
 			type: "password",
 			value: password,
 			onChange: setPassword,
 			error: errors.password,
-			placeholder: "Password",
+			placeholder: "Contraseña",
 		},
 		{
 			id: "confirmPassword",
-			label: "Confirm Password",
+			label: "Confirmar contraseña",
 			type: "password",
 			value: confirmPassword,
 			onChange: setConfirmPassword,
 			error: errors.confirmPassword,
-			placeholder: "Repeat Password",
+			placeholder: "Repite la contraseña",
 		},
 	]
 
 	const personalFields = [
 		{
 			id: "name",
-			label: "Name",
+			label: "Nombre",
 			type: "text",
 			value: name,
 			onChange: setName,
 			error: errors.name,
-			placeholder: "Name",
+			placeholder: "Nombre",
 		},
 		{
 			id: "surname",
-			label: "Surname",
+			label: "Apellidos",
 			type: "text",
 			value: surname,
 			onChange: setSurname,
 			error: errors.surname,
-			placeholder: "Surname",
+			placeholder: "Apellidos",
 		},
 		{
 			id: "birthday",
-			label: "Birthday",
+			label: "Fecha de nacimiento",
 			type: "date",
 			value: birthday,
 			onChange: setBirthday,
@@ -268,7 +268,7 @@ export const RegisterForm = () => {
 		<form className="auth-form" onSubmit={handleSubmit}>
 			
 			<div className="auth-form__section auth-form__section--account">
-				<h3 className="auth-form__section-title">ACCOUNT DATA</h3>
+				<h3 className="auth-form__section-title">DATOS DE LA CUENTA</h3>
 			</div>
 
 			<div className="auth-form__group auth-form__group--account">
@@ -288,7 +288,7 @@ export const RegisterForm = () => {
 			</div>
 
 			<div className="auth-form__section auth-form__section--personal">
-				<h3 className="auth-form__section-title">PERSONAL DATA</h3>
+				<h3 className="auth-form__section-title">DATOS PERSONALES</h3>
 			</div>
 
 			<div className="auth-form__group auth-form__group--personal">
@@ -315,7 +315,7 @@ export const RegisterForm = () => {
 						onChange={(e) => setTermsAndConditions(e.target.checked)}
 						required
 					/>
-					<span>I read Terms and Conditions...</span>
+					<span>He leído los términos y condiciones...</span>
 				</label>
 						
 				<label className="auth-form__check">
@@ -325,18 +325,18 @@ export const RegisterForm = () => {
 						onChange={(e) => setPrivacyPolicy(e.target.checked)}
 						required
 					/>
-					<span>I accept Privacy Policy</span>
+					<span>Acepto la política de privacidad</span>
 				</label>
 			</div>
 
 			<button className="auth-form__submit" type="submit" disabled={isSubmitting}>
-				{isSubmitting ? "Registering..." : "Create Now"}
+				{isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
 			</button>
 
 			{serverMessage && <p className="auth-form__server-message">{serverMessage}</p>}
 
 			<p className="auth-form__switch">
-				Do you already have an account? <NavLink to="/login">Login</NavLink>
+				¿Ya tienes una cuenta? <NavLink to="/login">Iniciar sesión</NavLink>
 			</p>
 		</form>
 	)

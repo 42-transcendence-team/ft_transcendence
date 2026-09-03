@@ -1,14 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import type { ApiError } from "../api/ApiRequest";
-import {
-  getPostsByUserId,
-  type PostReactionState,
-  type PostSummary,
-} from "../api/Posts";
-import { getUserPresence, getUserProfile } from "../api/UserProfile";
-import type { UserProfile } from "../api/UserProfile";
+import type { ApiError } from '../api/ApiRequest';
 import {
   acceptFriendRequest,
   blockUser,
@@ -16,44 +9,46 @@ import {
   removeFriend,
   sendFriendRequest,
   unblockUser,
-} from "../api/Friends";
+} from '../api/Friends';
+import {
+  getPostsByUserId,
+  type PostReactionState,
+  type PostSummary,
+} from '../api/Posts';
+import type { UserProfile } from '../api/UserProfile';
+import { getUserPresence, getUserProfile } from '../api/UserProfile';
+import { ConfirmModal } from '../components/ConfirmModal';
+import { PostImageModal } from '../components/posts/PostImageModal';
+import { PostList } from '../components/posts/PostList';
+import { ProfileBanner } from '../components/profile/ProfileBanner';
+import { ProfileContent } from '../components/profile/ProfileContent';
+import { ProfileHeader } from '../components/profile/ProfileHeader';
+import { AvatarEditorModal } from '../components/users/AvatarEditorModal';
+import { BannerEditorModal } from '../components/users/BannerEditorModal';
+import type { UserPresence } from '../components/users/UserAvatar';
+import { useAuth } from '../context/AuthContext';
+import { NotFound } from './NotFound';
+import '../styles/pages/_profile.scss';
 
-import { useAuth } from "../context/AuthContext";
-
-import { ProfileBanner } from "../components/profile/ProfileBanner";
-import { ProfileHeader } from "../components/profile/ProfileHeader";
-import { ProfileContent } from "../components/profile/ProfileContent";
-
-import type { UserPresence } from "../components/users/UserAvatar";
-import { AvatarEditorModal } from "../components/users/AvatarEditorModal";
-import { BannerEditorModal } from "../components/users/BannerEditorModal";
-import { PostImageModal } from "../components/posts/PostImageModal";
-import { PostList } from "../components/posts/PostList";
-import { ConfirmModal } from "../components/ConfirmModal";
-
-import { NotFound } from "./NotFound";
-
-import "../styles/pages/_profile.scss";
-
-type ConfirmAction = "remove-friend" | "block" | "unblock" | null;
+type ConfirmAction = 'remove-friend' | 'block' | 'unblock' | null;
 
 function getImageSource(imagePath: string): string {
-  return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+  return imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
 }
 
 function getVersionedImageSource(imagePath: string, version: number): string {
   const source = getImageSource(imagePath);
-  const separator = source.includes("?") ? "&" : "?";
+  const separator = source.includes('?') ? '&' : '?';
 
   return `${source}${separator}v=${version}`;
 }
 
 function isApiError(error: unknown): error is ApiError {
   return (
-    typeof error === "object" &&
+    typeof error === 'object' &&
     error !== null &&
-    "status" in error &&
-    typeof error.status === "number"
+    'status' in error &&
+    typeof error.status === 'number'
   );
 }
 
@@ -74,9 +69,6 @@ export const Profile = () => {
 
   const navigate = useNavigate();
 
-  console.log("PROFILE username:", username);
-  console.log("PROFILE SE HA RENDERIZADO:", username);
-
   const {
     user: authenticatedUser,
     loading: authLoading,
@@ -84,41 +76,24 @@ export const Profile = () => {
   } = useAuth();
 
   const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
-
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-
   const [profileError, setProfileError] = useState<string | null>(null);
-
   const [profileNotFound, setProfileNotFound] = useState(false);
-
   const [relationActionError, setRelationActionError] = useState<string | null>(
     null,
   );
-
   const [isAvatarEditorOpen, setIsAvatarEditorOpen] = useState(false);
-
   const [isBannerEditorOpen, setIsBannerEditorOpen] = useState(false);
-
   const [isAvatarViewerOpen, setIsAvatarViewerOpen] = useState(false);
-
   const [avatarImageFailed, setAvatarImageFailed] = useState(false);
-
   const [bannerImageFailed, setBannerImageFailed] = useState(false);
-
   const [avatarVersion, setAvatarVersion] = useState(0);
-
   const [bannerVersion, setBannerVersion] = useState(0);
-
   const [profilePosts, setProfilePosts] = useState<PostSummary[]>([]);
-
   const [postsPage, setPostsPage] = useState(1);
-
   const [postsTotalPages, setPostsTotalPages] = useState(0);
-
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
-
   const [isLoadingMorePosts, setIsLoadingMorePosts] = useState(false);
-
   const [postsError, setPostsError] = useState<string | null>(null);
 
   /*
@@ -132,7 +107,7 @@ export const Profile = () => {
   const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
-    console.log("PROFILE useEffect:", username);
+    console.log('PROFILE useEffect:', username);
 
     let cancelled = false;
 
@@ -171,7 +146,7 @@ export const Profile = () => {
           return;
         }
 
-        setProfileError("The profile could not be loaded.");
+setProfileError("No se ha podido cargar el perfil.");
       })
       .finally(() => {
         if (!cancelled) {
@@ -192,7 +167,6 @@ export const Profile = () => {
     const ownerID = profileUser?.id ?? null;
 
     postsOwnerIDRef.current = ownerID;
-
     setProfilePosts([]);
     setPostsPage(1);
     setPostsTotalPages(0);
@@ -205,9 +179,9 @@ export const Profile = () => {
      */
     const canLoadPosts = Boolean(
       profileUser &&
-      authenticatedUser &&
-      (authenticatedUser.login === profileUser.login ||
-        profileUser.relation === "friends"),
+        authenticatedUser &&
+        (authenticatedUser.login === profileUser.login ||
+          profileUser.relation === 'friends'),
     );
 
     if (ownerID === null || !canLoadPosts) {
@@ -234,7 +208,7 @@ export const Profile = () => {
         setPostsTotalPages(response.pagination.totalPages);
       } catch {
         if (!cancelled && postsOwnerIDRef.current === ownerID) {
-          setPostsError("The posts could not be loaded.");
+setPostsError("No se han podido cargar las publicaciones.");
         }
       } finally {
         if (!cancelled && postsOwnerIDRef.current === ownerID) {
@@ -430,7 +404,7 @@ export const Profile = () => {
       setPostsTotalPages(response.pagination.totalPages);
     } catch {
       if (postsOwnerIDRef.current === ownerID) {
-        setPostsError("More posts could not be loaded.");
+setPostsError("No se han podido cargar más publicaciones.");
       }
     } finally {
       if (postsOwnerIDRef.current === ownerID) {
@@ -477,7 +451,7 @@ export const Profile = () => {
 
       setProfileUser(updatedProfile);
     } catch {
-      setRelationActionError("No se ha podido completar la acción.");
+      setRelationActionError('No se ha podido completar la acción.');
     }
   };
 
@@ -550,7 +524,7 @@ export const Profile = () => {
   if (profileError || !profileUser) {
     return (
       <div className="error-screen">
-        {profileError ?? "The profile could not be loaded."}
+{profileError ?? "No se ha podido cargar el perfil."}
       </div>
     );
   }
@@ -558,8 +532,8 @@ export const Profile = () => {
   const isOwnProfile = authenticatedUser.login === profileUser.login;
 
   const profilePresence: UserPresence = profileUser.isOnline
-    ? "online"
-    : "offline";
+    ? 'online'
+    : 'offline';
 
   const hasCustomAvatar = Boolean(profileUser.avatarPath) && !avatarImageFailed;
 
@@ -580,7 +554,7 @@ export const Profile = () => {
       : undefined;
 
   const canViewPrivateContent =
-    isOwnProfile || profileUser.relation === "friends";
+    isOwnProfile || profileUser.relation === 'friends';
 
   const handleConfirmRelationAction = async () => {
     if (!confirmAction) {
@@ -591,15 +565,15 @@ export const Profile = () => {
 
     try {
       switch (confirmAction) {
-        case "remove-friend":
+        case 'remove-friend':
           await handleRemoveFriend();
           break;
 
-        case "block":
+        case 'block':
           await handleBlockUser();
           break;
 
-        case "unblock":
+        case 'unblock':
           await handleUnblockUser();
           break;
       }
@@ -611,23 +585,23 @@ export const Profile = () => {
   };
 
   const confirmationConfig = {
-    "remove-friend": {
-      title: "Eliminar amigo",
-      message: "¿Seguro que quieres eliminar a este usuario de tus amigos?",
-      confirmLabel: "Eliminar",
-      confirmingLabel: "Eliminando...",
+    'remove-friend': {
+      title: 'Eliminar amigo',
+      message: '¿Seguro que quieres eliminar a este usuario de tus amigos?',
+      confirmLabel: 'Eliminar',
+      confirmingLabel: 'Eliminando...',
     },
     block: {
-      title: "Bloquear usuario",
-      message: "¿Seguro que quieres bloquear a este usuario?",
-      confirmLabel: "Bloquear",
-      confirmingLabel: "Bloqueando...",
+      title: 'Bloquear usuario',
+      message: '¿Seguro que quieres bloquear a este usuario?',
+      confirmLabel: 'Bloquear',
+      confirmingLabel: 'Bloqueando...',
     },
     unblock: {
-      title: "Desbloquear usuario",
-      message: "¿Seguro que quieres desbloquear a este usuario?",
-      confirmLabel: "Desbloquear",
-      confirmingLabel: "Desbloqueando...",
+      title: 'Desbloquear usuario',
+      message: '¿Seguro que quieres desbloquear a este usuario?',
+      confirmLabel: 'Desbloquear',
+      confirmingLabel: 'Desbloqueando...',
     },
   };
 
@@ -663,9 +637,9 @@ export const Profile = () => {
           onAddFriend={handleAddFriend}
           onAcceptRequest={handleAcceptRequest}
           onRejectRequest={handleRejectRequest}
-          onRemoveFriend={() => setConfirmAction("remove-friend")}
-          onBlockUser={() => setConfirmAction("block")}
-          onUnblockUser={() => setConfirmAction("unblock")}
+          onRemoveFriend={() => setConfirmAction('remove-friend')}
+          onBlockUser={() => setConfirmAction('block')}
+          onUnblockUser={() => setConfirmAction('unblock')}
         />
 
         {relationActionError && (
@@ -689,11 +663,11 @@ export const Profile = () => {
               };
             });
           }}
-          onCreatePost={() => navigate("/app/posts/new")}
+          onCreatePost={() => navigate('/app/posts/new')}
         >
           <div className="profile__posts">
             {isLoadingPosts && (
-              <div className="profile__posts-state">Loading posts.</div>
+<div className="profile__posts-state">Cargando publicaciones.</div>
             )}
 
             {!isLoadingPosts && profilePosts.length === 0 && postsError && (
@@ -702,7 +676,7 @@ export const Profile = () => {
 
             {!isLoadingPosts && profilePosts.length === 0 && !postsError && (
               <div className="profile__empty">
-                This user has not posted anything yet.
+Este usuario todavía no ha publicado nada.
               </div>
             )}
 
@@ -725,7 +699,7 @@ export const Profile = () => {
                     disabled={isLoadingMorePosts}
                     onClick={() => void handleLoadMorePosts()}
                   >
-                    {isLoadingMorePosts ? "Loading..." : "Load more"}
+{isLoadingMorePosts ? "Cargando..." : "Cargar más"}
                   </button>
                 )}
               </>
@@ -756,7 +730,7 @@ export const Profile = () => {
         <PostImageModal
           open={isAvatarViewerOpen}
           imageSrc={avatarPath}
-          alt={`${profileUser.login} profile image`}
+          alt={`${profileUser.login}: imagen de perfil`}
           onClose={() => setIsAvatarViewerOpen(false)}
         />
       )}

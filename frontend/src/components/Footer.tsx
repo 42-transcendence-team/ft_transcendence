@@ -11,15 +11,15 @@ export const Footer = ({
 	onBrandActivate,
 }: FooterProps) => {
 	return (
-		<div className="footer">
+		<div className="footer desktop-footer">
 			<nav
 				className="footer__nav"
-				aria-label="Footer navigation"
+				aria-label="Navegación del pie de página"
 			>
 				<ul className="footer__list">
 					<li>
 						<NavLink to="/about">
-							About
+							Sobre nosotros
 						</NavLink>
 					</li>
 
@@ -31,25 +31,25 @@ export const Footer = ({
 
 					<li>
 						<NavLink to="/faq">
-							F.A.Q.
+							Preguntas frecuentes
 						</NavLink>
 					</li>
 
 					<li>
 						<NavLink to="/contact">
-							Contact
+							Contacto
 						</NavLink>
 					</li>
 
 					<li>
 						<NavLink to="/developers">
-							Developers
+							Desarrolladores
 						</NavLink>
 					</li>
 
 					<li>
 						<NavLink to="/privacy-policy">
-							Privacy Policy
+							Política de privacidad
 						</NavLink>
 					</li>
 				</ul>

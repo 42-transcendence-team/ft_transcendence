@@ -7,6 +7,9 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
+    height: 100dvh;
+    padding: 0 1rem;
+    box-sizing: border-box;
 }
 
 .notfound-content {
@@ -16,8 +19,8 @@
 }
 
 .notfound-img {
-    width: 330px;
-    max-width: 110%;
+    width: min(330px, 90vw);
+    max-width: 100%;
     margin-bottom: 24px;
 }
 

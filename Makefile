@@ -1,136 +1,184 @@
-DC		= docker compose
-DEV 	= docker-compose.dev.yml
-DEV_MIN	= docker-compose.dev.min.yml
+DC      = docker compose
 
-.PHONY: all start stop logs logs-all daemon remove full-remove shell restart re dev dev-demon dev-stop dev-remove dev-logs-all dev-logs dev-min dev-min-demon dev-min-stop dev-min-remove dev-min-logs-all dev-min-logs
+COMPOSE = docker-compose.yml
+DEV     = docker-compose.dev.yml
+DEV_MIN = docker-compose.dev.min.yml
+
+.PHONY: all start stop status logs logs-all daemon remove full-remove \
+        shell restart re build build-% build-pgadmin back \
+        dev dev-demon dev-stop dev-remove dev-logs-all dev-logs \
+        dev-min dev-min-demon dev-min-stop dev-min-remove \
+        dev-min-logs-all dev-min-logs detect help FORCE
+
+# DEFAULT / NORMAL
 
 all: daemon
 
-build: 
-	$(DC) build
+start: detect
+	$(DC) -f $(COMPOSE) up --build
 
-start: build
-	$(DC) up
+daemon: detect
+	$(DC) -f $(COMPOSE) up --build -d
+
+build: detect
+	$(DC) -f $(COMPOSE) build
 
 stop:
-	$(DC) down
+	$(DC) -f $(COMPOSE) down
 
 status:
-	$(DC) ps
-
-daemon: build
-	$(DC) up -d
+	$(DC) -f $(COMPOSE) ps
 
 logs-all:
-	$(DC) logs -f
+	$(DC) -f $(COMPOSE) logs -f
 
-# Para usar esta regla se debe ejecutar el comando con la variable s, por ejemplo: make logs s=backend
+# Uso:
+#   make logs s=backend
 logs:
-	$(DC) logs -f $(s)
+	$(DC) -f $(COMPOSE) logs -f $(s)
+
+# CLEANUP
 
 remove:
-	$(DC) down --rmi local --volumes --remove-orphans
+	$(DC) -f $(COMPOSE) down --rmi local --volumes --remove-orphans
 
 full-remove:
-	$(DC) down --rmi all --volumes --remove-orphans
+	$(DC) -f $(COMPOSE) down --rmi all --volumes --remove-orphans
 
-# TODO - Mejorar makefile con toda la infra 
-dev:
-	$(DC) -f $(DEV) up --build --no-attach grafana --no-attach elasticsearch --no-attach kibana --no-attach metricbeat --no-attach filebeat --no-attach logstash
+# DEVELOPMENT
 
-dev-demon:
+dev: detect
+	$(DC) -f $(DEV) up --build
+
+dev-demon: detect
 	$(DC) -f $(DEV) up --build -d
 
 dev-stop:
 	$(DC) -f $(DEV) down
 
 dev-remove:
-	$(DC) -f $(DEV) down -v
+	$(DC) -f $(DEV) down --volumes --remove-orphans
 
 dev-logs-all:
 	$(DC) -f $(DEV) logs -f
 
+# Uso:
+#   make dev-logs s=backend
 dev-logs:
 	$(DC) -f $(DEV) logs -f $(s)
 
-# Desarrollo ligero: solo backend, frontend, nginx, postgres y redis.
-# Sin Elastic/Prometheus/Grafana/Portainer para ahorrar RAM.
-dev-min:
+# DEVELOPMENT MINIMAL
+# backend + frontend + postgres + redis + nginx
+
+dev-min: detect
 	$(DC) -f $(DEV_MIN) up --build
 
-dev-min-demon:
+dev-min-demon: detect
 	$(DC) -f $(DEV_MIN) up --build -d
 
 dev-min-stop:
 	$(DC) -f $(DEV_MIN) down
 
 dev-min-remove:
-	$(DC) -f $(DEV_MIN) down -v
+	$(DC) -f $(DEV_MIN) down --volumes --remove-orphans
 
 dev-min-logs-all:
 	$(DC) -f $(DEV_MIN) logs -f
 
+# Uso:
+#   make dev-min-logs s=backend
 dev-min-logs:
 	$(DC) -f $(DEV_MIN) logs -f $(s)
 
+# INDIVIDUAL SERVICES
+
+# Uso:
+#   make build-backend
+#   make build-frontend
+#   make build-postgres
 build-%: FORCE
-	$(DC) build $*
-	$(DC) up -d --no-deps $*
+	$(DC) -f $(COMPOSE) build $*
+	$(DC) -f $(COMPOSE) up -d --no-deps $*
 
-build-pgadmin: build-postgres
+build-pgadmin: FORCE
+	$(DC) -f $(COMPOSE) build pgadmin
+	$(DC) -f $(COMPOSE) up -d postgres pgadmin
 
-back:
-	$(DC) up -d --build backend postgres
+back: detect
+	$(DC) -f $(COMPOSE) up -d --build postgres redis backend
 
-# Para usar esta regla se debe ejecutar el comando con la variable s, por ejemplo: make shell s=backend
+
+# SHELL / RESTART
+
+# Uso:
+#   make shell s=backend
+#   make shell s=postgres
 shell:
-	$(DC) exec $(s) sh -c "bash || sh"
+	$(DC) -f $(COMPOSE) exec $(s) sh -c "bash || sh"
 
+# Uso:
+#   make restart s=backend
 restart:
-	$(DC) restart $(s)
+	$(DC) -f $(COMPOSE) restart $(s)
+
+# RESET
 
 re: remove start
 
+# DOCKER PATH DETECTION
+
+detect:
+	./scripts/detect-docker-paths.sh
+
+# FORCE
+
 FORCE:
 
+# HELP
+
 help:
-	@echo "Available commands for ft_transcendence:"
 	@echo ""
-	@echo "Docker Management:"
-	@echo "  make start         - Build and start containers in foreground"
-	@echo "  make daemon        - Build and start containers in background (detached)"
-	@echo "  make stop          - Stop and remove containers"
-	@echo "  make restart       - Restart a service (use s=<name>)"
-	@echo "  make status        - Show running containers status"
+	@echo "ft_transcendence - Docker commands"
 	@echo ""
-	@echo "Logs & Debugging:"
-	@echo "  make logs-all      - Tail logs from all services"
-	@echo "  make logs          - Tail logs from a specific service (use s=<name>)"
-	@echo "  make shell         - Open shell in a service (use s=<name>)"
+	@echo "NORMAL:"
+	@echo "  make start              Build + start normal environment"
+	@echo "  make daemon             Build + start normal environment detached"
+	@echo "  make build              Build all normal images"
+	@echo "  make stop               Stop normal environment"
+	@echo "  make status             Show normal containers"
 	@echo ""
-	@echo "Cleanup & Rebuild:"
-	@echo "  make remove        - Remove containers, volumes, and local images"
-	@echo "  make full-remove   - Deep clean: remove EVERYTHING including all images"
-	@echo "  make re            - Full reset: remove and start again"
+	@echo "LOGS:"
+	@echo "  make logs-all           Logs from all normal services"
+	@echo "  make logs s=backend     Logs from one normal service"
 	@echo ""
-	@echo "Service Specific:"
-	@echo "  make build         - Build all images"
-	@echo "  make build-<svc>   - Build and restart a specific service"
-	@echo "  make back          - Start backend + postgres only"
-	@echo "  make build-pgadmin - Build pgAdmin service (depends on postgres)"
+	@echo "CLEANUP:"
+	@echo "  make remove             Remove containers, volumes and local images"
+	@echo "  make full-remove        Remove containers, volumes and project images"
+	@echo "  make re                 Remove everything and start again"
 	@echo ""
-	@echo "Development Environment:"
-	@echo "  make dev           - Start development environment"
-	@echo "  make dev-demon     - Start development environment in detached mode"
-	@echo "  make dev-stop      - Stop development environment"
-	@echo "  make dev-remove    - Stop and remove development environment"
-	@echo "  make dev-logs      - Tail logs from a dev service (use s=<name>)"
-	@echo "  make dev-logs-all  - Tail logs from all dev services"
+	@echo "SERVICES:"
+	@echo "  make build-backend      Rebuild backend"
+	@echo "  make build-frontend     Rebuild frontend"
+	@echo "  make build-postgres     Rebuild/start postgres"
+	@echo "  make build-pgadmin      Build/start pgAdmin"
+	@echo "  make back               Start postgres + redis + backend"
+	@echo "  make shell s=backend    Open shell in a service"
+	@echo "  make restart s=backend  Restart a service"
 	@echo ""
-	@echo "Lightweight Development (no monitoring stack, saves RAM):"
-	@echo "  make dev-min         - Start only backend, frontend, nginx, postgres, redis"
-	@echo "  make dev-min-demon   - Same as dev-min but in detached mode"
-	@echo "  make dev-min-stop    - Stop lightweight environment"
-	@echo "  make dev-min-remove  - Stop and remove lightweight environment"
-	@echo "  make dev-min-logs    - Tail logs from a dev-min service (use s=<name>)"
-	@echo "  make dev-min-logs-all - Tail logs from all dev-min services"
+	@echo "DEVELOPMENT:"
+	@echo "  make dev                Start full development environment"
+	@echo "  make dev-demon          Start full development environment detached"
+	@echo "  make dev-stop           Stop development environment"
+	@echo "  make dev-remove         Stop + remove development volumes"
+	@echo "  make dev-logs-all       Logs from all development services"
+	@echo "  make dev-logs s=backend Logs from one development service"
+	@echo ""
+	@echo "LIGHT DEVELOPMENT:"
+	@echo "  make dev-min              Start lightweight development environment"
+	@echo "  make dev-min-demon        Start lightweight environment detached"
+	@echo "  make dev-min-stop         Stop lightweight environment"
+	@echo "  make dev-min-remove       Stop + remove lightweight volumes"
+	@echo "  make dev-min-logs-all     Logs from all lightweight services"
+	@echo "  make dev-min-logs s=backend"
+	@echo "                           Logs from one lightweight service"
+	@echo ""

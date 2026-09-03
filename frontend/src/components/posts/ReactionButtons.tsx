@@ -33,15 +33,15 @@ function getReactionErrorMessage(error: unknown): string {
 		typeof error.status === "number"
 	) {
 		if (error.status === 401) {
-			return "You must be logged in to react to posts.";
+			return "Debes iniciar sesión para reaccionar a las publicaciones.";
 		}
 
 		if (error.status === 404) {
-			return "This post no longer exists.";
+			return "Esta publicación ya no existe.";
 		}
 	}
 
-	return "Could not update reaction.";
+	return "No se ha podido actualizar la reacción.";
 }
 
 export const ReactionButtons = ({
@@ -91,7 +91,7 @@ export const ReactionButtons = ({
 		<div className="reaction-buttons">
 			<div
 				className="reaction-buttons__controls"
-				aria-label="Post reactions"
+				aria-label="Reacciones a la publicación"
 			>
 				<button
 					className={`reaction-buttons__control reaction-buttons__control--like${
@@ -103,7 +103,7 @@ export const ReactionButtons = ({
 					onClick={() => handleReaction("like")}
 					disabled={isLoading}
 					aria-pressed={likedByCurrentUser}
-					aria-label={likedByCurrentUser ? "Remove like" : "Like post"}
+					aria-label={likedByCurrentUser ? "Retirar Me gusta" : "Indicar que te gusta la publicación"}
 				>
 					<span
 						className="reaction-buttons__icon"
@@ -133,8 +133,8 @@ export const ReactionButtons = ({
 					aria-pressed={dislikedByCurrentUser}
 					aria-label={
 						dislikedByCurrentUser
-							? "Remove dislike"
-							: "Dislike post"
+							? "Retirar No me gusta"
+							: "Indicar que no te gusta la publicación"
 					}
 				>
 					<span

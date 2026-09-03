@@ -12,106 +12,106 @@ export type FAQGroup = {
 export const faqGroups: FAQGroup[] = [
 	{
 		id: "account",
-		title: "Account",
+		title: "Cuenta",
 		items: [
 			{
-				question: "How do I create an account?",
+				question: "¿Cómo creo una cuenta?",
 				answer:
-					"Complete the registration form with a valid username, email address, secure password and the requested personal information.",
+"Completa el formulario de registro con un nombre de usuario válido, una dirección de correo electrónico, una contraseña segura y los datos personales solicitados.",
 			},
 			{
-				question: "Why must I be at least 18 years old?",
+				question: "¿Por qué debo tener al menos 18 años?",
 				answer:
-					"Twenty Four currently requires users to be at least 18 years old before creating an account.",
+					"Actualmente, Twenty Four exige que los usuarios tengan al menos 18 años para crear una cuenta.",
 			},
 			{
-				question: "Can I change my personal information?",
+				question: "¿Puedo cambiar mis datos personales?",
 				answer:
-					"Yes. Supported personal and security information can be updated from the account settings.",
+					"Sí. Los datos personales y de seguridad admitidos pueden actualizarse desde los ajustes de la cuenta.",
 			},
 			{
-				question: "How do I delete my account?",
+				question: "¿Cómo elimino mi cuenta?",
 				answer:
-					"Open the danger zone in account settings. Your password and, when enabled, a two-factor authentication code will be required.",
+"Abre la zona de peligro en los ajustes de la cuenta. Se te pedirá la contraseña y, si está activada, un código de autenticación en dos pasos.",
 			},
 		],
 	},
 	{
 		id: "security",
-		title: "Login and security",
+		title: "Inicio de sesión y seguridad",
 		items: [
 			{
-				question: "What is two-factor authentication?",
+				question: "¿Qué es la autenticación en dos pasos?",
 				answer:
-					"Two-factor authentication adds a temporary verification code to the normal password login process.",
+					"La autenticación en dos pasos añade un código de verificación temporal al inicio de sesión habitual con contraseña.",
 			},
 			{
-				question: "Why has my session expired?",
+				question: "¿Por qué ha caducado mi sesión?",
 				answer:
-					"Sessions have a limited duration and may also end after logout or when the server invalidates them.",
+					"Las sesiones tienen una duración limitada y también pueden finalizar al cerrar sesión o cuando el servidor las invalida.",
 			},
 			{
-				question: "Can Twenty Four read my password?",
+				question: "¿Puede Twenty Four leer mi contraseña?",
 				answer:
-					"No. Passwords are stored as secure hashes rather than plain text.",
+					"No. Las contraseñas se almacenan como resúmenes criptográficos seguros, no como texto sin cifrar.",
 			},
 		],
 	},
 	{
 		id: "profiles",
-		title: "Profiles and friends",
+		title: "Perfiles y amigos",
 		items: [
 			{
-				question: "Can I change my avatar or banner?",
+				question: "¿Puedo cambiar mi avatar o mi imagen de cabecera?",
 				answer:
-					"Yes. You can upload, replace or remove the avatar and banner associated with your own profile.",
+					"Sí. Puedes subir, sustituir o eliminar el avatar y la imagen de cabecera de tu perfil.",
 			},
 			{
-				question: "Who can see my profile?",
+				question: "¿Quién puede ver mi perfil?",
 				answer:
-					"Authenticated users can currently access user profiles. More detailed profile privacy controls are not yet available.",
+					"Actualmente, los usuarios identificados pueden acceder a los perfiles. Todavía no hay disponibles controles de privacidad más detallados.",
 			},
 			{
-				question: "How do friend requests work?",
+				question: "¿Cómo funcionan las solicitudes de amistad?",
 				answer:
-					"A friendship is created after another user accepts a pending friend request.",
+					"La amistad se establece cuando otro usuario acepta una solicitud de amistad pendiente.",
 			},
 		],
 	},
 	{
 		id: "posts",
-		title: "Posts and files",
+		title: "Publicaciones y archivos",
 		items: [
 			{
-				question: "What can I publish?",
+				question: "¿Qué puedo publicar?",
 				answer:
-					"A post may contain text and one supported file. At least one of those elements is required.",
+					"Una publicación puede contener texto y un archivo compatible. Debe incluir al menos uno de estos elementos.",
 			},
 			{
-				question: "Which files are supported?",
+				question: "¿Qué tipos de archivo son compatibles?",
 				answer:
-					"Posts support JPEG, PNG, WebP and PDF files. Avatars and banners support JPEG, PNG and WebP images.",
+					"Las publicaciones admiten archivos JPEG, PNG, WebP y PDF. Los avatares y las imágenes de cabecera admiten JPEG, PNG y WebP.",
 			},
 			{
-				question: "What is the maximum file size?",
+				question: "¿Cuál es el tamaño máximo de los archivos?",
 				answer:
-					"The current maximum size is 5 MB for each uploaded file.",
+					"El tamaño máximo actual es de 5 MB por cada archivo subido.",
 			},
 			{
-				question: "Can I delete another user's content?",
+				question: "¿Puedo eliminar el contenido de otro usuario?",
 				answer:
-					"No. Users can only delete posts and comments that they created themselves.",
+					"No. Los usuarios solo pueden eliminar las publicaciones y los comentarios que hayan creado ellos mismos.",
 			},
 		],
 	},
 	{
 		id: "support",
-		title: "Support",
+		title: "Ayuda",
 		items: [
 			{
-				question: "What should I do if something does not work?",
+				question: "¿Qué debo hacer si algo no funciona?",
 				answer:
-					"Use the contact details on the Contact page and include a short description of the problem and the steps that caused it.",
+					"Utiliza los datos de la página de contacto e incluye una breve descripción del problema y los pasos que lo provocaron.",
 			},
 		],
 	},

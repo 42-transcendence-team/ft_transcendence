@@ -1,17 +1,10 @@
 import type { MouseEvent } from "react";
 import { NavLink } from "react-router-dom";
-
 import { useAuth } from "@components/auth-router/AuthContext";
 import logo from "../assets/icons/24_logo.png";
 
-export type AppBrandSize =
-	| "small"
-	| "medium"
-	| "large";
-
-export type AppBrandTone =
-	| "light"
-	| "dark";
+export type AppBrandSize = "small" | "medium"| "large";
+export type AppBrandTone = "light" | "dark";
 
 type AppBrandProps = {
 	logoSize?: AppBrandSize;
@@ -31,16 +24,8 @@ export function AppBrand({
 	className,
 }: AppBrandProps) {
 	const { authStatus } = useAuth();
-
-	const destination =
-		authStatus === "auth"
-			? "/app"
-			: "/login";
-
-	const accessibleLabel =
-		authStatus === "auth"
-			? "Go to Twenty Four home"
-			: "Go to Twenty Four login";
+	const destination = authStatus === "auth" ? "/app" : "/login";
+ 	const accessibleLabel = authStatus === "auth" ? "Go to Twenty Four home" : "Go to Twenty Four login";
 
 	const classes = [
 		"app-brand",
@@ -49,13 +34,9 @@ export function AppBrand({
 		`app-brand--text-${textSize}`,
 		bold ? "app-brand--bold" : "",
 		className ?? "",
-	]
-		.filter(Boolean)
-		.join(" ");
+	].filter(Boolean).join(" ");
 
-	const handleActivate = (
-		event: MouseEvent<HTMLAnchorElement>,
-	) => {
+	const handleActivate = (event: MouseEvent<HTMLAnchorElement>) => {
 		/*
 		 * No ejecutamos efectos secundarios cuando el usuario abre
 		 * el enlace en otra pestaña mediante Ctrl, Cmd o botón central.
@@ -68,9 +49,8 @@ export function AppBrand({
 			event.shiftKey ||
 			event.altKey;
 
-		if (!opensAnotherContext) {
+		if (!opensAnotherContext)
 			onActivate?.();
-		}
 	};
 
 	return (
@@ -86,10 +66,7 @@ export function AppBrand({
 				alt=""
 				aria-hidden="true"
 			/>
-
-			<span className="app-brand__name">
-				Twenty Four
-			</span>
+			<span className="app-brand__name">Twenty Four</span>
 		</NavLink>
 	);
 }

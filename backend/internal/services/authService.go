@@ -140,21 +140,21 @@ func (s *AuthService) GetUserById(userID uint) (*models.User, error) {
 	return user, err
 }
 
-func (s *AuthService) Build42AuthURL() string {
+func (s *AuthService) Build42AuthURL(redirectURI string) string {
 	return fmt.Sprintf(
 		"https://api.intra.42.fr/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code",
 		url.QueryEscape(s.cfg.OAuth42ClientID),
-		url.QueryEscape(s.cfg.OAuth42RedirectURI),
+		url.QueryEscape(redirectURI),
 	)
 }
 
-func (s *AuthService) Exchange42Code(code string) (string, error) {
+func (s *AuthService) Exchange42Code(code, redirectURI string) (string, error) {
 	data := url.Values{}
 	data.Set("grant_type", "authorization_code")
 	data.Set("client_id", s.cfg.OAuth42ClientID)
 	data.Set("client_secret", s.cfg.OAuth42ClientSecret)
 	data.Set("code", code)
-	data.Set("redirect_uri", s.cfg.OAuth42RedirectURI)
+	data.Set("redirect_uri", redirectURI)
 
 	resp, err := http.PostForm("https://api.intra.42.fr/oauth/token", data)
 	if err != nil {

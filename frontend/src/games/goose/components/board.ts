@@ -1,5 +1,5 @@
 import { type GooseCell, type GooseCellType, type GoosePlayerState } from "games/goose/useGoose";
-import { getPosition } from "../goose";
+import { getPosition } from "./actions";
 
 const PLAYER_COLORS: Record<number, string> = {
 	1: "#e53935",
@@ -28,12 +28,14 @@ const GOOSE_CELL_TYPES: Record<number, GooseCellType> = {
 	59: "goose",
 
 	6: "bridge",
+	12: "bridge",
 	19: "inn",
+	26: "dice",
 	31: "well",
 	42: "maze",
-	52: "prison",
-	58: "dice",
-	63: "skull",
+	53: "dice",
+	56: "prison",
+	58: "skull",
 };
 
 export const GOOSE_BOARD: GooseCell[] = Array.from(
@@ -213,12 +215,7 @@ function drawFinish(
 	ctx.fillStyle = "#fff1a8";
 	ctx.globalAlpha = 0.65;
 
-	ctx.fillRect(
-		finish.x + 3,
-		finish.y + 3,
-		cellSize - 6,
-		cellSize - 6
-	);
+	ctx.fillRect(finish.x + 3, finish.y + 3, cellSize - 6, cellSize - 6);
 
 	ctx.globalAlpha = 1;
 
