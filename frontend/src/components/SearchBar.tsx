@@ -53,7 +53,7 @@ export const SearchBar = ({
 				type="search"
 				value={query}
 				placeholder="Buscar..."
-				aria-label="Search users"
+				aria-label="Buscar usuarios"
 				onChange={(event) =>
 					setQuery(event.target.value)
 				}
@@ -62,7 +62,7 @@ export const SearchBar = ({
 			<button
 				className="searchBar__button"
 				type="submit"
-				aria-label="Search"
+				aria-label="Buscar"
 			>
 				<FiSearch
 					className="searchBar__icon"

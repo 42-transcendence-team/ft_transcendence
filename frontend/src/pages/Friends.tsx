@@ -87,13 +87,13 @@ export const Friends = () => {
       <div className="request-container" key={request.id}>
         <div className="request-info">
           <div className="small-logo">
-            <img src={skullLogo} alt="Username logo" />
+            <img src={skullLogo} alt="Avatar del usuario" />
           </div>
           <p>{request.username}</p>
         </div>
         <div className="request-actions">
           <div className="request-actions">
-            <p className="pending-text">Pending request...</p>
+            <p className="pending-text">Solicitud pendiente...</p>
           </div>
         </div>
       </div>
@@ -108,7 +108,7 @@ export const Friends = () => {
       <div className="request-container" key={request.id}>
         <div className="request-info">
           <div className="small-logo">
-            <img src={skullLogo} alt="Username logo" />
+            <img src={skullLogo} alt="Avatar del usuario" />
           </div>
           <p>{request.username}</p>
         </div>
@@ -118,14 +118,14 @@ export const Friends = () => {
             type="button"
             onClick={() => handleAcceptFriendRequestClick(request.id)}
           >
-            Accept
+            Aceptar
           </button>
           <button
             className="reject-button"
             type="button"
             onClick={() => handleRejectFriendRequestClick(request.id)}
           >
-            Reject
+            Rechazar
           </button>
         </div>
       </div>
@@ -140,7 +140,7 @@ export const Friends = () => {
       <div className="request-container" key={request.user_id}>
         <div className="request-info">
           <div className="small-logo">
-            <img src={skullLogo} alt="Username logo" />
+            <img src={skullLogo} alt="Avatar del usuario" />
           </div>
           <p>{request.username}</p>
         </div>
@@ -155,7 +155,7 @@ export const Friends = () => {
 
   return (
     <>
-      <h2>FRIENDS</h2>
+      <h2>AMIGOS</h2>
 
       <nav className="friends-tabs">
         <button
@@ -163,21 +163,21 @@ export const Friends = () => {
           className={activeTab === 'friends' ? 'active' : ''}
           onClick={() => setActiveTab('friends')}
         >
-          Friends
+          Amigos
         </button>
         <button
           type="button"
           className={activeTab === 'sent' ? 'active' : ''}
           onClick={() => setActiveTab('sent')}
         >
-          Request sent
+          Solicitudes enviadas
         </button>
         <button
           type="button"
           className={activeTab === 'received' ? 'active' : ''}
           onClick={() => setActiveTab('received')}
         >
-          Request received
+          Solicitudes recibidas
         </button>
       </nav>
 

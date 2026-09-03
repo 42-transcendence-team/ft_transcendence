@@ -21,40 +21,40 @@ export const developers: DeveloperData[] = [
 		id: "developer-01",
 		name: "smeixoei",
 		surname: "",
-		role: "Developer",
+		role: "Desarrollador",
 		description:
-			"Contributed to the design, implementation and review of Twenty Four.",
+			"Participó en el diseño, el desarrollo y la revisión de Twenty Four.",
 	},
 	{
 		id: "developer-02",
 		name: "abarrio-",
 		surname: "",
-		role: "Developer",
+		role: "Desarrollador",
 		description:
-			"Contributed to the design, implementation and review of Twenty Four.",
+			"Participó en el diseño, el desarrollo y la revisión de Twenty Four.",
 	},
 	{
 		id: "developer-03",
 		name: "davidga2",
 		surname: "",
-		role: "Developer",
+		role: "Desarrollador",
 		description:
-			"Contributed to the design, implementation and review of Twenty Four.",
+			"Participó en el diseño, el desarrollo y la revisión de Twenty Four.",
 	},
 	{
 		id: "developer-04",
 		name: "igvisera",
 		surname: "",
-		role: "Developer",
+		role: "Desarrollador",
 		description:
-			"Contributed to the design, implementation and review of Twenty Four.",
+			"Participó en el diseño, el desarrollo y la revisión de Twenty Four.",
 	},
 	{
 		id: "developer-05",
 		name: "ancarvaj",
 		surname: "",
-		role: "Developer",
+		role: "Desarrollador",
 		description:
-			"Contributed to the design, implementation and review of Twenty Four.",
+			"Participó en el diseño, el desarrollo y la revisión de Twenty Four.",
 	},
 ];

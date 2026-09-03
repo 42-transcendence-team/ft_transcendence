@@ -10,89 +10,89 @@ import { InformationSection } from "../components/information/InformationSection
 
 const informationCategories = [
 	{
-		title: "Account information",
+		title: "Datos de la cuenta",
 		items: [
-			"Username",
-			"Email address",
-			"Name and surname",
-			"Date of birth",
-			"Password hash",
-			"Two-factor authentication configuration",
+			"Nombre de usuario",
+			"Dirección de correo electrónico",
+			"Nombre y apellidos",
+			"Fecha de nacimiento",
+			"Resumen criptográfico de la contraseña",
+			"Configuración de la autenticación en dos pasos",
 		],
 	},
 	{
-		title: "Profile information",
+		title: "Datos del perfil",
 		items: [
-			"Avatar and banner",
-			"Status message",
-			"Online status",
-			"Profile visit counter",
+			"Avatar e imagen de cabecera",
+			"Mensaje de estado",
+			"Estado de conexión",
+			"Contador de visitas al perfil",
 		],
 	},
 	{
-		title: "User-generated content",
+		title: "Contenido generado por los usuarios",
 		items: [
-			"Posts",
-			"Uploaded images and PDF files",
-			"Comments",
-			"Likes and dislikes",
+			"Publicaciones",
+			"Imágenes y archivos PDF subidos",
+			"Comentarios",
+			"Me gusta y no me gusta",
 		],
 	},
 	{
-		title: "Social information",
+		title: "Datos sociales",
 		items: [
-			"Friend requests",
-			"Friendships",
-			"Blocked users",
+			"Solicitudes de amistad",
+			"Amistades",
+			"Usuarios bloqueados",
 		],
 	},
 ];
 
 const purposes = [
-	"Create and manage user accounts.",
-	"Authenticate users and maintain secure sessions.",
-	"Provide profiles, friendships and social features.",
-	"Store and display user-generated content.",
-	"Enable two-factor authentication and account controls.",
-	"Maintain application stability and investigate technical incidents.",
+	"Crear y gestionar las cuentas de usuario.",
+	"Identificar a los usuarios y mantener sesiones seguras.",
+	"Ofrecer perfiles, amistades y funciones sociales.",
+	"Almacenar y mostrar el contenido generado por los usuarios.",
+	"Permitir la autenticación en dos pasos y la gestión de las cuentas.",
+	"Mantener la estabilidad de la aplicación e investigar incidencias técnicas.",
 ];
 
 const securityMeasures = [
-	"Passwords hashed with bcrypt.",
-	"HttpOnly authentication cookies.",
-	"SameSite cookie protection.",
-	"Secure cookies in production.",
-	"Optional TOTP two-factor authentication.",
-	"Server-side session validation.",
-	"Restricted upload types and file sizes.",
-	"Content-based MIME validation for uploaded files.",
+	"Contraseñas protegidas mediante bcrypt.",
+	"Cookies de autenticación HttpOnly.",
+	"Protección de cookies mediante SameSite.",
+	"Cookies seguras en producción.",
+	"Autenticación TOTP opcional en dos pasos.",
+	"Validación de las sesiones en el servidor.",
+	"Restricciones en los tipos y tamaños de los archivos subidos.",
+	"Validación del tipo MIME según el contenido de los archivos subidos.",
 ];
 
 export const PrivacyPolicy = () => {
 	return (
 		<InformationalPageLayout
-			eyebrow="Legal"
-			title="Privacy Policy"
-			subtitle="How Twenty Four collects, uses and protects personal information."
+			eyebrow="Información legal"
+			title="Política de privacidad"
+			subtitle="Cómo recopila, utiliza y protege Twenty Four los datos personales."
 			className="information-page--privacy"
 		>
 			<div className="information-callout information-callout--warning">
 				<FiAlertCircle aria-hidden="true" />
 
 				<div>
-					<h2>Current project implementation</h2>
+					<h2>Estado actual del proyecto</h2>
 					<p>
-						This notice describes the current behaviour of
-						Twenty Four. Contact details and retention rules
-						must be reviewed before a public production release.
+						Este aviso describe el funcionamiento actual de
+						Twenty Four. Los datos de contacto y las normas de conservación
+						deben revisarse antes de publicar la aplicación en producción.
 					</p>
 				</div>
 			</div>
 
-			<InformationSection title="1. Who is responsible?">
+			<InformationSection title="1. ¿Quién es el responsable?">
 				<div className="information-contact">
 					<p>
-						<strong>Twenty Four development team</strong>
+						<strong>Equipo de desarrollo de Twenty Four</strong>
 					</p>
 
 					<a href="mailto:privacy@twentyfour.example">
@@ -105,7 +105,7 @@ export const PrivacyPolicy = () => {
 				</div>
 			</InformationSection>
 
-			<InformationSection title="2. Information we collect">
+			<InformationSection title="2. Datos que recopilamos">
 				<div className="privacy-grid">
 					{informationCategories.map((category) => (
 						<article
@@ -127,14 +127,14 @@ export const PrivacyPolicy = () => {
 					<FiDatabase aria-hidden="true" />
 
 					<p>
-						Technical logs, authentication events and
-						operational metrics may also be processed when
-						the corresponding monitoring services are enabled.
+						También pueden procesarse registros técnicos, sucesos de autenticación
+						y métricas de funcionamiento cuando
+						estén activados los servicios de supervisión correspondientes.
 					</p>
 				</div>
 			</InformationSection>
 
-			<InformationSection title="3. Why we use this information">
+			<InformationSection title="3. Para qué utilizamos estos datos">
 				<ul className="information-list information-list--checks">
 					{purposes.map((purpose) => (
 						<li key={purpose}>{purpose}</li>
@@ -142,29 +142,29 @@ export const PrivacyPolicy = () => {
 				</ul>
 			</InformationSection>
 
-			<InformationSection title="4. Information visible to other users">
+			<InformationSection title="4. Datos visibles para otros usuarios">
 				<p>
-					Authenticated users may see information exposed by
-					your profile and activity, including your username,
-					name, avatar, banner, status, posts, comments and
-					reactions.
+					Los usuarios identificados pueden ver la información mostrada en
+					tu perfil y tu actividad, incluidos tu nombre de usuario,
+					nombre, avatar, imagen de cabecera, estado, publicaciones, comentarios y
+					reacciones.
 				</p>
 
 				<p>
-					Your password, password hash, email address and
-					two-factor authentication credentials are not
-					public profile information.
+					Tu contraseña, su resumen criptográfico, tu dirección de correo electrónico y
+					tus credenciales de autenticación en dos pasos no forman parte
+					de la información pública del perfil.
 				</p>
 			</InformationSection>
 
-			<InformationSection title="5. Where information is stored">
+			<InformationSection title="5. Dónde se almacenan los datos">
 				<div className="information-grid information-grid--two">
 					<article className="information-card">
 						<h3 className="information-card__title">
 							PostgreSQL
 						</h3>
 						<p className="information-card__text">
-							Account data, content and user relationships.
+							Datos de las cuentas, contenido y relaciones entre usuarios.
 						</p>
 					</article>
 
@@ -173,39 +173,39 @@ export const PrivacyPolicy = () => {
 							Redis
 						</h3>
 						<p className="information-card__text">
-							Sessions, temporary authentication data,
-							online state and temporary counters.
+							Sesiones, datos temporales de autenticación,
+							estado de conexión y contadores temporales.
 						</p>
 					</article>
 
 					<article className="information-card">
 						<h3 className="information-card__title">
-							Persistent uploads
+							Archivos persistentes
 						</h3>
 						<p className="information-card__text">
-							Avatars, banners and files attached to posts.
+							Avatares, imágenes de cabecera y archivos adjuntos a publicaciones.
 						</p>
 					</article>
 
 					<article className="information-card">
 						<h3 className="information-card__title">
-							Monitoring services
+							Servicios de supervisión
 						</h3>
 						<p className="information-card__text">
-							Application logs and operational metrics when
-							monitoring is enabled.
+							Registros de la aplicación y métricas de funcionamiento cuando
+							la supervisión está activada.
 						</p>
 					</article>
 				</div>
 			</InformationSection>
 
-			<InformationSection title="6. Security">
+			<InformationSection title="6. Seguridad">
 				<div className="information-inline">
 					<FiLock aria-hidden="true" />
 
 					<p>
-						Twenty Four applies technical measures intended
-						to protect accounts and uploaded information.
+						Twenty Four aplica medidas técnicas destinadas
+						a proteger las cuentas y la información subida.
 					</p>
 				</div>
 
@@ -216,68 +216,68 @@ export const PrivacyPolicy = () => {
 				</ul>
 
 				<p className="information-note">
-					No online service can guarantee absolute security.
+					Ningún servicio en línea puede garantizar una seguridad absoluta.
 				</p>
 			</InformationSection>
 
-			<InformationSection title="7. Retention and account deletion">
+			<InformationSection title="7. Conservación de datos y eliminación de cuentas">
 				<p>
-					Users can request account deletion from the account
-					settings. Password confirmation and, when enabled,
-					a two-factor authentication code are required.
+					Los usuarios pueden solicitar la eliminación de su cuenta desde los
+					ajustes. Es necesario confirmar la contraseña y, si está activada,
+					introducir un código de autenticación en dos pasos.
 				</p>
 
 				<p>
-					The final production policy must confirm how related
-					content, uploaded files, operational logs and backups
-					are retained or removed. This notice does not claim
-					that every related record is immediately erased.
+					La política definitiva para producción deberá especificar cómo se conservan
+					o eliminan el contenido relacionado, los archivos subidos, los registros
+					de funcionamiento y las copias de seguridad. Este aviso no afirma
+					que todos los registros relacionados se borren inmediatamente.
 				</p>
 			</InformationSection>
 
-			<InformationSection title="8. Your rights">
+			<InformationSection title="8. Tus derechos">
 				<p>
-					Depending on the applicable law, users may request
-					access, correction or deletion of their personal
-					information, as well as restriction, objection or
-					portability where applicable.
+					De acuerdo con la legislación aplicable, los usuarios pueden solicitar
+					el acceso, la rectificación o la eliminación de sus datos
+					personales, así como su limitación, oposición o
+					portabilidad cuando corresponda.
 				</p>
 
 				<p>
-					Requests can be sent to{" "}
+					Las solicitudes pueden enviarse a{" "}
 					<a href="mailto:privacy@twentyfour.example">
 						privacy@twentyfour.example
 					</a>.
 				</p>
 			</InformationSection>
 
-			<InformationSection title="9. Age requirement">
+			<InformationSection title="9. Requisito de edad">
 				<p>
-					Twenty Four is intended for users aged 18 or older.
+					Twenty Four está destinado a usuarios mayores de 18 años.
 				</p>
 			</InformationSection>
 
-			<InformationSection title="10. Third parties">
+			<InformationSection title="10. Terceros">
 				<div className="information-inline">
 					<FiShield aria-hidden="true" />
 
 					<p>
-						Twenty Four does not currently include advertising
-						networks, social tracking pixels or external
-						analytics platforms.
+						Twenty Four no incluye actualmente redes publicitarias,
+						píxeles de seguimiento de redes sociales ni plataformas
+						externas de análisis.
 					</p>
 				</div>
 			</InformationSection>
 
-			<InformationSection title="11. Changes to this policy">
+			<InformationSection title="11. Cambios en esta política">
 				<p>
-					This policy may be updated when the application,
-					its infrastructure or its data-processing practices
-					change.
+					Esta política podrá actualizarse cuando cambien la aplicación,
+					su infraestructura o sus prácticas de tratamiento de datos
+					personales.
 				</p>
 
 				<p className="information-meta">
-					Last updated: July 2026
+					Última actualización: julio de 2026
 				</p>
 			</InformationSection>
 		</InformationalPageLayout>

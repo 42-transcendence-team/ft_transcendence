@@ -11,11 +11,11 @@ export const ALLOWED_POST_FILE_TYPES = [
 
 export function validatePostFile(file: File): string | null {
 	if (!ALLOWED_POST_FILE_TYPES.includes(file.type)) {
-		return "The file must be a PNG, JPG, JPEG, WebP or PDF file.";
+		return "El archivo debe tener formato PNG, JPG, JPEG, WebP o PDF.";
 	}
 
 	if (file.size > MAX_POST_FILE_SIZE) {
-		return "The file cannot be larger than 5 MB.";
+		return "El archivo no puede superar los 5 MB.";
 	}
 
 	return null;
@@ -28,11 +28,11 @@ export function validatePostDraft(
 	const trimmedContent = content.trim();
 
 	if (trimmedContent === "" && file === null) {
-		return "You cannot publish an empty post.";
+		return "No puedes publicar una publicación vacía.";
 	}
 
 	if (trimmedContent.length > MAX_POST_CONTENT_LENGTH) {
-		return `The post cannot exceed ${MAX_POST_CONTENT_LENGTH} characters.`;
+		return `La publicación no puede superar los ${MAX_POST_CONTENT_LENGTH} caracteres.`;
 	}
 
 	if (file !== null) {
@@ -46,11 +46,11 @@ export function validateCommentContent(content: string): string | null {
 	const trimmedContent = content.trim();
 
 	if (trimmedContent === "") {
-		return "The comment cannot be empty.";
+		return "El comentario no puede estar vacío.";
 	}
 
 	if (trimmedContent.length > MAX_COMMENT_CONTENT_LENGTH) {
-		return `The comment cannot exceed ${MAX_COMMENT_CONTENT_LENGTH} characters.`;
+		return `El comentario no puede superar los ${MAX_COMMENT_CONTENT_LENGTH} caracteres.`;
 	}
 
 	return null;

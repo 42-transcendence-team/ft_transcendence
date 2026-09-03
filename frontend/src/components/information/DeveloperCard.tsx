@@ -37,7 +37,7 @@ export function DeveloperCard({
 				<img
 					className="developer-card__avatar"
 					src={avatarSrc ?? skullLogo}
-					alt={`${fullName} profile`}
+					alt={`${fullName}: imagen de perfil`}
 					onError={(event) => {
 						/*
 						 * Aunque posteriormente se añada una fotografía real,
@@ -66,7 +66,7 @@ export function DeveloperCard({
 			{(githubUrl || linkedinUrl || portfolioUrl) && (
 				<div
 					className="developer-card__links"
-					aria-label={`${fullName} links`}
+					aria-label={`${fullName}: enlaces`}
 				>
 					{githubUrl && (
 						<a
@@ -97,7 +97,7 @@ export function DeveloperCard({
 							rel="noreferrer"
 						>
 							<FiExternalLink aria-hidden="true" />
-							Portfolio
+							Sitio web
 						</a>
 					)}
 				</div>

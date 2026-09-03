@@ -63,52 +63,52 @@ export default function Register42() {
         }
 
         if (!formData.login.trim()) {
-            newErrors.login = "Login is required."
+            newErrors.login = "Debes introducir un nombre de usuario."
         } else if (!regex.username.test(formData.login)) {
-            newErrors.login = "Only letters, numbers, hyphens and underscores are allowed."
+            newErrors.login = "Solo se permiten letras, números, guiones y guiones bajos."
         } else if (formData.login.length > MAX_LENGTH) {
-            newErrors.login = `Maximum length is ${MAX_LENGTH} characters.`
+            newErrors.login = `La longitud máxima es de ${MAX_LENGTH} caracteres.`
         }
 
         if (!formData.email.trim()) {
-            newErrors.email = "Email is required."
+            newErrors.email = "Debes introducir el correo electrónico."
         } else if (!regex.email.test(formData.email)) {
-            newErrors.email = "Enter a valid email address."
+            newErrors.email = "Introduce una dirección de correo electrónico válida."
         }
 
         if (!formData.password) {
-            newErrors.password = "Password is required."
+            newErrors.password = "Debes introducir una contraseña."
         } else if (!regex.password.test(formData.password)) {
-            newErrors.password = "Password must be between 8 and 64 characters and include at least one uppercase letter, one number and one symbol."
+            newErrors.password = "La contraseña debe tener entre 8 y 64 caracteres e incluir al menos una mayúscula, un número y un símbolo."
         }
 
         if (!formData.confirmPassword) {
-            newErrors.confirmPassword = "You must confirm your password."
+            newErrors.confirmPassword = "Debes confirmar la contraseña."
         } else if (formData.confirmPassword !== formData.password) {
-            newErrors.confirmPassword = "Passwords do not match."
+            newErrors.confirmPassword = "Las contraseñas no coinciden."
         }
 
         ;(["first_name", "last_name"] as const).forEach((field) => {
             const val = formData[field].trim()
             if (!val) {
-                newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`
+                newErrors[field] = "Este campo es obligatorio."
             } else if (!regex.name.test(val)) {
-                newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} can only contain letters.`
+                newErrors[field] = "Este campo solo puede contener letras."
             } else if (val.length > MAX_LENGTH) {
-                newErrors[field] = `Maximum length is ${MAX_LENGTH} characters.`
+                newErrors[field] = `La longitud máxima es de ${MAX_LENGTH} caracteres.`
             }
         })
 
         if (!formData.birthday) {
-            newErrors.birthday = "Birthday is required."
+            newErrors.birthday = "Debes introducir la fecha de nacimiento."
         } else {
             const birthDate = new Date(formData.birthday)
             if (Number.isNaN(birthDate.getTime())) {
-                newErrors.birthday = "Enter a valid birthday."
+                newErrors.birthday = "Introduce una fecha de nacimiento válida."
             } else {
                 const age = calculateAge(formData.birthday)
-                if (age < 18) newErrors.birthday = "You must be at least 18 years old to register."
-                else if (age > 150) newErrors.birthday = "Age cannot be greater than 150 years."
+                if (age < 18) newErrors.birthday = "Debes tener al menos 18 años para registrarte."
+                else if (age > 150) newErrors.birthday = "La edad no puede superar los 150 años."
             }
         }
 
@@ -125,7 +125,7 @@ export default function Register42() {
         try {
             setIsSubmitting(true)
             await register42User(formData)
-            setServerMessage("User created successfully.")
+            setServerMessage("La cuenta se ha creado correctamente.")
             await refreshAuth()
             await refreshUser()
             navigate("/app")
@@ -138,21 +138,21 @@ export default function Register42() {
 				const apiError = error as { status: number }
 
 				if (apiError.status === 400) {
-					setServerMessage("Invalid request.")
+					setServerMessage("La solicitud no es válida.")
 					return
 				}
 
 				if (apiError.status === 422) {
-					setServerMessage("Some fields are invalid. Please check the form.")
+					setServerMessage("Algunos campos no son válidos. Revisa el formulario.")
 					return
 				}
 
 				if (apiError.status === 409) {
-					setServerMessage("Username or email already exists.")
+					setServerMessage("El nombre de usuario o el correo electrónico ya están registrados.")
 					return
 				}
 			}
-            setServerMessage("An error occurred. Please try again.")
+            setServerMessage("Se ha producido un error. Inténtalo de nuevo.")
         } finally {
             setIsSubmitting(false)
         }
@@ -171,22 +171,22 @@ export default function Register42() {
 			})
 			.catch(() => {
 				setServerMessage(
-					"An error occurred while fetching 42 user info."
+					"No se ha podido obtener la información del usuario de 42."
 				)
 			})
 	}, [])
 
     const accountFields = [
-        { id: "login", label: "Login", type: "text", placeholder: "Login" },
-        { id: "email", label: "Email", type: "email", placeholder: "Email" },
-        { id: "password", label: "Password", type: "password", placeholder: "Password" },
-        { id: "confirmPassword", label: "Confirm Password", type: "password", placeholder: "Repeat Password" },
+        { id: "login", label: "Nombre de usuario", type: "text", placeholder: "Nombre de usuario" },
+        { id: "email", label: "Correo electrónico", type: "email", placeholder: "Correo electrónico" },
+        { id: "password", label: "Contraseña", type: "password", placeholder: "Contraseña" },
+        { id: "confirmPassword", label: "Confirmar contraseña", type: "password", placeholder: "Repite la contraseña" },
     ]
 
     const personalFields = [
-        { id: "first_name", label: "First Name", type: "text", placeholder: "First Name" },
-        { id: "last_name", label: "Last Name", type: "text", placeholder: "Last Name" },
-        { id: "birthday", label: "Birthday", type: "date", placeholder: "" },
+        { id: "first_name", label: "Nombre", type: "text", placeholder: "Nombre" },
+        { id: "last_name", label: "Apellidos", type: "text", placeholder: "Apellidos" },
+        { id: "birthday", label: "Fecha de nacimiento", type: "date", placeholder: "" },
     ]
 
     return (
@@ -201,7 +201,7 @@ export default function Register42() {
 			        />
 			</div>
             <form className="auth-form" onSubmit={handleSubmit}>
-                <h3 className="auth-form__section-title">ACCOUNT DATA</h3>
+                <h3 className="auth-form__section-title">DATOS DE LA CUENTA</h3>
                 <div className="auth-form__group">
                     {accountFields.map((field) => (
                         <FormField
@@ -221,7 +221,7 @@ export default function Register42() {
                     ))}
                 </div>
 
-                <h3 className="auth-form__section-title">PERSONAL DATA</h3>
+                <h3 className="auth-form__section-title">DATOS PERSONALES</h3>
                 <div className="auth-form__group auth-form__group--personal">
                     {personalFields.map((field) => (
                         <FormField
@@ -245,7 +245,7 @@ export default function Register42() {
                     Al countinuar, aceptas los <NavLink to="/terms">Terminos y Condiciones</NavLink> y la <NavLink to="/privacy-policy">Política de Privacidad</NavLink>.
                 </p>
                 <button className="auth-form__submit" type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Registering..." : "Create Now"}
+                    {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
                 </button>
 
                 {serverMessage && <p className="auth-form__server-message">{serverMessage}</p>}

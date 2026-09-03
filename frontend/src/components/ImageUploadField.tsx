@@ -146,7 +146,7 @@ export const ImageUploadField = ({
 						disabled={disabled}
 						onClick={handleRemove}
 					>
-						{isImage ? "Remove image" : "Remove file"}
+						{isImage ? "Eliminar imagen" : "Eliminar archivo"}
 					</button>
 				</div>
 			)}

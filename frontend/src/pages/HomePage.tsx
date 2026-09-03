@@ -44,7 +44,7 @@ export const HomePage = () => {
       } catch {
         if (!cancelled) {
           setPosts([]);
-          setError('The feed could not be loaded.');
+          setError('No se ha podido cargar el contenido.');
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -74,7 +74,7 @@ export const HomePage = () => {
       setPage(response.pagination.page);
       setTotalPages(response.pagination.totalPages);
     } catch {
-      setError('More posts could not be loaded.');
+      setError('No se han podido cargar más publicaciones.');
     } finally {
       setIsLoadingMore(false);
     }
@@ -110,7 +110,7 @@ export const HomePage = () => {
       </header>
 
       <div className="home-page__feed">
-        {isLoading && <p className="home-page__state">Cargando posts.</p>}
+        {isLoading && <p className="home-page__state">Cargando publicaciones.</p>}
 
         {!isLoading && error && posts.length === 0 && (
           <p className="home-page__error">{error}</p>
@@ -118,7 +118,7 @@ export const HomePage = () => {
 
         {!isLoading && posts.length === 0 && !error && (
           <p className="home-page__state">
-            Aún no hay publicaciones en tu feed.
+            Todavía no hay publicaciones en tu inicio.
           </p>
         )}
 
@@ -139,7 +139,7 @@ export const HomePage = () => {
                 disabled={isLoadingMore}
                 onClick={() => void handleLoadMore()}
               >
-                {isLoadingMore ? 'Loading...' : 'Load more'}
+                {isLoadingMore ? 'Cargando...' : 'Cargar más'}
               </button>
             )}
           </>

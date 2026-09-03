@@ -43,9 +43,9 @@ const technologies = [
 export const Developers = () => {
 	return (
 		<InformationalPageLayout
-			eyebrow="Team"
-			title="Development Team"
-			subtitle="Five developers working together on Twenty Four."
+			eyebrow="Equipo"
+			title="Equipo de desarrollo"
+			subtitle="Cinco desarrolladores trabajando juntos en Twenty Four."
 			className="information-page--developers"
 		>
 			<div className="developers-grid">
@@ -57,10 +57,10 @@ export const Developers = () => {
 				))}
 			</div>
 
-			<InformationSection title="Built with">
+			<InformationSection title="Tecnologías utilizadas">
 				<ul
 					className="technology-list"
-					aria-label="Main technologies"
+					aria-label="Tecnologías principales"
 				>
 					{technologies.map((technology) => (
 						<li key={technology.name}>
@@ -68,7 +68,7 @@ export const Developers = () => {
 								href={technology.url}
 								target="_blank"
 								rel="noreferrer"
-								aria-label={`Open the official ${technology.name} website`}
+								aria-label={`Abrir el sitio web oficial de ${technology.name}`}
 							>
 								<span>{technology.name}</span>
 
