@@ -70,13 +70,13 @@ export const PostDetail = ({
 							disabled={isDeleting}
 							aria-label={
 								isDeleting
-									? "Deleting post"
-									: "Delete post"
+									? "Eliminando publicación"
+									: "Eliminar publicación"
 							}
 							title={
 								isDeleting
-									? "Deleting post"
-									: "Delete post"
+									? "Eliminando publicación"
+									: "Eliminar publicación"
 							}
 						>
 							<FiTrash2 size={18} aria-hidden="true" />
@@ -96,19 +96,19 @@ export const PostDetail = ({
 							className="post-detail__image-button"
 							type="button"
 							onClick={() => onImageClick(getPostImageSrc(post.imagePath!))}
-							aria-label="Open post image"
+							aria-label="Abrir la imagen de la publicación"
 						>
 							<img
 								className="post-detail__image"
 								src={getPostImageSrc(post.imagePath)}
-								alt="Post image"
+								alt="Imagen de la publicación"
 							/>
 						</button>
 					) : (
 						<img
 							className="post-detail__image"
 							src={getPostImageSrc(post.imagePath)}
-							alt="Post image"
+							alt="Imagen de la publicación"
 						/>
 					)}
 				</div>

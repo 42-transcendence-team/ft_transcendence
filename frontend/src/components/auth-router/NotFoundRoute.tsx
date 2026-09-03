@@ -9,7 +9,7 @@ export const NotFoundRoute = () => {
 	const { authStatus } = useAuth()
 
 	if (authStatus === "loading") {
-		return <div>Loading...</div>
+		return <div>Cargando...</div>
 	}
 
 	if (authStatus === "guest") {

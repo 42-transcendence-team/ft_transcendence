@@ -2,7 +2,7 @@ import {
 	useEffect,
 	useState,
 } from "react";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 
 import {
 	getFeedPosts,
@@ -67,7 +67,7 @@ export const HomePage = () => {
 				if (!cancelled) {
 					setPosts([]);
 					setError(
-						"The feed could not be loaded.",
+						"No se ha podido cargar el contenido.",
 					);
 				}
 			} finally {
@@ -117,7 +117,7 @@ export const HomePage = () => {
 			);
 		} catch {
 			setError(
-				"More posts could not be loaded.",
+				"No se han podido cargar más publicaciones.",
 			);
 		} finally {
 			setIsLoadingMore(false);
@@ -154,6 +154,7 @@ export const HomePage = () => {
 
 	return (
 		<section className="home-page">
+			{/*
 			<header className="home-page__header">
 				<h2>HOME</h2>
 
@@ -164,11 +165,12 @@ export const HomePage = () => {
 					Nuevo post
 				</Link>
 			</header>
+			*/}
 
 			<div className="home-page__feed">
 				{isLoading && (
 					<p className="home-page__state">
-						Loading posts.
+						Cargando publicaciones.
 					</p>
 				)}
 
@@ -184,7 +186,7 @@ export const HomePage = () => {
 					posts.length === 0 &&
 					!error && (
 						<p className="home-page__state">
-							There are no posts in your feed yet.
+							Todavía no hay publicaciones en tu inicio.
 						</p>
 					)}
 
@@ -216,8 +218,8 @@ export const HomePage = () => {
 								}
 							>
 								{isLoadingMore
-									? "Loading..."
-									: "Load more"}
+									? "Cargando..."
+									: "Cargar más"}
 							</button>
 						)}
 					</>

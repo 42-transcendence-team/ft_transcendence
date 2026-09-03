@@ -17,7 +17,7 @@ export const CommentList = ({
 	if (comments.length === 0) {
 		return (
 			<p className="comments__empty">
-				There are no comments yet.
+				Todavía no hay comentarios.
 			</p>
 		);
 	}

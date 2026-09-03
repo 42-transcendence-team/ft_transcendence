@@ -108,12 +108,12 @@ export const PostModalRenderer = ({
 						className="post-modal-renderer__image-button"
 						type="button"
 						onClick={() => onImageClick(imageSrc)}
-						aria-label="Open post image"
+						aria-label="Abrir la imagen de la publicación"
 					>
 						<img
 							className="post-modal-renderer__image"
 							src={imageSrc}
-							alt="Post image"
+							alt="Imagen de la publicación"
 						/>
 					</button>
 				</div>
@@ -125,7 +125,7 @@ export const PostModalRenderer = ({
 						<Link
 							className="post-modal-renderer__avatar-link"
 							to={authorProfilePath}
-							aria-label={`Open ${post.author.login} profile`}
+							aria-label={`Abrir el perfil de ${post.author.login}`}
 						>
 							<UserAvatar
 								avatarPath={post.author.avatarPath}
@@ -173,13 +173,13 @@ export const PostModalRenderer = ({
 								disabled={isDeletingPost}
 								aria-label={
 									isDeletingPost
-										? "Deleting post"
-										: "Delete post"
+										? "Eliminando publicación"
+										: "Eliminar publicación"
 								}
 								title={
 									isDeletingPost
-										? "Deleting post"
-										: "Delete post"
+										? "Eliminando publicación"
+										: "Eliminar publicación"
 								}
 							>
 								<FiTrash2 size={18} aria-hidden="true" />
@@ -230,7 +230,7 @@ export const PostModalRenderer = ({
 						/>
 					)}
 				
-					<section className="post-modal-renderer__comments" aria-label="Comments">
+					<section className="post-modal-renderer__comments" aria-label="Comentarios">
 						<CommentList
 							comments={comments}
 							currentUserId={currentUserId}

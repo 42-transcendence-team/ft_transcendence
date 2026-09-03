@@ -253,7 +253,7 @@ export const PostModal = ({
 				setComments((currentComments) =>
 					currentComments.filter((comment) => comment.id !== commentId),
 				);
-				setCommentError("This comment no longer exists.");
+				setCommentError("Este comentario ya no existe.");
 				return;
 			}
 
@@ -332,16 +332,16 @@ export const PostModal = ({
 	const isPostDeletion = pendingDeletion?.type === "post";
 
 	const confirmationTitle = isPostDeletion
-		? "Delete post?"
-		: "Delete comment?";
+		? "¿Eliminar la publicación?"
+		: "¿Eliminar el comentario?";
 
 	const confirmationMessage = isPostDeletion
-		? "This action cannot be undone. Are you sure you want to delete this post?"
-		: "This action cannot be undone. Are you sure you want to delete this comment?";
+		? "Esta acción no se puede deshacer. ¿Seguro que quieres eliminar esta publicación?"
+		: "Esta acción no se puede deshacer. ¿Seguro que quieres eliminar este comentario?";
 
 	const confirmationLabel = isPostDeletion
-		? "Delete post"
-		: "Delete comment";
+		? "Eliminar publicación"
+		: "Eliminar comentario";
 
 	const isConfirmingDeletion =
 		pendingDeletion?.type === "post"
@@ -362,13 +362,13 @@ export const PostModal = ({
 			>
 				<div className="post-modal">
 					{isLoading && (
-						<p className="post-modal__state">Loading post.</p>
+						<p className="post-modal__state">Cargando publicación.</p>
 					)}
 
 					{notFound && !isLoading && (
 						<div className="post-modal__state">
-							<h2>Post not found</h2>
-							<p>This post does not exist or has been deleted.</p>
+							<h2>Publicación no encontrada</h2>
+							<p>Esta publicación no existe o ha sido eliminada.</p>
 						</div>
 					)}
 
@@ -407,8 +407,8 @@ export const PostModal = ({
 				title={confirmationTitle}
 				message={confirmationMessage}
 				confirmLabel={confirmationLabel}
-				confirmingLabel="Deleting..."
-				cancelLabel="Cancel"
+				confirmingLabel="Eliminando..."
+				cancelLabel="Cancelar"
 				isConfirming={isConfirmingDeletion}
 				onConfirm={handleConfirmDeletion}
 				onClose={closeDeleteConfirmation}

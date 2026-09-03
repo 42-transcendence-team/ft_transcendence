@@ -171,7 +171,7 @@ export const Profile = () => {
           return;
         }
 
-        setProfileError("The profile could not be loaded.");
+        setProfileError("No se ha podido cargar el perfil.");
       })
       .finally(() => {
         if (!cancelled) {
@@ -234,7 +234,7 @@ export const Profile = () => {
         setPostsTotalPages(response.pagination.totalPages);
       } catch {
         if (!cancelled && postsOwnerIDRef.current === ownerID) {
-          setPostsError("The posts could not be loaded.");
+          setPostsError("No se han podido cargar las publicaciones.");
         }
       } finally {
         if (!cancelled && postsOwnerIDRef.current === ownerID) {
@@ -430,7 +430,7 @@ export const Profile = () => {
       setPostsTotalPages(response.pagination.totalPages);
     } catch {
       if (postsOwnerIDRef.current === ownerID) {
-        setPostsError("More posts could not be loaded.");
+        setPostsError("No se han podido cargar más publicaciones.");
       }
     } finally {
       if (postsOwnerIDRef.current === ownerID) {
@@ -550,7 +550,7 @@ export const Profile = () => {
   if (profileError || !profileUser) {
     return (
       <div className="error-screen">
-        {profileError ?? "The profile could not be loaded."}
+        {profileError ?? "No se ha podido cargar el perfil."}
       </div>
     );
   }
@@ -693,7 +693,7 @@ export const Profile = () => {
         >
           <div className="profile__posts">
             {isLoadingPosts && (
-              <div className="profile__posts-state">Loading posts.</div>
+              <div className="profile__posts-state">Cargando publicaciones.</div>
             )}
 
             {!isLoadingPosts && profilePosts.length === 0 && postsError && (
@@ -702,7 +702,7 @@ export const Profile = () => {
 
             {!isLoadingPosts && profilePosts.length === 0 && !postsError && (
               <div className="profile__empty">
-                This user has not posted anything yet.
+                Este usuario todavía no ha publicado nada.
               </div>
             )}
 
@@ -725,7 +725,7 @@ export const Profile = () => {
                     disabled={isLoadingMorePosts}
                     onClick={() => void handleLoadMorePosts()}
                   >
-                    {isLoadingMorePosts ? "Loading..." : "Load more"}
+                    {isLoadingMorePosts ? "Cargando..." : "Cargar más"}
                   </button>
                 )}
               </>
@@ -756,7 +756,7 @@ export const Profile = () => {
         <PostImageModal
           open={isAvatarViewerOpen}
           imageSrc={avatarPath}
-          alt={`${profileUser.login} profile image`}
+          alt={`${profileUser.login}: imagen de perfil`}
           onClose={() => setIsAvatarViewerOpen(false)}
         />
       )}

@@ -52,8 +52,8 @@ export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 					className="comment-form__textarea"
 					value={content}
 					onChange={(event) => setContent(event.target.value)}
-					placeholder="Add a comment."
-					aria-label="Add a comment"
+					placeholder="Añade un comentario."
+					aria-label="Añadir un comentario"
 					rows={1}
 				/>
 
@@ -61,9 +61,9 @@ export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 					className="comment-form__submit"
 					type="submit"
 					disabled={!canSubmit}
-					aria-label="Post comment"
+					aria-label="Publicar comentario"
 				>
-					{isSubmitting ? "Sending." : "Send"}
+					{isSubmitting ? "Enviando..." : "Enviar"}
 				</button>
 			</div>
 

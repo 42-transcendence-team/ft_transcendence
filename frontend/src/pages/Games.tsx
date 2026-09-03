@@ -6,8 +6,8 @@ import { Goose } from "games/goose/goose";
 export const games = [
 	{
 		id: "tictactoe",
-		name: "Tic Tac Toe",
-		description: "This is the first game.",
+		name: "Tres en raya",
+		description: "Este es el primer juego.",
 		aspectRatio: 1,
 		component: TicTacToe,
 	},
@@ -20,15 +20,15 @@ export const games = [
 	// },
 	{
 		id: "goose",
-		name: "Goose",
-		description: "This is the third game.",
+		name: "La oca",
+		description: "Este es el tercer juego.",
 		aspectRatio: 4 / 3,
 		component: Goose,
 	},
 	{
 		id: "connectfour",
-		name: "Connect Four",
-		description: "This is the fourth game.",
+		name: "Cuatro en raya",
+		description: "Este es el cuarto juego.",
 		aspectRatio: 4 / 3,
 		component: ConnectFour,
 	}
@@ -53,7 +53,7 @@ export const Games = () => {
 					<li key={game.id} className="game-item" onClick={() => handleGameClick(game.id)}>
 						<h2>{game.name}</h2>
 						<p>{game.description}</p>
-						<button onClick={(e) => { e.stopPropagation(); handleJoinGame(game.id); }}>Join Game</button>
+						<button onClick={(e) => { e.stopPropagation(); handleJoinGame(game.id); }}>Unirse a la partida</button>
 					</li>
 				))}
 			</ul>
@@ -62,7 +62,7 @@ export const Games = () => {
 
 	return (
 		<>
-			<h1>Games</h1>
+			<h1>Juegos</h1>
 			{displayGameList()}
 		</>
 	);

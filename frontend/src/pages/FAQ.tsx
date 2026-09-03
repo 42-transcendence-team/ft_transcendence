@@ -5,9 +5,9 @@ import { InformationalPageLayout } from "../components/information/Informational
 export const FAQ = () => {
 	return (
 		<InformationalPageLayout
-			eyebrow="Help"
-			title="Frequently Asked Questions"
-			subtitle="Quick answers about accounts, profiles, posts and security."
+			eyebrow="Ayuda"
+			title="Preguntas frecuentes"
+			subtitle="Respuestas rápidas sobre cuentas, perfiles, publicaciones y seguridad."
 			className="information-page--faq"
 		>
 			<div className="faq-groups">
