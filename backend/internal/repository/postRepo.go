@@ -116,19 +116,21 @@ func (r *PostRepository) ListFeedForUser(
 	var total int64
 
 	feedCondition := `
-		posts.user_id = ?
-		OR EXISTS (
-			SELECT 1
-			FROM friendships
-			WHERE (
-				friendships.user1_id = ?
-				AND friendships.user2_id = posts.user_id
-			)
-			OR (
-				friendships.user2_id = ?
-				AND friendships.user1_id = posts.user_id
-			)
-		)
+  (
+        		posts.user_id = ?
+        		OR EXISTS (
+        			SELECT 1
+        			FROM friendships
+        			WHERE (
+        				friendships.user1_id = ?
+        				AND friendships.user2_id = posts.user_id
+        			)
+        			OR (
+        				friendships.user2_id = ?
+        				AND friendships.user1_id = posts.user_id
+        			)
+        		)
+  )
 	`
 
 	countQuery := r.db.
