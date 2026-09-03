@@ -49,7 +49,7 @@ export const Footer = ({
 
 					<li>
 						<NavLink to="/privacy-policy">
-							Política de privacidad
+							Privacidad
 						</NavLink>
 					</li>
 				</ul>
