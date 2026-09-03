@@ -139,6 +139,8 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
 					last_dice_roll: message.state?.last_dice_roll ?? prevState.last_dice_roll,
 					turn: message.state?.turn ?? prevState.turn,
 					winning_line: message.winning_line ?? null,
+                    playerstate: message.state?.playerstate ?? prevState.playerstate,
+                    actions: message.state?.actions ?? prevState.actions,
 				}));
 		});
 
