@@ -494,56 +494,70 @@ func (h *UserHandler) DeleteBanner(c *gin.Context) {
 
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	login := c.Param("login")
-
-	currentUserID := c.MustGet("userID").(uint)
-
+	noIncrement := c.Query("no_increment") == "true"
 	user, err := h.UserService.GetUserByLogin(login)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
-
 	relation := "none"
 	var requestID *uint
 
-	if currentUserID != user.ID {
-		relation, requestID, err =
-			h.AdvancedSearchService.GetUserRelation(
-				currentUserID,
-				user.ID,
-			)
-		if err != nil {
-			c.Error(err)
-			c.Abort()
-			return
+	callerID, exists := c.Get("userID")
+	if exists {
+		currentUserID := callerID.(uint)
+		if currentUserID == user.ID {
+			noIncrement = true //en el perfil del usuario no incrementa -> paco no suma a paco
+		} else {
+			relation, requestID, err = h.AdvancedSearchService.GetUserRelation(currentUserID, user.ID)
+			if err != nil {
+				c.Error(err)
+				c.Abort()
+				return
+			}
 		}
 	}
-
 	ctx := c.Request.Context()
 
-	isOnline, err := h.Redis.
-		SIsMember(ctx, "online_users", user.ID).
-		Result()
+	isOnline, err := h.Redis.SIsMember(ctx, "online_users", user.ID).Result()
 	if err != nil {
-		log.Printf(
-			"could not read online status for user %d: %v",
-			user.ID,
-			err,
-		)
+		log.Printf("could not read online status for user %d: %v", user.ID, err)
 		isOnline = false
 	}
 
 	visitKey := fmt.Sprintf("visits:%d", user.ID)
+	var visits int64
 
-	visits, err := h.Redis.Incr(ctx, visitKey).Result()
-	if err != nil {
-		log.Printf(
-			"could not update visits for user %d: %v",
-			user.ID,
-			err,
-		)
-		visits = 0
+	if noIncrement { //sacamos el valor sin sumar numero de visitas sin sumar
+		visitsStr, err := h.Redis.Get(ctx, visitKey).Result()
+		if err == redis.Nil || err != nil { // La clave aún no existe
+			visits = 0
+		} else {
+			visits, _ = strconv.ParseInt(visitsStr, 10, 64)
+		}
+	} else { //se suma 1 como se hacia antes
+		var cooldownKey string
+		if exists {
+			cooldownKey = fmt.Sprintf("visit_cooldown:caller:%d:target:%d", callerID.(uint), user.ID)
+		} else {
+			cooldownKey = fmt.Sprintf("visit_cooldown:ip:%s:target:%d", c.ClientIP(), user.ID)
+		}
+
+		cooldownExists, _ := h.Redis.Exists(ctx, cooldownKey).Result()
+
+		if cooldownExists == 0 {
+			visits, err = h.Redis.Incr(ctx, visitKey).Result()
+			if err != nil {
+				log.Printf("could not update visits for user %d: %v", user.ID, err)
+				visits = 0
+			} else {
+				h.Redis.Set(ctx, cooldownKey, "1", 5*time.Minute) //cooldown para sumar visitas
+			}
+		} else {
+			visitsStr, _ := h.Redis.Get(ctx, visitKey).Result() //sacamos el valor pero no sumamos
+			visits, _ = strconv.ParseInt(visitsStr, 10, 64)
+		}
 	}
 
 	profile := dto.UserProfileResponse{
@@ -557,7 +571,7 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 		IsOnline:       isOnline,
 		Visits:         visits,
 		Relation:       relation,
-		CanSendRequest: currentUserID != user.ID && relation == "none",
+		CanSendRequest: exists && callerID.(uint) != user.ID && relation == "none",
 		RequestID:      requestID,
 	}
 

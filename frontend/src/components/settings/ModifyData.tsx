@@ -2,12 +2,13 @@ import "@styles/_settingsSection.scss";
 
 import { useState, Fragment, useEffect } from "react";
 import { useFormErrors } from "@hooks/useFormErrors";
-import { calculateAge } from "@utils/calculateAge";
+import { calculateAge } from "../../utils/calculateAge";
 import { updateData, type DataSettings } from "api/Settings";
 import { FormField } from "../FormField";
 import { DateInput } from "../DateInput";
 import { Modal } from "../Modal";
 import { Footer2FA, OtpInput } from "../TwoFactorUI";
+import { FiUser, FiShield, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 
 type SettingsFields = {
 	name: string;
@@ -167,71 +168,106 @@ export function ModifyData({ user, onUpdate }: { user: any; onUpdate: () => void
 	}, [show2FA]);
 
 	return (
-		<div className="settings__section">
-			<h2 className="settings__title">Configuración de la cuenta</h2>
-			<form onSubmit={handleSubmit} className="settings__form">
-				{inputsConfig.map((field) => (
-					<Fragment key={field.id}>
-						<div className="settings__field">
-							<FormField
-								id={field.id}
-								label={field.label}
-								type={field.type}
-								value={formData[field.id]}
-								onChange={(value) => handleInputChange(field.id, value)}
-								placeholder={user[field.id] || undefined}
-								className="form-field"
-							/>
+		<div>
+			<div className="settings__card">
+				<header className="settings__header">
+					<div className="settings__icon-wrapper">
+						<FiUser />
+					</div>
+					<div>
+						<h2 className="settings__title">Información personal</h2>
+						<p className="settings__subtitle">
+							Actualiza tus datos personales y fecha de nacimiento.
+						</p>
+					</div>
+				</header>
 
-							{formErrors[field.id] && (
-								<div className="settings__field-tooltip" onClick={() => clearError(field.id)}>
-									{formErrors[field.id]}
-								</div>
-							)}
-						</div>
-					</Fragment>
-				))}
-				<DateInput
-					label="Fecha de nacimiento"
-					value={formData.birthday}
-					onChange={(value) => handleInputChange("birthday", value)}
-					error={formErrors.birthday}
-					onClearError={() => clearError("birthday")}
-					placeholder={user.birthday}
-					className="settings__field"
-				/>
-				<button type="submit" className="settings__button">
-					Guardar cambios
-				</button>
-			</form>
+				<form onSubmit={handleSubmit} className="settings__form">
+					<div className="settings__grid">
+						{inputsConfig.map((field) => (
+							<div className="settings__field" key={field.id}>
+								<FormField
+									id={field.id}
+									label={field.label}
+									type={field.type}
+									value={formData[field.id]}
+									onChange={(value) => handleInputChange(field.id, value)}
+									placeholder={user[field.id] || "No especificado"}
+								/>
 
+								{formErrors[field.id] && (
+									<div
+										className="settings__field-tooltip"
+										onClick={() => clearError(field.id)}
+									>
+										<FiAlertCircle /> {formErrors[field.id]}
+									</div>
+								)}
+							</div>
+						))}
+					</div>
+
+					<DateInput
+						label="Fecha de nacimiento"
+						value={formData.birthday}
+						onChange={(value) => handleInputChange("birthday", value)}
+						error={formErrors.birthday}
+						onClearError={() => clearError("birthday")}
+						placeholder={user.birthday}
+					/>
+
+					<div className="settings__actions">
+						<button type="submit" className="settings__button">
+							Guardar cambios
+						</button>
+					</div>
+				</form>
+			</div>
+
+			{/* Modal de confirmación 2FA */}
 			<Modal
 				open={show2FA}
 				onClose={() => setShow2FA(false)}
-				title="Confirmar cambios"
-				onSubmit={() => executeUpdate(otpCode.join(""))}
-				submitDisabled={!isComplete}
+				title="Confirmar con 2FA"
 			>
-				<p className="modal__content">
-					Para completar los cambios, introduce el código de verificación.
-				</p>
+				<div className="modal-2fa">
+					<div className="modal-2fa__icon">
+						<FiShield />
+					</div>
+					<p className="modal-2fa__text">
+						Para guardar tus datos introduce el código de 6 dígitos de tu app de autenticación.
+					</p>
 
-				<OtpInput onChange={setOtpCode} />
+					<OtpInput onChange={setOtpCode} />
 
-				<Footer2FA
-					onClose={() => setShow2FA(false)}
-					onVerify={() => executeUpdate(otpCode.join(""))}
-					disabled={!isComplete}
-				/>
-			</Modal >
+					<Footer2FA
+						onClose={() => setShow2FA(false)}
+						onVerify={() => executeUpdate(otpCode.join(""))}
+						disabled={!isComplete}
+					/>
+				</div>
+			</Modal>
 
+			{/* Modal de estado (éxito/error) */}
 			<Modal
 				open={openModal}
 				onClose={() => setOpenModal(false)}
-				title={requestStatus?.type === "success" ? "Cambios guardados" : "Error"}
+				title={requestStatus?.type === "success" ? "Operación exitosa" : "Atención"}
 			>
-				<p>{requestStatus?.message}</p>
+				<div className="modal-status">
+					<div className={`modal-status__icon modal-status__icon--${requestStatus?.type}`}>
+						{requestStatus?.type === "success" ? <FiCheckCircle /> : <FiAlertCircle />}
+					</div>
+					<p className="modal-status__message">{requestStatus?.message}</p>
+					<button
+						type="button"
+						className="settings__button settings__button--modal"
+						onClick={() => setOpenModal(false)}
+					>
+						Entendido
+					</button>
+				</div>
 			</Modal>
-		</div >
+		</div>
 	);
 }

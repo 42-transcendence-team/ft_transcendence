@@ -22,10 +22,13 @@
 	&__left {
 		justify-content: flex-start;
 		min-width: 170px;
+		flex-shrink: 0;
 	}
 
 	&__center {
 		justify-content: center;
+		flex: 1;
+		min-width: 0;
 	}
 
 	&__right {
@@ -63,6 +66,28 @@
 
 		&__brand .app-brand__name {
 			display: none;
+		}
+
+		&__games-link {
+			font-size: 0.85rem;
+			padding: 0.35rem 0.6rem;
+		}
+	}
+}
+
+@media screen and (max-width: 480px) {
+	.privHeader {
+		gap: 0.5rem;
+		padding: 0 0.5rem;
+
+		&__right {
+			min-width: auto;
+		}
+
+		&__games-link {
+			font-size: 0.75rem;
+			padding: 0.3rem 0.5rem;
+			white-space: nowrap;
 		}
 	}
 }

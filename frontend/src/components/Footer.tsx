@@ -11,7 +11,7 @@ export const Footer = ({
 	onBrandActivate,
 }: FooterProps) => {
 	return (
-		<div className="footer">
+		<div className="footer desktop-footer">
 			<nav
 				className="footer__nav"
 				aria-label="Navegación del pie de página"

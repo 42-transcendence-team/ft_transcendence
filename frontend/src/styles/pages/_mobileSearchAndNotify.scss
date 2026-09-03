@@ -1,0 +1,42 @@
+@use "../abstracts/variables" as *;
+
+.mobileSearchAndNotify {
+	width: 100%;
+
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+
+	box-sizing: border-box;
+
+	&__section {
+		width: 100%;
+		box-sizing: border-box;
+
+		&--notifications {
+			background-color: $light-gray-common-components;
+			border-radius: 16px;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+		}
+
+		&--results {
+			padding: 20px;
+
+			background-color: $light-gray-common-components;
+			border-radius: 16px;
+
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+		}
+	}
+
+	&__loading,
+	&__error {
+		margin: 0;
+		text-align: center;
+		color: $secondary-text-light;
+	}
+
+	&__error {
+		color: $red-background-light;
+	}
+}

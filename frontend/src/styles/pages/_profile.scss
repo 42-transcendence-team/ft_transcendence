@@ -12,6 +12,7 @@ body {
 	justify-content: center;
 	width: 100%;
 	min-height: 100vh;
+	min-height: 100dvh;
 	padding: 5px;
 	background-color: $background-page;
 
@@ -19,7 +20,7 @@ body {
 		display: flex;
 		flex-direction: column;
 		width: 100%;
-		min-width: 320px;
+		min-width: 0;
 		max-width: 1000px;
 		overflow: hidden;
 		border-radius: 10px;

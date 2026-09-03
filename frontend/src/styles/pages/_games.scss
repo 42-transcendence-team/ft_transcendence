@@ -1,0 +1,63 @@
+@use '../abstracts/variables' as *;
+
+.game-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+
+    .game-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        padding: 1.5rem;
+        background: #fff;
+        border: 1px solid $border-color;
+        border-radius: 16px;
+        box-shadow: $shadow-sm;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        &:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.15rem;
+            color: $text-main;
+        }
+
+        p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: $text-muted;
+        }
+
+        button {
+            margin-top: auto;
+            align-self: flex-start;
+            padding: 0.5rem 1.1rem;
+            border: none;
+            border-radius: 8px;
+            background: $primary-color;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+
+            &:hover {
+                background: $primary-hover;
+            }
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .game-list {
+        grid-template-columns: 1fr;
+    }
+}

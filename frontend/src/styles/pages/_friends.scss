@@ -1,13 +1,47 @@
+@use '../abstracts/variables' as *;
+
+.friends-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0 1.5rem;
+
+    button {
+        padding: 0.5rem 1.1rem;
+        border: 1px solid $border-color;
+        border-radius: 8px;
+        background: #fff;
+        color: $text-main;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+
+        &:hover {
+            border-color: $primary-color;
+        }
+
+        &.active {
+            background: $primary-color;
+            border-color: $primary-color;
+            color: #fff;
+        }
+    }
+}
 
 .request-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 0.75rem;
     width: 100%;
     min-height: 80px;
     padding: 1rem;
+    margin-bottom: 0.75rem;
     border-radius: 12px;
-    background-color: green;
+    background-color: #fff;
+    border: 1px solid $border-color;
+    box-shadow: $shadow-sm;
     box-sizing: border-box;
 }
 
@@ -15,6 +49,16 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    min-width: 0;
+
+    p {
+        margin: 0;
+        font-weight: 500;
+        color: $text-main;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
 
 .small-logo {
@@ -26,6 +70,7 @@
 	justify-content: center;
 	align-items: center;
 	overflow: hidden;
+	flex-shrink: 0;
 
 	img {
 		width: 60%;
@@ -35,13 +80,61 @@
 
 .request-actions {
     display: flex;
+    align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
-
-button {
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
+.accept-button {
+    padding: 0.45rem 1rem;
     border: none;
+    border-radius: 8px;
+    background: $green-background-light;
+    color: $green-main-text-light;
+    font-weight: 600;
     cursor: pointer;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+.reject-button {
+    padding: 0.45rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: $red-background-light;
+    color: $red-main-text-light;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+.pending-text {
+    margin: 0;
+    font-size: 0.85rem;
+    color: $secondary-text-light;
+}
+
+.friends {
+    margin: 0;
+    font-size: 0.85rem;
+    color: $green-border-light;
+}
+
+@media (max-width: 480px) {
+    .request-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .request-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
 }

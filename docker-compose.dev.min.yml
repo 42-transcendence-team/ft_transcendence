@@ -176,7 +176,6 @@ services:
     networks:
       - back-front
 
-
 volumes:
   postgres_data:
   redis_data:

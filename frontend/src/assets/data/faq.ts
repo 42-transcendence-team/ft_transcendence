@@ -17,7 +17,7 @@ export const faqGroups: FAQGroup[] = [
 			{
 				question: "¿Cómo creo una cuenta?",
 				answer:
-					"Completa el formulario de registro con un nombre de usuario válido, una dirección de correo electrónico, una contraseña segura y los datos personales solicitados.",
+"Completa el formulario de registro con un nombre de usuario válido, una dirección de correo electrónico, una contraseña segura y los datos personales solicitados.",
 			},
 			{
 				question: "¿Por qué debo tener al menos 18 años?",
@@ -32,7 +32,7 @@ export const faqGroups: FAQGroup[] = [
 			{
 				question: "¿Cómo elimino mi cuenta?",
 				answer:
-					"Abre la zona de peligro en los ajustes de la cuenta. Se te pedirá la contraseña y, si está activada, un código de autenticación en dos pasos.",
+"Abre la zona de peligro en los ajustes de la cuenta. Se te pedirá la contraseña y, si está activada, un código de autenticación en dos pasos.",
 			},
 		],
 	},

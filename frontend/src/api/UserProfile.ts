@@ -23,9 +23,14 @@ type UserProfileApiResponse = {
 
 export async function getUserProfile(
 	username: string,
+	options?: { noIncrement?: boolean }
 ): Promise<UserProfile> {
+	let targetEndpoint = `users/profile/${encodeURIComponent(username)}`;
+    if (options?.noIncrement) {
+        targetEndpoint += "?no_increment=true";
+    }
 	const response = await apiRequest<UserProfileApiResponse>({
-		endpoint: `users/profile/${encodeURIComponent(username)}`,
+		endpoint: targetEndpoint,
 		method: "GET",
 	});
 

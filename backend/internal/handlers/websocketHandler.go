@@ -41,9 +41,16 @@ func (h *WebsocketHandler) HandleWebSocket(ctx *gin.Context) {
 		return
 	}
 
-	user, err := h.websocketService.GetUser(userIDValue.(uint))
+	userID, ok := userIDValue.(uint)
+	if !ok {
+		ctx.Error(appErr.NewUnauthorized("Invalid user ID"))
+		ctx.Abort()
+		return
+	}
+
+	user, err := h.websocketService.GetUser(userID)
 	if err != nil {
-		ctx.Error(appErr.NewInternal(errors.New("invalid userID type in context")))
+		ctx.Error(appErr.NewInternal(errors.New("user not found")))
 		ctx.Abort()
 		return
 	}
@@ -203,25 +210,42 @@ func (h *WebsocketHandler) HandleMessage(c ws.ClientConn, msg *dto.IncomingMessa
 }
 
 func (h *WebsocketHandler) JoinRoom(c ws.ClientConn, msg *dto.IncomingMessage) {
+	dbRoom, err := h.websocketService.GetRoomByID(msg.RoomID)
+	if err != nil {
+		log.Printf("Error fetching room from database: %v", err)
+		return
+	}
+
+	if dbRoom.ID == 0 {
+		log.Printf(
+			"Room with ID %d doesn't exist in database",
+			msg.RoomID,
+		)
+		return
+	}
+
+	// Seguridad: solo los miembros de la sala pueden unirse a ella.
+	isMember := false
+	for _, member := range dbRoom.Members {
+		if member.ID == c.GetUserID() {
+			isMember = true
+			break
+		}
+	}
+	if !isMember {
+		log.Printf(
+			"User %d is not a member of room %d",
+			c.GetUserID(),
+			msg.RoomID,
+		)
+		return
+	}
+
 	h.hub.Mu.RLock()
 	room, ok := h.hub.Rooms[msg.RoomID]
 	h.hub.Mu.RUnlock()
 
 	if !ok {
-		dbRoom, err := h.websocketService.GetRoomByID(msg.RoomID)
-		if err != nil {
-			log.Printf("Error fetching room from database: %v", err)
-			return
-		}
-
-		if dbRoom.ID == 0 {
-			log.Printf(
-				"Room with ID %d doesn't exist in database",
-				msg.RoomID,
-			)
-			return
-		}
-
 		room = h.hub.CreateRoom(dbRoom.ID, dbRoom.Name, dbRoom.Private)
 	}
 
@@ -270,6 +294,19 @@ func (h *WebsocketHandler) LeaveRoom(c ws.ClientConn, msg *dto.IncomingMessage) 
 }
 
 func (h *WebsocketHandler) SendMessage(c ws.ClientConn, msg *dto.IncomingMessage) {
+	// Seguridad: solo los miembros de la sala pueden enviar mensajes.
+	member, err := h.websocketService.IsUserInRoom(msg.RoomID, c.GetUserID())
+	if err != nil || !member {
+		errMsg, _ := json.Marshal(map[string]any{
+			"type":    "message_rejected",
+			"room_id": msg.RoomID,
+			"content": msg.Message,
+			"reason":  "no eres miembro de esta sala",
+		})
+		c.Send(errMsg)
+		return
+	}
+
 	// Antes de guardar: comprobar que el remitente sigue siendo amigo de los
 	// demas miembros de la sala y que no hay bloqueo entre ellos.
 	if ok, motivo := h.websocketService.CanSendToRoom(msg.RoomID, c.GetUserID()); !ok {
