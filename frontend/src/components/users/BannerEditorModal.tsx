@@ -30,9 +30,9 @@ function validateBannerImage(
 		allowedTypes: ALLOWED_BANNER_IMAGE_TYPES,
 		maxSize: MAX_BANNER_IMAGE_SIZE,
 		invalidTypeMessage:
-			"The image must be a JPEG, PNG or WebP file.",
+			"La imagen debe ser un archivo JPEG, PNG o WebP.",
 		maxSizeMessage:
-			"The image cannot be larger than 5 MB.",
+			"La imagen no puede superar los 5 MB.",
 	});
 }
 
@@ -71,11 +71,11 @@ function getBannerErrorMessage(
 ): string {
 	switch (getBannerErrorCode(error)) {
 	case "required":
-		return "Please select an image.";
+		return "Selecciona una imagen.";
 	case "invalid_type":
-		return "The image must be a JPEG, PNG or WebP file.";
+		return "La imagen debe ser un archivo JPEG, PNG o WebP.";
 	case "max_size":
-		return "The image cannot be larger than 5 MB.";
+		return "La imagen no puede superar los 5 MB.";
 	default:
 		return fallbackMessage;
 	}
@@ -138,7 +138,7 @@ export function BannerEditorModal({
 		if (!file || isBusy) {
 			if (!file) {
 				setValidationError(
-					"Please select an image.",
+					"Selecciona una imagen.",
 				);
 			}
 
@@ -157,7 +157,7 @@ export function BannerEditorModal({
 			setRequestError(
 				getBannerErrorMessage(
 					error,
-					"The profile banner could not be updated.",
+					"No se ha podido actualizar la imagen de cabecera.",
 				),
 			);
 		} finally {
@@ -182,7 +182,7 @@ export function BannerEditorModal({
 			setRequestError(
 				getBannerErrorMessage(
 					error,
-					"The profile banner could not be removed.",
+					"No se ha podido eliminar la imagen de cabecera.",
 				),
 			);
 		} finally {
@@ -202,7 +202,7 @@ export function BannerEditorModal({
 			onSubmit={handleSave}
 			submitDisabled={!file || isBusy}
 			closeOnEscape={!isBusy}
-			title="Edit profile banner"
+			title="Editar imagen de cabecera"
 			modalClassName="banner-editor-modal"
 			contentClassName="banner-editor-modal__content"
 		>
@@ -215,7 +215,7 @@ export function BannerEditorModal({
 							src={getBannerSource(
 								currentBannerPath,
 							)}
-							alt="Current profile banner"
+							alt="Imagen de cabecera actual"
 							onError={() =>
 								setCurrentPreviewFailed(true)
 							}
@@ -224,7 +224,7 @@ export function BannerEditorModal({
 						<div className="banner-editor-modal__placeholder">
 							<i className="fas fa-image" />
 							<span>
-								No custom banner selected
+								No hay ninguna imagen de cabecera seleccionada
 							</span>
 						</div>
 					)}
@@ -233,11 +233,11 @@ export function BannerEditorModal({
 
 			<ImageUploadField
 				id="profile-banner"
-				label="Choose an image"
+				label="Selecciona una imagen"
 				file={file}
 				accept="image/jpeg,image/png,image/webp"
 				disabled={isBusy}
-				previewAlt="New profile banner preview"
+				previewAlt="Vista previa de la nueva imagen de cabecera"
 				variant="banner"
 				validate={validateBannerImage}
 				onChange={handleFileChange}
@@ -263,7 +263,7 @@ export function BannerEditorModal({
 					disabled={isBusy}
 					onClick={handleClose}
 				>
-					Cancel
+					Cancelar
 				</button>
 
 				{currentBannerPath && (
@@ -274,8 +274,8 @@ export function BannerEditorModal({
 						onClick={handleDelete}
 					>
 						{operation === "delete"
-							? "Removing..."
-							: "Remove banner"}
+							? "Eliminando..."
+							: "Eliminar imagen de cabecera"}
 					</button>
 				)}
 
@@ -286,8 +286,8 @@ export function BannerEditorModal({
 					onClick={handleSave}
 				>
 					{operation === "save"
-						? "Saving..."
-						: "Save banner"}
+						? "Guardando..."
+						: "Guardar imagen de cabecera"}
 				</button>
 			</div>
 		</Modal>

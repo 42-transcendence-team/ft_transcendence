@@ -28,9 +28,9 @@ function validateAvatarImage(file: File): string | null {
 		allowedTypes: ALLOWED_AVATAR_IMAGE_TYPES,
 		maxSize: MAX_AVATAR_IMAGE_SIZE,
 		invalidTypeMessage:
-			"The image must be a JPEG, PNG or WebP file.",
+			"La imagen debe ser un archivo JPEG, PNG o WebP.",
 		maxSizeMessage:
-			"The image cannot be larger than 5 MB.",
+			"La imagen no puede superar los 5 MB.",
 	});
 }
 
@@ -71,11 +71,11 @@ function getAvatarErrorMessage(
 ): string {
 	switch (getAvatarErrorCode(error)) {
 	case "required":
-		return "Please select an image.";
+		return "Selecciona una imagen.";
 	case "invalid_type":
-		return "The image must be a JPEG, PNG or WebP file.";
+		return "La imagen debe ser un archivo JPEG, PNG o WebP.";
 	case "max_size":
-		return "The image cannot be larger than 5 MB.";
+		return "La imagen no puede superar los 5 MB.";
 	default:
 		return fallbackMessage;
 	}
@@ -136,7 +136,7 @@ export function AvatarEditorModal({
 	const handleSave = async () => {
 		if (!file || isBusy) {
 			if (!file) {
-				setValidationError("Please select an image.");
+				setValidationError("Selecciona una imagen.");
 			}
 
 			return;
@@ -158,7 +158,7 @@ export function AvatarEditorModal({
 			setRequestError(
 				getAvatarErrorMessage(
 					error,
-					"The profile image could not be updated.",
+					"No se ha podido actualizar la imagen de perfil.",
 				),
 			);
 		} finally {
@@ -187,7 +187,7 @@ export function AvatarEditorModal({
 			setRequestError(
 				getAvatarErrorMessage(
 					error,
-					"The profile image could not be removed.",
+					"No se ha podido eliminar la imagen de perfil.",
 				),
 			);
 		} finally {
@@ -202,7 +202,7 @@ export function AvatarEditorModal({
 			onSubmit={handleSave}
 			submitDisabled={!file || isBusy}
 			closeOnEscape={!isBusy}
-			title="Edit profile image"
+			title="Editar imagen de perfil"
 			modalClassName="avatar-editor-modal"
 			contentClassName="avatar-editor-modal__content"
 		>
@@ -219,18 +219,18 @@ export function AvatarEditorModal({
 							.filter(Boolean)
 							.join(" ")}
 						src={getAvatarSource(currentAvatarPath)}
-						alt="Current profile"
+						alt="Imagen de perfil actual"
 					/>
 				</div>
 			)}
 
 			<ImageUploadField
 				id="profile-avatar"
-				label="Choose an image"
+				label="Selecciona una imagen"
 				file={file}
 				accept="image/jpeg,image/png,image/webp"
 				disabled={isBusy}
-				previewAlt="New profile preview"
+				previewAlt="Vista previa de la nueva imagen de perfil"
 				variant="avatar"
 				validate={validateAvatarImage}
 				onChange={handleFileChange}
@@ -256,7 +256,7 @@ export function AvatarEditorModal({
 					disabled={isBusy}
 					onClick={handleClose}
 				>
-					Cancel
+					Cancelar
 				</button>
 
 				{currentAvatarPath && (
@@ -267,8 +267,8 @@ export function AvatarEditorModal({
 						onClick={handleDelete}
 					>
 						{operation === "delete"
-							? "Removing..."
-							: "Remove image"}
+							? "Eliminando..."
+							: "Eliminar imagen"}
 					</button>
 				)}
 
@@ -279,8 +279,8 @@ export function AvatarEditorModal({
 					onClick={handleSave}
 				>
 					{operation === "save"
-						? "Saving..."
-						: "Save image"}
+						? "Guardando..."
+						: "Guardar imagen"}
 				</button>
 			</div>
 		</Modal>

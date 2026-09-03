@@ -74,68 +74,68 @@ export function getPostLoadErrorMessage(error: unknown): string {
 	const status = getApiErrorStatus(error);
 
 	if (status === 400 || hasApiErrorValue(error, "invalid_post_id")) {
-		return "Invalid post ID.";
+		return "El identificador de la publicación no es válido.";
 	}
 
 	if (status === 404 || hasApiErrorValue(error, "post_not_found")) {
-		return "This post does not exist or has been deleted.";
+		return "Esta publicación no existe o ha sido eliminada.";
 	}
 
-	return "Something went wrong while loading the post.";
+	return "Se ha producido un error al cargar la publicación.";
 }
 
 export function getPostCreateErrorMessage(error: unknown): string {
 	if (hasApiErrorValue(error, "content_or_image_required")) {
-		return "You cannot publish an empty post.";
+		return "No puedes publicar una publicación vacía.";
 	}
 
 	if (hasApiErrorValue(error, "invalid_image_upload")) {
-		return "The image could not be uploaded.";
+		return "No se ha podido subir la imagen.";
 	}
 
 	if (hasApiErrorValue(error, "invalid_type")) {
-		return "The image must be a PNG, JPG, JPEG or WebP file.";
+		return "La imagen debe ser un archivo PNG, JPG, JPEG o WebP.";
 	}
 
 	if (hasApiErrorValue(error, "max_size")) {
-		return "The image cannot be larger than 5 MB.";
+		return "La imagen no puede superar los 5 MB.";
 	}
 
 	if (hasApiErrorValue(error, "max")) {
-		return "The post cannot exceed 5000 characters.";
+		return "La publicación no puede superar los 5000 caracteres.";
 	}
 
-	return "Something went wrong while creating the post.";
+	return "Se ha producido un error al crear la publicación.";
 }
 
 export function getPostDeleteErrorMessage(error: unknown): string {
 	const status = getApiErrorStatus(error);
 
 	if (status === 403 || hasApiErrorValue(error, "cannot_delete_other_user_post")) {
-		return "You do not have permission to delete this post.";
+		return "No tienes permiso para eliminar esta publicación.";
 	}
 
 	if (status === 404 || hasApiErrorValue(error, "post_not_found")) {
-		return "This post no longer exists.";
+		return "Esta publicación ya no existe.";
 	}
 
-	return "Something went wrong while deleting the post.";
+	return "Se ha producido un error al eliminar la publicación.";
 }
 
 export function getCommentCreateErrorMessage(error: unknown): string {
 	if (hasApiErrorValue(error, "required")) {
-		return "The comment cannot be empty.";
+		return "El comentario no puede estar vacío.";
 	}
 
 	if (hasApiErrorValue(error, "max")) {
-		return "The comment cannot exceed 1000 characters.";
+		return "El comentario no puede superar los 1000 caracteres.";
 	}
 
 	if (hasApiErrorValue(error, "post_not_found")) {
-		return "This post does not exist or has been deleted.";
+		return "Esta publicación no existe o ha sido eliminada.";
 	}
 
-	return "Something went wrong while creating the comment.";
+	return "Se ha producido un error al crear el comentario.";
 }
 
 export function getCommentDeleteErrorMessage(error: unknown): string {
@@ -145,30 +145,30 @@ export function getCommentDeleteErrorMessage(error: unknown): string {
 		status === 403 ||
 		hasApiErrorValue(error, "cannot_delete_other_user_comment")
 	) {
-		return "You do not have permission to delete this comment.";
+		return "No tienes permiso para eliminar este comentario.";
 	}
 
 	if (status === 404 || hasApiErrorValue(error, "comment_not_found")) {
-		return "This comment no longer exists.";
+		return "Este comentario ya no existe.";
 	}
 
-	return "Something went wrong while deleting the comment.";
+	return "Se ha producido un error al eliminar el comentario.";
 }
 
 export function getGenericApiErrorMessage(error: unknown): string {
 	const status = getApiErrorStatus(error);
 
 	if (status === 401) {
-		return "You must be logged in to perform this action.";
+		return "Debes iniciar sesión para realizar esta acción.";
 	}
 
 	if (status === 403) {
-		return "You do not have permission to perform this action.";
+		return "No tienes permiso para realizar esta acción.";
 	}
 
 	if (status === 404) {
-		return "The requested resource does not exist or has been deleted.";
+		return "El recurso solicitado no existe o ha sido eliminado.";
 	}
 
-	return "Something went wrong. Please try again.";
+	return "Se ha producido un error. Inténtalo de nuevo.";
 }
