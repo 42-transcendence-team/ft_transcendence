@@ -97,7 +97,7 @@ export const MiniProfile = () => {
         className="miniProfile__publishBtn"
         to="/app/posts/new"
       >
-        New Post
+        Nuevo post
       </Link>
       
     </div>

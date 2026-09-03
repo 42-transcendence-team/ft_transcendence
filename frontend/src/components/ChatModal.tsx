@@ -96,6 +96,7 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
                     name="input"
                     placeholder="Escribe un mensaje..."
                     className="chatModal__form--input"
+					maxlength="512"
                 />
                 <button type="submit" className="chatModal__form--btn">Enviar</button>
             </form>
