@@ -24,7 +24,17 @@ func (srv *HTTPServer) Router() {
 	srv.Engine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	srv.Engine.MaxMultipartMemory = 8 << 20 // 8 MB
-	srv.Engine.Static("/uploads", "./uploads")
+
+	/*
+	 * Los uploads se sirven por subcarpeta:
+	 * - avatares y banners siguen siendo estáticos.
+	 * - las imágenes/PDFs de posts pasan por un handler
+	 *   que comprueba auth + amistad (ver postHandler.ServePostImage).
+	 * No es posible usar srv.Engine.Static("/uploads", ...) junto
+	 * con la ruta /uploads/posts/*filepath (conflicto de catch-all).
+	 */
+	srv.Engine.Static("/uploads/avatars", "./uploads/avatars")
+	srv.Engine.Static("/uploads/banners", "./uploads/banners")
 
 	userRepo := repository.NewUserRepository(srv.Db)
 	chatRepo := repository.NewChatRepository(srv.Db)
@@ -46,8 +56,8 @@ func (srv *HTTPServer) Router() {
 	advancedSearchService := services.NewAdvancedSearch(userRepo, friendRepo)
 	blockService := services.NewBlockUserService(friendRepo, userRepo)
 	postService := services.NewPostService(postRepo, postLikeRepo, friendRepo)
-	commentService := services.NewCommentService(commentRepo, postRepo)
-	postLikeService := services.NewPostLikeService(postRepo, postLikeRepo)
+	commentService := services.NewCommentService(commentRepo, postRepo, friendRepo)
+	postLikeService := services.NewPostLikeService(postRepo, postLikeRepo, friendRepo)
 	gameManager := services.NewGameManager()
 	notificationService := services.NewNotificationService(notifRepo, hub)
 
@@ -63,6 +73,16 @@ func (srv *HTTPServer) Router() {
 	getMeHandler := handlers.NewGetMeHandler(authService, srv.Conf)
 	notificationsHandler := handlers.NewNotificationsHandler(friendService, websocketService, chatService, notificationService)
 	websocketHandler := handlers.NewWebsocketHandler(hub, websocketService, gameHandler)
+
+	// La protección de imágenes de posts también pasa por auth.
+	postUploads := srv.Engine.Group("/uploads/posts")
+	postUploads.Use(middlewares.AuthMiddleware(srv.Conf, srv.Redis))
+	{
+		postUploads.GET(
+			"/*filepath",
+			postHandler.ServePostImage,
+		)
+	}
 
 	api := srv.Engine.Group("/api/v1")
 

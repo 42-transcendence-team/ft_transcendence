@@ -90,6 +90,13 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 }
 
 func (h *CommentHandler) ListCommentsByPostID(c *gin.Context) {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
 	postID, err := parseUintParam(c.Param("id"), "invalid_post_id")
 	if err != nil {
 		c.Error(err)
@@ -97,7 +104,7 @@ func (h *CommentHandler) ListCommentsByPostID(c *gin.Context) {
 		return
 	}
 
-	comments, err := h.CommentService.ListCommentsByPostID(postID)
+	comments, err := h.CommentService.ListCommentsByPostID(postID, userID)
 	if err != nil {
 		c.Error(err)
 		c.Abort()

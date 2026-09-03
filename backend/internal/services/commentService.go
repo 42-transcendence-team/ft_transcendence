@@ -16,12 +16,14 @@ const maxCommentContentLength = 1000
 type CommentService struct {
 	commentRepo *repository.CommentRepository
 	postRepo    *repository.PostRepository
+	friendRepo  *repository.FriendRepository
 }
 
-func NewCommentService(commentRepo *repository.CommentRepository, postRepo *repository.PostRepository) *CommentService {
+func NewCommentService(commentRepo *repository.CommentRepository, postRepo *repository.PostRepository, friendRepo *repository.FriendRepository) *CommentService {
 	return &CommentService{
 		commentRepo: commentRepo,
 		postRepo:    postRepo,
+		friendRepo:  friendRepo,
 	}
 }
 
@@ -48,6 +50,14 @@ func (s *CommentService) CreateComment(input dto.CreateCommentInput) (*dto.Comme
 		return nil, 0, appErr.NewInternal(err)
 	}
 
+	if err := requirePostAccess(
+		s.friendRepo,
+		post,
+		input.UserID,
+	); err != nil {
+		return nil, 0, err
+	}
+
 	comment := models.Comment{
 		PostID:  input.PostID,
 		UserID:  input.UserID,
@@ -63,13 +73,21 @@ func (s *CommentService) CreateComment(input dto.CreateCommentInput) (*dto.Comme
 	return &response, post.UserID, nil
 }
 
-func (s *CommentService) ListCommentsByPostID(postID uint) ([]dto.CommentResponse, error) {
-	_, err := s.postRepo.FindByID(postID)
+func (s *CommentService) ListCommentsByPostID(postID uint, currentUserID uint) ([]dto.CommentResponse, error) {
+	post, err := s.postRepo.FindByID(postID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, appErr.NewNotFound("post_not_found")
 		}
 		return nil, appErr.NewInternal(err)
+	}
+
+	if err := requirePostAccess(
+		s.friendRepo,
+		post,
+		currentUserID,
+	); err != nil {
+		return nil, err
 	}
 
 	comments, err := s.commentRepo.ListByPostID(postID)

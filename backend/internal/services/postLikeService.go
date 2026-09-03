@@ -13,15 +13,18 @@ import (
 type PostLikeService struct {
 	postRepo     *repository.PostRepository
 	postLikeRepo *repository.PostLikeRepository
+	friendRepo   *repository.FriendRepository
 }
 
 func NewPostLikeService(
 	postRepo *repository.PostRepository,
 	postLikeRepo *repository.PostLikeRepository,
+	friendRepo *repository.FriendRepository,
 ) *PostLikeService {
 	return &PostLikeService{
 		postRepo:     postRepo,
 		postLikeRepo: postLikeRepo,
+		friendRepo:   friendRepo,
 	}
 }
 
@@ -30,7 +33,7 @@ func (s *PostLikeService) LikePost(
 	userID uint,
 	postID uint,
 ) (*dto.PostLikeStateResponse, uint, error) {
-	postOwnerID, err := s.ensurePostExists(postID)
+	postOwnerID, err := s.ensurePostExists(postID, userID)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -53,7 +56,7 @@ func (s *PostLikeService) UnlikePost(
 	userID uint,
 	postID uint,
 ) (*dto.PostLikeStateResponse, error) {
-	if _, err := s.ensurePostExists(postID); err != nil {
+	if _, err := s.ensurePostExists(postID, userID); err != nil {
 		return nil, err
 	}
 
@@ -73,7 +76,7 @@ func (s *PostLikeService) DislikePost(
 	userID uint,
 	postID uint,
 ) (*dto.PostLikeStateResponse, error) {
-	if _, err := s.ensurePostExists(postID); err != nil {
+	if _, err := s.ensurePostExists(postID, userID); err != nil {
 		return nil, err
 	}
 
@@ -94,7 +97,7 @@ func (s *PostLikeService) UndislikePost(
 	userID uint,
 	postID uint,
 ) (*dto.PostLikeStateResponse, error) {
-	if _, err := s.ensurePostExists(postID); err != nil {
+	if _, err := s.ensurePostExists(postID, userID); err != nil {
 		return nil, err
 	}
 
@@ -109,9 +112,17 @@ func (s *PostLikeService) UndislikePost(
 	return s.buildReactionState(postID, userID)
 }
 
-func (s *PostLikeService) ensurePostExists(postID uint) (uint, error) {
+func (s *PostLikeService) ensurePostExists(postID uint, userID uint) (uint, error) {
 	post, err := s.postRepo.FindByID(postID)
 	if err == nil {
+		if err := requirePostAccess(
+			s.friendRepo,
+			post,
+			userID,
+		); err != nil {
+			return 0, err
+		}
+
 		return post.UserID, nil
 	}
 
