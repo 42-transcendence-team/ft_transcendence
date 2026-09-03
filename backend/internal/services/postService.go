@@ -22,15 +22,18 @@ const maxPostContentLength = 5000
 type PostService struct {
 	postRepo     *repository.PostRepository
 	postLikeRepo *repository.PostLikeRepository
+	friendRepo   *repository.FriendRepository
 }
 
 func NewPostService(
 	postRepo *repository.PostRepository,
 	postLikeRepo *repository.PostLikeRepository,
+	friendRepo *repository.FriendRepository,
 ) *PostService {
 	return &PostService{
 		postRepo:     postRepo,
 		postLikeRepo: postLikeRepo,
+		friendRepo:   friendRepo,
 	}
 }
 
@@ -119,6 +122,24 @@ func (s *PostService) GetPostByID(
 		}
 
 		return nil, appErr.NewInternal(err)
+	}
+
+	if post.UserID != currentUserID {
+		areFriends, err :=
+			s.friendRepo.AreFriends(
+				post.UserID,
+				currentUserID,
+			)
+
+		if err != nil {
+			return nil, appErr.NewInternal(err)
+		}
+
+		if !areFriends {
+			return nil, appErr.NewForbidden(
+				"not_friends",
+			)
+		}
 	}
 
 	likeCount, err :=

@@ -45,7 +45,7 @@ func (srv *HTTPServer) Router() {
 	friendService := services.NewFriendRequestService(friendRepo, userRepo)
 	advancedSearchService := services.NewAdvancedSearch(userRepo, friendRepo)
 	blockService := services.NewBlockUserService(friendRepo, userRepo)
-	postService := services.NewPostService(postRepo, postLikeRepo)
+	postService := services.NewPostService(postRepo, postLikeRepo, friendRepo)
 	commentService := services.NewCommentService(commentRepo, postRepo)
 	postLikeService := services.NewPostLikeService(postRepo, postLikeRepo)
 	gameManager := services.NewGameManager()
