@@ -103,11 +103,8 @@ export const HomePage = () => {
   return (
     <section className="home-page">
       <header className="home-page__header">
-        <h2></h2> {/* no borra es para el diseño */}
-        <Link className="home-page__new-post-button" to="/app/posts/new">
-          Nuevo post
-        </Link>
-      </header>
+        <h2></h2>{/* no borra es para el diseño */}
+        </header>
 
       <div className="home-page__feed">
         {isLoading && <p className="home-page__state">Cargando publicaciones.</p>}
