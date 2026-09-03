@@ -83,9 +83,7 @@ export function PrivateLayout() {
             <main className="privateLayout__content">
               <div className="privateLayout__contentFrame">
                 <div className="privateLayout__contentInner">
-                  <PrivateMainContent>
                     <Outlet context={{ user: data.user }} />
-                  </PrivateMainContent>
                 </div>
 
                 {search.hasSearched && (
