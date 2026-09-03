@@ -27,7 +27,7 @@ type GooseState struct {
 type GooseAction struct {
 	Type    string `json:"type"`
 	Token   int    `json:"token,omitempty"`
-	From    uint   `json:"from,omitempty"`
+	From    uint   `json:"from"`
 	To      uint   `json:"to,omitempty"`
 	Dice1   uint   `json:"dice1,omitempty"`
 	Dice2   uint   `json:"dice2,omitempty"`

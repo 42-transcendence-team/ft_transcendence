@@ -1,129 +1,188 @@
-# Compose de desarrollo LIGERO: solo backend, frontend, nginx, postgres y redis.
-# El resto del stack (Elastic, Prometheus/Grafana, Portainer, pgAdmin,
-# RedisInsight, Docusaurus...) está en docker-compose.dev.yml y consume
-# demasiada RAM para una máquina de 16GB.
-#
-# Uso: make dev-min  (o docker compose -f docker-compose.dev.min.yml up --build)
 services:
-    backend:
-        env_file: .env
-        build:
-            context: ./backend
-            dockerfile: Dockerfile.dev
-        expose:
-            - "8080"
-        ports:
-            - "8080:8080"
-        restart: unless-stopped
-        depends_on:
-            postgres:
-                condition: service_healthy
-            redis:
-                condition: service_healthy
-        healthcheck:
-            test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-            start_period: 30s
-        volumes:
-          - ./backend:/app
-          - ./elastic/filebeat/ingest_data:/var/log/api
-          - uploads_data:/app/uploads
-        environment:
-          - GIN_MODE=debug
-        networks:
-            - redis
-            - back-front
-            - db-back
 
-    frontend:
-        env_file: .env
-        build:
-            context: ./frontend
-        expose:
-            - "3000"
-        volumes:
-            - /app/node_modules
-            - ./frontend:/app
-        restart: unless-stopped
-        depends_on:
-            - backend
-        healthcheck:
-            test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-            start_period: 20s
-        networks:
-            - back-front
-        environment:
-            - PUBLIC_API_URL=${PUBLIC_API_URL}
+  backend:
+    env_file: .env
 
-    postgres:
-        env_file: .env
-        image: postgres:16
-        environment:
-            POSTGRES_USER: "${DB_USER}"
-            POSTGRES_PASSWORD: "${DB_PASSWORD}"
-            POSTGRES_DB: "${DB_NAME}"
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-        expose:
-            - "5432"
-        restart: unless-stopped
-        volumes:
-            - postgres_data:/var/lib/postgresql
-        networks:
-            - db-back
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
 
-    redis:
-        env_file: .env
-        image: redis:latest
-        command: redis-server --requirepass ${REDIS_PASSWORD}
-        ports:
-            - "7777:6379"
-        restart: always
-        volumes:
-            - redis_data:/data
-        networks:
-            - redis
-        healthcheck:
-            test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-            interval: 5s
-            timeout: 3s
-            retries: 5
+    expose:
+      - "8080"
 
-    nginx:
-        build:
-          context: ./nginx
-        ports:
-          - "80:80"
-          - "8081:80"
-          - "8443:8443"
-          - "1312:80"
-          - "6969:443"
-        volumes:
-          # Config mínima: sin server blocks de grafana/kibana/pgadmin/etc.,
-          # que no existen en este compose y harían fallar a nginx al arrancar.
-          - ./nginx/default.min.conf:/etc/nginx/conf.d/default.conf:ro
-        depends_on:
-          backend:
-            condition: service_healthy
-          frontend:
-            condition: service_healthy
-        networks:
-          - back-front
+    ports:
+      - "8080:8080"
+
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    volumes:
+      - ./backend:/app
+      - ./elastic/filebeat/ingest_data:/var/log/api
+      - uploads_data:/app/uploads
+
+    environment:
+      GIN_MODE: debug
+
+    networks:
+      - redis
+      - back-front
+      - db-back
+
+
+
+  frontend:
+    env_file: .env
+
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    expose:
+      - "3000"
+
+    volumes:
+      - /app/node_modules
+      - ./frontend:/app
+
+    restart: unless-stopped
+
+    depends_on:
+      backend:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+    networks:
+      - back-front
+
+    environment:
+      PUBLIC_API_URL: ${PUBLIC_API_URL}
+
+
+  postgres:
+    env_file: .env
+
+    image: postgres:17.11
+
+    environment:
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_NAME}"
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER} -d ${DB_NAME}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    expose:
+      - "5432"
+
+    restart: unless-stopped
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    networks:
+      - db-back
+
+
+  redis:
+    env_file: .env
+
+    image: redis:7
+
+    command:
+      - redis-server
+      - --requirepass
+      - "${REDIS_PASSWORD}"
+
+    ports:
+      - "7777:6379"
+
+    restart: unless-stopped
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - redis
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "-a",
+          "${REDIS_PASSWORD}",
+          "ping"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+
+  nginx:
+    build:
+      context: ./nginx
+
+    env_file: .env
+
+    ports:
+      - "8081:80"
+      - "8443:8443"
+      - "1312:80"
+      - "6969:443"
+
+    volumes:
+      - ./nginx/default.min.conf:/etc/nginx/conf.d/default.conf:ro
+
+    restart: unless-stopped
+
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+
+    networks:
+      - back-front
 
 volumes:
-    postgres_data:
-    redis_data:
-    uploads_data: # Donde se guardan las imágenes subidas a través de los posts
+  postgres_data:
+  redis_data:
+  uploads_data:
+
 
 networks:
-    db-back:
-    back-front:
-    redis:
+  db-back:
+  back-front:
+  redis:
