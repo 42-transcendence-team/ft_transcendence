@@ -36,9 +36,13 @@
 	}
 
 	&__name {
-		display: block;
+		display: none;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		font-size: 0.5rem;
+		@media (min-width: 1000px) {
+			display: inline-block;
+		}
 	}
 
 	/*

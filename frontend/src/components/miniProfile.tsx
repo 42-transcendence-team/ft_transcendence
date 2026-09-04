@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { FiTrendingUp } from "react-icons/fi";
+import { FiEdit3, FiTrendingUp } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getUserProfile, getUserPresence, type UserProfile } from "../api/UserProfile"; // Ajusta la ruta
+import { getUserProfile, type UserProfile } from "../api/UserProfile"; // Ajusta la ruta
 import skullLogo from '../assets/icons/skull_logo.png';
 
 import "../styles/components/_miniProfile.scss";
@@ -82,24 +82,33 @@ export const MiniProfile = () => {
   return (
     <div className="miniProfile">
       <div className="miniProfile__avatarWrapper">
-        <img 
-          src={avatarSrc} 
-          alt={`Avatar de ${displayName}`} 
-          className="miniProfile__avatar" 
+        <img
+          src={avatarSrc}
+          alt={`Avatar de ${displayName}`}
+          className="miniProfile__avatar"
         />
-        <span className={`miniProfile__statusDot miniProfile__statusDot--${statusClass}`}></span>
+        <span
+          className={`miniProfile__statusDot miniProfile__statusDot--${statusClass}`}
+        />
       </div>
 
-      <div className="miniProfile__stats" title={`${visits} visitas en tu perfil`}>
-        <FiTrendingUp /> <span>{visits} visitas</span>
+      <div
+        className="miniProfile__stats"
+        title={`${visits} visitas en tu perfil`}
+      >
+        <FiTrendingUp />
+        <span>{visits} visitas</span>
       </div>
+
       <Link
         className="miniProfile__publishBtn"
         to="/app/posts/new"
+        title="Nuevo post"
+        aria-label="Nuevo post"
       >
-        Nuevo post
+        <FiEdit3 className="miniProfile__publishIcon" />
+        <span className="miniProfile__publishText">Nuevo post</span>
       </Link>
-      
     </div>
   );
 };
