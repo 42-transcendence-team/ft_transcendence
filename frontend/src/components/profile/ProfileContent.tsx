@@ -107,6 +107,7 @@ export const ProfileContent = ({
 	return (
 		<div className="profile__feed">
 			<div className="profile__status-container">
+				<div className="profile__status-content">
 				{isEditingStatus ? (
 					<div className="profile__status-edit">
 						<input
@@ -158,6 +159,7 @@ export const ProfileContent = ({
 						)}
 					</div>
 				)}
+				</div>
 
 				<div className="profile__visits">
 					<FiEye />
