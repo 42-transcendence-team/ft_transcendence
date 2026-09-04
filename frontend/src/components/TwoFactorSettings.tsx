@@ -42,19 +42,20 @@ export function TwoFactorSettings(active: { active: boolean }) {
     }
   }, [modalOpen]);
 
-  const handleToggle = async (checked: boolean) => {
-    if (checked) {
-      setMode('enable');
-      setModalOpen(true);
-      setAnimating('on');
-      const res = await enable2FA();
-      setQr(res.QR);
-    } else {
-      setMode('disable');
-      setModalOpen(true);
-      setAnimating('off');
-    }
-  };
+const handleToggle = async (checked: boolean) => {
+		if (checked) {
+			setMode("enable");
+			setModalOpen(true);
+			setAnimating("on");
+			const res = await enable2FA();
+			setQr(res.QR);
+		} else {
+			setMode("disable");
+			setModalOpen(true);
+			setAnimating("off");
+			setActive2FA(false);
+		}
+	};
 
   const handleVerify = async () => {
     if (!isComplete) return;
