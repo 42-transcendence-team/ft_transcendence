@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
+import { Modal } from "@components/Modal";
 import { PostForm } from "@components/posts/PostForm";
 import type { Post } from "../api/Posts";
 
@@ -10,15 +11,22 @@ export const CreatePostPage = () => {
 		navigate(`/app/posts/${post.id}`);
 	};
 
-	return (
-		<section className="post-create-page">
-			<header className="post-create-page__header">
-				<h1 className="post-create-page__title">Nuevo post</h1>
-			</header>
+	const handleClose = () => {
+		navigate(-1);
+	};
 
-			<div className="post-create-page__body">
+	return (
+		<section className="post-create-page post-create-page--modal-route">
+			<Modal
+				open={true}
+				onClose={handleClose}
+				title="Nuevo post"
+				overlayClassName="post-create-page__overlay"
+				modalClassName="post-create-shell"
+				contentClassName="post-create-shell__content"
+			>
 				<PostForm onCreated={handlePostCreated} />
-			</div>
+			</Modal>
 		</section>
 	);
 };

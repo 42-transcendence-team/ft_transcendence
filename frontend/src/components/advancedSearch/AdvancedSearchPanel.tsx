@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { SearchResults } from "./SearchResults";
@@ -28,6 +28,28 @@ export function AdvancedSearchPanel({
 	onClose,
 }: AdvancedSearchPanelProps) {
 	const navigate = useNavigate();
+	const panelRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				onClose();
+			}
+		};
+
+		const handleClickOutside = (e: PointerEvent) => {
+			if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+				onClose();
+			}
+		};
+
+		document.addEventListener("keydown", handleKeyDown);
+		document.addEventListener("pointerdown", handleClickOutside);
+		return () => {
+			document.removeEventListener("keydown", handleKeyDown);
+			document.removeEventListener("pointerdown", handleClickOutside);
+		};
+	}, [onClose]);
 
 	const [pendingConfirmation, setPendingConfirmation] =
 		useState<PendingConfirmation | null>(null);
@@ -123,7 +145,7 @@ export function AdvancedSearchPanel({
 
 	return (
 		<div className="advancedSearchOverlay">
-			<div className="advancedSearchPanel">
+			<div className="advancedSearchPanel" ref={panelRef}>
 				<div className="advancedSearchPanel__header">
 					<h3 className="advancedSearchPanel__title">
 						Búsqueda avanzada

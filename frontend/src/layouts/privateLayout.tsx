@@ -51,19 +51,19 @@ export function PrivateLayout() {
             {/* ESTRUCTURA DEL PANEL IZQUIERDO (DISEÑO ANTIGUO + LÓGICA NUEVA) */}
             <PrivateLeftPanel>
               <div className="leftPanel__wrapper">
-                {/* TOP: Buscador */}
+                {/* TOP: Notificaciones */}
                 <div className="leftPanel__section leftPanel__section--top">
+                  <Notification />
+                </div>
+
+                {/* MIDDLE: Buscador */}
+                <div className="leftPanel__section leftPanel__section--middle">
                   <SearchFilters
                     selectedRelations={search.relations}
                     onRelationsChange={search.handleRelationsChange}
                     selectedSort={search.sort}
                     onSortChange={search.handleSortChange}
                   />
-                </div>
-
-                {/* MIDDLE: Notificaciones (usando tu nuevo componente) */}
-                <div className="leftPanel__section leftPanel__section--middle">
-                  <Notification />
                 </div>
 
                 {/* BOTTOM: Perfil (Lo tenías en el diseño antiguo, lo dejo para que el CSS no se rompa) */}

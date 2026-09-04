@@ -99,6 +99,10 @@ export const MobileSearchAndNotify: React.FC = () => {
 
   return (
     <div className="mobileSearchAndNotify">
+      <div className="mobileSearchAndNotify__section mobileSearchAndNotify__section--notifications">
+        <Notification />
+      </div>
+
       <div className="mobileSearchAndNotify__section mobileSearchAndNotify__section--filters">
         <SearchFilters
           selectedRelations={search.relations}
@@ -106,10 +110,6 @@ export const MobileSearchAndNotify: React.FC = () => {
           selectedSort={search.sort}
           onSortChange={search.handleSortChange}
         />
-      </div>
-
-      <div className="mobileSearchAndNotify__section mobileSearchAndNotify__section--notifications">
-        <Notification />
       </div>
 
       {search.hasSearched && (

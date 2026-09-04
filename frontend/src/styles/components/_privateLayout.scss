@@ -74,12 +74,12 @@
                 flex-shrink: 0;
             }
 
-            // Middle (Notificaciones): se estira y hace scroll interno
+            // Middle (Buscador): se estira y hace scroll interno
             .leftPanel__section--middle {
                 flex-grow: 1;
                 min-height: 0; // Clave para que Flexbox permita el scroll
                 display: flex;
-				justify-content: center;
+				justify-content: flex-start;
                 flex-direction: column;
                 overflow-y: auto; // Aparece scroll solo aquí si hay muchas notificaciones
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
+import { FiUpload } from "react-icons/fi";
 
 type ImageUploadFieldVariant = "avatar" | "banner";
 
@@ -121,6 +122,16 @@ export const ImageUploadField = ({
 				disabled={disabled}
 				onChange={handleFileChange}
 			/>
+
+			<button
+				type="button"
+				className="image-upload-field__button"
+				disabled={disabled}
+				onClick={() => inputRef.current?.click()}
+			>
+				<FiUpload aria-hidden="true" />
+				<span>Elegir archivo</span>
+			</button>
 
 			{file && (
 				<div className="image-upload-field__preview">

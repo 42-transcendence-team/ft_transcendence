@@ -1,6 +1,6 @@
 import "../styles/components/_userMenu.scss";
 import { FiUser, FiSettings, FiLogOut, FiMenu } from "react-icons/fi";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Logout } from "api/Logout";
 import { useAuth } from "@components/auth-router/AuthContext";
 import { useAuth as useAuthProfile} from "../context/AuthContext";
@@ -9,6 +9,7 @@ import { useNavigate, useLoaderData } from "react-router-dom";
 
 export const UserMenu = () => {
 	const [isOpen, setIsOpen] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
 	const user = useLoaderData();
 	const { refreshAuth } = useAuth();
 	const navigate = useNavigate();
@@ -52,8 +53,31 @@ export const UserMenu = () => {
         navigate(path);
     };
 
+	useEffect(() => {
+		if (!isOpen) return;
+
+		const handleClickOutside = (e: PointerEvent) => {
+			if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+				setIsOpen(false);
+			}
+		};
+
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				setIsOpen(false);
+			}
+		};
+
+		document.addEventListener("pointerdown", handleClickOutside);
+		document.addEventListener("keydown", handleKeyDown);
+		return () => {
+			document.removeEventListener("pointerdown", handleClickOutside);
+			document.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [isOpen]);
+
 	return (
-		<div className="userMenu">
+		<div className="userMenu" ref={menuRef}>
 			<button
 				className="userMenu__button"
 				type="button"
