@@ -1,13 +1,13 @@
-import {
-	FiFileText,
-	FiThumbsDown,
-	FiThumbsUp,
-} from "react-icons/fi";
+import { FiFileText } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
-import type { PostSummary } from "api/Posts";
+import type {
+	PostReactionState,
+	PostSummary,
+} from "api/Posts";
 
 import { UserAvatar } from "@components/users/UserAvatar";
+import { ReactionButtons } from "@components/posts/ReactionButtons";
 import {
 	getPostCardVariant,
 	type PostCardVariant,
@@ -16,6 +16,9 @@ import {
 type PostCardProps = {
 	post: PostSummary;
 	onOpen: (postId: number) => void;
+	onReactionUpdated: (
+		reactionState: PostReactionState,
+	) => void;
 };
 
 function getPublicPath(
@@ -134,6 +137,7 @@ function hasPdfVariant(
 export const PostCard = ({
 	post,
 	onOpen,
+	onReactionUpdated,
 }: PostCardProps) => {
 	const variant = getPostCardVariant(post);
 
@@ -254,25 +258,18 @@ export const PostCard = ({
 				)}
 
 				<footer className="post-card__reactions">
-					<span
-						className="post-card__reaction"
-						aria-label={
-							`${post.likeCount} me gusta`
+					<ReactionButtons
+						postId={post.id}
+						likeCount={post.likeCount}
+						dislikeCount={post.dislikeCount}
+						likedByCurrentUser={
+							post.likedByCurrentUser
 						}
-					>
-						<FiThumbsUp aria-hidden="true" />
-						<span>{post.likeCount}</span>
-					</span>
-
-					<span
-						className="post-card__reaction"
-						aria-label={
-							`${post.dislikeCount} no me gusta`
+						dislikedByCurrentUser={
+							post.dislikedByCurrentUser
 						}
-					>
-						<FiThumbsDown aria-hidden="true" />
-						<span>{post.dislikeCount}</span>
-					</span>
+						onChange={onReactionUpdated}
+					/>
 				</footer>
 			</div>
 		</article>

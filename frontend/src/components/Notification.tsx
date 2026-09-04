@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { LuBell } from 'react-icons/lu';
 import { useNotification } from '../context/notificationsContext';
 import { NotificationModal } from './NotificationModal';
 import '../styles/components/_notification.scss';
@@ -46,8 +47,9 @@ export const Notification: React.FC = () => {
           onPointerDown={(e) => e.stopPropagation()}
           aria-label="Abrir notificaciones"
           aria-expanded={isOpen}
+          data-tooltip="Notificaciones"
         >
-          🔔
+          <LuBell className="notification-bell__icon" />
         </button>
         {count > 0 && (
           <span className="notification-badge">

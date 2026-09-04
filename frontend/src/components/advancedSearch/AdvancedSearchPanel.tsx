@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiSliders } from "react-icons/fi";
 
 import { SearchResults } from "./SearchResults";
 import { SearchPagination } from "./SearchPagination";
+import { SearchFilters } from "./SearchFilters";
 import { useAdvancedSearch } from "./useAdvancedSearch";
 
 import { ConfirmModal } from "@components/ConfirmModal";
@@ -29,6 +31,13 @@ export function AdvancedSearchPanel({
 }: AdvancedSearchPanelProps) {
 	const navigate = useNavigate();
 	const panelRef = useRef<HTMLDivElement>(null);
+	const [showFilters, setShowFilters] = useState(false);
+
+	useEffect(() => {
+		if (search.relations.length > 0) {
+			setShowFilters(true);
+		}
+	}, [search.relations.length]);
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -151,15 +160,38 @@ export function AdvancedSearchPanel({
 						Búsqueda avanzada
 					</h3>
 
-					<button
-						type="button"
-						className="advancedSearchPanel__close"
-						onClick={onClose}
-						aria-label="Cerrar búsqueda avanzada"
-					>
-						×
-					</button>
+					<div className="advancedSearchPanel__actions">
+						<button
+							type="button"
+							className={`advancedSearchPanel__toggle ${showFilters ? 'advancedSearchPanel__toggle--active' : ''}`}
+							onClick={() => setShowFilters((current) => !current)}
+							aria-label="Mostrar filtros"
+							aria-expanded={showFilters}
+							title="Filtros"
+						>
+							<FiSliders />
+						</button>
+						<button
+							type="button"
+							className="advancedSearchPanel__close"
+							onClick={onClose}
+							aria-label="Cerrar búsqueda avanzada"
+						>
+							×
+						</button>
+					</div>
 				</div>
+
+				{showFilters && (
+					<div className="advancedSearchPanel__filters">
+						<SearchFilters
+							selectedRelations={search.relations}
+							onRelationsChange={search.handleRelationsChange}
+							selectedSort={search.sort}
+							onSortChange={search.handleSortChange}
+						/>
+					</div>
+				)}
 
 				{search.error ? (
 					<p>{search.error}</p>
