@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { FiEdit2, FiEye, FiCheck, FiX } from "react-icons/fi";
+import { FiEdit2, FiEye, FiCheck, FiX, FiEdit3 } from "react-icons/fi";
 import { updateData } from "../../api/Settings";
 import type { ReactNode } from "react";
 
-import { ProfileCreatePostTrigger } from "./ProfileCreatePostTrigger";
+import { Link } from "react-router";
 
 type ProfileContentProps = {
 	status: string | null;
@@ -166,12 +166,6 @@ export const ProfileContent = ({
 					<span>{visits} visitas</span>
 				</div>
 			</div>
-
-			{isOwnProfile && (
-				<ProfileCreatePostTrigger
-					onClick={onCreatePost}
-				/>
-			)}
 
 			{children ?? (
 				<div className="profile__posts-placeholder">

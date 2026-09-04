@@ -27,12 +27,12 @@ export const SearchBar = ({ onSearch }: SearchBarProps) => {
   };
 
   return (
-    <div className="searchBar">
+    <div className="privHeader__functions--searchBar">
       <input 
         value={searchQuery}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        className="searchBar__input" 
+        className="privHeader__functions--searchBar__input" 
         type="text" 
         placeholder="Buscar..." 
       />

@@ -5,8 +5,11 @@ import {
 
 import { Button1 } from "../Button1";
 import type { UserRelation } from "../../api/UserSearch";
+import { TbUserShare } from "react-icons/tb";
 
 import { useState } from "react";
+import { Link } from "react-router";
+import { FiEdit3 } from "react-icons/fi";
 
 type ProfileHeaderProps = {
 	userId: number;
@@ -209,6 +212,18 @@ export const ProfileHeader = ({
 
 			{renderRelationActions()}
 
+			{isOwnProfile && (
+				      <Link
+						className="miniProfile__publishBtn"
+						to="/app/posts/new"
+						title="Nuevo post"
+						aria-label="Nuevo post"
+					>
+						<FiEdit3 className="miniProfile__publishIcon" />
+						<span className="miniProfile__publishText">Nuevo post</span>
+					</Link>
+			)}
+
 			{relation !== "blocked_by_me" &&
 				relation !== "blocked_me" && (
 					<div className="profile__share">
@@ -222,7 +237,9 @@ export const ProfileHeader = ({
 							label="Compartir"
 							variant="secondary"
 							onClick={handleShare}
-						/>
+						>
+							<TbUserShare className="profile__share-icon" />
+						</Button1>
 					</div>
 			)}
 		</div>

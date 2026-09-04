@@ -2,6 +2,7 @@ import { AppBrand } from "@components/AppBrand";
 import { UserMenu } from "./UserMenu";
 import { Link } from "react-router-dom";
 import { SearchBar } from "./advancedSearch/SearchBar";
+import { GrGamepad } from "react-icons/gr";
 
 import "../styles/components/_privHeader.scss";
 
@@ -23,14 +24,15 @@ export function PrivHeader({ onSearch, onBrandActivate }: PrivHeaderProps) {
 					onActivate={onBrandActivate}
 				/>
 			</div>
-			<div className="privHeader__center">
-				<SearchBar onSearch={onSearch} />
-			</div>
-			<div>
-				<Link to="/app/games" className="privHeader__games-link">
-					Juegos
-				</Link>
-			</div>
+				<div className="privHeader__functions">
+					<SearchBar onSearch={onSearch} />
+					<div>
+						<Link to="/app/games" className="privHeader__functions--games-link">
+							<GrGamepad className="privHeader__functions--games-link-icon" />
+							Juegos
+						</Link>
+					</div>
+				</div>
 			<div className="privHeader__right">
 				<UserMenu />
 			</div>
