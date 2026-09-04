@@ -6,18 +6,21 @@ import {
   acceptFriendRequest,
   getIncomingFriendRequests,
   getOutcomingFriendRequests,
+  listBlocksRequest,
   listFriendsRequest,
   rejectFriendRequest,
+  unblockUser,
 } from '../api/Friends';
 import { EmptyFriendsState } from '../components/EmptyFriendsState';
 
 export const Friends = () => {
-  const [activeTab, setActiveTab] = useState<'friends' | 'sent' | 'received'>(
+  const [activeTab, setActiveTab] = useState<'friends' | 'sent' | 'received' | 'blocked'>(
     'friends',
   );
   const [friendsRequests, setFriendsRequest] = useState<Friend[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
   const [sentRequests, setSentRequest] = useState<FriendRequest[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<Friend[]>([]);
 
   useEffect(() => {
     async function loadFriends() {
@@ -50,6 +53,16 @@ export const Friends = () => {
       }
     }
 
+    async function loadBlocked() {
+      try {
+        const response = await listBlocksRequest();
+
+        setBlockedUsers(response.data ?? []);
+      } catch (error) {
+        console.error('ERROR LOADING BLOCKED USERS:', error);
+      }
+    }
+
     if (activeTab === 'friends') {
       loadFriends();
     }
@@ -58,6 +71,9 @@ export const Friends = () => {
     }
     if (activeTab === 'received') {
       loadReceiverRequest();
+    }
+    if (activeTab === 'blocked') {
+      loadBlocked();
     }
   }, [activeTab]);
 
@@ -77,6 +93,44 @@ export const Friends = () => {
     } catch (error) {
       console.log('reject request ERROR', error);
     }
+  };
+
+  const handleUnblockClick = async (userId: number) => {
+    try {
+      await unblockUser(userId);
+      setBlockedUsers((prev) => prev.filter((u) => u.user_id !== userId));
+    } catch (error) {
+      console.error('ERROR UNBLOCKING USER:', error);
+    }
+  };
+
+  const renderBlocked = () => {
+    if (blockedUsers.length === 0) {
+      return (
+        <div className="empty-friends">
+          <p>No tienes usuarios bloqueados</p>
+        </div>
+      );
+    }
+    return blockedUsers.map((user) => (
+      <div className="request-container" key={user.user_id}>
+        <div className="request-info">
+          <div className="small-logo">
+            <img src={skullLogo} alt="Avatar del usuario" />
+          </div>
+          <p>{user.username}</p>
+        </div>
+        <div className="request-actions">
+          <button
+            className="unblock-button"
+            type="button"
+            onClick={() => handleUnblockClick(user.user_id)}
+          >
+            Desbloquear
+          </button>
+        </div>
+      </div>
+    ));
   };
 
   const renderSentRequests = () => {
@@ -146,7 +200,7 @@ export const Friends = () => {
         </div>
         <div className="request-actions">
           <div className="request-actions">
-            <p className="friends">Somos familiaaaa</p>
+            <p className="friends">Amigos</p>
           </div>
         </div>
       </div>
@@ -155,7 +209,7 @@ export const Friends = () => {
 
   return (
     <>
-      <h2>AMIGOS</h2>
+      <h2 className="friends-title">AMIGOS</h2>
 
       <nav className="friends-tabs">
         <button
@@ -179,6 +233,13 @@ export const Friends = () => {
         >
           Solicitudes recibidas
         </button>
+        <button
+          type="button"
+          className={activeTab === 'blocked' ? 'active' : ''}
+          onClick={() => setActiveTab('blocked')}
+        >
+          Bloqueados
+        </button>
       </nav>
 
       {activeTab === 'friends' && renderFriends()}
@@ -186,6 +247,8 @@ export const Friends = () => {
       {activeTab === 'sent' && renderSentRequests()}
 
       {activeTab === 'received' && renderReceivedRequests()}
+
+      {activeTab === 'blocked' && renderBlocked()}
     </>
   );
 };

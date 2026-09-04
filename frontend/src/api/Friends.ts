@@ -66,6 +66,14 @@ export async function listFriendsRequest() {
     return data;
 }
 
+export async function listBlocksRequest() {
+    const data = await apiRequest({
+        endpoint: "friends/blocks",
+    });
+
+    return data;
+}
+
 export async function sendFriendRequest(userId: number) {
   const data = await apiRequest({
     endpoint: "friends/requests",

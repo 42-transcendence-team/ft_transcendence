@@ -12,6 +12,7 @@ interface ChatModalProps {
 export function ChatModal({ id, onClose }: ChatModalProps) {
     const { messagesByRoom, sendMessage, user, roomMembers, joinRoom } = useChat();
     const messagesRef = useRef<HTMLDivElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
     const otherMember = (roomMembers[id] || []).find(m => m.id !== parseInt(user?.id || '0', 10));
     const isAtBottomRef = useRef(true);
     const lastMessageFromMeRef = useRef(false);
@@ -21,6 +22,37 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
 			joinRoom(id);
 		}
     }, [id, joinRoom]);
+
+    useEffect(() => {
+        const handleClickOutside = (e: PointerEvent) => {
+            const target = e.target;
+            if (target instanceof Element) {
+                // Estas zonas gestionan su propio toggle del chat (burbuja activa,
+                // notificaciones de mensajes, hoja móvil). Si cerramos aquí,
+                // el click posterior reabriría el chat (doble toggle).
+                if (target.closest('.chatPanel__bubble, .notification-item, .mobileChatSheet')) {
+                    return;
+                }
+            }
+            if (modalRef.current && !modalRef.current.contains(target as Node)) {
+                onClose();
+            }
+        };
+
+        document.addEventListener("pointerdown", handleClickOutside);
+        return () => document.removeEventListener("pointerdown", handleClickOutside);
+    }, [onClose]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onClose();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [onClose]);
 
    const handleScroll = () => {
         const el = messagesRef.current;
@@ -60,7 +92,7 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
     };
 
     return (
-        <div className="chatModal">
+        <div className="chatModal" ref={modalRef}>
             <div className="chatModal__header">
                 {otherMember ? (
 					<span className="chatModal__headerUser">
@@ -70,7 +102,7 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
 				) : (
                 	<span>Sala {id}</span>
 				)}
-                <button onClick={onClose}>X</button>
+                <button type="button" className="chatModal__close" aria-label="Cerrar chat" onClick={onClose}>×</button>
             </div>
             
             <div 
@@ -96,7 +128,7 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
                     name="input"
                     placeholder="Escribe un mensaje..."
                     className="chatModal__form--input"
-					maxlength="512"
+					maxLength="512"
                 />
                 <button type="submit" className="chatModal__form--btn">Enviar</button>
             </form>

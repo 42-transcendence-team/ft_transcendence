@@ -32,6 +32,8 @@ export type PostSummary = {
 	fileName?: string | null;
 	likeCount: number;
 	dislikeCount: number;
+	likedByCurrentUser: boolean;
+	dislikedByCurrentUser: boolean;
 	createdAt: string;
 };
 
