@@ -5,6 +5,7 @@ import (
 	appErr "backend/internal/errors"
 	"backend/internal/services"
 	"backend/internal/storage"
+
 	"errors"
 	"fmt"
 	"log"
@@ -22,6 +23,7 @@ type UserHandler struct {
 	Redis                 *redis.Client
 	ImageStorage          *storage.ImageStorage
 	AdvancedSearchService *services.AdvancedSearchService
+	AuthHandler			  *AuthHandler
 }
 
 func NewUserHandler(
@@ -29,12 +31,14 @@ func NewUserHandler(
 	redisClient *redis.Client,
 	imageStorage *storage.ImageStorage,
 	advancedSearchService *services.AdvancedSearchService,
+	AuthHandler *AuthHandler,
 ) *UserHandler {
 	return &UserHandler{
 		UserService:           userService,
 		Redis:                 redisClient,
 		ImageStorage:          imageStorage,
 		AdvancedSearchService: advancedSearchService,
+		AuthHandler:		AuthHandler,
 	}
 }
 
@@ -181,6 +185,9 @@ func (h *UserHandler) RemoveAccount(c *gin.Context) {
 		c.Abort()
 		return
 	}
+	expTime := time.Unix(0, 0)
+	h.AuthHandler.SetCookie(c, "", expTime) //matamos la cokie
+
 
 	c.JSON(http.StatusOK, gin.H{"message": "User removed successfully"})
 }
