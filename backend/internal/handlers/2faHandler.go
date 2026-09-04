@@ -169,7 +169,7 @@ func (h *TwoFAHandler) Login2FA(c *gin.Context) {
 
 	log.Printf("token: %s life: %v", token, life)
 	// Se guarda el token definitivo y se elimina el temporal de las cookies del navegador
-	h.AuthHandler.setCookie(c, token, life)
+	h.AuthHandler.SetCookie(c, token, life)
 	h.AuthHandler.ClearTempToken(c)
 
 	ctx := c.Request.Context()
