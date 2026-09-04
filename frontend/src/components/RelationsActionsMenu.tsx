@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
-import { FiMoreHorizontal } from "react-icons/fi";
-import type { UserRelation } from "../api/UserSearch";
-import "../styles/components/_relationsActionsMenu.scss"; 
+import { useEffect, useRef, useState } from 'react';
+import { FiMoreHorizontal } from 'react-icons/fi';
+import type { UserRelation } from '../api/UserSearch';
+import '../styles/components/_relationsActionsMenu.scss';
 
 type RelationsActionsMenuProps = {
   relation: UserRelation;
@@ -14,41 +14,35 @@ export function RelationsActionsMenu({
   onRemoveFriend,
   onBlockUser,
 }: RelationsActionsMenuProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement | null>(null)
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
-  const canRemoveFriend = relation === "friends" && onRemoveFriend;
+  const canRemoveFriend = relation === 'friends' && onRemoveFriend;
   const canBlockUser =
-    relation !== "blocked_by_me" &&
-    relation !== "blocked_me" &&
-    onBlockUser;
+    relation !== 'blocked_by_me' && relation !== 'blocked_me' && onBlockUser;
 
   const hasActions = canRemoveFriend || canBlockUser;
 
-  
   useEffect(() => {
     if (!isOpen) return;
-    
+
     function handleClickOutside(event: PointerEvent) {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node)
-      ) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
-    
-    document.addEventListener("pointerdown", handleClickOutside);
-    
+
+    document.addEventListener('pointerdown', handleClickOutside);
+
     return () => {
-      document.removeEventListener("pointerdown", handleClickOutside);
+      document.removeEventListener('pointerdown', handleClickOutside);
     };
   }, [isOpen]);
-  
+
   if (!hasActions) {
     return null;
   }
-  
+
   return (
     <div className="relationsActionsMenu" ref={menuRef}>
       <button

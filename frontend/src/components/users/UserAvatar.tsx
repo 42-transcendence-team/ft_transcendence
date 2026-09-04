@@ -1,8 +1,4 @@
-import {
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import skullLogo from '../../assets/icons/skull_logo.png';
 import '../../styles/components/_userAvatar.scss';
 
@@ -32,16 +28,12 @@ const presenceLabels: Record<UserPresence, string> = {
 
 // Normaliza la ruta relativa enviada por el backend.
 // Cuando no existe un avatar personalizado, devuelve la imagen predeterminada.
-function getAvatarSource(
-  avatarPath?: string | null,
-): string {
+function getAvatarSource(avatarPath?: string | null): string {
   if (!avatarPath) {
     return skullLogo;
   }
 
-  return avatarPath.startsWith('/')
-    ? avatarPath
-    : `/${avatarPath}`;
+  return avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`;
 }
 
 export function UserAvatar({
@@ -63,8 +55,7 @@ export function UserAvatar({
     setImageFailed(false);
   }, [avatarPath]);
 
-  const hasCustomAvatar =
-    Boolean(avatarPath) && !imageFailed;
+  const hasCustomAvatar = Boolean(avatarPath) && !imageFailed;
 
   const avatarSource = hasCustomAvatar
     ? getAvatarSource(avatarPath)
@@ -84,15 +75,13 @@ export function UserAvatar({
   // Contenido compartido por las versiones interactiva y estática.
   const content = (
     <>
-      <span className='user-avatar__frame'>
+      <span className="user-avatar__frame">
         <img
           src={avatarSource}
           alt={`${username} profile`}
           className={[
             'user-avatar__image',
-            hasCustomAvatar
-              ? ''
-              : 'user-avatar__image--fallback',
+            hasCustomAvatar ? '' : 'user-avatar__image--fallback',
           ]
             .filter(Boolean)
             .join(' ')}
@@ -106,10 +95,7 @@ export function UserAvatar({
 
       {/* Capa opcional para iconos o acciones visuales sobre la imagen. */}
       {overlay && (
-        <span
-          className='user-avatar__overlay'
-          aria-hidden='true'
-        >
+        <span className="user-avatar__overlay" aria-hidden="true">
           {overlay}
         </span>
       )}
@@ -121,7 +107,7 @@ export function UserAvatar({
             'user-avatar__status',
             `user-avatar__status--${status}`,
           ].join(' ')}
-          role='img'
+          role="img"
           aria-label={presenceLabels[status]}
           title={presenceLabels[status]}
         />
@@ -134,10 +120,8 @@ export function UserAvatar({
     return (
       <button
         className={avatarClasses}
-        type='button'
-        aria-label={
-          ariaLabel ?? `Open ${username} profile`
-        }
+        type="button"
+        aria-label={ariaLabel ?? `Open ${username} profile`}
         onClick={onClick}
       >
         {content}
@@ -146,9 +130,5 @@ export function UserAvatar({
   }
 
   // Sin acción asociada se utiliza como elemento únicamente visual.
-  return (
-    <div className={avatarClasses}>
-      {content}
-    </div>
-  );
+  return <div className={avatarClasses}>{content}</div>;
 }

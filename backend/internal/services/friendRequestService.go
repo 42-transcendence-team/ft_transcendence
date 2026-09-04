@@ -57,9 +57,15 @@ func (s *FriendRequestService) MapToFriendResponse(reqs []models.Friendship, cur
 			return nil, appErr.NewNotFound("User not found")
 		}
 
+		avatarURL := ""
+		if otherUser.AvatarPath != nil {
+			avatarURL = *otherUser.AvatarPath
+		}
+
 		res = append(res, dto.FriendsResponse{
-			UserID:   otherUserID,
-			Username: otherUser.Login,
+			UserID:    otherUserID,
+			Username:  otherUser.Login,
+			AvatarURL: avatarURL,
 		})
 	}
 
@@ -164,12 +170,18 @@ func (s *FriendRequestService) MapToResponse(reqs []models.FriendRequest, curren
 			return nil, appErr.NewNotFound("User not found")
 		}
 
+		avatarURL := ""
+		if otherUser.AvatarPath != nil {
+			avatarURL = *otherUser.AvatarPath
+		}
+
 		res = append(res, dto.FriendRequestResponse{
-			ID:       r.ID,
-			UserID:   otherUserID,
-			Username: otherUser.Login,
-			Status:   string(r.Status),
-			Type:     reqType,
+			ID:        r.ID,
+			UserID:    otherUserID,
+			Username:  otherUser.Login,
+			AvatarURL: avatarURL,
+			Status:    string(r.Status),
+			Type:      reqType,
 		})
 	}
 

@@ -1,17 +1,16 @@
-import { useState, useEffect } from "react";
-import { FiTrendingUp } from "react-icons/fi";
-import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { getUserProfile, type UserProfile } from "../api/UserProfile"; // Ajusta la ruta
+import { useEffect, useState } from 'react';
+import { FiTrendingUp } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
+import { getUserProfile, type UserProfile } from '../api/UserProfile'; // Ajusta la ruta
 import skullLogo from '../assets/icons/skull_logo.png';
+import { useAuth } from '../context/AuthContext';
 
-import "../styles/components/_miniProfile.scss";
+import '../styles/components/_miniProfile.scss';
 
 // Función de ayuda copiada de tu Profile.tsx
 function getImageSource(imagePath: string | null): string {
-  if (!imagePath)
-    return skullLogo;
-  return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+  if (!imagePath) return skullLogo;
+  return imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
 }
 
 export const MiniProfile = ({
@@ -25,8 +24,7 @@ export const MiniProfile = ({
   const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    if (!authenticatedUser?.login)
-      return;
+    if (!authenticatedUser?.login) return;
     let cancelled = false;
 
     getUserProfile(authenticatedUser.login, { noIncrement: true })
@@ -36,7 +34,7 @@ export const MiniProfile = ({
         }
       })
       .catch((error) => {
-        console.error("Error cargando perfil en MiniProfile", error);
+        console.error('Error cargando perfil en MiniProfile', error);
       });
 
     return () => {
@@ -44,7 +42,7 @@ export const MiniProfile = ({
     };
   }, [authenticatedUser?.login]);
 
-//escucha activa si se incrementa el nmumero de visitas en el profile
+  //escucha activa si se incrementa el nmumero de visitas en el profile
   useEffect(() => {
     const handleVisitsUpdate = (event: Event) => {
       const customEvent = event as CustomEvent<number>;
@@ -63,7 +61,7 @@ export const MiniProfile = ({
   // Si está cargando la sesión, mostramos un esqueleto o estado de carga
   if (authLoading) {
     return (
-      <div className="miniProfile" style={{ justifyContent: "center" }}>
+      <div className="miniProfile" style={{ justifyContent: 'center' }}>
         <span>Cargando...</span>
       </div>
     );
@@ -71,18 +69,18 @@ export const MiniProfile = ({
 
   // Si no hay usuario logueado, no renderizamos nada (o podrías poner un error)
   if (!authenticatedUser) {
-    return null; 
+    return null;
   }
   // 3. Preparamos las variables a mostrar cruzando el AuthContext con el UserProfile
   const displayName = profileUser?.name
-    ? `${profileUser.name} ${profileUser.surname ?? ""}`.trim()
+    ? `${profileUser.name} ${profileUser.surname ?? ''}`.trim()
     : authenticatedUser.login;
 
   const avatarSrc = getImageSource(
-    profileUser?.avatarPath ?? authenticatedUser.avatarPath ?? null
+    profileUser?.avatarPath ?? authenticatedUser.avatarPath ?? null,
   );
-  
-  const statusClass = profileUser?.isOnline ? "online" : "offline";
+
+  const statusClass = profileUser?.isOnline ? 'online' : 'offline';
   const visits = profileUser?.visits ?? 0;
 
   return (
@@ -103,21 +101,22 @@ export const MiniProfile = ({
             className="miniProfile__avatar"
           />
         )}
-        <span className={`miniProfile__statusDot miniProfile__statusDot--${statusClass}`}></span>
+        <span
+          className={`miniProfile__statusDot miniProfile__statusDot--${statusClass}`}
+        ></span>
       </div>
 
-      <div className="miniProfile__stats" title={`${visits} visitas en tu perfil`}>
+      <div
+        className="miniProfile__stats"
+        title={`${visits} visitas en tu perfil`}
+      >
         <FiTrendingUp /> <span>{visits} visitas</span>
       </div>
       {!hidePublish && (
-        <Link
-          className="miniProfile__publishBtn"
-          to="/app/posts/new"
-        >
+        <Link className="miniProfile__publishBtn" to="/app/posts/new">
           Nuevo post
         </Link>
       )}
-      
     </div>
   );
 };

@@ -1,256 +1,224 @@
-import {
-	FiDownload,
-	FiFileText,
-	FiTrash2,
-} from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { CommentForm } from '@components/posts/CommentForm';
+import { CommentList } from '@components/posts/CommentList';
 
-import { ReactionButtons } from "@components/posts/ReactionButtons";
-import { CommentForm } from "@components/posts/CommentForm";
-import { CommentList } from "@components/posts/CommentList";
-import { UserAvatar } from "@components/users/UserAvatar";
-
-import type { Comment } from "api/Comments";
-import type { Post, PostReactionState } from "api/Posts";
-
-import {
-	getPostVariant,
-	isPdfPostFile,
-} from "@utils/postVariant";
+import { ReactionButtons } from '@components/posts/ReactionButtons';
+import { UserAvatar } from '@components/users/UserAvatar';
+import { getPostVariant, isPdfPostFile } from '@utils/postVariant';
+import type { Comment } from 'api/Comments';
+import type { Post, PostReactionState } from 'api/Posts';
+import { FiDownload, FiFileText, FiTrash2 } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 
 type PostModalRendererProps = {
-	post: Post;
-	comments: Comment[];
-	currentUserId: number | null;
-	isOwner: boolean;
-	isDeletingPost: boolean;
-	deletingCommentId: number | null;
-	deletePostError: string | null;
-	commentError: string | null;
-	onRequestDeletePost: () => void;
-	onCommentCreated: (comment: Comment) => void;
-	onRequestDeleteComment: (commentId: number) => void;
-	onReactionChange: (
-		reactionState: PostReactionState,
-	) => void;
-	onImageClick: (imageSrc: string) => void;
+  post: Post;
+  comments: Comment[];
+  currentUserId: number | null;
+  isOwner: boolean;
+  isDeletingPost: boolean;
+  deletingCommentId: number | null;
+  deletePostError: string | null;
+  commentError: string | null;
+  onRequestDeletePost: () => void;
+  onCommentCreated: (comment: Comment) => void;
+  onRequestDeleteComment: (commentId: number) => void;
+  onReactionChange: (reactionState: PostReactionState) => void;
+  onImageClick: (imageSrc: string) => void;
 };
 
 function getPublicPath(path: string): string {
-	if (path.startsWith("/")) {
-		return path;
-	}
+  if (path.startsWith('/')) {
+    return path;
+  }
 
-	return `/${path}`;
+  return `/${path}`;
 }
 
 function getAttachmentName(post: Post): string {
-	const originalName = post.fileName?.trim();
+  const originalName = post.fileName?.trim();
 
-	if (originalName) {
-		return originalName;
-	}
+  if (originalName) {
+    return originalName;
+  }
 
-	const storedName = post.imagePath
-		?.split("/")
-		.pop()
-		?.trim();
+  const storedName = post.imagePath?.split('/').pop()?.trim();
 
-	return storedName || "document.pdf";
+  return storedName || 'document.pdf';
 }
 
 function formatPostDate(value: string): string {
-	return new Intl.DateTimeFormat("es-ES", {
-		dateStyle: "medium",
-		timeStyle: "short",
-	}).format(new Date(value));
+  return new Intl.DateTimeFormat('es-ES', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value));
 }
 
 export const PostModalRenderer = ({
-	post,
-	comments,
-	currentUserId,
-	isOwner,
-	isDeletingPost,
-	deletingCommentId,
-	deletePostError,
-	commentError,
-	onRequestDeletePost,
-	onCommentCreated,
-	onRequestDeleteComment,
-	onReactionChange,
-	onImageClick,
+  post,
+  comments,
+  currentUserId,
+  isOwner,
+  isDeletingPost,
+  deletingCommentId,
+  deletePostError,
+  commentError,
+  onRequestDeletePost,
+  onCommentCreated,
+  onRequestDeleteComment,
+  onReactionChange,
+  onImageClick,
 }: PostModalRendererProps) => {
-	const variant = getPostVariant(post);
-	const isPdf = isPdfPostFile(post.imagePath);
+  const variant = getPostVariant(post);
+  const isPdf = isPdfPostFile(post.imagePath);
 
-	const fileSrc = post.imagePath
-		? getPublicPath(post.imagePath)
-		: null;
+  const fileSrc = post.imagePath ? getPublicPath(post.imagePath) : null;
 
-	const imageSrc = fileSrc && !isPdf
-		? fileSrc
-		: null;
+  const imageSrc = fileSrc && !isPdf ? fileSrc : null;
 
-	const authorProfilePath =
-		`/app/profile/${encodeURIComponent(post.author.login)}`;
-	const attachmentName = getAttachmentName(post);
-	const hasText = Boolean(post.content?.trim());
-	const hasPostBody = hasText || isPdf;
+  const authorProfilePath = `/app/profile/${encodeURIComponent(post.author.login)}`;
+  const attachmentName = getAttachmentName(post);
+  const hasText = Boolean(post.content?.trim());
+  const hasPostBody = hasText || isPdf;
 
-	return (
-		<article
-			className={`post-modal-renderer post-modal-renderer--${variant}`}
-		>
-			{imageSrc && (
-				<div className="post-modal-renderer__image-panel">
-					<button
-						className="post-modal-renderer__image-button"
-						type="button"
-						onClick={() => onImageClick(imageSrc)}
-						aria-label="Abrir la imagen de la publicación"
-					>
-						<img
-							className="post-modal-renderer__image"
-							src={imageSrc}
-							alt="Imagen de la publicación"
-						/>
-					</button>
-				</div>
-			)}
+  return (
+    <article className={`post-modal-renderer post-modal-renderer--${variant}`}>
+      {imageSrc && (
+        <div className="post-modal-renderer__image-panel">
+          <button
+            className="post-modal-renderer__image-button"
+            type="button"
+            onClick={() => onImageClick(imageSrc)}
+            aria-label="Abrir la imagen de la publicación"
+          >
+            <img
+              className="post-modal-renderer__image"
+              src={imageSrc}
+              alt="Imagen de la publicación"
+            />
+          </button>
+        </div>
+      )}
 
-			<div className="post-modal-renderer__side-panel">
-				<header className="post-modal-renderer__header">
-					<div className="post-modal-renderer__author">
-						<Link
-							className="post-modal-renderer__avatar-link"
-							to={authorProfilePath}
-							aria-label={`Abrir el perfil de ${post.author.login}`}
-						>
-							<UserAvatar
-								avatarPath={post.author.avatarPath}
-								username={post.author.login}
-								size="medium"
-								status={null}
-								className="post-modal-renderer__avatar"
-							/>
-						</Link>
+      <div className="post-modal-renderer__side-panel">
+        <header className="post-modal-renderer__header">
+          <div className="post-modal-renderer__author">
+            <Link
+              className="post-modal-renderer__avatar-link"
+              to={authorProfilePath}
+              aria-label={`Abrir el perfil de ${post.author.login}`}
+            >
+              <UserAvatar
+                avatarPath={post.author.avatarPath}
+                username={post.author.login}
+                size="medium"
+                status={null}
+                className="post-modal-renderer__avatar"
+              />
+            </Link>
 
-						<div className="post-modal-renderer__author-info">
-							<Link
-								className="post-modal-renderer__username"
-								to={authorProfilePath}
-							>
-								{post.author.login}
-							</Link>
+            <div className="post-modal-renderer__author-info">
+              <Link
+                className="post-modal-renderer__username"
+                to={authorProfilePath}
+              >
+                {post.author.login}
+              </Link>
 
-							<time
-								className="post-modal-renderer__date"
-								dateTime={post.createdAt}
-							>
-								{formatPostDate(post.createdAt)}
-							</time>
-						</div>
-					</div>
+              <time
+                className="post-modal-renderer__date"
+                dateTime={post.createdAt}
+              >
+                {formatPostDate(post.createdAt)}
+              </time>
+            </div>
+          </div>
 
-					<div className="post-modal-renderer__actions">
-						<ReactionButtons
-							postId={post.id}
-							likeCount={post.likeCount}
-							dislikeCount={post.dislikeCount}
-							likedByCurrentUser={post.likedByCurrentUser}
-							dislikedByCurrentUser={
-								post.dislikedByCurrentUser
-							}
-							onChange={onReactionChange}
-						/>
+          <div className="post-modal-renderer__actions">
+            <ReactionButtons
+              postId={post.id}
+              likeCount={post.likeCount}
+              dislikeCount={post.dislikeCount}
+              likedByCurrentUser={post.likedByCurrentUser}
+              dislikedByCurrentUser={post.dislikedByCurrentUser}
+              onChange={onReactionChange}
+            />
 
-						{isOwner && (
-							<button
-								className="post-modal-renderer__delete-button"
-								type="button"
-								onClick={onRequestDeletePost}
-								disabled={isDeletingPost}
-								aria-label={
-									isDeletingPost
-										? "Eliminando publicación"
-										: "Eliminar publicación"
-								}
-								title={
-									isDeletingPost
-										? "Eliminando publicación"
-										: "Eliminar publicación"
-								}
-							>
-								<FiTrash2 size={18} aria-hidden="true" />
-							</button>
-						)}
-					</div>
-				</header>
+            {isOwner && (
+              <button
+                className="post-modal-renderer__delete-button"
+                type="button"
+                onClick={onRequestDeletePost}
+                disabled={isDeletingPost}
+                aria-label={
+                  isDeletingPost
+                    ? 'Eliminando publicación'
+                    : 'Eliminar publicación'
+                }
+                title={
+                  isDeletingPost
+                    ? 'Eliminando publicación'
+                    : 'Eliminar publicación'
+                }
+              >
+                <FiTrash2 size={18} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        </header>
 
-				<div className="post-modal-renderer__body-scroll">
-					{hasText && (
-						<p className="post-modal-renderer__content">
-							{post.content}
-						</p>
-					)}
-					
-					{isPdf && fileSrc && (
-						<a
-							className="post-modal-renderer__attachment"
-							href={fileSrc}
-							download={attachmentName}
-						>
-							<FiFileText
-								className="post-modal-renderer__attachment-icon"
-								aria-hidden="true"
-							/>
+        <div className="post-modal-renderer__body-scroll">
+          {hasText && (
+            <p className="post-modal-renderer__content">{post.content}</p>
+          )}
 
-							<span className="post-modal-renderer__attachment-name">
-								{attachmentName}
-							</span>
-					
-							<FiDownload
-								className="post-modal-renderer__attachment-download"
-								aria-hidden="true"
-							/>
-						</a>
-					)}
+          {isPdf && fileSrc && (
+            <a
+              className="post-modal-renderer__attachment"
+              href={fileSrc}
+              download={attachmentName}
+            >
+              <FiFileText
+                className="post-modal-renderer__attachment-icon"
+                aria-hidden="true"
+              />
 
-					{deletePostError && (
-						<p className="post-modal-renderer__error">
-							{deletePostError}
-						</p>
-					)}
-					
-					{hasPostBody && (
-						<div
-							className="post-modal-renderer__divider"
-							aria-hidden="true"
-						/>
-					)}
-				
-					<section className="post-modal-renderer__comments" aria-label="Comentarios">
-						<CommentList
-							comments={comments}
-							currentUserId={currentUserId}
-							deletingCommentId={deletingCommentId}
-							onRequestDelete={onRequestDeleteComment}
-						/>
+              <span className="post-modal-renderer__attachment-name">
+                {attachmentName}
+              </span>
 
-						{commentError && (
-							<p className="post-modal-renderer__error">
-								{commentError}
-							</p>
-						)}
-					</section>
-				</div>
-					
-				<CommentForm
-					postId={post.id}
-					onCreated={onCommentCreated}
-				/>
-			</div>
-		</article>
-	);
+              <FiDownload
+                className="post-modal-renderer__attachment-download"
+                aria-hidden="true"
+              />
+            </a>
+          )}
+
+          {deletePostError && (
+            <p className="post-modal-renderer__error">{deletePostError}</p>
+          )}
+
+          {hasPostBody && (
+            <div className="post-modal-renderer__divider" aria-hidden="true" />
+          )}
+
+          <section
+            className="post-modal-renderer__comments"
+            aria-label="Comentarios"
+          >
+            <CommentList
+              comments={comments}
+              currentUserId={currentUserId}
+              deletingCommentId={deletingCommentId}
+              onRequestDelete={onRequestDeleteComment}
+            />
+
+            {commentError && (
+              <p className="post-modal-renderer__error">{commentError}</p>
+            )}
+          </section>
+        </div>
+
+        <CommentForm postId={post.id} onCreated={onCommentCreated} />
+      </div>
+    </article>
+  );
 };

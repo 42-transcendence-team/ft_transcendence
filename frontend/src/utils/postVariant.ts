@@ -1,37 +1,32 @@
-import type { Post } from "api/Posts";
+import type { Post } from 'api/Posts';
 
-export type PostVariant = "text" | "image" | "mixed";
+export type PostVariant = 'text' | 'image' | 'mixed';
 
-export function isPdfPostFile(
-	filePath?: string | null,
-): boolean {
-	if (!filePath) {
-		return false;
-	}
+export function isPdfPostFile(filePath?: string | null): boolean {
+  if (!filePath) {
+    return false;
+  }
 
-	const normalizedPath = filePath
-		.split("?", 1)[0]
-		.split("#", 1)[0]
-		.toLowerCase();
+  const normalizedPath = filePath
+    .split('?', 1)[0]
+    .split('#', 1)[0]
+    .toLowerCase();
 
-	return normalizedPath.endsWith(".pdf");
+  return normalizedPath.endsWith('.pdf');
 }
 
 export function getPostVariant(post: Post): PostVariant {
-	const hasText = Boolean(post.content?.trim());
+  const hasText = Boolean(post.content?.trim());
 
-	const hasImage = Boolean(
-		post.imagePath &&
-		!isPdfPostFile(post.imagePath),
-	);
+  const hasImage = Boolean(post.imagePath && !isPdfPostFile(post.imagePath));
 
-	if (hasText && hasImage) {
-		return "mixed";
-	}
+  if (hasText && hasImage) {
+    return 'mixed';
+  }
 
-	if (hasImage) {
-		return "image";
-	}
+  if (hasImage) {
+    return 'image';
+  }
 
-	return "text";
+  return 'text';
 }

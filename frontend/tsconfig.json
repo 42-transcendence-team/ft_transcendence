@@ -22,19 +22,19 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
 
-	"baseUrl": "./src",
-	"paths": {
-		"@pages/*": ["./pages/*"],
-		"@components/*": ["./components/*"],
-		"@reset": ["./src/styles/App.scss"],
-		"@styles/*": ["./styles/components/*"],
-		"@images/*": ["./assets/img/*"],
-		"@fonts/*": ["./assets/fonts/*"],
-		"@data/*": ["./assets/data/*"],
-		"@icons/*": ["./assets/icons/*"],
-		"@utils/*": ["./utils/*"],
-		"@hooks/*": ["./hooks/*"]
-	}
+    "baseUrl": "./src",
+    "paths": {
+      "@pages/*": ["./pages/*"],
+      "@components/*": ["./components/*"],
+      "@reset": ["./src/styles/App.scss"],
+      "@styles/*": ["./styles/components/*"],
+      "@images/*": ["./assets/img/*"],
+      "@fonts/*": ["./assets/fonts/*"],
+      "@data/*": ["./assets/data/*"],
+      "@icons/*": ["./assets/icons/*"],
+      "@utils/*": ["./utils/*"],
+      "@hooks/*": ["./hooks/*"]
+    }
   },
   "include": ["src"]
 }

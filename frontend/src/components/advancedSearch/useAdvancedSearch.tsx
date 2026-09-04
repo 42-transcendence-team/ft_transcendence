@@ -1,365 +1,279 @@
-import { useState } from "react";
-
+import { useState } from 'react';
 import {
-	searchUsers,
-	type UserSearch,
-	type UserRelation,
-	type UserSearchSort,
-} from "../../api/UserSearch.tsx";
-
+  acceptFriendRequest,
+  blockUser,
+  rejectFriendRequest,
+  removeFriend,
+  sendFriendRequest,
+  unblockUser,
+} from '../../api/Friends';
 import {
-	sendFriendRequest,
-	acceptFriendRequest,
-	rejectFriendRequest,
-	removeFriend,
-	blockUser,
-	unblockUser,
-} from "../../api/Friends";
+  searchUsers,
+  type UserRelation,
+  type UserSearch,
+  type UserSearchSort,
+} from '../../api/UserSearch.tsx';
 
 export function useAdvancedSearch() {
-	const [searchResults, setSearchResults] =
-		useState<UserSearch[]>([]);
+  const [searchResults, setSearchResults] = useState<UserSearch[]>([]);
 
-	const [hasSearched, setHasSearched] =
-		useState<boolean>(false);
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
 
-	const [isLoading, setIsLoading] =
-		useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-	const [error, setError] =
-		useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-	const [currentQuery, setCurrentQuery] =
-		useState<string>("");
+  const [currentQuery, setCurrentQuery] = useState<string>('');
 
-	const [relations, setRelations] =
-		useState<UserRelation[]>([]);
+  const [relations, setRelations] = useState<UserRelation[]>([]);
 
-	const [sort, setSort] =
-		useState<UserSearchSort>("username_asc");
+  const [sort, setSort] = useState<UserSearchSort>('username_asc');
 
-	const [totalResults, setTotalResults] =
-		useState<number>(0);
+  const [totalResults, setTotalResults] = useState<number>(0);
 
-	const [page, setPage] =
-		useState<number>(1);
+  const [page, setPage] = useState<number>(1);
 
-	const [totalPages, setTotalPages] =
-		useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
-	const limit = 5;
+  const limit = 5;
 
-	const executeSearch = async (
-		query: string,
-		searchRelations: UserRelation[],
-		searchSort: UserSearchSort,
-		searchPage: number,
-	) => {
-		try {
-			setIsLoading(true);
-			setError(null);
+  const executeSearch = async (
+    query: string,
+    searchRelations: UserRelation[],
+    searchSort: UserSearchSort,
+    searchPage: number,
+  ) => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-			const response = await searchUsers({
-				query,
-				relations: searchRelations,
-				sort: searchSort,
-				page: searchPage,
-				limit,
-			});
+      const response = await searchUsers({
+        query,
+        relations: searchRelations,
+        sort: searchSort,
+        page: searchPage,
+        limit,
+      });
 
-			setSearchResults(response.items);
-			setPage(response.page);
-			setTotalResults(response.total);
+      setSearchResults(response.items);
+      setPage(response.page);
+      setTotalResults(response.total);
 
-			setTotalPages(
-				Math.max(
-					1,
-					Math.ceil(
-						response.total / response.limit,
-					),
-				),
-			);
+      setTotalPages(Math.max(1, Math.ceil(response.total / response.limit)));
 
-			setHasSearched(true);
-		} catch (err) {
-			setError("No se pudo hacer la búsqueda");
-			setSearchResults([]);
-			setTotalResults(0);
-			setTotalPages(1);
-			setHasSearched(true);
-		} finally {
-			setIsLoading(false);
-		}
-	};
+      setHasSearched(true);
+    } catch (err) {
+      setError('No se pudo hacer la búsqueda');
+      setSearchResults([]);
+      setTotalResults(0);
+      setTotalPages(1);
+      setHasSearched(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-	const handleSearch = async (query: string) => {
-		setCurrentQuery(query);
+  const handleSearch = async (query: string) => {
+    setCurrentQuery(query);
 
-		await executeSearch(
-			query,
-			relations,
-			sort,
-			1,
-		);
-	};
+    await executeSearch(query, relations, sort, 1);
+  };
 
-	const handleRelationsChange = async (
-		newRelations: UserRelation[],
-	) => {
-		setRelations(newRelations);
+  const handleRelationsChange = async (newRelations: UserRelation[]) => {
+    setRelations(newRelations);
 
-		await executeSearch(
-			currentQuery,
-			newRelations,
-			sort,
-			1,
-		);
-	};
+    await executeSearch(currentQuery, newRelations, sort, 1);
+  };
 
-	const handleSortChange = async (
-		newSort: UserSearchSort,
-	) => {
-		setSort(newSort);
+  const handleSortChange = async (newSort: UserSearchSort) => {
+    setSort(newSort);
 
-		await executeSearch(
-			currentQuery,
-			relations,
-			newSort,
-			1,
-		);
-	};
+    await executeSearch(currentQuery, relations, newSort, 1);
+  };
 
-	const handleNextPage = async () => {
-		if (isLoading || page >= totalPages) {
-			return;
-		}
+  const handleNextPage = async () => {
+    if (isLoading || page >= totalPages) {
+      return;
+    }
 
-		await executeSearch(
-			currentQuery,
-			relations,
-			sort,
-			page + 1,
-		);
-	};
+    await executeSearch(currentQuery, relations, sort, page + 1);
+  };
 
-	const handlePreviousPage = async () => {
-		if (isLoading || page <= 1) {
-			return;
-		}
+  const handlePreviousPage = async () => {
+    if (isLoading || page <= 1) {
+      return;
+    }
 
-		await executeSearch(
-			currentQuery,
-			relations,
-			sort,
-			page - 1,
-		);
-	};
+    await executeSearch(currentQuery, relations, sort, page - 1);
+  };
 
-	const handleCloseSearch = () => {
-		setHasSearched(false);
-		setRelations([]);
-		setSort("username_asc");
-	};
+  const handleCloseSearch = () => {
+    setHasSearched(false);
+    setRelations([]);
+    setSort('username_asc');
+  };
 
-	// Abre el panel de resultados con un filtro de relacion concreto, sin
-	// arrastrar la query de la busqueda anterior (p.ej. al venir de una
-	// notificacion de solicitud de amistad).
-	const openWithRelations = async (
-		newRelations: UserRelation[],
-	) => {
-		setRelations(newRelations);
-		setCurrentQuery("");
+  // Abre el panel de resultados con un filtro de relacion concreto, sin
+  // arrastrar la query de la busqueda anterior (p.ej. al venir de una
+  // notificacion de solicitud de amistad).
+  const openWithRelations = async (newRelations: UserRelation[]) => {
+    setRelations(newRelations);
+    setCurrentQuery('');
 
-		await executeSearch(
-			"",
-			newRelations,
-			sort,
-			1,
-		);
-	};
+    await executeSearch('', newRelations, sort, 1);
+  };
 
-	const handleSendFriendRequest = async (
-		userId: number,
-	) => {
-		try {
-			await sendFriendRequest(userId);
+  const handleSendFriendRequest = async (userId: number) => {
+    try {
+      await sendFriendRequest(userId);
 
-			setSearchResults((currentResults) =>
-				currentResults.map((user) =>
-					user.id === userId
-						? {
-								...user,
-								relation: "pending_sent",
-								can_send_request: false,
-							}
-						: user,
-				),
-			);
-		} catch (error) {
-			console.log(
-				"ERROR SEND FRIEND REQUEST",
-				error,
-			);
-		}
-	};
+      setSearchResults((currentResults) =>
+        currentResults.map((user) =>
+          user.id === userId
+            ? {
+                ...user,
+                relation: 'pending_sent',
+                can_send_request: false,
+              }
+            : user,
+        ),
+      );
+    } catch (error) {
+      console.log('ERROR SEND FRIEND REQUEST', error);
+    }
+  };
 
-	const handleAcceptFriendRequest = async (
-		requestId: number,
-	) => {
-		try {
-			await acceptFriendRequest(requestId);
+  const handleAcceptFriendRequest = async (requestId: number) => {
+    try {
+      await acceptFriendRequest(requestId);
 
-			setSearchResults((currentResults) =>
-				currentResults.map((user) =>
-					user.request_id === requestId
-						? {
-								...user,
-								relation: "friends",
-								can_send_request: false,
-								request_id: null,
-							}
-						: user,
-				),
-			);
-		} catch (error) {
-			console.log(
-				"ERROR ACCEPT FRIEND REQUEST",
-				error,
-			);
-		}
-	};
+      setSearchResults((currentResults) =>
+        currentResults.map((user) =>
+          user.request_id === requestId
+            ? {
+                ...user,
+                relation: 'friends',
+                can_send_request: false,
+                request_id: null,
+              }
+            : user,
+        ),
+      );
+    } catch (error) {
+      console.log('ERROR ACCEPT FRIEND REQUEST', error);
+    }
+  };
 
-	const handleRejectFriendRequest = async (
-		requestId: number,
-	) => {
-		try {
-			await rejectFriendRequest(requestId);
+  const handleRejectFriendRequest = async (requestId: number) => {
+    try {
+      await rejectFriendRequest(requestId);
 
-			setSearchResults((currentResults) =>
-				currentResults.map((user) =>
-					user.request_id === requestId
-						? {
-								...user,
-								relation: "none",
-								can_send_request: true,
-								request_id: null,
-							}
-						: user,
-				),
-			);
-		} catch (error) {
-			console.log(
-				"ERROR REJECT FRIEND REQUEST",
-				error,
-			);
-		}
-	};
+      setSearchResults((currentResults) =>
+        currentResults.map((user) =>
+          user.request_id === requestId
+            ? {
+                ...user,
+                relation: 'none',
+                can_send_request: true,
+                request_id: null,
+              }
+            : user,
+        ),
+      );
+    } catch (error) {
+      console.log('ERROR REJECT FRIEND REQUEST', error);
+    }
+  };
 
-	const handleRemoveFriend = async (
-		userId: number,
-	) => {
-		try {
-			await removeFriend(userId);
+  const handleRemoveFriend = async (userId: number) => {
+    try {
+      await removeFriend(userId);
 
-			setSearchResults((currentResults) =>
-				currentResults.map((user) =>
-					user.id === userId
-						? {
-								...user,
-								relation: "none",
-								can_send_request: true,
-							}
-						: user,
-				),
-			);
-		} catch (error) {
-			console.log(
-				"ERROR REMOVE FRIEND",
-				error,
-			);
-		}
-	};
+      setSearchResults((currentResults) =>
+        currentResults.map((user) =>
+          user.id === userId
+            ? {
+                ...user,
+                relation: 'none',
+                can_send_request: true,
+              }
+            : user,
+        ),
+      );
+    } catch (error) {
+      console.log('ERROR REMOVE FRIEND', error);
+    }
+  };
 
-	const handleBlockUser = async (
-		userId: number,
-	) => {
-		try {
-			await blockUser(userId);
+  const handleBlockUser = async (userId: number) => {
+    try {
+      await blockUser(userId);
 
-			setSearchResults((currentResults) =>
-				currentResults.map((user) =>
-					user.id === userId
-						? {
-								...user,
-								relation:
-									"blocked_by_me",
-								can_send_request: false,
-								request_id: null,
-							}
-						: user,
-				),
-			);
-		} catch (error) {
-			console.log(
-				"ERROR BLOCK USER",
-				error,
-			);
-		}
-	};
+      setSearchResults((currentResults) =>
+        currentResults.map((user) =>
+          user.id === userId
+            ? {
+                ...user,
+                relation: 'blocked_by_me',
+                can_send_request: false,
+                request_id: null,
+              }
+            : user,
+        ),
+      );
+    } catch (error) {
+      console.log('ERROR BLOCK USER', error);
+    }
+  };
 
-	const handleUnblockUser = async (
-		userId: number,
-	) => {
-		try {
-			await unblockUser(userId);
+  const handleUnblockUser = async (userId: number) => {
+    try {
+      await unblockUser(userId);
 
-			setSearchResults((currentResults) =>
-				currentResults.map((user) =>
-					user.id === userId
-						? {
-								...user,
-								relation: "none",
-								can_send_request: true,
-								request_id: null,
-							}
-						: user,
-				),
-			);
-		} catch (error) {
-			console.log(
-				"ERROR UNBLOCK USER",
-				error,
-			);
-		}
-	};
+      setSearchResults((currentResults) =>
+        currentResults.map((user) =>
+          user.id === userId
+            ? {
+                ...user,
+                relation: 'none',
+                can_send_request: true,
+                request_id: null,
+              }
+            : user,
+        ),
+      );
+    } catch (error) {
+      console.log('ERROR UNBLOCK USER', error);
+    }
+  };
 
-	return {
-		searchResults,
-		hasSearched,
-		isLoading,
-		error,
+  return {
+    searchResults,
+    hasSearched,
+    isLoading,
+    error,
 
-		currentQuery,
-		relations,
-		sort,
+    currentQuery,
+    relations,
+    sort,
 
-		totalResults,
-		page,
-		totalPages,
+    totalResults,
+    page,
+    totalPages,
 
-		handleSearch,
-		handleRelationsChange,
-		handleSortChange,
-		handleNextPage,
-		handlePreviousPage,
-		handleCloseSearch,
-		openWithRelations,
+    handleSearch,
+    handleRelationsChange,
+    handleSortChange,
+    handleNextPage,
+    handlePreviousPage,
+    handleCloseSearch,
+    openWithRelations,
 
-		handleSendFriendRequest,
-		handleAcceptFriendRequest,
-		handleRejectFriendRequest,
-		handleRemoveFriend,
-		handleBlockUser,
-		handleUnblockUser,
-	};
+    handleSendFriendRequest,
+    handleAcceptFriendRequest,
+    handleRejectFriendRequest,
+    handleRemoveFriend,
+    handleBlockUser,
+    handleUnblockUser,
+  };
 }

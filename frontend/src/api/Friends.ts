@@ -1,83 +1,84 @@
-import { apiRequest } from "./ApiRequest";
+import { apiRequest } from './ApiRequest';
 
 export type FriendRequest = {
-    id: number;
-    user_id: number;
-    username: string;
-    status: "pending";
-    type: "incoming" | "outgoing";
-}
+  id: number;
+  user_id: number;
+  username: string;
+  avatar_url?: string;
+  status: 'pending';
+  type: 'incoming' | 'outgoing';
+};
 
 export type FriendRequestResponse = {
-    data: FriendRequest[];
-}
+  data: FriendRequest[];
+};
 
 export async function getIncomingFriendRequests() {
-	const data = await apiRequest({
-		endpoint: "friends/requests/incoming",
-	});
+  const data = await apiRequest({
+    endpoint: 'friends/requests/incoming',
+  });
 
-	return data;
+  return data;
 }
 
 export async function getOutcomingFriendRequests() {
-	const data = await apiRequest({
-		endpoint: "friends/requests/outgoing",
-	});
+  const data = await apiRequest({
+    endpoint: 'friends/requests/outgoing',
+  });
 
-	return data;
+  return data;
 }
 
 export type DoSomethingFriendRequest = {
-    id: number;
-    senderID: number;
-    userID: number;
-}
-
+  id: number;
+  senderID: number;
+  userID: number;
+};
 
 export async function acceptFriendRequest(requestId: number) {
-	const data = await apiRequest({
-		endpoint: `friends/requests/${requestId}/accept`,
-		method: "PATCH",
-	});
+  const data = await apiRequest({
+    endpoint: `friends/requests/${requestId}/accept`,
+    method: 'PATCH',
+  });
 
-	return data;
+  return data;
 }
 
 export async function rejectFriendRequest(requestId: number) {
-	const data = await apiRequest({
-		endpoint: `friends/requests/${requestId}/reject`,
-		method: "PATCH",
-	});
+  const data = await apiRequest({
+    endpoint: `friends/requests/${requestId}/reject`,
+    method: 'PATCH',
+  });
 
-	return data;
+  return data;
 }
 
 export type Friend = {
-    user_id: number;
-    username: string;
-}
+  user_id: number;
+  username: string;
+  avatar_url?: string;
+};
 
 export async function listFriendsRequest() {
-    const data = await apiRequest({
-        endpoint: "friends",
-    });
+  const data = await apiRequest({
+    endpoint: 'friends',
+  });
 
-    return data;
+  return data;
 }
 
 export async function listBlocksRequest() {
-    const data = await apiRequest({
-        endpoint: "friends/blocks",
-    });
+  const data = await apiRequest({
+    endpoint: 'friends/blocks',
+  });
 
-    return data;
+  return data;
 }
 
 export async function sendFriendRequest(userId: number) {
   const data = await apiRequest({
-    endpoint: "friends/requests",
-    method: "POST",
+    endpoint: 'friends/requests',
+    method: 'POST',
     body: {
       receiver_id: userId,
     },
@@ -87,21 +88,21 @@ export async function sendFriendRequest(userId: number) {
 }
 
 export async function removeFriend(userId: number) {
-    const data = await apiRequest({
-        endpoint: `friends/${userId}`,
-        method: "DELETE",
-    });
+  const data = await apiRequest({
+    endpoint: `friends/${userId}`,
+    method: 'DELETE',
+  });
 
-  return data
-};
+  return data;
+}
 
 export async function blockUser(userId: number) {
   const data = await apiRequest({
-    endpoint: "friends/blocks",
-    method: "POST",
+    endpoint: 'friends/blocks',
+    method: 'POST',
     body: {
       blocked_id: userId,
-    }
+    },
   });
 
   return data;
@@ -110,7 +111,7 @@ export async function blockUser(userId: number) {
 export async function unblockUser(userId: number) {
   const data = await apiRequest({
     endpoint: `friends/blocks/${userId}`,
-    method: "DELETE",
+    method: 'DELETE',
   });
 
   return data;

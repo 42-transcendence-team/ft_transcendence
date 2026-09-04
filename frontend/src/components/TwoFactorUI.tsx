@@ -1,112 +1,124 @@
-import { useRef, useState, Fragment } from "react";
+import { Fragment, useRef, useState } from 'react';
 
-import "@styles/_modal.scss";
-import "@styles/_otpInput.scss";
+import '@styles/_modal.scss';
+import '@styles/_otpInput.scss';
 
 const CODE_LENGTH = 6;
 
-export function OtpInput({ onChange }: { onChange?: (code: string[]) => void }) {
-	const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
-	const inputsRef = useRef<HTMLInputElement[]>([]);
+export function OtpInput({
+  onChange,
+}: {
+  onChange?: (code: string[]) => void;
+}) {
+  const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(''));
+  const inputsRef = useRef<HTMLInputElement[]>([]);
 
-	const handleChange = (value: string, index: number) => {
-		if (!/^\d?$/.test(value)) return;
+  const handleChange = (value: string, index: number) => {
+    if (!/^\d?$/.test(value)) return;
 
-		const newCode = [...code];
-		newCode[index] = value;
-		setCode(newCode);
+    const newCode = [...code];
+    newCode[index] = value;
+    setCode(newCode);
 
-		if (onChange) onChange(newCode);
+    if (onChange) onChange(newCode);
 
-		if (value && index < CODE_LENGTH - 1)
-			inputsRef.current[index + 1]?.focus();
-	};
+    if (value && index < CODE_LENGTH - 1) inputsRef.current[index + 1]?.focus();
+  };
 
-	const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-		if (e.key === "Backspace" && !code[index] && index > 0)
-			inputsRef.current[index - 1]?.focus();
-	};
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'Backspace' && !code[index] && index > 0)
+      inputsRef.current[index - 1]?.focus();
+  };
 
-	const handlePaste = (e: React.ClipboardEvent) => {
-		e.preventDefault();
-		const paste = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, CODE_LENGTH);
-		
-		if (!paste) return;
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const paste = e.clipboardData
+      .getData('text')
+      .replace(/\D/g, '')
+      .slice(0, CODE_LENGTH);
 
-		const newCode = paste.split("");
-		const filled = [...newCode, ...Array(CODE_LENGTH - newCode.length).fill("")];
-		setCode(filled);
+    if (!paste) return;
 
-		if (onChange) onChange(filled);
+    const newCode = paste.split('');
+    const filled = [
+      ...newCode,
+      ...Array(CODE_LENGTH - newCode.length).fill(''),
+    ];
+    setCode(filled);
 
-		const nextIndex = newCode.length < CODE_LENGTH ? newCode.length : CODE_LENGTH - 1;
-		inputsRef.current[nextIndex]?.focus();
-	};
+    if (onChange) onChange(filled);
 
-	return (
-		<div className="otp">
-			{code.map((digit, index) => (
-				<Fragment key={index}>
-					{index === 3 && <span className="otp__separator">-</span>}
-					<input
-						id={`otp-${index}`}
-						ref={(el) => {
-							if (el) inputsRef.current[index] = el;
-						}}
-						type="text"
-						inputMode="numeric"
-						maxLength={1}
-						value={digit}
-						onChange={(e) => handleChange(e.target.value, index)}
-						onKeyDown={(e) => handleKeyDown(e, index)}
-						onPaste={handlePaste}
-						className={`otp__input ${digit ? "is-filled" : ""}`}
-					/>
-				</Fragment>
-			))}
-		</div>
-	);
+    const nextIndex =
+      newCode.length < CODE_LENGTH ? newCode.length : CODE_LENGTH - 1;
+    inputsRef.current[nextIndex]?.focus();
+  };
+
+  return (
+    <div className="otp">
+      {code.map((digit, index) => (
+        <Fragment key={index}>
+          {index === 3 && <span className="otp__separator">-</span>}
+          <input
+            id={`otp-${index}`}
+            ref={(el) => {
+              if (el) inputsRef.current[index] = el;
+            }}
+            type="text"
+            inputMode="numeric"
+            maxLength={1}
+            value={digit}
+            onChange={(e) => handleChange(e.target.value, index)}
+            onKeyDown={(e) => handleKeyDown(e, index)}
+            onPaste={handlePaste}
+            className={`otp__input ${digit ? 'is-filled' : ''}`}
+          />
+        </Fragment>
+      ))}
+    </div>
+  );
 }
 
 type Props = {
-	onClose: () => void;
-	onVerify: () => void;
-	disabled: boolean;
+  onClose: () => void;
+  onVerify: () => void;
+  disabled: boolean;
 };
 
 export function Footer2FA(props: Props) {
-	return (
-		<div className="modal-2fa__footer">
-			<button
-				type="button"
-				className="modal-2fa__btn modal-2fa__btn--cancel"
-				onClick={props.onClose}
-			>
-				Cancelar
-			</button>
-			<button
-				type="button"
-				className="modal-2fa__btn modal-2fa__btn--verify"
-				onClick={props.onVerify}
-				disabled={props.disabled}
-			>
-				Verificar y guardar
-			</button>
-		</div>
-	);
+  return (
+    <div className="modal-2fa__footer">
+      <button
+        type="button"
+        className="modal-2fa__btn modal-2fa__btn--cancel"
+        onClick={props.onClose}
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        className="modal-2fa__btn modal-2fa__btn--verify"
+        onClick={props.onVerify}
+        disabled={props.disabled}
+      >
+        Verificar y guardar
+      </button>
+    </div>
+  );
 }
 
 export function TwoFactorQRCode({ qrBase64 }: { qrBase64: string }) {
   return (
     <div className="otp__qr">
-		<p className="otp__qr--text">Escanea este código con tu app de autenticación:</p>
-		<div className="otp__qr--frame">
-			<img
-				src={`data:image/png;base64,${qrBase64}`}
-				alt="Código QR 2FA"
-				className="otp__qr--image"
-			/>
-		</div>
-	</div>
+      <p className="otp__qr--text">
+        Escanea este código con tu app de autenticación:
+      </p>
+      <div className="otp__qr--frame">
+        <img
+          src={`data:image/png;base64,${qrBase64}`}
+          alt="Código QR 2FA"
+          className="otp__qr--image"
+        />
+      </div>
+    </div>
   );
 }

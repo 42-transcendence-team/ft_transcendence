@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import skullLogo from '../assets/icons/skull_logo.png';
 import '../styles/components/_feedPost.scss';
 
@@ -39,45 +39,37 @@ export const Post: React.FC<PostProps> = ({
 
   return (
     <div className={postClassName}>
-      <div className='feed-post__header'>
-        <div className='feed-post__avatar'>
+      <div className="feed-post__header">
+        <div className="feed-post__avatar">
           <img
-            className='feed-post__avatar-image'
+            className="feed-post__avatar-image"
             src={skullLogo}
-            alt='Avatar del usuario'
+            alt="Avatar del usuario"
           />
         </div>
 
-        <div className='feed-post__info'>
-          <span className='feed-post__username'>
-            {username}
-          </span>
+        <div className="feed-post__info">
+          <span className="feed-post__username">{username}</span>
 
-          <span className='feed-post__time'>
-            {time}
-          </span>
+          <span className="feed-post__time">{time}</span>
         </div>
       </div>
 
-      <p className='feed-post__message'>
-        {message}
-      </p>
+      <p className="feed-post__message">{message}</p>
 
       {images.length > 0 && (
-        <div className='feed-post__gallery'>
+        <div className="feed-post__gallery">
           {displayedImages.map((image, index) => (
             <img
               key={index}
-              className='feed-post__gallery-image'
+              className="feed-post__gallery-image"
               src={image}
               alt={`Contenido de la publicación ${index + 1}`}
             />
           ))}
 
           {moreImages > 0 && (
-            <div className='feed-post__more'>
-              +{moreImages}
-            </div>
+            <div className="feed-post__more">+{moreImages}</div>
           )}
         </div>
       )}

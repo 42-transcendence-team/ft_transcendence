@@ -3,10 +3,10 @@ package websocket
 import (
 	"backend/internal/dto"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
 	"sync"
 	"time"
-	"github.com/gorilla/websocket"
 )
 
 type Client struct {
@@ -15,10 +15,10 @@ type Client struct {
 
 	Hub *Hub // Referencia al Hub para registrar/desregistrar clientes
 
-	UserID   uint   // ID del usuario asociado al cliente
-	Username string // Nombre de usuario del cliente
-	Rooms map[uint]*Room // Salas a las que el cliente está unido
-	Mu sync.RWMutex // Protege Rooms (se accede desde hub y desde las salas)
+	UserID   uint           // ID del usuario asociado al cliente
+	Username string         // Nombre de usuario del cliente
+	Rooms    map[uint]*Room // Salas a las que el cliente está unido
+	Mu       sync.RWMutex   // Protege Rooms (se accede desde hub y desde las salas)
 
 	closeOnce sync.Once // Garantiza que SendChan solo se cierre una vez (kick de clientes lentos)
 }
@@ -31,7 +31,6 @@ func NewClient(conn *websocket.Conn, hub *Hub, userID uint, username string) *Cl
 		UserID:   userID,
 		Username: username,
 		Rooms:    make(map[uint]*Room),
-		
 	}
 }
 
@@ -39,7 +38,7 @@ const (
 	writeWait      = 10 * time.Second    // Tiempo permitido para escribir un mensaje
 	pongWait       = 60 * time.Second    // Tiempo permitido para recibir el pong
 	pingPeriod     = (pongWait * 9) / 10 // Enviar pings un poco antes del timeout
-	maxMessageSize = 1024                 // Tamaño máximo de mensaje
+	maxMessageSize = 1024                // Tamaño máximo de mensaje
 )
 
 type ClientConn interface {

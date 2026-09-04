@@ -7,12 +7,12 @@ import (
 )
 
 type Hub struct {
-	Clients          map[*Client]bool // Mapa de clientes conectados
-	ClientsConnected map[uint]*Client // Mapa de clientes conectados
-	Rooms            map[uint]*Room   // Mapa de salas de chat y sus clientes
-	Register         chan *Client     // Canal para registrar nuevos clientes
-	Unregister       chan *Client     // Canal para desregistrar clientes
-	CloseRooms       chan uint        // Canal para cerrar salas
+	Clients          map[*Client]bool          // Mapa de clientes conectados
+	ClientsConnected map[uint]map[*Client]bool // Conexiones por usuario (un usuario puede tener varias pestañas)
+	Rooms            map[uint]*Room            // Mapa de salas de chat y sus clientes
+	Register         chan *Client              // Canal para registrar nuevos clientes
+	Unregister       chan *Client              // Canal para desregistrar clientes
+	CloseRooms       chan uint                 // Canal para cerrar salas
 
 	Mu sync.RWMutex // Mutex para proteger el acceso a los mapas
 }
@@ -20,7 +20,7 @@ type Hub struct {
 func NewHub() *Hub {
 	return &Hub{
 		Clients:          make(map[*Client]bool),
-		ClientsConnected: make(map[uint]*Client),
+		ClientsConnected: make(map[uint]map[*Client]bool),
 		Register:         make(chan *Client),
 		Unregister:       make(chan *Client),
 		Rooms:            make(map[uint]*Room),
@@ -33,24 +33,25 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.Register:
 			h.Mu.Lock()
-			if prev, ok := h.ClientsConnected[client.UserID]; ok && prev != client {
-				// El mismo usuario abrió una nueva conexión: se expulsa la
-				// anterior. La conexión vieja hará que su ReadPump falle y
-				// acabe en Unregister, donde se limpia sin tocar a la nueva.
-				log.Printf("Nueva conexión para el usuario %d: cerrando la conexión anterior.", client.UserID)
-				prev.Conn.Close()
+			// Un mismo usuario puede tener varias conexiones abiertas (varias
+			// pestañas del navegador). No se expulsa la conexión anterior: se
+			// añade la nueva al set de conexiones del usuario.
+			if h.ClientsConnected[client.UserID] == nil {
+				h.ClientsConnected[client.UserID] = make(map[*Client]bool)
 			}
+			h.ClientsConnected[client.UserID][client] = true
 			h.Clients[client] = true
-			h.ClientsConnected[client.UserID] = client
 			h.Mu.Unlock()
 
 		case client := <-h.Unregister:
 			h.Mu.Lock()
-			// Solo se elimina de ClientsConnected si sigue apuntando a ESTE
-			// cliente. Si el usuario se reconectó, la entrada pertenece a la
-			// conexión nueva y no debe borrarse.
-			if stored, ok := h.ClientsConnected[client.UserID]; ok && stored == client {
-				delete(h.ClientsConnected, client.UserID)
+			// Se elimina el cliente del set de su usuario. Solo se borra la
+			// clave cuando ya no queda ninguna conexión de ese usuario.
+			if conns, ok := h.ClientsConnected[client.UserID]; ok {
+				delete(conns, client)
+				if len(conns) == 0 {
+					delete(h.ClientsConnected, client.UserID)
+				}
 			}
 			if _, ok := h.Clients[client]; ok {
 				delete(h.Clients, client)
@@ -106,7 +107,7 @@ func (h *Hub) SendMessagesToUsers(userID []uint, message []byte) {
 	defer h.Mu.RUnlock()
 
 	for _, id := range userID {
-		if client, ok := h.ClientsConnected[id]; ok {
+		for client := range h.ClientsConnected[id] {
 			// Envio no bloqueante: un cliente lento no debe congelar el hub
 			select {
 			case client.SendChan <- message:
@@ -120,7 +121,7 @@ func (h *Hub) SendMessagesToUser(userID uint, message []byte) {
 	h.Mu.RLock()
 	defer h.Mu.RUnlock()
 
-	if client, ok := h.ClientsConnected[userID]; ok {
+	for client := range h.ClientsConnected[userID] {
 		select {
 		case client.SendChan <- message:
 		default:

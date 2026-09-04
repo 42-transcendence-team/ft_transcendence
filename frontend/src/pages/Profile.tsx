@@ -144,7 +144,7 @@ export const Profile = () => {
           return;
         }
 
-setProfileError("No se ha podido cargar el perfil.");
+        setProfileError('No se ha podido cargar el perfil.');
       })
       .finally(() => {
         if (!cancelled) {
@@ -206,7 +206,7 @@ setProfileError("No se ha podido cargar el perfil.");
         setPostsTotalPages(response.pagination.totalPages);
       } catch {
         if (!cancelled && postsOwnerIDRef.current === ownerID) {
-setPostsError("No se han podido cargar las publicaciones.");
+          setPostsError('No se han podido cargar las publicaciones.');
         }
       } finally {
         if (!cancelled && postsOwnerIDRef.current === ownerID) {
@@ -402,7 +402,7 @@ setPostsError("No se han podido cargar las publicaciones.");
       setPostsTotalPages(response.pagination.totalPages);
     } catch {
       if (postsOwnerIDRef.current === ownerID) {
-setPostsError("No se han podido cargar más publicaciones.");
+        setPostsError('No se han podido cargar más publicaciones.');
       }
     } finally {
       if (postsOwnerIDRef.current === ownerID) {
@@ -425,10 +425,8 @@ setPostsError("No se han podido cargar más publicaciones.");
               ...post,
               likeCount: reactionState.likeCount,
               dislikeCount: reactionState.dislikeCount,
-              likedByCurrentUser:
-                reactionState.likedByCurrentUser,
-              dislikedByCurrentUser:
-                reactionState.dislikedByCurrentUser,
+              likedByCurrentUser: reactionState.likedByCurrentUser,
+              dislikedByCurrentUser: reactionState.dislikedByCurrentUser,
             }
           : post,
       ),
@@ -526,7 +524,7 @@ setPostsError("No se han podido cargar más publicaciones.");
   if (profileError || !profileUser) {
     return (
       <div className="error-screen">
-{profileError ?? "No se ha podido cargar el perfil."}
+        {profileError ?? 'No se ha podido cargar el perfil.'}
       </div>
     );
   }
@@ -670,7 +668,9 @@ setPostsError("No se han podido cargar más publicaciones.");
         >
           <div className="profile__posts">
             {isLoadingPosts && (
-<div className="profile__posts-state">Cargando publicaciones.</div>
+              <div className="profile__posts-state">
+                Cargando publicaciones.
+              </div>
             )}
 
             {!isLoadingPosts && profilePosts.length === 0 && postsError && (
@@ -679,7 +679,7 @@ setPostsError("No se han podido cargar más publicaciones.");
 
             {!isLoadingPosts && profilePosts.length === 0 && !postsError && (
               <div className="profile__empty">
-Este usuario todavía no ha publicado nada.
+                Este usuario todavía no ha publicado nada.
               </div>
             )}
 
@@ -702,7 +702,7 @@ Este usuario todavía no ha publicado nada.
                     disabled={isLoadingMorePosts}
                     onClick={() => void handleLoadMorePosts()}
                   >
-{isLoadingMorePosts ? "Cargando..." : "Cargar más"}
+                    {isLoadingMorePosts ? 'Cargando...' : 'Cargar más'}
                   </button>
                 )}
               </>

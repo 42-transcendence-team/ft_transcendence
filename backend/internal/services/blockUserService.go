@@ -64,9 +64,14 @@ func (s *BlockUserService) MapToBlocksResponse(reqs []models.Block, currentUserI
 		if err != nil {
 			return nil, appErr.NewNotFound("User not found")
 		}
+		avatarURL := ""
+		if blocked.AvatarPath != nil {
+			avatarURL = *blocked.AvatarPath
+		}
 		res = append(res, dto.BlocksResponse{
-			UserID:   r.BlockedID,
-			Username: blocked.Login,
+			UserID:    r.BlockedID,
+			Username:  blocked.Login,
+			AvatarURL: avatarURL,
 		})
 	}
 

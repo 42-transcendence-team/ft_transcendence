@@ -10,12 +10,12 @@ declare module '*.svg?react' {
   export default ReactComponent;
 }
 
-declare module "*.scss" {
+declare module '*.scss' {
   const content: { [className: string]: string };
   export default content;
 }
 
-declare module "@reset" {
+declare module '@reset' {
   const content: any;
   export default content;
 }

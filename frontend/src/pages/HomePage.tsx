@@ -94,10 +94,8 @@ export const HomePage = () => {
               ...post,
               likeCount: reactionState.likeCount,
               dislikeCount: reactionState.dislikeCount,
-              likedByCurrentUser:
-                reactionState.likedByCurrentUser,
-              dislikedByCurrentUser:
-                reactionState.dislikedByCurrentUser,
+              likedByCurrentUser: reactionState.likedByCurrentUser,
+              dislikedByCurrentUser: reactionState.dislikedByCurrentUser,
             }
           : post,
       ),
@@ -107,11 +105,14 @@ export const HomePage = () => {
   return (
     <section className="home-page">
       <header className="home-page__header">
-        <h2></h2>{/* no borra es para el diseño */}
-        </header>
+        <h2></h2>
+        {/* no borra es para el diseño */}
+      </header>
 
       <div className="home-page__feed">
-        {isLoading && <p className="home-page__state">Cargando publicaciones.</p>}
+        {isLoading && (
+          <p className="home-page__state">Cargando publicaciones.</p>
+        )}
 
         {!isLoading && error && posts.length === 0 && (
           <p className="home-page__error">{error}</p>

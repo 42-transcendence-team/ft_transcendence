@@ -63,10 +63,26 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        padding: 0;
+        border: none;
+        background: none;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+        font-family: inherit;
 
         span {
             font-weight: 600;
             font-size: 0.95rem;
+        }
+
+        &:hover {
+            opacity: 0.85;
+        }
+
+        &:focus-visible {
+            outline: 2px solid white;
+            outline-offset: 2px;
         }
     }
 
@@ -78,6 +94,7 @@
     
     &__messages {
         flex: 1;
+        min-height: 0;
         padding: 0.7rem;
         padding-bottom: 0.3rem;
         overflow-y: auto;

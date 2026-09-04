@@ -1,288 +1,265 @@
-import { useEffect, useState } from "react";
-import { deleteAvatar, updateAvatar } from "../../api/UserAvatar";
-import skullLogo from "../../assets/icons/skull_logo.png";
-import { ImageUploadField } from "../ImageUploadField";
-import { Modal } from "../Modal";
-import { validateImageFile } from "../../utils/imageValidation";
-import "../../styles/components/_avatarEditorModal.scss";
+import { useEffect, useState } from 'react';
+import { deleteAvatar, updateAvatar } from '../../api/UserAvatar';
+import skullLogo from '../../assets/icons/skull_logo.png';
+import { validateImageFile } from '../../utils/imageValidation';
+import { ImageUploadField } from '../ImageUploadField';
+import { Modal } from '../Modal';
+import '../../styles/components/_avatarEditorModal.scss';
 
 const MAX_AVATAR_IMAGE_SIZE = 5 * 1024 * 1024;
 
 const ALLOWED_AVATAR_IMAGE_TYPES = [
-	"image/jpeg",
-	"image/png",
-	"image/webp",
+  'image/jpeg',
+  'image/png',
+  'image/webp',
 ] as const;
 
 type AvatarEditorModalProps = {
-	open: boolean;
-	currentAvatarPath: string | null;
-	onClose: () => void;
-	onUpdated: () => Promise<void>;
+  open: boolean;
+  currentAvatarPath: string | null;
+  onClose: () => void;
+  onUpdated: () => Promise<void>;
 };
 
 // Adapta la validación reutilizable de imágenes a las restricciones
 // concretas de los avatares.
 function validateAvatarImage(file: File): string | null {
-	return validateImageFile(file, {
-		allowedTypes: ALLOWED_AVATAR_IMAGE_TYPES,
-		maxSize: MAX_AVATAR_IMAGE_SIZE,
-		invalidTypeMessage:
-			"La imagen debe ser un archivo JPEG, PNG o WebP.",
-		maxSizeMessage:
-			"La imagen no puede superar los 5 MB.",
-	});
+  return validateImageFile(file, {
+    allowedTypes: ALLOWED_AVATAR_IMAGE_TYPES,
+    maxSize: MAX_AVATAR_IMAGE_SIZE,
+    invalidTypeMessage: 'La imagen debe ser un archivo JPEG, PNG o WebP.',
+    maxSizeMessage: 'La imagen no puede superar los 5 MB.',
+  });
 }
 
 // Extrae el código de validación aunque la respuesta de error llegue
 // directamente en data.details o envuelta dentro de data.error.details.
 function getAvatarErrorCode(error: unknown): string | null {
-	if (
-		typeof error !== "object" ||
-		error === null ||
-		!("data" in error)
-	) {
-		return null;
-	}
+  if (typeof error !== 'object' || error === null || !('data' in error)) {
+    return null;
+  }
 
-	const data = (
-		error as {
-			data?: {
-				details?: Record<string, string>;
-				error?: {
-					details?: Record<string, string>;
-				};
-			};
-		}
-	).data;
+  const data = (
+    error as {
+      data?: {
+        details?: Record<string, string>;
+        error?: {
+          details?: Record<string, string>;
+        };
+      };
+    }
+  ).data;
 
-	return (
-		data?.details?.image ??
-		data?.error?.details?.image ??
-		null
-	);
+  return data?.details?.image ?? data?.error?.details?.image ?? null;
 }
 
 // Convierte los códigos devueltos por el backend en mensajes comprensibles
 // para el usuario. Los errores desconocidos utilizan el mensaje alternativo.
 function getAvatarErrorMessage(
-	error: unknown,
-	fallbackMessage: string,
+  error: unknown,
+  fallbackMessage: string,
 ): string {
-	switch (getAvatarErrorCode(error)) {
-	case "required":
-		return "Selecciona una imagen.";
-	case "invalid_type":
-		return "La imagen debe ser un archivo JPEG, PNG o WebP.";
-	case "max_size":
-		return "La imagen no puede superar los 5 MB.";
-	default:
-		return fallbackMessage;
-	}
+  switch (getAvatarErrorCode(error)) {
+    case 'required':
+      return 'Selecciona una imagen.';
+    case 'invalid_type':
+      return 'La imagen debe ser un archivo JPEG, PNG o WebP.';
+    case 'max_size':
+      return 'La imagen no puede superar los 5 MB.';
+    default:
+      return fallbackMessage;
+  }
 }
 
 function getAvatarSource(avatarPath: string | null): string {
-	if (!avatarPath) {
-		return skullLogo;
-	}
+  if (!avatarPath) {
+    return skullLogo;
+  }
 
-	return `/${avatarPath}`;
+  return `/${avatarPath}`;
 }
 
 export function AvatarEditorModal({
-	open,
-	currentAvatarPath,
-	onClose,
-	onUpdated,
+  open,
+  currentAvatarPath,
+  onClose,
+  onUpdated,
 }: AvatarEditorModalProps) {
-	const [file, setFile] = useState<File | null>(null);
-	const [validationError, setValidationError] =
-		useState<string | null>(null);
-	const [requestError, setRequestError] =
-		useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
 
-	// Un único estado evita ejecutar guardado y borrado al mismo tiempo
-	// y permite mostrar qué operación está en curso.
-	const [operation, setOperation] =
-		useState<"save" | "delete" | null>(null);
+  // Un único estado evita ejecutar guardado y borrado al mismo tiempo
+  // y permite mostrar qué operación está en curso.
+  const [operation, setOperation] = useState<'save' | 'delete' | null>(null);
 
-	const isBusy = operation !== null;
+  const isBusy = operation !== null;
 
-	useEffect(() => {
-		if (!open) {
-			return;
-		}
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
 
-		// Cada apertura comienza limpia para no conservar archivos,
-		// errores u operaciones de la apertura anterior.
-		setFile(null);
-		setValidationError(null);
-		setRequestError(null);
-		setOperation(null);
-	}, [open]);
+    // Cada apertura comienza limpia para no conservar archivos,
+    // errores u operaciones de la apertura anterior.
+    setFile(null);
+    setValidationError(null);
+    setRequestError(null);
+    setOperation(null);
+  }, [open]);
 
-	const handleClose = () => {
-		// Evita cerrar la modal mientras una petición sigue en curso.
-		if (!isBusy) {
-			onClose();
-		}
-	};
+  const handleClose = () => {
+    // Evita cerrar la modal mientras una petición sigue en curso.
+    if (!isBusy) {
+      onClose();
+    }
+  };
 
-	const handleFileChange = (nextFile: File | null) => {
-		setFile(nextFile);
-		setRequestError(null);
-	};
+  const handleFileChange = (nextFile: File | null) => {
+    setFile(nextFile);
+    setRequestError(null);
+  };
 
-	const handleSave = async () => {
-		if (!file || isBusy) {
-			if (!file) {
-				setValidationError("Selecciona una imagen.");
-			}
+  const handleSave = async () => {
+    if (!file || isBusy) {
+      if (!file) {
+        setValidationError('Selecciona una imagen.');
+      }
 
-			return;
-		}
+      return;
+    }
 
-		setValidationError(null);
-		setRequestError(null);
-		setOperation("save");
+    setValidationError(null);
+    setRequestError(null);
+    setOperation('save');
 
-		try {
-			await updateAvatar(file);
+    try {
+      await updateAvatar(file);
 
-			// Recarga el usuario del contexto para mostrar inmediatamente
-			// la nueva ruta del avatar.
-			await onUpdated();
+      // Recarga el usuario del contexto para mostrar inmediatamente
+      // la nueva ruta del avatar.
+      await onUpdated();
 
-			onClose();
-		} catch (error) {
-			setRequestError(
-				getAvatarErrorMessage(
-					error,
-					"No se ha podido actualizar la imagen de perfil.",
-				),
-			);
-		} finally {
-			setOperation(null);
-		}
-	};
+      onClose();
+    } catch (error) {
+      setRequestError(
+        getAvatarErrorMessage(
+          error,
+          'No se ha podido actualizar la imagen de perfil.',
+        ),
+      );
+    } finally {
+      setOperation(null);
+    }
+  };
 
-	const handleDelete = async () => {
-		if (!currentAvatarPath || isBusy) {
-			return;
-		}
+  const handleDelete = async () => {
+    if (!currentAvatarPath || isBusy) {
+      return;
+    }
 
-		setValidationError(null);
-		setRequestError(null);
-		setOperation("delete");
+    setValidationError(null);
+    setRequestError(null);
+    setOperation('delete');
 
-		try {
-			await deleteAvatar();
+    try {
+      await deleteAvatar();
 
-			// Recarga el usuario para que el perfil vuelva a mostrar
-			// la imagen predeterminada.
-			await onUpdated();
+      // Recarga el usuario para que el perfil vuelva a mostrar
+      // la imagen predeterminada.
+      await onUpdated();
 
-			onClose();
-		} catch (error) {
-			setRequestError(
-				getAvatarErrorMessage(
-					error,
-					"No se ha podido eliminar la imagen de perfil.",
-				),
-			);
-		} finally {
-			setOperation(null);
-		}
-	};
+      onClose();
+    } catch (error) {
+      setRequestError(
+        getAvatarErrorMessage(
+          error,
+          'No se ha podido eliminar la imagen de perfil.',
+        ),
+      );
+    } finally {
+      setOperation(null);
+    }
+  };
 
-	return (
-		<Modal
-			open={open}
-			onClose={handleClose}
-			onSubmit={handleSave}
-			submitDisabled={!file || isBusy}
-			closeOnEscape={!isBusy}
-			title="Editar imagen de perfil"
-			modalClassName="avatar-editor-modal"
-			contentClassName="avatar-editor-modal__content"
-		>
-			{/* La imagen actual se oculta cuando existe una nueva previsualización. */}
-			{!file && (
-				<div className="avatar-editor-modal__current-preview">
-					<img
-						className={[
-							"avatar-editor-modal__avatar",
-							currentAvatarPath
-								? ""
-								: "avatar-editor-modal__avatar--fallback",
-						]
-							.filter(Boolean)
-							.join(" ")}
-						src={getAvatarSource(currentAvatarPath)}
-						alt="Imagen de perfil actual"
-					/>
-				</div>
-			)}
+  return (
+    <Modal
+      open={open}
+      onClose={handleClose}
+      onSubmit={handleSave}
+      submitDisabled={!file || isBusy}
+      closeOnEscape={!isBusy}
+      title="Editar imagen de perfil"
+      modalClassName="avatar-editor-modal"
+      contentClassName="avatar-editor-modal__content"
+    >
+      {/* La imagen actual se oculta cuando existe una nueva previsualización. */}
+      {!file && (
+        <div className="avatar-editor-modal__current-preview">
+          <img
+            className={[
+              'avatar-editor-modal__avatar',
+              currentAvatarPath ? '' : 'avatar-editor-modal__avatar--fallback',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            src={getAvatarSource(currentAvatarPath)}
+            alt="Imagen de perfil actual"
+          />
+        </div>
+      )}
 
-			<ImageUploadField
-				id="profile-avatar"
-				label="Selecciona una imagen"
-				file={file}
-				accept="image/jpeg,image/png,image/webp"
-				disabled={isBusy}
-				previewAlt="Vista previa de la nueva imagen de perfil"
-				variant="avatar"
-				validate={validateAvatarImage}
-				onChange={handleFileChange}
-				onError={setValidationError}
-			/>
+      <ImageUploadField
+        id="profile-avatar"
+        label="Selecciona una imagen"
+        file={file}
+        accept="image/jpeg,image/png,image/webp"
+        disabled={isBusy}
+        previewAlt="Vista previa de la nueva imagen de perfil"
+        variant="avatar"
+        validate={validateAvatarImage}
+        onChange={handleFileChange}
+        onError={setValidationError}
+      />
 
-			{validationError && (
-				<p className="avatar-editor-modal__error">
-					{validationError}
-				</p>
-			)}
+      {validationError && (
+        <p className="avatar-editor-modal__error">{validationError}</p>
+      )}
 
-			{requestError && (
-				<p className="avatar-editor-modal__error">
-					{requestError}
-				</p>
-			)}
+      {requestError && (
+        <p className="avatar-editor-modal__error">{requestError}</p>
+      )}
 
-			<div className="modal__footer avatar-editor-modal__actions">
-				<button
-					className="modal__button modal__button--cancel"
-					type="button"
-					disabled={isBusy}
-					onClick={handleClose}
-				>
-					Cancelar
-				</button>
+      <div className="modal__footer avatar-editor-modal__actions">
+        <button
+          className="modal__button modal__button--cancel"
+          type="button"
+          disabled={isBusy}
+          onClick={handleClose}
+        >
+          Cancelar
+        </button>
 
-				{currentAvatarPath && (
-					<button
-						className="modal__button modal__button--disable"
-						type="button"
-						disabled={isBusy}
-						onClick={handleDelete}
-					>
-						{operation === "delete"
-							? "Eliminando..."
-							: "Eliminar imagen"}
-					</button>
-				)}
+        {currentAvatarPath && (
+          <button
+            className="modal__button modal__button--disable"
+            type="button"
+            disabled={isBusy}
+            onClick={handleDelete}
+          >
+            {operation === 'delete' ? 'Eliminando...' : 'Eliminar imagen'}
+          </button>
+        )}
 
-				<button
-					className="modal__button modal__button--enable"
-					type="button"
-					disabled={!file || isBusy}
-					onClick={handleSave}
-				>
-					{operation === "save"
-						? "Guardando..."
-						: "Guardar imagen"}
-				</button>
-			</div>
-		</Modal>
-	);
+        <button
+          className="modal__button modal__button--enable"
+          type="button"
+          disabled={!file || isBusy}
+          onClick={handleSave}
+        >
+          {operation === 'save' ? 'Guardando...' : 'Guardar imagen'}
+        </button>
+      </div>
+    </Modal>
+  );
 }

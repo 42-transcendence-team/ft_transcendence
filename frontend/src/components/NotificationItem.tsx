@@ -7,7 +7,13 @@ export const NotificationItem: React.FC<{
   onChatOpen: (roomId: number) => void;
   onOpenReceivedRequests: () => void;
   onNotificationClick?: () => void;
-}> = ({ notification, onMarkAsRead, onChatOpen, onOpenReceivedRequests, onNotificationClick }) => {
+}> = ({
+  notification,
+  onMarkAsRead,
+  onChatOpen,
+  onOpenReceivedRequests,
+  onNotificationClick,
+}) => {
   const navigate = useNavigate();
 
   const handleClick = () => {

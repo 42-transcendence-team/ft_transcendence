@@ -1,15 +1,9 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
 type PrivateLeftPanelProps = {
-    children: ReactNode;
+  children: ReactNode;
 };
 
-export function PrivateLeftPanel({
-    children,
-}: PrivateLeftPanelProps) {
-    return (
-        <aside className="privateLayout__leftPanel">
-            {children}
-        </aside>
-    );
+export function PrivateLeftPanel({ children }: PrivateLeftPanelProps) {
+  return <aside className="privateLayout__leftPanel">{children}</aside>;
 }

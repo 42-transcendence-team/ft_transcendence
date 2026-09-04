@@ -1,4 +1,4 @@
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 type SearchPaginationProps = {
   page: number;
@@ -15,11 +15,7 @@ export function SearchPagination({
 }: SearchPaginationProps) {
   return (
     <div className="searchResults__pagination">
-      <button
-        type="button"
-        onClick={onPrevious}
-        disabled={page <= 1}
-      >
+      <button type="button" onClick={onPrevious} disabled={page <= 1}>
         <FiChevronLeft />
       </button>
 
@@ -27,11 +23,7 @@ export function SearchPagination({
         Página {page} de {totalPages}
       </span>
 
-      <button
-        type="button"
-        onClick={onNext}
-        disabled={page >= totalPages}
-      >
+      <button type="button" onClick={onNext} disabled={page >= totalPages}>
         <FiChevronRight />
       </button>
     </div>

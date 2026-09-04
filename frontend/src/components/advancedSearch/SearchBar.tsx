@@ -1,44 +1,47 @@
-import "../../styles/components/advancedSearch/_searchBar.scss"
-import { FiSearch } from "react-icons/fi";
+import '../../styles/components/advancedSearch/_searchBar.scss';
 import { useState } from 'react';
+import { FiSearch } from 'react-icons/fi';
 
 type SearchBarProps = {
-  onSearch: (query: string) => void
-}
+  onSearch: (query: string) => void;
+};
 
 export const SearchBar = ({ onSearch }: SearchBarProps) => {
-  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement> ) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
-  }
-  
-  const handleButtonClick = () => {
-    const cleanQuery = searchQuery.trim()
+  };
 
-    onSearch(cleanQuery)
-    setSearchQuery("")
-  }
+  const handleButtonClick = () => {
+    const cleanQuery = searchQuery.trim();
+
+    onSearch(cleanQuery);
+    setSearchQuery('');
+  };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
+    if (event.key === 'Enter') {
       handleButtonClick();
     }
   };
 
   return (
     <div className="privHeader__functions--searchBar">
-      <input 
+      <input
         id="header-search-input"
         value={searchQuery}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        className="privHeader__functions--searchBar__input" 
-        type="text" 
-        placeholder="Buscar..." 
+        className="privHeader__functions--searchBar__input"
+        type="text"
+        placeholder="Buscar..."
       />
-      <button className="searchBar__button" type="button" onClick={handleButtonClick}
-        >
+      <button
+        className="searchBar__button"
+        type="button"
+        onClick={handleButtonClick}
+      >
         <FiSearch className="searchBar__icon" />
       </button>
     </div>

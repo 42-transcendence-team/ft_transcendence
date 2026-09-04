@@ -1,21 +1,29 @@
-import { apiRequest } from "./ApiRequest";
+import { apiRequest } from './ApiRequest';
 
+export type UserRelation =
+  | 'friends'
+  | 'pending_sent'
+  | 'pending_received'
+  | 'blocked_by_me'
+  | 'blocked_me'
+  | 'none';
 
-export type UserRelation = "friends" | "pending_sent" | "pending_received" 
-    | "blocked_by_me" | "blocked_me" | "none";
-
-export type UserSearchSort ="username_asc" | "username_desc" | "newest" | "oldest";
+export type UserSearchSort =
+  | 'username_asc'
+  | 'username_desc'
+  | 'newest'
+  | 'oldest';
 
 export type UserSearch = {
-	id: number;
-	login: string;
-	name: string;
-	surname: string;
-	avatar_url: string;
-	status: string;
-	relation: UserRelation;
-	can_send_request: boolean;
-	request_id: number | null;
+  id: number;
+  login: string;
+  name: string;
+  surname: string;
+  avatar_url: string;
+  status: string;
+  relation: UserRelation;
+  can_send_request: boolean;
+  request_id: number | null;
 };
 
 export type UserSearchResponse = {
@@ -35,26 +43,26 @@ export type SearchUsersParams = {
 };
 
 export async function searchUsers(
-  params: SearchUsersParams
+  params: SearchUsersParams,
 ): Promise<UserSearchResponse> {
   const queryParams = new URLSearchParams();
 
-  queryParams.set("q", params.query);
+  queryParams.set('q', params.query);
 
   if (params.page) {
-    queryParams.set("page", String(params.page));
+    queryParams.set('page', String(params.page));
   }
 
   if (params.limit) {
-    queryParams.set("limit", String(params.limit));
+    queryParams.set('limit', String(params.limit));
   }
 
   if (params.sort) {
-    queryParams.set("sort", params.sort);
+    queryParams.set('sort', params.sort);
   }
 
   if (params.relations && params.relations.length > 0) {
-    queryParams.set("relations", params.relations.join(","));
+    queryParams.set('relations', params.relations.join(','));
   }
 
   const data = await apiRequest<UserSearchResponse>({

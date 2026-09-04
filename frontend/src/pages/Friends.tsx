@@ -1,6 +1,6 @@
-import skullLogo from '../assets/icons/skull_logo.png';
 import '../styles/pages/_friends.scss';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { Friend, FriendRequest } from '../api/Friends';
 import {
   acceptFriendRequest,
@@ -12,11 +12,12 @@ import {
   unblockUser,
 } from '../api/Friends';
 import { EmptyFriendsState } from '../components/EmptyFriendsState';
+import { UserAvatar } from '../components/users/UserAvatar';
 
 export const Friends = () => {
-  const [activeTab, setActiveTab] = useState<'friends' | 'sent' | 'received' | 'blocked'>(
-    'friends',
-  );
+  const [activeTab, setActiveTab] = useState<
+    'friends' | 'sent' | 'received' | 'blocked'
+  >('friends');
   const [friendsRequests, setFriendsRequest] = useState<Friend[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
   const [sentRequests, setSentRequest] = useState<FriendRequest[]>([]);
@@ -115,9 +116,11 @@ export const Friends = () => {
     return blockedUsers.map((user) => (
       <div className="request-container" key={user.user_id}>
         <div className="request-info">
-          <div className="small-logo">
-            <img src={skullLogo} alt="Avatar del usuario" />
-          </div>
+          <UserAvatar
+            avatarPath={user.avatar_url}
+            username={user.username}
+            size="small"
+          />
           <p>{user.username}</p>
         </div>
         <div className="request-actions">
@@ -140,9 +143,11 @@ export const Friends = () => {
     return sentRequests.map((request) => (
       <div className="request-container" key={request.id}>
         <div className="request-info">
-          <div className="small-logo">
-            <img src={skullLogo} alt="Avatar del usuario" />
-          </div>
+          <UserAvatar
+            avatarPath={request.avatar_url}
+            username={request.username}
+            size="small"
+          />
           <p>{request.username}</p>
         </div>
         <div className="request-actions">
@@ -161,9 +166,11 @@ export const Friends = () => {
     return receivedRequests.map((request) => (
       <div className="request-container" key={request.id}>
         <div className="request-info">
-          <div className="small-logo">
-            <img src={skullLogo} alt="Avatar del usuario" />
-          </div>
+          <UserAvatar
+            avatarPath={request.avatar_url}
+            username={request.username}
+            size="small"
+          />
           <p>{request.username}</p>
         </div>
         <div className="request-actions">
@@ -191,11 +198,17 @@ export const Friends = () => {
       return <EmptyFriendsState />;
     }
     return friendsRequests.map((request) => (
-      <div className="request-container" key={request.user_id}>
+      <Link
+        className="request-container request-container--clickable"
+        to={`/app/profile/${request.username}`}
+        key={request.user_id}
+      >
         <div className="request-info">
-          <div className="small-logo">
-            <img src={skullLogo} alt="Avatar del usuario" />
-          </div>
+          <UserAvatar
+            avatarPath={request.avatar_url}
+            username={request.username}
+            size="small"
+          />
           <p>{request.username}</p>
         </div>
         <div className="request-actions">
@@ -203,7 +216,7 @@ export const Friends = () => {
             <p className="friends">Amigos</p>
           </div>
         </div>
-      </div>
+      </Link>
     ));
   };
 

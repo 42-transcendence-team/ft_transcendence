@@ -15,9 +15,21 @@ import { PrivHeader } from '@components/PrivHeader';
 import { ChatProvider } from 'context/chatContext';
 import { NotificationProvider } from 'context/notificationsContext';
 import { WebSocketProvider } from 'context/webSocketContext';
-import { LuChevronsLeft, LuHouse, LuPlus, LuSearch, LuUsers } from 'react-icons/lu';
 import { useState } from 'react';
-import { Link, Outlet, useLoaderData, useLocation, useNavigate } from 'react-router-dom';
+import {
+  LuChevronsLeft,
+  LuHouse,
+  LuPlus,
+  LuSearch,
+  LuUsers,
+} from 'react-icons/lu';
+import {
+  Link,
+  Outlet,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 
 function useHandleChat() {
   const [activeChat, setActiveChat] = useState<number | null>(null);
@@ -39,7 +51,7 @@ export function PrivateLayout() {
     search.handleCloseSearch();
   };
   const handleRailSearch = () => {
-    document.getElementById('header-search-input')?.focus();
+    document.querySelector<HTMLButtonElement>('.searchBar__button')?.click();
   };
   const handleFriendsClick = () => {
     if (location.pathname.startsWith('/app/friends/')) {
@@ -162,7 +174,7 @@ export function PrivateLayout() {
             <main className="privateLayout__content">
               <div className="privateLayout__contentFrame">
                 <div className="privateLayout__contentInner">
-                    <Outlet context={{ user: data.user }} />
+                  <Outlet context={{ user: data.user }} />
                 </div>
 
                 {search.hasSearched && (

@@ -1,7 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import type { UserRelation, UserSearchSort } from "../../api/UserSearch";
-import "../../styles/components/advancedSearch/_searchFilters.scss";
-import { FiUsers, FiSend, FiInbox, FiSlash, FiChevronDown } from "react-icons/fi";
+import { useEffect, useRef, useState } from 'react';
+import type { UserRelation, UserSearchSort } from '../../api/UserSearch';
+import '../../styles/components/advancedSearch/_searchFilters.scss';
+import {
+  FiChevronDown,
+  FiInbox,
+  FiSend,
+  FiSlash,
+  FiUsers,
+} from 'react-icons/fi';
 
 type SearchFiltersProps = {
   selectedRelations: UserRelation[];
@@ -12,24 +18,24 @@ type SearchFiltersProps = {
 };
 
 const sortOptions: {
-    value: UserSearchSort;
-    label: string;
-  }[] = [
-    { value: "username_asc", label: "A - Z" },
-    { value: "username_desc", label: "Z - A" },
-    { value: "newest", label: "Más recientes" },
-    { value: "oldest", label: "Más antiguos" },
-  ];
+  value: UserSearchSort;
+  label: string;
+}[] = [
+  { value: 'username_asc', label: 'A - Z' },
+  { value: 'username_desc', label: 'Z - A' },
+  { value: 'newest', label: 'Más recientes' },
+  { value: 'oldest', label: 'Más antiguos' },
+];
 
 const filters: {
   value: UserRelation;
   label: string;
   icon: React.ReactNode;
 }[] = [
-  { value: "friends", label: "Amigos", icon: <FiUsers /> },
-  { value: "pending_sent", label: "Enviadas", icon: <FiSend /> },
-  { value: "pending_received", label: "Recibidas", icon: <FiInbox /> },
-  { value: "blocked_by_me", label: "Bloqueados", icon: <FiSlash /> },
+  { value: 'friends', label: 'Amigos', icon: <FiUsers /> },
+  { value: 'pending_sent', label: 'Enviadas', icon: <FiSend /> },
+  { value: 'pending_received', label: 'Recibidas', icon: <FiInbox /> },
+  { value: 'blocked_by_me', label: 'Bloqueados', icon: <FiSlash /> },
 ];
 
 export const SearchFilters = ({
@@ -41,7 +47,9 @@ export const SearchFilters = ({
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortMenuRef = useRef<HTMLDivElement | null>(null);
 
-  const currentSortLabel = sortOptions.find((option) => option.value === selectedSort)?.label ?? "Ordenar";
+  const currentSortLabel =
+    sortOptions.find((option) => option.value === selectedSort)?.label ??
+    'Ordenar';
 
   useEffect(() => {
     if (!isSortOpen) return;
@@ -55,10 +63,10 @@ export const SearchFilters = ({
       }
     }
 
-    document.addEventListener("pointerdown", handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside);
 
     return () => {
-      document.removeEventListener("pointerdown", handleClickOutside);
+      document.removeEventListener('pointerdown', handleClickOutside);
     };
   }, [isSortOpen]);
 
@@ -91,7 +99,7 @@ export const SearchFilters = ({
               key={filter.value}
               type="button"
               className={`searchFilters__chip ${
-                isActive ? "searchFilters__chip--active" : ""
+                isActive ? 'searchFilters__chip--active' : ''
               }`}
               onClick={() => handleChange(filter.value)}
             >
@@ -110,33 +118,33 @@ export const SearchFilters = ({
           className="searchFilters__sortTrigger"
           onClick={() => setIsSortOpen((current) => !current)}
         >
-          <span className="searchFilters__sortLabel">
-            {currentSortLabel}
-          </span>
+          <span className="searchFilters__sortLabel">{currentSortLabel}</span>
 
           <FiChevronDown
             className={`searchFilters__sortIcon ${
-              isSortOpen ? "searchFilters__sortIcon--open" : ""
+              isSortOpen ? 'searchFilters__sortIcon--open' : ''
             }`}
           />
         </button>
 
         {isSortOpen && (
-         <div className="searchFilters__sortMenu">
-          {sortOptions.map((option) => {
-            const isActive = option.value === selectedSort;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                className={isActive ? "searchFilters__sortOption--active" : ""}
-                onClick={() => handleSortSelect(option.value)}
-              >
-                {option.label}
-              </button>
-            );
-          })}
-</div>
+          <div className="searchFilters__sortMenu">
+            {sortOptions.map((option) => {
+              const isActive = option.value === selectedSort;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={
+                    isActive ? 'searchFilters__sortOption--active' : ''
+                  }
+                  onClick={() => handleSortSelect(option.value)}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
