@@ -5,16 +5,22 @@ import {
 
 import { Button1 } from "../Button1";
 import type { UserRelation } from "../../api/UserSearch";
+import { TbUserShare } from "react-icons/tb";
 
 import { useState } from "react";
+import { Link } from "react-router";
+import { FiEdit3, FiEye } from "react-icons/fi";
+import { UserState } from "@components/UserState";
 
 type ProfileHeaderProps = {
 	userId: number;
 	username: string;
 	name: string | null;
 	surname: string | null;
+	visits: number;
 	avatarPath: string | null;
 	presence: UserPresence;
+	status: string | null;
 
 	isOwnProfile: boolean;
 	hasCustomAvatar: boolean;
@@ -31,14 +37,17 @@ type ProfileHeaderProps = {
 	onRemoveFriend?: () => void;
 	onBlockUser?: () => void;
 	onUnblockUser?: () => void;
+	onStatusUpdated?: (newStatus: string) => void;
 };
 
 export const ProfileHeader = ({
 	username,
 	name,
 	surname,
+	visits,
 	avatarPath,
 	presence,
+	status,
 	isOwnProfile,
 	hasCustomAvatar,
 	relation,
@@ -51,6 +60,7 @@ export const ProfileHeader = ({
 	onRemoveFriend,
 	onBlockUser,
 	onUnblockUser,
+	onStatusUpdated,
 }: ProfileHeaderProps) => {
 	const displayName =
 		name && surname
@@ -197,34 +207,66 @@ export const ProfileHeader = ({
 				onClick={onAvatarClick}
 			/>
 
-			<div className="profile__user-details">
-				<h4 className="profile__user-name">
-					{displayName}
-				</h4>
+			<div className="profile__info">
+				<div className="profile__state-overlay">
+					<UserState
+						userStatus={status}
+						isOwnProfile={isOwnProfile}
+						onStatusUpdated={onStatusUpdated}
+					/>
 
-				<span className="profile__username">
-					@{username}
-				</span>
+					<div className="profile__user-details">
+						<h4 className="profile__user-name">
+							{displayName}
+						</h4>
+
+						<span className="profile__username">
+							@{username}
+						</span>
+					</div>
+				</div>
+
+				<div className="profile__acation-btn">
+					<div className="profile__visits">
+						<FiEye />
+						<span>{visits} visitas</span>
+					</div>
+
+					{renderRelationActions()}
+
+					{isOwnProfile && (
+							<Link
+								className="miniProfile__publishBtn"
+								to="/app/posts/new"
+								title="Nuevo post"
+								aria-label="Nuevo post"
+							>
+								<FiEdit3 className="miniProfile__publishIcon" />
+								<span className="miniProfile__publishText">Nuevo post</span>
+							</Link>
+					)}
+
+					{relation !== "blocked_by_me" &&
+						relation !== "blocked_me" && (
+							<div className="profile__share">
+								{showCopied && (
+									<div className="profile__share-toast">
+										Enlace copiado
+									</div>
+								)}
+
+								<Button1
+									label="Compartir"
+									variant="secondary"
+									onClick={handleShare}
+								>
+									<TbUserShare className="profile__share-icon" />
+								</Button1>
+							</div>
+					)}
+				</div>
 			</div>
 
-			{renderRelationActions()}
-
-			{relation !== "blocked_by_me" &&
-				relation !== "blocked_me" && (
-					<div className="profile__share">
-						{showCopied && (
-							<div className="profile__share-toast">
-								Enlace copiado
-							</div>
-						)}
-
-						<Button1
-							label="Compartir"
-							variant="secondary"
-							onClick={handleShare}
-						/>
-					</div>
-			)}
 		</div>
 	);
 };

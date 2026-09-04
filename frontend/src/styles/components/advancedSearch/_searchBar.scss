@@ -2,15 +2,15 @@
 @use "../../components/buttons" as *;
 
 .searchBar {
-  display: flex; // Pone el input y el botón uno al lado del otro
-  gap: 0.5rem; // Deja un pequeño espacio entre ambos
+  display: flex;
+  gap: 0.5rem;
   align-items: center;
   width: 100%;
   max-width: 50%;
 
   &__input {
     flex: 1;
-    min-width: 0;
+	max-width: 80%;
     height: 40px;
     padding: 0 1rem;
     border: none;

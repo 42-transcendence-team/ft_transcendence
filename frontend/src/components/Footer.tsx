@@ -18,39 +18,27 @@ export const Footer = ({
 			>
 				<ul className="footer__list">
 					<li>
-						<NavLink to="/about">
-							Sobre nosotros
-						</NavLink>
+						<NavLink to="/about">Sobre nosotros</NavLink>
 					</li>
 
 					<li>
-						<NavLink to="/cookies">
-							Cookies
-						</NavLink>
+						<NavLink to="/cookies">Cookies</NavLink>
 					</li>
 
 					<li>
-						<NavLink to="/faq">
-							Preguntas frecuentes
-						</NavLink>
+						<NavLink to="/faq">Preguntas frecuentes</NavLink>
 					</li>
 
 					<li>
-						<NavLink to="/contact">
-							Contacto
-						</NavLink>
+						<NavLink to="/contact">Contacto</NavLink>
 					</li>
 
 					<li>
-						<NavLink to="/developers">
-							Desarrolladores
-						</NavLink>
+						<NavLink to="/developers">Desarrolladores</NavLink>
 					</li>
 
 					<li>
-						<NavLink to="/privacy-policy">
-							Privacidad
-						</NavLink>
+						<NavLink to="/privacy-policy">Privacidad</NavLink>
 					</li>
 				</ul>
 			</nav>

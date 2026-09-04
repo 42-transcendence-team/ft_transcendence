@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import type { ApiError } from '../api/ApiRequest';
 import {
@@ -66,8 +66,6 @@ function appendUniquePosts(
 
 export const Profile = () => {
   const { username } = useParams<{ username: string }>();
-
-  const navigate = useNavigate();
 
   const {
     user: authenticatedUser,
@@ -632,6 +630,8 @@ setPostsError("No se han podido cargar más publicaciones.");
           surname={profileUser.surname}
           avatarPath={avatarPath}
           presence={profilePresence}
+          visits={profileUser.visits}
+          status={profileUser.status}
           isOwnProfile={isOwnProfile}
           hasCustomAvatar={hasCustomAvatar}
           relation={profileUser.relation}
@@ -644,17 +644,6 @@ setPostsError("No se han podido cargar más publicaciones.");
           onRemoveFriend={() => setConfirmAction('remove-friend')}
           onBlockUser={() => setConfirmAction('block')}
           onUnblockUser={() => setConfirmAction('unblock')}
-        />
-
-        {relationActionError && (
-          <p className="profile__action-error">{relationActionError}</p>
-        )}
-
-        <ProfileContent
-          status={profileUser.status}
-          visits={profileUser.visits}
-          isOwnProfile={isOwnProfile}
-          canViewPrivateContent={canViewPrivateContent}
           onStatusUpdated={(newStatus) => {
             setProfileUser((currentProfile) => {
               if (!currentProfile) {
@@ -667,7 +656,17 @@ setPostsError("No se han podido cargar más publicaciones.");
               };
             });
           }}
-          onCreatePost={() => navigate('/app/posts/new')}
+        />
+
+        {relationActionError && (
+          <p className="profile__action-error">{relationActionError}</p>
+        )}
+
+        <ProfileContent
+          status={profileUser.status}
+          visits={profileUser.visits}
+          isOwnProfile={isOwnProfile}
+          canViewPrivateContent={canViewPrivateContent}
         >
           <div className="profile__posts">
             {isLoadingPosts && (

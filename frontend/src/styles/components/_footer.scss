@@ -7,7 +7,7 @@
   flex-wrap: wrap;
   gap: 24px;
   width: 100%;
-  padding: 12px 32px;
+  padding: 8px 20px;
 
   color: #ffffff;
   background-color: $dark-purple-background-light;
@@ -21,7 +21,7 @@
 .footer__list {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 15px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -29,7 +29,7 @@
 
 .footer__list a {
   color: #ffffff;
-  font-size: 0.95rem;
+  font-size: 0.65rem;
   text-decoration: none;
   transition: opacity 0.2s ease;
 }
@@ -63,11 +63,8 @@
 }
 
 .desktop-footer {
-  display: none !important; // oculto por defecto en mobile
-
-  // Solo se muestra en desktop (901px), para no solaparse con la
-  // MobileBottomNav (visible hasta 900px)
+  display: none; 
   @media (min-width: 901px) {
-    display: flex !important;
+    display: flex;
   }
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { FiTrendingUp } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getUserProfile, getUserPresence, type UserProfile } from "../api/UserProfile"; // Ajusta la ruta
+import { getUserProfile, type UserProfile } from "../api/UserProfile"; // Ajusta la ruta
 import skullLogo from '../assets/icons/skull_logo.png';
 
 import "../styles/components/_miniProfile.scss";

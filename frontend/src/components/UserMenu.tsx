@@ -5,16 +5,15 @@ import { Logout } from "api/Logout";
 import { useAuth } from "@components/auth-router/AuthContext";
 import { useAuth as useAuthProfile} from "../context/AuthContext";
 import { getUserProfile, type UserProfile } from "../api/UserProfile";
-import { useNavigate, useLoaderData } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export const UserMenu = () => {
 	const [isOpen, setIsOpen] = useState(false);
-	const menuRef = useRef<HTMLDivElement>(null);
-	const user = useLoaderData();
 	const { refreshAuth } = useAuth();
 	const navigate = useNavigate();
 	const { user: authenticatedUser } = useAuthProfile();
 	const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
+	const menuRef = useRef<HTMLDivElement>(null);
 
 	const handleLogoutClick = async () => {
 		try {
@@ -47,6 +46,20 @@ export const UserMenu = () => {
             cancelled = true;
         };
     }, [authenticatedUser?.login]);
+
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+				setIsOpen(false);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, []);
 
 	const handleNavigation = (path: string) => {
         setIsOpen(false);

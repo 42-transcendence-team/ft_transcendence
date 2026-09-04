@@ -12,6 +12,7 @@ interface Button1Props {
 	label?: string;
 	variant?: ButtonVariant;
 	disabled?: boolean;
+	children?: React.ReactNode;
 }
 
 export const Button1: React.FC<Button1Props> = ({
@@ -19,6 +20,7 @@ export const Button1: React.FC<Button1Props> = ({
 	label = "Share",
 	variant = "primary",
 	disabled = false,
+	children,
 }) => {
 	return (
 		<button
@@ -27,7 +29,7 @@ export const Button1: React.FC<Button1Props> = ({
 			onClick={onClick}
 			disabled={disabled}
 		>
-			{label}
+			{children || label}
 		</button>
 	);
 };
