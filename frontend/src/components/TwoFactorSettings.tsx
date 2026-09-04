@@ -54,6 +54,7 @@ export function TwoFactorSettings(active: { active: boolean }) {
 			setMode("disable");
 			setModalOpen(true);
 			setAnimating("off");
+			setActive2FA(false);
 		}
 	};
 

@@ -103,7 +103,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 	h.Redis.SAdd(c, "online_users", user.ID)
 
-	h.setCookie(c, strToken, expTime)
+	h.SetCookie(c, strToken, expTime)
 
 	// TODO: Hay que ver como damos la respuesta al front
 	c.JSON(201, gin.H{
@@ -183,7 +183,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	expTime := result.ExpTime
 	user := result.User
 
-	h.setCookie(c, strToken, expTime)
+	h.SetCookie(c, strToken, expTime)
 	timeExp := time.Until(expTime)
 	if timeExp < 0 {
 		log.Printf("authHandler: Expired session %v", err)
@@ -231,14 +231,14 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		}
 	}
 	expTime := time.Unix(0, 0)
-	h.setCookie(c, "", expTime) //matamos la cokie
+	h.SetCookie(c, "", expTime) //matamos la cokie
 	log.Printf("session borrada")
 	// TODO: hay q ver como se mandan los msg al front y que necesita
 	c.JSON(200, gin.H{"message": "user logout success"})
 
 }
 
-func (h *AuthHandler) setCookie(c *gin.Context, strToken string, exp time.Time) {
+func (h *AuthHandler) SetCookie(c *gin.Context, strToken string, exp time.Time) {
 
 	var secure bool
 
@@ -441,7 +441,7 @@ func (h *AuthHandler) Login42Callback(c *gin.Context) {
 		return
 	}
 
-	h.setCookie(c, final.Token, final.ExpTime)
+	h.SetCookie(c, final.Token, final.ExpTime)
 	h.ClearTempToken(c)
 	sessionKey := fmt.Sprintf("session:%d", user.ID)
 	err = h.Redis.Set(ctx, sessionKey, final.Token, time.Until(final.ExpTime)).Err()
@@ -552,6 +552,6 @@ func (h *AuthHandler) Register42(c *gin.Context) {
 	}
 	h.Redis.SAdd(c, "online_users", user.ID)
 
-	h.setCookie(c, strToken, expTime)
+	h.SetCookie(c, strToken, expTime)
 	c.JSON(http.StatusOK, gin.H{"message": "42 registration successful", "user": user})
 }
