@@ -63,7 +63,7 @@ export function AppBrand({
 			<img
 				className="app-brand__logo"
 				src={logo}
-				alt=""
+				alt="Twenty Four Logo"
 				aria-hidden="true"
 			/>
 			<span className="app-brand__name">Twenty Four</span>
