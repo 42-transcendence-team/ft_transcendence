@@ -104,6 +104,7 @@ func (gh *GameHandler) HandleCreateGame(c ws.ClientConn, msg *dto.IncomingMessag
 	}
 
 	room := gh.hub.CreateRoom(newGameID, fmt.Sprintf("Game-%d", newGameID), false)
+	room.OnClientLeft = gh.handleGameClientLeft
 
 	c.JoinRoom(room)
 
@@ -169,6 +170,7 @@ func (gh *GameHandler) HandleJoinGame(c ws.ClientConn, msg *dto.IncomingMessage)
 
 	log.Printf("Usuario %d se unió a la partida %d", c.GetUserID(), joinData.GameID)
 	room := gh.hub.CreateRoom(joinData.GameID, fmt.Sprintf("Game-%d", joinData.GameID), false)
+	room.OnClientLeft = gh.handleGameClientLeft
 
 	c.JoinRoom(room)
 
@@ -291,4 +293,26 @@ func (gh *GameHandler) HandleMakeMove(c ws.ClientConn, msg *dto.IncomingMessage)
 	}
 
 	gh.hub.BroadcastToRoom(moveData.GameID, broadcastBytes)
+}
+
+// handleGameClientLeft marca al jugador como desconectado del juego cuando su
+// última conexión abandona la sala (p.ej. porque otra ventana tomó la sesión y
+// no se unió a la partida, o porque se cayó la conexión). Esto arranca el
+// temporizador de reconexión y avisa al resto de jugadores para que esperen.
+// Si el jugador se reconecta (se vuelve a unir), reconnectPlayer cancela el
+// temporizador.
+func (gh *GameHandler) handleGameClientLeft(roomID uint, userID uint) {
+	engine, ok := gh.gameManager.GetGame(roomID)
+	if !ok {
+		return
+	}
+
+	for _, player := range engine.GetPlayers() {
+		if player.ID == userID && player.Connected {
+			if err := engine.DisconnectPlayer(userID); err != nil {
+				log.Printf("Error al desconectar jugador %d del juego %d: %v", userID, roomID, err)
+			}
+			return
+		}
+	}
 }

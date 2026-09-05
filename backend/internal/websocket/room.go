@@ -16,6 +16,12 @@ type Room struct {
 
 	Broadcast    chan []byte
 	hubCloseRoom chan uint
+
+	// OnClientLeft se invoca (solo si está seteado, p.ej. en salas de juego)
+	// cuando el último cliente de un usuario abandona la sala. Permite que el
+	// motor del juego marque al jugador como desconectado y avise al resto de
+	// que espere a que se reconecte.
+	OnClientLeft func(roomID uint, userID uint)
 }
 
 func NewRoom(id uint, name string, private bool, hubCloseChan chan uint) *Room {
@@ -47,6 +53,18 @@ func (r *Room) broadcast(message []byte) {
 			client.closeSendChan()
 		}
 	}
+}
+
+// hasClientWithUser comprueba si todavía queda algún cliente del mismo usuario
+// en la sala. Se llama desde room.Run, que es el único sitio que modifica
+// r.Clients, por lo que no necesita lock.
+func (r *Room) hasClientWithUser(userID uint) bool {
+	for c := range r.Clients {
+		if c.UserID == userID {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *Room) Run() {
@@ -87,6 +105,13 @@ func (r *Room) Run() {
 					// r.broadcast nunca debe llamarse con el lock cogido:
 					// dentro de él se hace closeSendChan y se toca client.Mu.
 					r.broadcast(msg)
+				}
+
+				// Si es una sala de juego y ya no queda ninguna conexión del
+				// mismo usuario, el motor debe marcar al jugador como
+				// desconectado para que el rival espere a que se reconecte.
+				if r.OnClientLeft != nil && !r.hasClientWithUser(client.UserID) {
+					r.OnClientLeft(r.ID, client.UserID)
 				}
 			}
 
