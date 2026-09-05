@@ -58,7 +58,7 @@ func (r *UserRepository) buildAdvancedSearchQuery(userID uint, filter dto.UserFi
 		search := "%" + filter.Q + "%"
 
 		query = query.Where(
-			"(login ILIKE ? OR name ILIKE ? OR surname ILIKE ?)",
+			"(LOWER(login) LIKE LOWER(?) OR LOWER(name) LIKE LOWER(?) OR LOWER(surname) LIKE LOWER(?))",
 			search, search, search,
 		)
 	}
