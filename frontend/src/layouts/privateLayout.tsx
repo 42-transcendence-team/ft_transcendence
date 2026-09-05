@@ -39,7 +39,7 @@ export function PrivateLayout() {
     search.handleCloseSearch();
   };
   const handleRailSearch = () => {
-    document.getElementById('header-search-input')?.focus();
+    document.querySelector<HTMLButtonElement>('.searchBar__button')?.click();
   };
   const handleFriendsClick = () => {
     if (location.pathname.startsWith('/app/friends/')) {
