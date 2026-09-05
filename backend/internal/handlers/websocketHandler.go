@@ -64,6 +64,7 @@ func (h *WebsocketHandler) HandleWebSocket(ctx *gin.Context) {
 	}
 
 	client := ws.NewClient(conn, h.hub, user.ID, user.Login)
+	client.Reclaim = ctx.Query("reclaim") == "1"
 
 	h.hub.Register <- client
 
