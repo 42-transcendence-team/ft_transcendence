@@ -34,6 +34,7 @@
 	align-items: center;
 	gap: 0.3rem;
 	height: 100%; 
+	min-height: 0;
     box-sizing: border-box;
 
 	&__list {
@@ -43,7 +44,8 @@
 		width: 100%;
 		align-items: center;
 		overflow-y: auto;
-		max-height: 75vh;
+		flex: 1;
+		min-height: 0;
 		padding: 0.2rem 0;
 
 		scrollbar-width: thin;
@@ -99,34 +101,8 @@
 		color: $dark-purple-main-text-light;
 	}
 
-	&__searchInput {
-		@extend %button-base;
-		border-radius: 12px;
-		width: 75px;
-		text-align: center;
-		font-size: 0.85rem;
-		background-color: $dark-purple-background-light;
-		color: white;
-		outline: none;
 
-		&::placeholder {
-			color: #888;
-			font-size: 0.7rem;
-		}
-	}
 
-	&__noResults {
-		font-size: 0.65rem;
-		color: #888;
-		padding: 0.3rem;
-	}
-
-	&__searchBtn {
-		@extend %button-base;
-		background-color: #555;
-		color: white;
-		font-size: 1.1rem;
-	}
 
 	&__actions {
 		display: flex;

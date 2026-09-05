@@ -1,6 +1,7 @@
 import "../styles/components/_chatModal.scss";
 
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useChat } from "../context/chatContext";
 import { UserAvatar } from "./users/UserAvatar";
 
@@ -15,6 +16,7 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
     const otherMember = (roomMembers[id] || []).find(m => m.id !== parseInt(user?.id || '0', 10));
     const isAtBottomRef = useRef(true);
     const lastMessageFromMeRef = useRef(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (id){
@@ -63,10 +65,18 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
         <div className="chatModal">
             <div className="chatModal__header">
                 {otherMember ? (
-					<span className="chatModal__headerUser">
+					<button
+						type="button"
+						className="chatModal__headerUser"
+						title={`Ver perfil de ${otherMember.login}`}
+						onClick={() => {
+							navigate(`/app/profile/${encodeURIComponent(otherMember.login)}`);
+							onClose();
+						}}
+					>
 						<UserAvatar avatarPath={otherMember.avatar_url || null} username={otherMember.login} size="small" />
 						<span>{otherMember.login}</span>
-					</span>
+					</button>
 				) : (
                 	<span>Sala {id}</span>
 				)}
