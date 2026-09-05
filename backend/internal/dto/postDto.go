@@ -38,15 +38,17 @@ type PostResponse struct {
 }
 
 type PostSummaryResponse struct {
-	ID           uint               `json:"id"`
-	UserID       uint               `json:"userId"`
-	Author       PostAuthorResponse `json:"author"`
-	Content      *string            `json:"content,omitempty"`
-	ImagePath    *string            `json:"imagePath,omitempty"`
-	FileName     *string            `json:"fileName,omitempty"`
-	LikeCount    int64              `json:"likeCount"`
-	DislikeCount int64              `json:"dislikeCount"`
-	CreatedAt    time.Time          `json:"createdAt"`
+	ID                    uint               `json:"id"`
+	UserID                uint               `json:"userId"`
+	Author                PostAuthorResponse `json:"author"`
+	Content               *string            `json:"content,omitempty"`
+	ImagePath             *string            `json:"imagePath,omitempty"`
+	FileName              *string            `json:"fileName,omitempty"`
+	LikeCount             int64              `json:"likeCount"`
+	DislikeCount          int64              `json:"dislikeCount"`
+	LikedByCurrentUser    bool               `json:"likedByCurrentUser"`
+	DislikedByCurrentUser bool               `json:"dislikedByCurrentUser"`
+	CreatedAt             time.Time          `json:"createdAt"`
 }
 
 type PaginationResponse struct {
@@ -95,6 +97,8 @@ func NewPostSummaryResponse(
 	post models.Post,
 	likeCount int64,
 	dislikeCount int64,
+	likedByCurrentUser bool,
+	dislikedByCurrentUser bool,
 ) PostSummaryResponse {
 	return PostSummaryResponse{
 		ID:     post.ID,
@@ -104,11 +108,13 @@ func NewPostSummaryResponse(
 			Login:      post.User.Login,
 			AvatarPath: post.User.AvatarPath,
 		},
-		Content:      post.Content,
-		ImagePath:    post.ImagePath,
-		FileName:     post.FileName,
-		LikeCount:    likeCount,
-		DislikeCount: dislikeCount,
-		CreatedAt:    post.CreatedAt,
+		Content:               post.Content,
+		ImagePath:             post.ImagePath,
+		FileName:              post.FileName,
+		LikeCount:             likeCount,
+		DislikeCount:          dislikeCount,
+		LikedByCurrentUser:    likedByCurrentUser,
+		DislikedByCurrentUser: dislikedByCurrentUser,
+		CreatedAt:             post.CreatedAt,
 	}
 }

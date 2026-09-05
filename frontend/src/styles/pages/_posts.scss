@@ -52,20 +52,27 @@ $post-radius: 18px;
 
 /* Create page */
 .post-create-page {
-	width: 100%;
-	max-width: 880px;
-	margin: 0 auto;
-	padding: 2rem 1rem;
-
-	&__header {
-		width: 100%;
+	&--modal-route {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 50vh;
 	}
+}
 
-	&__title {
-		margin: 0 0 1.5rem;
-		font-size: 1.8rem;
-		font-weight: 700;
-		color: $post-text;
+.post-create-shell {
+	width: min(720px, 94vw);
+	max-width: min(720px, 94vw);
+
+	&__content {
+		text-align: left;
+
+		.post-form {
+			border: none;
+			padding: 0;
+			background: transparent;
+			box-shadow: none;
+		}
 	}
 }
 

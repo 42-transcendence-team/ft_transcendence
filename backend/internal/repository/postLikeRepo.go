@@ -158,6 +158,45 @@ func (r *PostLikeRepository) CountGroupedByPostIDs(
 	return countsByPostID, nil
 }
 
+// GetReactionByPostIDsAndUser devuelve la reacción del usuario actual
+// en cada post de la página mediante una única consulta.
+// Se utiliza en listados para no ejecutar una consulta por tarjeta.
+func (r *PostLikeRepository) GetReactionByPostIDsAndUser(
+	postIDs []uint,
+	userID uint,
+) (map[uint]int8, error) {
+	reactionByPostID := make(
+		map[uint]int8,
+		len(postIDs),
+	)
+
+	if len(postIDs) == 0 {
+		return reactionByPostID, nil
+	}
+
+	var postReactions []models.PostLike
+
+	err := r.db.
+		Where(
+			"post_id IN ? AND user_id = ?",
+			postIDs,
+			userID,
+		).
+		Find(&postReactions).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, postReaction := range postReactions {
+		reactionByPostID[postReaction.PostID] =
+			postReaction.Reaction
+	}
+
+	return reactionByPostID, nil
+}
+
 // GetReactionByPostAndUser devuelve:
 // - la reacción encontrada;
 // - si existe;
