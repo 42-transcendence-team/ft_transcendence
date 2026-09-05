@@ -61,6 +61,29 @@ export const UserMenu = () => {
 		};
 	}, []);
 
+	useEffect(() => {
+		if (!isOpen) return;
+
+		const handleClickOutside = (e: PointerEvent) => {
+			if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+				setIsOpen(false);
+			}
+		};
+
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				setIsOpen(false);
+			}
+		};
+
+		document.addEventListener("pointerdown", handleClickOutside);
+		document.addEventListener("keydown", handleKeyDown);
+		return () => {
+			document.removeEventListener("pointerdown", handleClickOutside);
+			document.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [isOpen]);
+
 	const handleNavigation = (path: string) => {
         setIsOpen(false);
         navigate(path);

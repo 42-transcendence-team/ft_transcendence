@@ -94,6 +94,10 @@ export const HomePage = () => {
               ...post,
               likeCount: reactionState.likeCount,
               dislikeCount: reactionState.dislikeCount,
+              likedByCurrentUser:
+                reactionState.likedByCurrentUser,
+              dislikedByCurrentUser:
+                reactionState.dislikedByCurrentUser,
             }
           : post,
       ),
