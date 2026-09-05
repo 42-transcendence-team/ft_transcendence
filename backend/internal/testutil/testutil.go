@@ -64,9 +64,11 @@ func NewTestRedis(t *testing.T) *redis.Client {
 }
 
 // NewTestConfig devuelve una configuración mínima y válida para tests.
+// Usa Env=prod para que gin arranque en modo release (menos ruido de logs),
+// aunque las cookies se marquen como Secure; los tests solo leen el header.
 func NewTestConfig() *config.Config {
 	return &config.Config{
-		Env:               "local",
+		Env:               "prod",
 		GoServiceHost:     "127.0.0.1",
 		GoServicePort:     8080,
 		GoAllowedURLs:     []string{"http://localhost:3000"},

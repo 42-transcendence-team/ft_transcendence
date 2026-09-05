@@ -14,7 +14,10 @@ import (
 var Log *zap.Logger
 
 func InitLogger() {
-	logPath := "/var/log/api/go-app.log"
+	logPath := os.Getenv("API_LOG_PATH")
+	if logPath == "" {
+		logPath = "/var/log/api/go-app.log"
+	}
 
 	dir := filepath.Dir(logPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
