@@ -1,6 +1,7 @@
 import "../styles/components/_chatModal.scss";
 
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useChat } from "../context/chatContext";
 import { UserAvatar } from "./users/UserAvatar";
 
@@ -12,15 +13,48 @@ interface ChatModalProps {
 export function ChatModal({ id, onClose }: ChatModalProps) {
     const { messagesByRoom, sendMessage, user, roomMembers, joinRoom } = useChat();
     const messagesRef = useRef<HTMLDivElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
     const otherMember = (roomMembers[id] || []).find(m => m.id !== parseInt(user?.id || '0', 10));
     const isAtBottomRef = useRef(true);
     const lastMessageFromMeRef = useRef(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (id){
 			joinRoom(id);
 		}
     }, [id, joinRoom]);
+
+    useEffect(() => {
+        const handleClickOutside = (e: PointerEvent) => {
+            const target = e.target;
+            if (target instanceof Element) {
+                // Estas zonas gestionan su propio toggle del chat (burbuja activa,
+                // notificaciones de mensajes, hoja móvil). Si cerramos aquí,
+                // el click posterior reabriría el chat (doble toggle).
+                if (target.closest('.chatPanel__bubble, .notification-item, .mobileChatSheet, .chatPanel__actions, .addChatModal__backdrop, .mobileChatSheet__backdrop')) {
+                    return;
+                }
+            }
+            if (modalRef.current && !modalRef.current.contains(target as Node)) {
+                onClose();
+            }
+        };
+
+        document.addEventListener("pointerdown", handleClickOutside);
+        return () => document.removeEventListener("pointerdown", handleClickOutside);
+    }, [onClose]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onClose();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [onClose]);
 
    const handleScroll = () => {
         const el = messagesRef.current;
@@ -60,17 +94,25 @@ export function ChatModal({ id, onClose }: ChatModalProps) {
     };
 
     return (
-        <div className="chatModal">
+        <div className="chatModal" ref={modalRef}>
             <div className="chatModal__header">
                 {otherMember ? (
-					<span className="chatModal__headerUser">
+					<button
+						type="button"
+						className="chatModal__headerUser"
+						title={`Ver perfil de ${otherMember.login}`}
+						onClick={() => {
+							navigate(`/app/profile/${encodeURIComponent(otherMember.login)}`);
+							onClose();
+						}}
+					>
 						<UserAvatar avatarPath={otherMember.avatar_url || null} username={otherMember.login} size="small" />
 						<span>{otherMember.login}</span>
-					</span>
+					</button>
 				) : (
                 	<span>Sala {id}</span>
 				)}
-                <button onClick={onClose}>X</button>
+                <button type="button" className="chatModal__close" aria-label="Cerrar chat" onClick={onClose}>×</button>
             </div>
             
             <div 
