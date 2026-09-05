@@ -36,12 +36,27 @@ go test -race ./...         # tests con race detector
 pnpm dev      # Rsbuild dev server (:3000)
 pnpm build    # build de producción
 pnpm lint     # eslint
-pnpm check    # biome check --write
-pnpm format   # biome format --write
+pnpm check    # biome check (solo lint + organizeImports)
 
 # Integración (desde tests/)
 make          # crea venv, instala deps, ejecuta pytest (necesita backend corriendo)
 ```
+
+---
+
+## Flujo de trabajo con IA — commits
+
+> Regla para sesiones de IA: al terminar una implementación solicitada, se propone
+> un commit. **Siempre se pide confirmación al usuario antes de commitear.**
+
+1. Al terminar la implementación: verificar (lint/tests/build según el caso).
+2. Revisar `git status` y `git diff`; stagear **solo** los archivos relevantes.
+3. Proponer el commit al usuario y esperar confirmación explícita.
+4. Mensaje en estilo convencional: `feat(scope): descripción`, `fix(scope): ...`,
+   `refactor(scope): ...`, etc. (scope = dominio, p.ej. `chat`, `auth`, `friends`).
+5. **Nunca**: commitear `.env`, secretos, cambios no relacionados, `--amend`,
+   `--force-push` ni hacer `push` sin pedirlo.
+6. Si hay cambios no relacionados o dudas: preguntar antes de commitear.
 
 ---
 
