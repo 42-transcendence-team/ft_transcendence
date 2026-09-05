@@ -7,7 +7,6 @@ import { ChatPanel } from '@components/ChatPanel';
 import { ChatRejectionModal } from '@components/ChatRejectionModal';
 import { Footer } from '@components/Footer';
 import { PrivateLeftPanel } from '@components/layout/PrivateLeftPanel';
-import { PrivateMainContent } from '@components/layout/PrivateMainContent';
 import { MobileBottomNav } from '@components/MobileBottomNav';
 import { MiniProfile } from '@components/miniProfile';
 import { Notification } from '@components/Notification';

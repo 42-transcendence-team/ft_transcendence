@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { Logout } from "api/Logout";
 import { useAuth } from "@components/auth-router/AuthContext";
 import { useAuth as useAuthProfile} from "../context/AuthContext";
-import { getUserProfile, type UserProfile } from "../api/UserProfile";
 import { useNavigate } from "react-router-dom";
 
 export const UserMenu = () => {
@@ -12,7 +11,6 @@ export const UserMenu = () => {
 	const { refreshAuth } = useAuth();
 	const navigate = useNavigate();
 	const { user: authenticatedUser } = useAuthProfile();
-	const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
 	const menuRef = useRef<HTMLDivElement>(null);
 
 	const handleLogoutClick = async () => {
@@ -26,26 +24,6 @@ export const UserMenu = () => {
 			console.log("logout ERROR", error);
 		}
 	};
-
-	useEffect(() => {
-        if (!authenticatedUser?.login)
-			return;
-        let cancelled = false;
-
-        getUserProfile(authenticatedUser.login, { noIncrement: true })
-            .then((profile) => {
-                if (!cancelled) {
-                    setProfileUser(profile);
-                }
-            })
-            .catch((error) => {
-                console.error("Error cargando perfil en UserMenu", error);
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [authenticatedUser?.login]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {

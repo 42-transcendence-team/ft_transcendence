@@ -49,7 +49,7 @@ export function TwoFactorSettings(active: { active: boolean }) {
 			setModalOpen(true);
 			setAnimating("on");
 			const res = await enable2FA();
-			setQr(res.QR);
+			setQr(res.QR ?? "");
 		} else {
 			setMode("disable");
 			setModalOpen(true);

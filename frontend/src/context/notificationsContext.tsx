@@ -42,7 +42,7 @@ const normalizeNotifications = (data: any[]): Notification[] => {
 
 const getNotifications = async (updateNotifications: (data: Notification[]) => void) => {
 	try {
-		const data = await apiRequest({
+		const data = await apiRequest<Notification[] | { notifications?: Notification[]; data?: Notification[] }>({
 		endpoint: 'notifications',
 		method: 'GET',
 		});

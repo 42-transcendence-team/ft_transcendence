@@ -12,16 +12,16 @@ export type FriendRequestResponse = {
     data: FriendRequest[];
 }
 
-export async function getIncomingFriendRequests() {
-	const data = await apiRequest({
+export async function getIncomingFriendRequests(): Promise<FriendRequestResponse> {
+	const data = await apiRequest<FriendRequestResponse>({
 		endpoint: "friends/requests/incoming",
 	});
 
 	return data;
 }
 
-export async function getOutcomingFriendRequests() {
-	const data = await apiRequest({
+export async function getOutcomingFriendRequests(): Promise<FriendRequestResponse> {
+	const data = await apiRequest<FriendRequestResponse>({
 		endpoint: "friends/requests/outgoing",
 	});
 
@@ -58,8 +58,12 @@ export type Friend = {
     username: string;
 }
 
-export async function listFriendsRequest() {
-    const data = await apiRequest({
+export type FriendsListResponse = {
+    data: Friend[];
+}
+
+export async function listFriendsRequest(): Promise<FriendsListResponse> {
+    const data = await apiRequest<FriendsListResponse>({
         endpoint: "friends",
     });
 

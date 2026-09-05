@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { useNotification, type Notification } from '../context/notificationsContext';
+import { useNotification, type Notification as NotificationType } from '../context/notificationsContext';
 import "../styles/components/_notification.scss";
 
 const NotificationItem: React.FC<{
-  notification: Notification;
+  notification: NotificationType;
   onMarkAsRead: (id: string | number) => void;
   onChatOpen: (roomId: number) => void;
   onOpenReceivedRequests: () => void;
@@ -28,7 +28,7 @@ const NotificationItem: React.FC<{
 
   const getUsername = () => notification.payload.username || 'Alguien';
 
-  const getNotificationContent = (notif: Notification) => {
+  const getNotificationContent = (notif: NotificationType) => {
     switch (notif.type) {
       case 'FRIEND_REQUEST':
         return (

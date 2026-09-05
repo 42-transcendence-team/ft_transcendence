@@ -61,11 +61,11 @@ function drawSpecialAnimation(ctx: CanvasRenderingContext2D,
 
 	switch (animation.type) {
 		case "bridge":
-			drawBridgeAnimation(ctx, animation.progress, x, y, cellSize);
+			drawBridgeAnimation(ctx, animation.progress, x, y);
 			break;
 
 		case "dice":
-			drawDiceAnimation(ctx, animation.progress, x, y, cellSize);
+			drawDiceAnimation(ctx, animation.progress, x, y);
 			break;
 
 		case "maze":
