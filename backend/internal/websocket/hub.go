@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type Hub struct {
@@ -35,9 +38,16 @@ func (h *Hub) Run() {
 			h.Mu.Lock()
 			if prev, ok := h.ClientsConnected[client.UserID]; ok && prev != client {
 				// El mismo usuario abrió una nueva conexión: se expulsa la
-				// anterior. La conexión vieja hará que su ReadPump falle y
-				// acabe en Unregister, donde se limpia sin tocar a la nueva.
+				// anterior. Se envía un close frame con código 4001 para que el
+				// frontend distinga un "takeover" intencional de una caída de
+				// red y no intente reconectar (evitando el ping-pong de
+				// expulsiones entre dos ventanas del mismo usuario).
 				log.Printf("Nueva conexión para el usuario %d: cerrando la conexión anterior.", client.UserID)
+				prev.Conn.WriteControl(
+					websocket.CloseMessage,
+					websocket.FormatCloseMessage(4001, "SESSION_TAKEOVER"),
+					time.Now().Add(writeWait),
+				)
 				prev.Conn.Close()
 			}
 			h.Clients[client] = true
