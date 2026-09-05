@@ -425,6 +425,10 @@ setPostsError("No se han podido cargar más publicaciones.");
               ...post,
               likeCount: reactionState.likeCount,
               dislikeCount: reactionState.dislikeCount,
+              likedByCurrentUser:
+                reactionState.likedByCurrentUser,
+              dislikedByCurrentUser:
+                reactionState.dislikedByCurrentUser,
             }
           : post,
       ),
