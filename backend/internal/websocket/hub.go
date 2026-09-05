@@ -37,11 +37,21 @@ func (h *Hub) Run() {
 		case client := <-h.Register:
 			h.Mu.Lock()
 			if prev, ok := h.ClientsConnected[client.UserID]; ok && prev != client {
-				// El mismo usuario abrió una nueva conexión: se expulsa la
-				// anterior. Se envía un close frame con código 4001 para que el
-				// frontend distinga un "takeover" intencional de una caída de
-				// red y no intente reconectar (evitando el ping-pong de
-				// expulsiones entre dos ventanas del mismo usuario).
+				if client.Reclaim {
+					// Reconexión desde una ventana "standby" (la vieja, bloqueada
+					// tras un takeover). No debe expulsar a la conexión activa:
+					// se rechaza para que siga bloqueada y reintente cuando la
+					// ventana activa se cierre (evitando el ping-pong).
+					h.Mu.Unlock()
+					client.Conn.WriteControl(
+						websocket.CloseMessage,
+						websocket.FormatCloseMessage(4002, "SESSION_ACTIVE"),
+						time.Now().Add(writeWait),
+					)
+					client.Conn.Close()
+					continue
+				}
+				// Takeover real: expulsar la conexión anterior con código 4001.
 				log.Printf("Nueva conexión para el usuario %d: cerrando la conexión anterior.", client.UserID)
 				prev.Conn.WriteControl(
 					websocket.CloseMessage,

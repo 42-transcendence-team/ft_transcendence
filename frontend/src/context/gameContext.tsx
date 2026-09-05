@@ -66,6 +66,7 @@ export function GameProvider({ children, user, gameId, gameType }: { children: R
     const [ gameState, setGameState ] = useState<GameState>(initialGameState);
     const navigate = useNavigate();
     const autoJoinedRef = useRef(false);
+    const wasConnectedRef = useRef(false);
 
     const myPlayer = useMemo(
 		() => gameState.players.find(p => p.id === user?.id),
@@ -242,9 +243,18 @@ export function GameProvider({ children, user, gameId, gameType }: { children: R
     }, []);
 
     useEffect(() => {
+        if (isConnected && !wasConnectedRef.current) {
+            // La conexión se (re)estableció: permitir auto-unirse de nuevo
+            // (p.ej. tras recuperar la sesión en esta ventana con un reclaim).
+            autoJoinedRef.current = false;
+        }
+        wasConnectedRef.current = isConnected;
+    }, [isConnected]);
+
+    useEffect(() => {
         if (!user?.id || !gameId || !gameType) return;
         if (autoJoinedRef.current) return;
-        if (gameState.status !== 'MENU' && gameState.status !== 'IDLE') return;
+        if (gameState.status === 'FINISH' || gameState.status === 'TIMEOUT') return;
         if (!isConnected) return;
 
         autoJoinedRef.current = true;
@@ -276,6 +286,7 @@ export function GameProvider({ children, user, gameId, gameType }: { children: R
 
     const createGame = useCallback((gameType: GameState['game_type'], mode: GameMode, players: number) => {
         if (!user) return;
+        autoJoinedRef.current = true;
         console.log(`Creating game of type: ${gameType} with mode: ${mode} and players: ${players}`);
         send({
             type: "game",
@@ -290,6 +301,7 @@ export function GameProvider({ children, user, gameId, gameType }: { children: R
 
     const joinGame = useCallback((gameId: number) => {
 		if (!user) return;
+		autoJoinedRef.current = true;
 
 		if (!gameId || gameId === 0) {
 			console.error("Invalid game ID provided for joining.");
