@@ -1,98 +1,55 @@
 from fixture import API_URL
-from fixture import session_logged_in
-from fixture import requests
+from fixture import new_user
 
-from test_friends import friend_send_request
 
-def test_list_blocks(session_logged_in):
-    user1, user1_id, user1_session = session_logged_in()
-    #user2, user2_id, user2_session = session_logged_in()
-    #print(f"usuarios:\nuser1: {user1} id: {user1_id}, user2: {user2}, id: {user2_id}\n")
+def test_block_and_unblock():
+    _, u1, s1 = new_user()
+    _, u2, s2 = new_user()
 
-    print(f"usuarios:\nuser1: {user1} id: {user1_id}")
-    print('\nimprime lista blocks sin ningun block')
-    req = user1_session.get(f'{API_URL}/friends/blocks', verify=False)
-    print(req.json())
+    # block
+    resp = s1.post(f"{API_URL}/friends/blocks", json={"blocked_id": u2})
+    assert resp.status_code == 200
 
-def test_block(session_logged_in):
-    user1, user1_id, user1_session = session_logged_in()
-    user2, user2_id, user2_session = session_logged_in()
-    print("\ntest_block\n")
-    print(f"usuarios:\nuser1: {user1} id: {user1_id}, user2: {user2}, id: {user2_id}\n")
+    # duplicate block -> conflict
+    resp = s1.post(f"{API_URL}/friends/blocks", json={"blocked_id": u2})
+    assert resp.status_code == 409
 
-    print('\nuser 1 block user 2')
-    req = user1_session.post(f'{API_URL}/friends/blocks', json = {'blocked_id': user2_id}, verify=False)
-    #print(req.json())
-    assert req.status_code >= 200 and req.status_code < 300
+    # self block -> bad request
+    resp = s1.post(f"{API_URL}/friends/blocks", json={"blocked_id": u1})
+    assert resp.status_code == 400
 
-    print('\nuser 1 block user inexistente')
-    req = user1_session.post(f'{API_URL}/friends/blocks', json = {'blocked_id': 999999}, verify=False)
-    print(req.json())
-    assert req.status_code >= 400 and req.status_code < 500
+    # non-existent -> not found
+    resp = s1.post(f"{API_URL}/friends/blocks", json={"blocked_id": 999999})
+    assert resp.status_code == 404
 
-    print('\nuser 1 block user invalid json')
-    req = user1_session.post(f'{API_URL}/friends/blocks', json = {'block': 999999}, verify=False)
-    print(req.json())
-    assert req.status_code >= 400 and req.status_code < 500
+    # list blocks
+    resp = s1.get(f"{API_URL}/friends/blocks")
+    assert resp.status_code == 200
+    assert any(b["user_id"] == u2 for b in resp.json()["data"])
 
-    print('\nuser 1 imprime lista blocks')
-    req = user1_session.get(f'{API_URL}/friends/blocks', verify=False)
-    print(req.json())
-    assert req.status_code >= 200 and req.status_code < 300
+    # unblock
+    resp = s1.delete(f"{API_URL}/friends/blocks/{u2}")
+    assert resp.status_code == 204
 
-    user3, user3_id, user3_session = session_logged_in()
-    print(f"usuarios:\nuser3: {user3} id: {user3_id}")
-    print('\nuser 1 block user 3')
-    req = user1_session.post(f'{API_URL}/friends/blocks', json = {'blocked_id': user3_id}, verify=False)
-    #print(req.json())
-    assert req.status_code >= 200 and req.status_code < 300
+    # unblock again -> not found
+    resp = s1.delete(f"{API_URL}/friends/blocks/{u2}")
+    assert resp.status_code == 404
 
-    print('\nuser 1 imprime lista blocks ')
-    req = user1_session.get(f'{API_URL}/friends/blocks', verify=False)
-    print(req.json())
 
-    print('\nuser 1 block a el mismo')
-    req = user1_session.post(f'{API_URL}/friends/blocks', json = {'blocked_id': user1_id}, verify=False)
-    print(req.json())
-    assert req.status_code >= 400 and req.status_code < 500
+def test_block_removes_friendship_and_pending_requests():
+    _, u1, s1 = new_user()
+    _, u2, s2 = new_user()
 
-    print('\nuser 1 block user 3 otra vez')
-    req = user1_session.post(f'{API_URL}/friends/blocks', json = {'blocked_id': user3_id}, verify=False)
-    print(req.json())
-    assert req.status_code >= 400 and req.status_code < 500
+    # become friends
+    resp = s1.post(f"{API_URL}/friends/requests", json={"receiver_id": u2})
+    req_id = resp.json()["data"]["id"]
+    s2.patch(f"{API_URL}/friends/requests/{req_id}/accept")
 
-    print('\nuser 2 block user 1')
-    req = user2_session.post(f'{API_URL}/friends/blocks', json = {'blocked_id': user1_id}, verify=False)
-    #print(req.json())
-    assert req.status_code >= 200 and req.status_code < 300
+    # blocking removes the friendship
+    s1.post(f"{API_URL}/friends/blocks", json={"blocked_id": u2})
+    friends = s1.get(f"{API_URL}/friends/").json()["data"]
+    assert all(f["user_id"] != u2 for f in friends)
 
-    print('\nuser 2 imprime lista blocks ')
-    req = user2_session.get(f'{API_URL}/friends/blocks', verify=False)
-    print(req.json())
-
-def test_unblock(session_logged_in):
-    user1, user1_id, user1_session = session_logged_in()
-    user2, user2_id, user2_session = session_logged_in()
-    print(f"usuarios:\nuser1: {user1} id: {user1_id}, user2: {user2}, id: {user2_id}\n")
-
-    print('\nuser 1 block user 2')
-    req = user1_session.post(f'{API_URL}/friends/blocks', json = {'blocked_id': user2_id}, verify=False)
-    #print(req.json())
-    assert req.status_code >= 200 and req.status_code < 300
-
-    print('\nuser 1 imprime lista blocks')
-    req = user1_session.get(f'{API_URL}/friends/blocks', verify=False)
-    print(req.json())
-
-    print('\nuser 1 borra block de user 2')
-    req = user1_session.delete(f'{API_URL}/friends/blocks/{user2_id}', verify=False)
-    assert req.status_code >= 200 and req.status_code < 300
-
-    print('\nuser 1 borra block de user inexistente')
-    req = user1_session.delete(f'{API_URL}/friends/blocks/{9999}', verify=False)
-    print(req.json())
-    assert req.status_code >= 400 and req.status_code < 500
-
-    print('\nuser 1 imprime lista blocks despues de haber desbloqueado a user 2')
-    req = user1_session.get(f'{API_URL}/friends/blocks', verify=False)
-    print(req.json())
+    # blocked users cannot send a request again
+    resp = s2.post(f"{API_URL}/friends/requests", json={"receiver_id": u1})
+    assert resp.status_code == 403
