@@ -1,6 +1,6 @@
 import "@styles/_settingsSection.scss";
 
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormErrors } from "@hooks/useFormErrors";
 import { FormField } from "../FormField";
 import { updateEmail, type EmailSettings } from "api/Settings";

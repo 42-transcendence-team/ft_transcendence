@@ -75,7 +75,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 	const [ rooms, setRooms ] = useState<number[]>([]);
 	const [ lastActivity, setLastActivity ] = useState<Record<number, number>>({});
 	const [ roomMembers, setRoomMembers ] = useState<Record<number, RoomMember[]>>({});
-	const fetchRoomsRef = useRef<() => Promise<void>>();
+	const fetchRoomsRef = useRef<(() => Promise<void>) | null>(null);
 	const [ sendRejection, setSendRejection ] = useState<SendRejection | null>(null);
 	useJoinRooms(rooms);
 
@@ -121,7 +121,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 
 		// Si ya existe una sala entre estos dos usuarios, devolver esa en vez de crear otra
 		try {
-			const existing = await apiRequest({ endpoint: "websocket/rooms", method: "GET" });
+			const existing = await apiRequest<any[]>({ endpoint: "websocket/rooms", method: "GET" });
 			for (const r of (existing || [])) {
 				const ids: number[] = (r.Members || r.members || []).map(
 					(m: any) => m.ID ?? m.id ?? 0
@@ -138,7 +138,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 		}
 
 		try {
-			const data = await apiRequest({
+			const data = await apiRequest<{ ID: number }>({
 				endpoint: "websocket/rooms",
 				method: "POST",
 				body: { name: `Room ${Math.floor(Math.random() * 1000)}`, private: true, users: [otherUserId] },
@@ -174,7 +174,7 @@ export function ChatProvider({ children, user }: { children: React.ReactNode; us
 
 		const fetchRooms = async () => {
 			try {
-				const data = await apiRequest({ endpoint: "websocket/rooms", method: "GET" });
+				const data = await apiRequest<any[]>({ endpoint: "websocket/rooms", method: "GET" });
 				const allIds = data.map((r: any) => r.ID ?? r.id);
 				setRooms(allIds);
 				const members: Record<number, RoomMember[]> = {};

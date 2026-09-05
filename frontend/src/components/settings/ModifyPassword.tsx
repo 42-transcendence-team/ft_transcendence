@@ -1,5 +1,5 @@
 import "@styles/_settingsSection.scss";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FormField } from "../FormField";
 import { updatePassword, type PasswordSettings } from "api/Settings";
 import { Modal } from "../Modal";
@@ -15,12 +15,6 @@ type SettingsFields = {
 
 // TODO - Pensar como mover cosas a Hook comun para evitar repetir codigo en los 3 componentes de modificacion de datos, email y password
 // TODO - Aplicar estilos al formulario
-
-const inputsConfig: Array<{ id: keyof SettingsFields; label: string; type: string }> = [
-	{ id: "previous_password", label: "Contraseña anterior", type: "password" },
-	{ id: "password", label: "Nueva contraseña", type: "password" },
-	{ id: "verify_password", label: "Verificar nueva contraseña", type: "password" },
-];
 
 type RequestStatus = { type: "success" | "error"; message: string; } | null;
 

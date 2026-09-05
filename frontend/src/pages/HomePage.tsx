@@ -5,7 +5,6 @@ import {
   type PostSummary,
 } from 'api/Posts';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 function appendUniquePosts(
   currentPosts: PostSummary[],

@@ -1,7 +1,7 @@
 import { apiRequest } from "./ApiRequest";
 
-export async function enable2FA() {
-	const data = apiRequest({
+export async function enable2FA(): Promise<{ QR?: string }> {
+	const data = apiRequest<{ QR?: string }>({
 		endpoint: "2fa/enable",
 		method: "POST",
 	});

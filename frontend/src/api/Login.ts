@@ -20,8 +20,8 @@ export type AuthMeResponse = {
 	message?: string;
 };
 
-export async function Login(identifier: string, password: string) {
-	const data = await apiRequest({
+export async function Login(identifier: string, password: string): Promise<LoginResponse> {
+	const data = await apiRequest<LoginResponse>({
 		endpoint: "auth/login",
 		method: "POST",
 		body: { identifier: identifier.trim(), password },
@@ -29,8 +29,8 @@ export async function Login(identifier: string, password: string) {
 	return data;
 }
 
-export async function GetMyProfile() {
-    const data = apiRequest({
+export async function GetMyProfile(): Promise<{ user?: { login?: string; id?: number } }> {
+    const data = apiRequest<{ user?: { login?: string; id?: number } }>({
 		endpoint: "auth/me",
 	});
 	return data;
@@ -68,8 +68,8 @@ export async function userLoader() {
 	return data;
 }
 
-export async function getAuthenticatedUser() {
-	const data = await apiRequest({
+export async function getAuthenticatedUser(): Promise<{ user?: { login?: string } }> {
+	const data = await apiRequest<{ user?: { login?: string } }>({
 		endpoint: "auth/me",
 	});
 	
