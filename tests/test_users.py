@@ -27,11 +27,15 @@ def test_get_settings():
 
 
 def test_advanced_search():
-    login, _, session = new_user()
-    resp = session.get(f"{API_URL}/users/search", params={"q": login})
+    # El buscador es un usuario distinto del objetivo (la búsqueda excluye al
+    # propio usuario).
+    _, _, session_a = new_user()
+    login_b, _, _ = new_user()
+
+    resp = session_a.get(f"{API_URL}/users/search", params={"q": login_b})
     assert resp.status_code == 200
     items = resp.json()["items"]
-    assert any(i["login"] == login for i in items)
+    assert any(i["login"] == login_b for i in items)
 
 
 def test_update_personal_data():

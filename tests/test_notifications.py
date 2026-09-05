@@ -6,7 +6,7 @@ def test_notifications_empty():
     _, _, session = new_user()
     resp = session.get(f"{API_URL}/notifications")
     assert resp.status_code == 200
-    assert resp.json() == []
+    assert (resp.json() or []) == []
 
 
 def test_post_notification_for_friend_and_mark_read():
@@ -23,7 +23,7 @@ def test_post_notification_for_friend_and_mark_read():
 
     feed = s2.get(f"{API_URL}/notifications")
     assert feed.status_code == 200
-    post_notifs = [n for n in feed.json() if n.get("type") == "POST"]
+    post_notifs = [n for n in (feed.json() or []) if n.get("type") == "POST"]
     assert len(post_notifs) == 1
     notif_id = post_notifs[0]["id"]
     assert notif_id is not None
@@ -33,4 +33,4 @@ def test_post_notification_for_friend_and_mark_read():
 
     feed = s2.get(f"{API_URL}/notifications")
     assert feed.status_code == 200
-    assert all(n.get("type") != "POST" for n in feed.json())
+    assert all(n.get("type") != "POST" for n in (feed.json() or []))

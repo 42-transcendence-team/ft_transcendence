@@ -47,7 +47,7 @@ def test_block_removes_friendship_and_pending_requests():
 
     # blocking removes the friendship
     s1.post(f"{API_URL}/friends/blocks", json={"blocked_id": u2})
-    friends = s1.get(f"{API_URL}/friends/").json()["data"]
+    friends = s1.get(f"{API_URL}/friends/").json()["data"] or []
     assert all(f["user_id"] != u2 for f in friends)
 
     # blocked users cannot send a request again

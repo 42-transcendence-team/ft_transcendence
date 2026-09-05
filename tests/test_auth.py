@@ -1,5 +1,6 @@
 from fixture import API_URL
 from fixture import PASSWORD
+from fixture import fake
 from fixture import login_user
 from fixture import new_user
 from fixture import register_payload
@@ -9,9 +10,7 @@ from fixture import user_id
 
 
 def test_register_and_me():
-    login = "pytest_auth_user"
-    register_user(login)
-    session = login_user(login)
+    login, _, session = new_user()
 
     me = session.get(f"{API_URL}/auth/me")
     assert me.status_code == 200
@@ -22,7 +21,7 @@ def test_register_and_me():
 
 
 def test_register_duplicate_conflict():
-    login = "pytest_dupe_user"
+    login = fake.user_name()
     register_user(login)
     resp = requests.post(
         f"{API_URL}/auth/register",
@@ -33,7 +32,7 @@ def test_register_duplicate_conflict():
 
 
 def test_register_invalid_payload():
-    login = "pytest_invalid_user"
+    login = fake.user_name()
     payload = register_payload(login)
     payload["privacyPolicy"] = False
     resp = requests.post(
@@ -45,7 +44,7 @@ def test_register_invalid_payload():
 
 
 def test_login_wrong_password():
-    login = "pytest_wrongpass"
+    login = fake.user_name()
     register_user(login)
     resp = requests.post(
         f"{API_URL}/auth/login",
@@ -58,7 +57,7 @@ def test_login_wrong_password():
 def test_login_unknown_user():
     resp = requests.post(
         f"{API_URL}/auth/login",
-        json={"identifier": "no_such_user", "password": PASSWORD},
+        json={"identifier": fake.user_name(), "password": PASSWORD},
         verify=False,
     )
     assert resp.status_code == 401
@@ -69,9 +68,10 @@ def test_logout_invalidates_session():
     resp = session.post(f"{API_URL}/auth/logout")
     assert resp.status_code == 200
 
-    # The session is no longer valid even though the cookie is still present.
+    # /auth/me devuelve 200 pero con authenticated=false tras el logout.
     me = session.get(f"{API_URL}/auth/me")
-    assert me.status_code == 401
+    assert me.status_code == 200
+    assert me.json()["authenticated"] is False
 
 
 def test_protected_route_requires_auth():

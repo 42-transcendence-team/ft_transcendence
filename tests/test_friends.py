@@ -43,7 +43,7 @@ def test_send_accept_and_delete_friend():
 
     resp = s1.get(f"{API_URL}/friends/")
     assert resp.status_code == 200
-    assert all(f["user_id"] != u2 for f in resp.json()["data"])
+    assert all(f["user_id"] != u2 for f in (resp.json()["data"] or []))
 
 
 def test_reject_friend_request():

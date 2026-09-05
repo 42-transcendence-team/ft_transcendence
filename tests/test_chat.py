@@ -11,7 +11,7 @@ def test_create_room_and_list():
         json={"name": "shared", "private": False, "users": [u2]},
     )
     assert resp.status_code == 200
-    room_id = resp.json()["id"]
+    room_id = resp.json()["ID"]
     assert room_id > 0
 
     rooms = s1.get(f"{API_URL}/websocket/rooms")
@@ -48,7 +48,7 @@ def test_chat_unread():
         f"{API_URL}/websocket/rooms",
         json={"name": "chat", "private": False, "users": [u2]},
     )
-    room_id = resp.json()["id"]
+    room_id = resp.json()["ID"]
 
     resp = s1.put(f"{API_URL}/chat/enter", json={"room_id": room_id})
     assert resp.status_code == 200
