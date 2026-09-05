@@ -1,5 +1,6 @@
 import "../styles/components/_chatPanel.scss"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LuPlus } from "react-icons/lu";
 import { useChat, type RoomMember } from "../context/chatContext";
 import { AddChatModal } from "./AddChatModal";
 import { UserAvatar } from "./users/UserAvatar";
@@ -62,16 +63,14 @@ export function ChatPanel(props: ChatPanelProps) {
 				className={`chatPanel__bubble ${activeChatId === roomId ? 'is-active' : ''}`}
 				onClick={() => onChatClick(roomId)}
 				title={other ? other.login : `Sala ${roomId}`}
+				data-tooltip={other ? other.login : `Sala ${roomId}`}
 			>
 				{other ? (
-					<>
-						<UserAvatar
-							avatarPath={other.avatar_url || null}
-							username={other.login}
-							size="small"
-						/>
-						<span className="chatPanel__bubbleLabel">{other.login}</span>
-					</>
+					<UserAvatar
+						avatarPath={other.avatar_url || null}
+						username={other.login}
+						size="medium"
+					/>
 				) : (
 					<span className="chatPanel__bubbleId">{roomId}</span>
 				)}
@@ -86,17 +85,25 @@ export function ChatPanel(props: ChatPanelProps) {
 					{displayRooms.map(renderBubble)}
 				</div>
 
-				<div className="chatPanel__actions">
-					<button className="chatPanel__add" onClick={() => setShowAddChat(true)}>+</button>
-				</div>
-			</aside>
+			<div className="chatPanel__actions">
+				<button
+					type="button"
+					className="chatPanel__add"
+					aria-label="Nuevo chat"
+					data-tooltip="Nuevo chat"
+					onClick={() => setShowAddChat(true)}
+				>
+					<LuPlus />
+				</button>
+			</div>
+        </aside>
 
-			{showAddChat && (
-				<AddChatModal
-					onSelect={handleSelectUser}
-					onClose={() => setShowAddChat(false)}
-				/>
-			)}
+		{showAddChat && (
+			<AddChatModal
+				onSelect={handleSelectUser}
+				onClose={() => setShowAddChat(false)}
+			/>
+		)}
 		</>
     );
 }

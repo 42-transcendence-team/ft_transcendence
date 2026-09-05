@@ -8,8 +8,8 @@
     bottom: 20px;
     right: 20px;
     
-    width: 320px;
-    height: 450px;
+    width: 360px;
+    height: 500px;
     max-height: 80%;
     
     background-color: white;
@@ -28,6 +28,35 @@
         color: white;
         display: flex;
         justify-content: space-between;
+    }
+
+    &__close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        cursor: pointer;
+        font-size: 1.25rem;
+        font-weight: 600;
+        line-height: 1;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.35);
+            transform: scale(1.08);
+        }
+
+        &:focus-visible {
+            outline: 2px solid white;
+            outline-offset: 2px;
+        }
     }
 
     &__headerUser {
@@ -75,9 +104,9 @@
     }
 
     &__msg {
-        max-width: 80%;
+        max-width: 100%;
         margin-bottom: 0.5rem;
-        padding: 0.5rem 0.75rem;
+        padding: 0.6rem 0.9rem;
         border-radius: 12px;
         background-color: #f1f1f1;
         align-self: flex-start;
@@ -90,7 +119,8 @@
         }
 
         &__content {
-            font-size: 0.875rem;
+            overflow-wrap: anywhere;
+            font-size: 1rem;
         }
 
         &-header {
