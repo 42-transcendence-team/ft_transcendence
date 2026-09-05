@@ -61,10 +61,11 @@ const initialGameState: GameState = {
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
-export function GameProvider({ children, user }: { children: React.ReactNode; user: any }) {
-    const { send, subscribe } = useWebSocket();
+export function GameProvider({ children, user, gameId, gameType }: { children: React.ReactNode; user: any; gameId?: string; gameType?: string }) {
+    const { send, subscribe, isConnected } = useWebSocket();
     const [ gameState, setGameState ] = useState<GameState>(initialGameState);
     const navigate = useNavigate();
+    const autoJoinedRef = useRef(false);
 
     const myPlayer = useMemo(
 		() => gameState.players.find(p => p.id === user?.id),
@@ -239,6 +240,24 @@ export function GameProvider({ children, user }: { children: React.ReactNode; us
             game_type: gameType,
         }));
     }, []);
+
+    useEffect(() => {
+        if (!user?.id || !gameId || !gameType) return;
+        if (autoJoinedRef.current) return;
+        if (gameState.status !== 'MENU' && gameState.status !== 'IDLE') return;
+        if (!isConnected) return;
+
+        autoJoinedRef.current = true;
+        setGameType(gameType.toUpperCase());
+        send({
+            type: "game",
+            payload: {
+                action: "join",
+                game_id: Number(gameId),
+                game_type: gameType.toUpperCase(),
+            },
+        });
+    }, [user?.id, gameId, gameType, gameState.status, isConnected, send, setGameType]);
 
     const returnMenu = useCallback(() => {
         const gameType = gameState.game_type.toLowerCase();

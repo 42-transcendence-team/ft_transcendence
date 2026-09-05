@@ -27,7 +27,7 @@ export default function GameView() {
     }
 
     return (
-        <GameProvider user={user}>
+        <GameProvider user={user} gameId={gameId} gameType={gameType}>
             <GameViewContent game={game} gameId={gameId} gameType={gameType} />
         </GameProvider>
     );

@@ -1,9 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import '@styles/components/_sessionTakenOver.scss';
+
+const SESSION_TAKEOVER_CODE = 4001;
 
 interface WebSocketContextType {
 	send: (message: any) => void;
 	subscribe: (type: string, handler: (message: unknown) => void) => () => void;
 	isConnected: boolean;
+	sessionTakenOver: boolean;
 }
 
 interface AuthUser {
@@ -28,6 +32,7 @@ export function useHandleWebsocket(user: AuthUser | null) {
 	const reconnectTimeout = useRef<number | null>(null);
 	const shouldReconnect = useRef(true);
 	const [isConnected, setIsConnected] = useState(false);
+	const [sessionTakenOver, setSessionTakenOver] = useState(false);
 
 	const send = useCallback((message: any): boolean => {
 		if (websocket.current?.readyState !== WebSocket.OPEN) return false;
@@ -98,6 +103,15 @@ export function useHandleWebsocket(user: AuthUser | null) {
 				websocket.current = null;
 				setIsConnected(false);
 
+				if (e.code === SESSION_TAKEOVER_CODE) {
+					// Otra ventana tomó la sesión del usuario: no reconectar
+					// y bloquear esta ventana para evitar el ping-pong de
+					// conexiones entre dos pestañas.
+					shouldReconnect.current = false;
+					setSessionTakenOver(true);
+					return;
+				}
+
 				if (!shouldReconnect.current) {
 					return;
 				}
@@ -142,7 +156,21 @@ export function useHandleWebsocket(user: AuthUser | null) {
 		};
 	}, [user?.id]);
 
-	return { send, subscribe, isConnected };
+	return { send, subscribe, isConnected, sessionTakenOver };
+}
+
+function SessionTakenOverOverlay() {
+	return (
+		<div className="session-taken-over">
+			<div className="session-taken-over__card">
+				<h2 className="session-taken-over__title">Sesión activa en otra ventana</h2>
+				<p className="session-taken-over__text">
+					Has iniciado sesión en una ventana nueva. Esta ventana quedará
+					bloqueada y la partida continuará en la ventana reciente.
+				</p>
+			</div>
+		</div>
+	);
 }
 
 export function WebSocketProvider({
@@ -152,11 +180,12 @@ export function WebSocketProvider({
 	children: React.ReactNode;
 	user: AuthUser | null;
 }) {
-	const { send, subscribe, isConnected } = useHandleWebsocket(user);
+	const { send, subscribe, isConnected, sessionTakenOver } = useHandleWebsocket(user);
 
 	return (
-		<WebSocketContext.Provider value={{ send, subscribe, isConnected }}>
+		<WebSocketContext.Provider value={{ send, subscribe, isConnected, sessionTakenOver }}>
 			{children}
+			{sessionTakenOver && <SessionTakenOverOverlay />}
 		</WebSocketContext.Provider>
 	);
 }
