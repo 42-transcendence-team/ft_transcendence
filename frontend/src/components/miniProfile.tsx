@@ -14,7 +14,13 @@ function getImageSource(imagePath: string | null): string {
   return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
 }
 
-export const MiniProfile = () => {
+export const MiniProfile = ({
+  avatarHref,
+  hidePublish = false,
+}: {
+  avatarHref?: string;
+  hidePublish?: boolean;
+}) => {
   const { user: authenticatedUser, loading: authLoading } = useAuth();
   const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
 
@@ -82,23 +88,35 @@ export const MiniProfile = () => {
   return (
     <div className="miniProfile">
       <div className="miniProfile__avatarWrapper">
-        <img 
-          src={avatarSrc} 
-          alt={`Avatar de ${displayName}`} 
-          className="miniProfile__avatar" 
-        />
+        {avatarHref ? (
+          <Link to={avatarHref}>
+            <img
+              src={avatarSrc}
+              alt={`Avatar de ${displayName}`}
+              className="miniProfile__avatar"
+            />
+          </Link>
+        ) : (
+          <img
+            src={avatarSrc}
+            alt={`Avatar de ${displayName}`}
+            className="miniProfile__avatar"
+          />
+        )}
         <span className={`miniProfile__statusDot miniProfile__statusDot--${statusClass}`}></span>
       </div>
 
       <div className="miniProfile__stats" title={`${visits} visitas en tu perfil`}>
         <FiTrendingUp /> <span>{visits} visitas</span>
       </div>
-      <Link
-        className="miniProfile__publishBtn"
-        to="/app/posts/new"
-      >
-        Nuevo post
-      </Link>
+      {!hidePublish && (
+        <Link
+          className="miniProfile__publishBtn"
+          to="/app/posts/new"
+        >
+          Nuevo post
+        </Link>
+      )}
       
     </div>
   );

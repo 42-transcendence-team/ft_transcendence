@@ -1,168 +1,189 @@
 @use "../../abstracts/variables" as *;
 
 .searchFilters {
-  width: 100%;
+	width: 100%;
 
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
 
-  padding: 20px;
+	padding: 16px;
 
-  background-color: $light-gray-common-components;
-  border-radius: 16px;
+	background-color: $background-light;
+	border-radius: 12px;
 
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 
-  box-sizing: border-box;
+	box-sizing: border-box;
 
-  &__title {
-    margin: 0;
+	&__title {
+		margin: 0;
 
-    text-align: center;
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #222;
-  }
+		display: flex;
+		align-items: center;
+		gap: 8px;
 
-  &__sectionTitle {
-    margin: 8px 0 0;
+		font-size: 0.95rem;
+		font-weight: 700;
+		color: $main-text-light;
+	}
 
-    font-size: 0.85rem;
-    font-weight: bold;
-    color: #222;
-  }
+	&__sectionTitle {
+		margin: 4px 0 0;
 
-  &__chips {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+		font-size: 0.72rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: $disabled-text-light;
+	}
 
-  &__chip,
-  &__sortTrigger {
-    width: 100%;
-    min-height: 42px;
+	&__chips {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 8px;
+	}
 
-    display: flex;
-    align-items: center;
+	&__chip,
+	&__sortTrigger {
+		display: flex;
+		align-items: center;
+		gap: 8px;
 
-    padding: 10px 12px;
+		min-height: 42px;
+		padding: 8px 12px;
 
-    border: none;
-    border-radius: 10px;
+		border: 1px solid $light-gray-common-components;
+		border-radius: 10px;
 
-    background-color: #eeeeee;
-    color: #333;
+		background-color: #ffffff;
+		color: $secondary-text-light;
 
-    cursor: pointer;
+		cursor: pointer;
 
-    font-family: inherit;
-    font-size: 1rem;
+		font-family: inherit;
+		font-size: 0.85rem;
+		font-weight: 600;
 
-    transition:
-      transform 0.2s ease,
-      background-color 0.2s ease,
-      color 0.2s ease;
-  }
+		transition:
+			transform 0.15s ease,
+			background-color 0.15s ease,
+			color 0.15s ease,
+			border-color 0.15s ease,
+			box-shadow 0.15s ease;
 
-  &__chip {
-    gap: 8px;
-  }
+		svg {
+			flex-shrink: 0;
+		}
 
-  &__sortTrigger {
-    justify-content: space-between;
-  }
+		&:hover {
+			transform: translateY(-1px);
+			border-color: $light-purple-background-light;
+			color: $main-text-light;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+		}
 
-  &__chip:hover,
-  &__sortTrigger:hover {
-    transform: translateY(-2px);
-  }
+		&:active {
+			transform: scale(0.98);
+		}
+	}
 
-  &__chip--active {
-    background-color: $dark-purple-background-light;
-    color: $dark-purple-main-text-light;
+	&__chip {
+		justify-content: flex-start;
+	}
 
-    transform: scale(0.97);
-  }
+	&__chip--active {
+		background-color: $dark-purple-background-light;
+		border-color: $dark-purple-background-light;
+		color: $dark-purple-main-text-light;
+		box-shadow: 0 4px 10px rgba(84, 82, 201, 0.35);
 
-  &__sortDropdown {
-    position: relative;
-    width: 100%;
-  }
+		&:hover {
+			background-color: $light-purple-background-light;
+			border-color: $light-purple-background-light;
+			color: $light-purple-main-text-light;
+		}
+	}
 
-  &__sortIcon {
-    transition: transform 0.2s ease;
+	&__sortDropdown {
+		width: 100%;
 
-    &--open {
-      transform: rotate(180deg);
-    }
-  }
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
 
-  &__sortMenu {
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 0;
-    right: 0;
+	&__sortTrigger {
+		justify-content: space-between;
+	}
 
-    z-index: 20;
+	&__sortIcon {
+		transition: transform 0.2s ease;
 
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+		&--open {
+			transform: rotate(180deg);
+		}
+	}
 
-    padding: 6px;
+	&__sortMenu {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
 
-    background-color: #eeeeee;
-    border-radius: 10px;
+		padding: 6px;
 
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+		background-color: #ffffff;
+		border: 1px solid $light-gray-common-components;
+		border-radius: 10px;
 
-    animation: searchFiltersMenuIn 0.16s ease;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
-    button {
-      width: 100%;
+		animation: searchFiltersMenuIn 0.16s ease;
 
-      padding: 10px 12px;
+		button {
+			width: 100%;
 
-      border: none;
-      border-radius: 8px;
+			padding: 8px 12px;
 
-      background: transparent;
-      color: #333;
+			border: none;
+			border-radius: 8px;
 
-      text-align: left;
+			background: transparent;
+			color: $secondary-text-light;
 
-      cursor: pointer;
+			text-align: left;
 
-      font-family: inherit;
-      font-size: 0.95rem;
+			cursor: pointer;
 
-      transition:
-        background-color 0.2s ease,
-        color 0.2s ease;
+			font-family: inherit;
+			font-size: 0.85rem;
 
-      &:hover {
-        background-color: $light-purple-secondary-text-light;
-      }
-    }
-  }
+			transition:
+				background-color 0.2s ease,
+				color 0.2s ease;
 
-  &__sortOption--active {
-    background-color: $dark-purple-background-light !important;
-    color: $dark-purple-main-text-light !important;
-    font-weight: 600;
-  }
+			&:hover {
+				background-color: $light-purple-secondary-text-light;
+				color: $main-text-light;
+			}
+		}
+	}
+
+	&__sortOption--active {
+		background-color: $dark-purple-background-light !important;
+		color: $dark-purple-main-text-light !important;
+		font-weight: 600;
+	}
 }
 
 @keyframes searchFiltersMenuIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
+	from {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }

@@ -1,12 +1,13 @@
 .miniProfile {
-  background-color: #e5e7eb; // Mismo fondo que las otras tarjetas
+  background-color: $background-light; // Mismo fondo que las otras tarjetas
   border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
   padding: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between; // Reparte el espacio horizontalmente
   gap: 12px;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); // Sutil sombra superior opcional
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 
   &__avatarWrapper {
     position: relative;
@@ -18,7 +19,7 @@
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
-    background-color: #cbd5e1; // Color de fallback
+    background-color: $light-gray-common-components; // Color de fallback
     display: block; // Previene márgenes fantasma en imágenes
   }
 
@@ -29,7 +30,7 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    border: 2px solid #e5e7eb; // Borde del color de fondo para simular recorte
+    border: 2px solid $background-light; // Borde del color de fondo para simular recorte
     
     // Estados estilo Discord
     &--online { background-color: #23a559; } // Verde

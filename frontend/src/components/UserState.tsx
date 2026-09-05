@@ -80,7 +80,7 @@ export function UserState({ userStatus, isOwnProfile, onStatusUpdated }: UserSta
 								setNewStatus(event.target.value)
 							}
 							onKeyDown={handleStatusKeyDown}
-							maxLength={42}
+							maxLength={100}
 							autoFocus
 							disabled={isSaving}
 							placeholder="Escribe tu estado..."
