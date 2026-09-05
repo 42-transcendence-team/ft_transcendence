@@ -3,6 +3,7 @@ package middlewares
 import (
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,14 +25,21 @@ var HttpDuration = prometheus.NewHistogramVec(
 	[]string{"path"},
 )
 
+var registerOnce sync.Once
+
 func Register() {
-	prometheus.MustRegister(HttpRequests)
-	prometheus.MustRegister(HttpDuration)
-	// TODO- Revisar porque si esta en WSL funciona con esto descomentado, en Linux comentado
-	// prometheus.MustRegister(
-	// 	collectors.NewGoCollector(),
-	// 	collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-	// )
+	// Idempotente: en producción solo se llama una vez al arrancar, pero
+	// permite que server.NewHTTPServer se reutilice en tests sin panic por
+	// registro duplicado de los mismos collectors.
+	registerOnce.Do(func() {
+		prometheus.MustRegister(HttpRequests)
+		prometheus.MustRegister(HttpDuration)
+		// TODO- Revisar porque si esta en WSL funciona con esto descomentado, en Linux comentado
+		// prometheus.MustRegister(
+		// 	collectors.NewGoCollector(),
+		// 	collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+		// )
+	})
 }
 
 func PrometheusMiddleware() gin.HandlerFunc {
