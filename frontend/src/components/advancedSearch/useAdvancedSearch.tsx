@@ -157,6 +157,8 @@ export function useAdvancedSearch() {
 
 	const handleCloseSearch = () => {
 		setHasSearched(false);
+		setRelations([]);
+		setSort("username_asc");
 	};
 
 	// Abre el panel de resultados con un filtro de relacion concreto, sin
