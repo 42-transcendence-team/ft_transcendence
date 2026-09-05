@@ -40,6 +40,9 @@ export const PostList = ({
 						key={post.id}
 						post={post}
 						onOpen={setSelectedPostId}
+						onReactionUpdated={
+							onPostReactionUpdated
+						}
 					/>
 				))}
 			</div>

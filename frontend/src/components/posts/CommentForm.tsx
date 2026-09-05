@@ -21,6 +21,8 @@ export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
+		if (isSubmitting) return;
+
 		const validationError = validateCommentContent(content);
 
 		if (validationError) {
@@ -52,6 +54,16 @@ export const CommentForm = ({ postId, onCreated }: CommentFormProps) => {
 					className="comment-form__textarea"
 					value={content}
 					onChange={(event) => setContent(event.target.value)}
+					onKeyDown={(event) => {
+						if (
+							event.key === "Enter" &&
+							!event.shiftKey &&
+							!event.nativeEvent.isComposing
+						) {
+							event.preventDefault();
+							event.currentTarget.form?.requestSubmit();
+						}
+					}}
 					placeholder="Añade un comentario."
 					aria-label="Añadir un comentario"
 					rows={1}

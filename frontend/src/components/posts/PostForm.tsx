@@ -29,6 +29,8 @@ export const PostForm = ({ onCreated }: PostFormProps) => {
 	) => {
 		event.preventDefault();
 
+		if (isSubmitting) return;
+
 		const validationError = validatePostDraft(content, file);
 
 		if (validationError) {
@@ -76,6 +78,16 @@ export const PostForm = ({ onCreated }: PostFormProps) => {
 					onChange={(event) =>
 						setContent(event.target.value)
 					}
+					onKeyDown={(event) => {
+						if (
+							event.key === "Enter" &&
+							!event.shiftKey &&
+							!event.nativeEvent.isComposing
+						) {
+							event.preventDefault();
+							event.currentTarget.form?.requestSubmit();
+						}
+					}}
 					placeholder="Escribe algo."
 					rows={6}
 				/>
