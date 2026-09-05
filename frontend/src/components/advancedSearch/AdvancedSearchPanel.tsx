@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiSliders } from "react-icons/fi";
 
 import { SearchResults } from "./SearchResults";
 import { SearchPagination } from "./SearchPagination";
+import { SearchFilters } from "./SearchFilters";
 import { useAdvancedSearch } from "./useAdvancedSearch";
 
 import { ConfirmModal } from "@components/ConfirmModal";
@@ -28,6 +30,35 @@ export function AdvancedSearchPanel({
 	onClose,
 }: AdvancedSearchPanelProps) {
 	const navigate = useNavigate();
+	const panelRef = useRef<HTMLDivElement>(null);
+	const [showFilters, setShowFilters] = useState(false);
+
+	useEffect(() => {
+		if (search.relations.length > 0) {
+			setShowFilters(true);
+		}
+	}, [search.relations.length]);
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				onClose();
+			}
+		};
+
+		const handleClickOutside = (e: PointerEvent) => {
+			if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+				onClose();
+			}
+		};
+
+		document.addEventListener("keydown", handleKeyDown);
+		document.addEventListener("pointerdown", handleClickOutside);
+		return () => {
+			document.removeEventListener("keydown", handleKeyDown);
+			document.removeEventListener("pointerdown", handleClickOutside);
+		};
+	}, [onClose]);
 
 	const [pendingConfirmation, setPendingConfirmation] =
 		useState<PendingConfirmation | null>(null);
@@ -123,21 +154,44 @@ export function AdvancedSearchPanel({
 
 	return (
 		<div className="advancedSearchOverlay">
-			<div className="advancedSearchPanel">
+			<div className="advancedSearchPanel" ref={panelRef}>
 				<div className="advancedSearchPanel__header">
 					<h3 className="advancedSearchPanel__title">
 						Búsqueda avanzada
 					</h3>
 
-					<button
-						type="button"
-						className="advancedSearchPanel__close"
-						onClick={onClose}
-						aria-label="Cerrar búsqueda avanzada"
-					>
-						×
-					</button>
+					<div className="advancedSearchPanel__actions">
+						<button
+							type="button"
+							className={`advancedSearchPanel__toggle ${showFilters ? 'advancedSearchPanel__toggle--active' : ''}`}
+							onClick={() => setShowFilters((current) => !current)}
+							aria-label="Mostrar filtros"
+							aria-expanded={showFilters}
+							title="Filtros"
+						>
+							<FiSliders />
+						</button>
+						<button
+							type="button"
+							className="advancedSearchPanel__close"
+							onClick={onClose}
+							aria-label="Cerrar búsqueda avanzada"
+						>
+							×
+						</button>
+					</div>
 				</div>
+
+				{showFilters && (
+					<div className="advancedSearchPanel__filters">
+						<SearchFilters
+							selectedRelations={search.relations}
+							onRelationsChange={search.handleRelationsChange}
+							selectedSort={search.sort}
+							onSortChange={search.handleSortChange}
+						/>
+					</div>
+				)}
 
 				{search.error ? (
 					<p>{search.error}</p>

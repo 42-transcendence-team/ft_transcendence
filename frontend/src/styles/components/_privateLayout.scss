@@ -22,6 +22,16 @@
         "left content right"
         "left footer right";
 
+    @media (min-width: 901px) {
+        &--panelCollapsed {
+            grid-template-columns: 72px minmax(0, 1fr) 76px;
+
+            .privateLayout__leftPanel {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    }
+
     @media (max-width: 900px) {
         /* Pasamos a 1 sola columna que ocupa todo el ancho */
         grid-template-columns: 1fr;
@@ -77,12 +87,12 @@
                 flex-shrink: 0;
             }
 
-            // Middle (Notificaciones): se estira y hace scroll interno
+            // Middle (Buscador): se estira y hace scroll interno
             .leftPanel__section--middle {
                 flex-grow: 1;
                 min-height: 0; // Clave para que Flexbox permita el scroll
                 display: flex;
-				justify-content: center;
+				justify-content: flex-start;
                 flex-direction: column;
                 overflow-y: auto; // Aparece scroll solo aquí si hay muchas notificaciones
 
@@ -95,6 +105,200 @@
                 -ms-overflow-style: none !important;
             }
         }
+    }
+
+    // Rail comprimido (modo por defecto)
+    .panelRail {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        height: 100%;
+
+        &__btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.12);
+            color: $dark-purple-main-text-light;
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition:
+                transform 0.15s ease,
+                box-shadow 0.15s ease,
+                background-color 0.15s ease,
+                color 0.15s ease,
+                border-color 0.15s ease;
+
+            svg {
+                font-size: 1.2rem;
+            }
+
+            &:hover {
+                transform: translateY(-2px) scale(1.06);
+                background-color: $background-light;
+                border-color: $background-light;
+                color: $dark-purple-background-light;
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            }
+
+            &:active {
+                transform: scale(0.95);
+            }
+        }
+
+        &__btn--link {
+            text-decoration: none;
+        }
+
+        // Campana en modo glass (el resto de la app la mantiene blanca)
+        .notification-bell {
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: $dark-purple-main-text-light;
+            box-shadow: none;
+
+            &:hover {
+                background-color: $background-light;
+                border-color: $background-light;
+                color: $dark-purple-background-light;
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            }
+
+            &__icon {
+                font-size: 1.2rem;
+            }
+        }
+
+        &__spacer {
+            flex: 1;
+        }
+
+        &__profile {
+            width: 100%;
+
+            .miniProfile {
+                flex-direction: column;
+                gap: 6px;
+                padding: 10px 6px;
+                justify-content: center;
+                background-color: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                box-shadow: none;
+
+                .miniProfile__avatar {
+                    border: 2px solid rgba(255, 255, 255, 0.6);
+                }
+
+                .miniProfile__statusDot {
+                    border-color: rgba(255, 255, 255, 0.12);
+                }
+
+                &__stats,
+                &__publishBtn {
+                    display: none;
+                }
+            }
+        }
+
+        // Tooltip al hacer hover
+        [data-tooltip] {
+            &::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                left: calc(100% + 10px);
+                top: 50%;
+                transform: translateY(-50%);
+                padding: 5px 10px;
+                border-radius: 8px;
+                background-color: rgba(15, 23, 42, 0.92);
+                color: #fff;
+                font-size: 0.72rem;
+                font-weight: 600;
+                white-space: nowrap;
+                opacity: 0;
+                pointer-events: none;
+                z-index: 50;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                transition: opacity 0.15s ease;
+            }
+
+            &:hover::after {
+                opacity: 1;
+            }
+        }
+    }
+
+    // Cabecera del panel expandido
+    .leftPanel__panelHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+
+        &-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: $dark-purple-main-text-light;
+        }
+
+        &-collapse {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: $dark-purple-main-text-light;
+            font-size: 1rem;
+            cursor: pointer;
+            transition:
+                background-color 0.15s ease,
+                transform 0.15s ease;
+
+            &:hover {
+                background-color: rgba(255, 255, 255, 0.35);
+                transform: translateX(-2px);
+            }
+        }
+    }
+
+    // Búsqueda dentro del panel expandido
+    .leftPanel__section--search {
+        flex-shrink: 0;
+
+        .searchBar {
+            max-width: 100%;
+
+            &__input {
+                background-color: $background-light;
+
+                &::placeholder {
+                    color: $disabled-text-light;
+                }
+            }
+        }
+    }
+
+    // Notificaciones centradas en el espacio libre
+    .leftPanel__section--notifications {
+        flex-grow: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     &__header {
@@ -135,7 +339,7 @@
 
     &__rightPanel {
         grid-area: right;
-        padding: 1rem;
+        padding: 0.75rem 0.5rem;
         background-color: $light-gray-common-components;
         border-radius: 10px;
         color: black;
@@ -215,6 +419,13 @@
         font-weight: 700;
     }
 
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__toggle,
     &__close {
         width: 34px;
         height: 34px;
@@ -228,7 +439,7 @@
         background-color: rgba(0, 0, 0, 0.06);
         color: $main-text-light;
         cursor: pointer;
-        font-size: 1.3rem;
+        font-size: 1.05rem;
         font-weight: 600;
         line-height: 1;
         transition: background-color 0.2s ease, transform 0.2s ease;
@@ -242,6 +453,24 @@
             outline: 2px solid $main-text-light;
             outline-offset: 2px;
         }
+    }
+
+    &__close {
+        font-size: 1.3rem;
+    }
+
+    &__toggle--active {
+        background-color: $dark-purple-background-light;
+        color: $dark-purple-main-text-light;
+
+        &:hover {
+            background-color: $light-purple-background-light;
+            color: $light-purple-main-text-light;
+        }
+    }
+
+    &__filters {
+        margin-bottom: 14px;
     }
 }
 

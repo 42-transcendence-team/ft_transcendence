@@ -6,6 +6,7 @@
   gap: 0.5rem;
   align-items: center;
   width: 100%;
+  max-width: 50%;
 
   &__input {
     flex: 1;
@@ -24,5 +25,11 @@
 
   &__icon {
     font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .searchBar {
+    max-width: 100%;
   }
 }
