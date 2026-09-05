@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FiEdit3, FiTrendingUp } from "react-icons/fi";
+import { FiTrendingUp } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getUserProfile, type UserProfile } from "../api/UserProfile"; // Ajusta la ruta
@@ -82,33 +82,24 @@ export const MiniProfile = () => {
   return (
     <div className="miniProfile">
       <div className="miniProfile__avatarWrapper">
-        <img
-          src={avatarSrc}
-          alt={`Avatar de ${displayName}`}
-          className="miniProfile__avatar"
+        <img 
+          src={avatarSrc} 
+          alt={`Avatar de ${displayName}`} 
+          className="miniProfile__avatar" 
         />
-        <span
-          className={`miniProfile__statusDot miniProfile__statusDot--${statusClass}`}
-        />
+        <span className={`miniProfile__statusDot miniProfile__statusDot--${statusClass}`}></span>
       </div>
 
-      <div
-        className="miniProfile__stats"
-        title={`${visits} visitas en tu perfil`}
-      >
-        <FiTrendingUp />
-        <span>{visits} visitas</span>
+      <div className="miniProfile__stats" title={`${visits} visitas en tu perfil`}>
+        <FiTrendingUp /> <span>{visits} visitas</span>
       </div>
-
       <Link
         className="miniProfile__publishBtn"
         to="/app/posts/new"
-        title="Nuevo post"
-        aria-label="Nuevo post"
       >
-        <FiEdit3 className="miniProfile__publishIcon" />
-        <span className="miniProfile__publishText">Nuevo post</span>
+        Nuevo post
       </Link>
+      
     </div>
   );
 };
