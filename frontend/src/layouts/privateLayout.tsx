@@ -39,7 +39,11 @@ export function PrivateLayout() {
     search.handleCloseSearch();
   };
   const handleRailSearch = () => {
-    document.querySelector<HTMLButtonElement>('.searchBar__button')?.click();
+    if (search.hasSearched) {
+      search.handleCloseSearch();
+    } else {
+      document.querySelector<HTMLButtonElement>('.searchBar__button')?.click();
+    }
   };
   const handleFriendsClick = () => {
     if (location.pathname.startsWith('/app/friends/')) {
@@ -57,7 +61,7 @@ export function PrivateLayout() {
           user={data.user}
           onChatOpen={toggleChat}
           onOpenReceivedRequests={() =>
-            search.openWithRelations(['pending_received'])
+            navigate(`/app/friends/${data.user.login}?tab=received`)
           }
         >
           <ChatProvider user={data.user}>
@@ -78,6 +82,7 @@ export function PrivateLayout() {
                     type="button"
                     className="panelRail__btn"
                     onClick={handleRailSearch}
+                    onPointerDown={(e) => e.stopPropagation()}
                     aria-label="Buscar usuarios"
                     title="Buscar"
                     data-tooltip="Buscar"

@@ -1,6 +1,7 @@
 import skullLogo from '../assets/icons/skull_logo.png';
 import '../styles/pages/_friends.scss';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { Friend, FriendRequest } from '../api/Friends';
 import {
   acceptFriendRequest,
@@ -11,13 +12,28 @@ import {
 } from '../api/Friends';
 import { EmptyFriendsState } from '../components/EmptyFriendsState';
 
+type FriendTab = 'friends' | 'sent' | 'received';
+
 export const Friends = () => {
-  const [activeTab, setActiveTab] = useState<'friends' | 'sent' | 'received'>(
-    'friends',
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<FriendTab>(
+    tabParam === 'received' ? 'received' : tabParam === 'sent' ? 'sent' : 'friends',
   );
   const [friendsRequests, setFriendsRequest] = useState<Friend[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
   const [sentRequests, setSentRequest] = useState<FriendRequest[]>([]);
+
+  useEffect(() => {
+    if (tabParam === 'friends' || tabParam === 'sent' || tabParam === 'received') {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+  const handleTabChange = (tab: FriendTab) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   useEffect(() => {
     async function loadFriends() {
@@ -64,7 +80,7 @@ export const Friends = () => {
   const handleAcceptFriendRequestClick = async (id: number) => {
     try {
       await acceptFriendRequest(id);
-      console.log('accept request click');
+      setReceivedRequests((prev) => prev.filter((r) => r.id !== id));
     } catch (error) {
       console.log('accept request ERROR', error);
     }
@@ -73,7 +89,7 @@ export const Friends = () => {
   const handleRejectFriendRequestClick = async (id: number) => {
     try {
       await rejectFriendRequest(id);
-      console.log('reject request click');
+      setReceivedRequests((prev) => prev.filter((r) => r.id !== id));
     } catch (error) {
       console.log('reject request ERROR', error);
     }
@@ -161,21 +177,21 @@ export const Friends = () => {
         <button
           type="button"
           className={activeTab === 'friends' ? 'active' : ''}
-          onClick={() => setActiveTab('friends')}
+          onClick={() => handleTabChange('friends')}
         >
           Amigos
         </button>
         <button
           type="button"
           className={activeTab === 'sent' ? 'active' : ''}
-          onClick={() => setActiveTab('sent')}
+          onClick={() => handleTabChange('sent')}
         >
           Solicitudes enviadas
         </button>
         <button
           type="button"
           className={activeTab === 'received' ? 'active' : ''}
-          onClick={() => setActiveTab('received')}
+          onClick={() => handleTabChange('received')}
         >
           Solicitudes recibidas
         </button>
