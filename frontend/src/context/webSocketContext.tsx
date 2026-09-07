@@ -1,9 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import '@styles/components/_sessionTakenOver.scss';
+
+const SESSION_TAKEOVER_CODE = 4001;
+const SESSION_ACTIVE_CODE = 4002;
+const RECLAIM_INTERVAL_MS = 4000;
 
 interface WebSocketContextType {
 	send: (message: any) => void;
 	subscribe: (type: string, handler: (message: unknown) => void) => () => void;
 	isConnected: boolean;
+	sessionTakenOver: boolean;
 }
 
 interface AuthUser {
@@ -27,7 +33,9 @@ export function useHandleWebsocket(user: AuthUser | null) {
 	const listeners = useRef(new Map<string, Set<MessageHandler>>());
 	const reconnectTimeout = useRef<number | null>(null);
 	const shouldReconnect = useRef(true);
+	const connectRef = useRef<((reclaim?: boolean) => void) | null>(null);
 	const [isConnected, setIsConnected] = useState(false);
+	const [sessionTakenOver, setSessionTakenOver] = useState(false);
 
 	const send = useCallback((message: any): boolean => {
 		if (websocket.current?.readyState !== WebSocket.OPEN) return false;
@@ -55,17 +63,25 @@ export function useHandleWebsocket(user: AuthUser | null) {
 
 		shouldReconnect.current = true;
 
-		const connect = () => {
-			if (!shouldReconnect.current) {
+		const connect = (reclaim = false) => {
+			if (!shouldReconnect.current && !reclaim) {
 				return;
 			}
 
-			const ws = new WebSocket(getWebSocketURL());
+			const url = reclaim
+				? `${getWebSocketURL()}?reclaim=1`
+				: getWebSocketURL();
+			const ws = new WebSocket(url);
 
 			websocket.current = ws;
 
 			ws.onopen = () => {
 				if (websocket.current === ws) {
+					if (reclaim) {
+						// La ventana standby recuperó la sesión: desbloquear.
+						shouldReconnect.current = true;
+						setSessionTakenOver(false);
+					}
 					setIsConnected(true);
 				}
 			};
@@ -98,7 +114,28 @@ export function useHandleWebsocket(user: AuthUser | null) {
 				websocket.current = null;
 				setIsConnected(false);
 
+				if (e.code === SESSION_TAKEOVER_CODE) {
+					// Otra ventana tomó la sesión del usuario: bloquear esta
+					// ventana y esperar a recuperarla con reconexiones reclaim.
+					shouldReconnect.current = false;
+					setSessionTakenOver(true);
+					return;
+				}
+
+				if (e.code === SESSION_ACTIVE_CODE) {
+					// El reclaim fue rechazado porque la sesión sigue activa en
+					// otra ventana: seguir bloqueado (el intervalo reintenta).
+					shouldReconnect.current = false;
+					setSessionTakenOver(true);
+					return;
+				}
+
 				if (!shouldReconnect.current) {
+					return;
+				}
+
+				if (reclaim) {
+					// Falla de red durante el reclaim: lo reintenta el intervalo.
 					return;
 				}
 
@@ -120,9 +157,12 @@ export function useHandleWebsocket(user: AuthUser | null) {
 			};
 		};
 
+		connectRef.current = connect;
+
 		connect();
 
 		return () => {
+			connectRef.current = null;
 			shouldReconnect.current = false;
 
 			if (reconnectTimeout.current !== null) {
@@ -142,7 +182,44 @@ export function useHandleWebsocket(user: AuthUser | null) {
 		};
 	}, [user?.id]);
 
-	return { send, subscribe, isConnected };
+	// Cuando la sesión fue tomada por otra ventana, esta ventana queda en
+	// standby y reintenta recuperarla periódicamente (reclaim, sin expulsar a la
+	// activa). Si la ventana activa se cierra, el reclaim tiene éxito y la
+	// ventana vieja se desbloquea.
+	useEffect(() => {
+		if (!sessionTakenOver) {
+			return;
+		}
+
+		const retry = () => {
+			// No lanzar otra conexión si ya hay una en curso o abierta.
+			if (websocket.current && websocket.current.readyState < WebSocket.CLOSING) {
+				return;
+			}
+			connectRef.current?.(true);
+		};
+
+		const interval = window.setInterval(retry, RECLAIM_INTERVAL_MS);
+		return () => window.clearInterval(interval);
+	}, [sessionTakenOver]);
+
+	return { send, subscribe, isConnected, sessionTakenOver };
+}
+
+function SessionTakenOverOverlay() {
+	return (
+		<div className="session-taken-over">
+			<div className="session-taken-over__card">
+				<h2 className="session-taken-over__title">Sesión activa en otra ventana</h2>
+				<p className="session-taken-over__text">
+					Has iniciado sesión en una ventana nueva. Esta ventana quedará
+					bloqueada y la partida continuará en la ventana reciente.
+					Si cierras la ventana nueva, esta ventana se desbloqueará y
+					recuperará la sesión.
+				</p>
+			</div>
+		</div>
+	);
 }
 
 export function WebSocketProvider({
@@ -152,11 +229,12 @@ export function WebSocketProvider({
 	children: React.ReactNode;
 	user: AuthUser | null;
 }) {
-	const { send, subscribe, isConnected } = useHandleWebsocket(user);
+	const { send, subscribe, isConnected, sessionTakenOver } = useHandleWebsocket(user);
 
 	return (
-		<WebSocketContext.Provider value={{ send, subscribe, isConnected }}>
+		<WebSocketContext.Provider value={{ send, subscribe, isConnected, sessionTakenOver }}>
 			{children}
+			{sessionTakenOver && <SessionTakenOverOverlay />}
 		</WebSocketContext.Provider>
 	);
 }

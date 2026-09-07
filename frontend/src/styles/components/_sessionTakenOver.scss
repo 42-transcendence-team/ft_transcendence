@@ -1,0 +1,30 @@
+.session-taken-over {
+	position: fixed;
+	inset: 0;
+	z-index: 9999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+	background-color: rgba(0, 0, 0, 0.75);
+
+	&__card {
+		max-width: 24rem;
+		padding: 2rem;
+		text-align: center;
+		background-color: #fff;
+		border-radius: 0.75rem;
+		box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.3);
+	}
+
+	&__title {
+		margin: 0 0 0.75rem;
+		font-size: 1.5rem;
+	}
+
+	&__text {
+		margin: 0;
+		color: #555;
+		line-height: 1.5;
+	}
+}
