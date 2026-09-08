@@ -9,9 +9,11 @@ import "../styles/components/_privHeader.scss";
 type PrivHeaderProps = {
 	onSearch: (query: string) => void;
 	onBrandActivate: () => void;
+	isSearchActive: boolean;
+	onSearchClose: () => void;
 };
 
-export function PrivHeader({ onSearch, onBrandActivate }: PrivHeaderProps) {
+export function PrivHeader({ onSearch, onBrandActivate, isSearchActive, onSearchClose }: PrivHeaderProps) {
 	return (
 		<header className="privHeader privateLayout__header">
 			<div className="privHeader__left">
@@ -25,7 +27,11 @@ export function PrivHeader({ onSearch, onBrandActivate }: PrivHeaderProps) {
 				/>
 			</div>
 				<div className="privHeader__functions">
-					<SearchBar onSearch={onSearch} />
+					<SearchBar
+						onSearch={onSearch}
+						isActive={isSearchActive}
+						onClose={onSearchClose}
+					/>
 					<div>
 						<Link to="/app/games" className="privHeader__functions--games-link">
 							<GrGamepad className="privHeader__functions--games-link-icon" />

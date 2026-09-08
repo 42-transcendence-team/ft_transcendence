@@ -39,6 +39,11 @@ export function PrivateLayout() {
     search.handleCloseSearch();
   };
   const handleRailSearch = () => {
+    if (search.hasSearched) {
+      search.handleCloseSearch();
+      return;
+    }
+
     document.querySelector<HTMLButtonElement>('.searchBar__button')?.click();
   };
   const handleFriendsClick = () => {
@@ -57,7 +62,7 @@ export function PrivateLayout() {
           user={data.user}
           onChatOpen={toggleChat}
           onOpenReceivedRequests={() =>
-            search.openWithRelations(['pending_received'])
+            navigate(`/app/friends/${data.user.login}?tab=received`)
           }
         >
           <ChatProvider user={data.user}>
@@ -78,6 +83,7 @@ export function PrivateLayout() {
                     type="button"
                     className="panelRail__btn"
                     onClick={handleRailSearch}
+                    onPointerDown={(event) => event.stopPropagation()}
                     aria-label="Buscar usuarios"
                     title="Buscar"
                     data-tooltip="Buscar"
@@ -156,6 +162,8 @@ export function PrivateLayout() {
               <PrivHeader
                 onSearch={search.handleSearch}
                 onBrandActivate={handleBrandActivate}
+                isSearchActive={search.hasSearched}
+                onSearchClose={search.handleCloseSearch}
               />
             </header>
 

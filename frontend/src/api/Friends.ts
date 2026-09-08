@@ -4,6 +4,7 @@ export type FriendRequest = {
     id: number;
     user_id: number;
     username: string;
+    avatar_url: string;
     status: "pending";
     type: "incoming" | "outgoing";
 }
@@ -56,6 +57,7 @@ export async function rejectFriendRequest(requestId: number) {
 export type Friend = {
     user_id: number;
     username: string;
+    avatar_url: string;
 }
 
 export async function listFriendsRequest() {

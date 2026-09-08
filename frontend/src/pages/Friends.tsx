@@ -1,6 +1,6 @@
 import '../styles/pages/_friends.scss';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { Friend, FriendRequest } from '../api/Friends';
 import {
   acceptFriendRequest,
@@ -14,14 +14,25 @@ import {
 import { EmptyFriendsState } from '../components/EmptyFriendsState';
 import { UserAvatar } from '../components/users/UserAvatar';
 
+const TABS = ['friends', 'sent', 'received', 'blocked'] as const;
+type Tab = (typeof TABS)[number];
+
 export const Friends = () => {
-  const [activeTab, setActiveTab] = useState<'friends' | 'sent' | 'received' | 'blocked'>(
-    'friends',
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<Tab>(
+    TABS.includes(tabParam as Tab) ? (tabParam as Tab) : 'friends',
   );
   const [friendsRequests, setFriendsRequest] = useState<Friend[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
   const [sentRequests, setSentRequest] = useState<FriendRequest[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<Friend[]>([]);
+
+  useEffect(() => {
+    if (tabParam && TABS.includes(tabParam as Tab)) {
+      setActiveTab(tabParam as Tab);
+    }
+  }, [tabParam]);
 
   useEffect(() => {
     async function loadFriends() {

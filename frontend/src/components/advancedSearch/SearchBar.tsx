@@ -4,9 +4,11 @@ import { useState } from 'react';
 
 type SearchBarProps = {
   onSearch: (query: string) => void
+  isActive?: boolean
+  onClose?: () => void
 }
 
-export const SearchBar = ({ onSearch }: SearchBarProps) => {
+export const SearchBar = ({ onSearch, isActive, onClose }: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState<string>('')
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement> ) => {
@@ -14,6 +16,11 @@ export const SearchBar = ({ onSearch }: SearchBarProps) => {
   }
   
   const handleButtonClick = () => {
+    if (isActive && onClose) {
+      onClose()
+      return
+    }
+
     const cleanQuery = searchQuery.trim()
 
     onSearch(cleanQuery)
@@ -38,6 +45,7 @@ export const SearchBar = ({ onSearch }: SearchBarProps) => {
         placeholder="Buscar..." 
       />
       <button className="searchBar__button" type="button" onClick={handleButtonClick}
+        onPointerDown={(event) => event.stopPropagation()}
         >
         <FiSearch className="searchBar__icon" />
       </button>
