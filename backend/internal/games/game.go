@@ -51,6 +51,7 @@ type GameEngine interface {
 	PlayerTimeout(userID uint) (interface{}, error)
 	GetPlayers() []Player
 	RedyToStart() bool
+	IsPlayerConnected(userID uint) bool
 }
 
 func (g *Game) GetCurrentPlayer() int { return g.Turn }
@@ -72,6 +73,16 @@ func (g *Game) FindPlayerByID(userID uint) *Player {
 	return nil
 }
 
+// IsPlayerConnected devuelve si el jugador está conectado, de forma thread-safe
+// (coge g.mu). Debe usarse en lugar de leer player.Connected sin lock.
+func (g *Game) IsPlayerConnected(userID uint) bool {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	player := g.FindPlayerByID(userID)
+	return player != nil && player.Connected
+}
+
 func (g *Game) RedyToStart() bool {
 	if g.Mode == "online" {
 		return len(g.Players) >= g.MaxPlayers
@@ -84,26 +95,35 @@ func (g *Game) ConnectPlayer(userID uint, username string) error {
 		return appErr.NewConflict("no se puede unir a un juego local")
 	}
 
-	if g.Mode == "online" && len(g.Players) >= g.MaxPlayers {
-		if g.Finished {
-			return appErr.NewConflict("el juego ya ha terminado")
+	if g.Mode == "online" {
+		// Si el usuario ya tiene un slot (p.ej. reconexión tras un takeover a un
+		// juego aún no lleno), se reconecta en lugar de añadir un segundo Player
+		// duplicado con el mismo userID.
+		if g.FindPlayerByID(userID) != nil {
+			return g.reconnectPlayer(userID)
 		}
-		log.Printf("Maximo de jugadores: %d", g.MaxPlayers)
-		err := g.reconnectPlayer(userID)
-		if err != nil {
-			newViwer := Player{
-				ID:        userID,
-				Type:      "viewer",
-				Token:     0,
-				Username:  username,
-				Connected: true,
-				LeftAt:    time.Time{},
+
+		if len(g.Players) >= g.MaxPlayers {
+			if g.Finished {
+				return appErr.NewConflict("el juego ya ha terminado")
 			}
-			log.Printf("Jugador %d se unió como espectador al juego %d", userID, g.ID)
-			g.Players = append(g.Players, newViwer)
+			log.Printf("Maximo de jugadores: %d", g.MaxPlayers)
+			err := g.reconnectPlayer(userID)
+			if err != nil {
+				newViwer := Player{
+					ID:        userID,
+					Type:      "viewer",
+					Token:     0,
+					Username:  username,
+					Connected: true,
+					LeftAt:    time.Time{},
+				}
+				log.Printf("Jugador %d se unió como espectador al juego %d", userID, g.ID)
+				g.Players = append(g.Players, newViwer)
+				return nil
+			}
 			return nil
 		}
-		return nil
 	}
 
 	token := len(g.Players) + 1

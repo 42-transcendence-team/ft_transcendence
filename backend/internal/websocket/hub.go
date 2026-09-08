@@ -35,6 +35,7 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.Register:
+			var prevToClose *Client
 			h.Mu.Lock()
 			if prev, ok := h.ClientsConnected[client.UserID]; ok && prev != client {
 				if client.Reclaim {
@@ -53,16 +54,22 @@ func (h *Hub) Run() {
 				}
 				// Takeover real: expulsar la conexión anterior con código 4001.
 				log.Printf("Nueva conexión para el usuario %d: cerrando la conexión anterior.", client.UserID)
-				prev.Conn.WriteControl(
-					websocket.CloseMessage,
-					websocket.FormatCloseMessage(4001, "SESSION_TAKEOVER"),
-					time.Now().Add(writeWait),
-				)
-				prev.Conn.Close()
+				prevToClose = prev
 			}
 			h.Clients[client] = true
 			h.ClientsConnected[client.UserID] = client
 			h.Mu.Unlock()
+
+			// La escritura/cierre de la conexión anterior se hace FUERA del lock:
+			// WriteControl puede bloquearse hasta writeWait y congelaría el hub.
+			if prevToClose != nil {
+				prevToClose.Conn.WriteControl(
+					websocket.CloseMessage,
+					websocket.FormatCloseMessage(4001, "SESSION_TAKEOVER"),
+					time.Now().Add(writeWait),
+				)
+				prevToClose.Conn.Close()
+			}
 
 		case client := <-h.Unregister:
 			h.Mu.Lock()
