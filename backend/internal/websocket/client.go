@@ -20,6 +20,11 @@ type Client struct {
 	Rooms map[uint]*Room // Salas a las que el cliente está unido
 	Mu sync.RWMutex // Protege Rooms (se accede desde hub y desde las salas)
 
+	// Reclaim indica que es una reconexión desde una ventana "standby" (la
+	// vieja, bloqueada tras un takeover). En ese caso el hub NO expulsa a la
+	// conexión activa; si hay sesión activa, se rechaza con 4002.
+	Reclaim bool
+
 	closeOnce sync.Once // Garantiza que SendChan solo se cierre una vez (kick de clientes lentos)
 }
 
