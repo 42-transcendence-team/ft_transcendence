@@ -3,7 +3,21 @@ package websocket
 import (
 	"encoding/json"
 	"log"
+	"time"
 )
+
+// clientLeftGrace es el periodo durante el cual, tras abandonar el último
+// cliente de un usuario en una sala de juego, se espera a que otra conexión
+// del mismo usuario (p.ej. una toma de sesión) se una y cancele la salida.
+// Evita el parpadeo transitorio "RECONNECTING / abandonó la sala".
+const clientLeftGrace = time.Second
+
+// deferredLeave representa una salida de sala diferida: el cliente que se fue y
+// el timer que disparará el aviso/OnClientLeft si no se reincorpora a tiempo.
+type deferredLeave struct {
+	client *Client
+	timer  *time.Timer
+}
 
 type Room struct {
 	ID      uint
@@ -17,6 +31,14 @@ type Room struct {
 	Broadcast    chan []byte
 	hubCloseRoom chan uint
 
+	// clientLeftTimer avisa (desde una goroutine de time.AfterFunc) de que ha
+	// expirado la gracia de salida de un usuario.
+	clientLeftTimer chan uint
+	// pendingLeft guarda las salidas diferidas pendientes por usuario. Solo se
+	// toca desde la goroutine de room.Run (el callback solo envía a
+	// clientLeftTimer), por lo que no necesita lock.
+	pendingLeft map[uint]*deferredLeave
+
 	// OnClientLeft se invoca (solo si está seteado, p.ej. en salas de juego)
 	// cuando el último cliente de un usuario abandona la sala. Permite que el
 	// motor del juego marque al jugador como desconectado y avise al resto de
@@ -26,14 +48,16 @@ type Room struct {
 
 func NewRoom(id uint, name string, private bool, hubCloseChan chan uint) *Room {
 	return &Room{
-		ID:           id,
-		Name:         name,
-		Private:      private,
-		Clients:      make(map[*Client]bool),
-		Join:         make(chan *Client, 1),
-		Leave:        make(chan *Client, 1),
-		Broadcast:    make(chan []byte, 32),
-		hubCloseRoom: hubCloseChan,
+		ID:              id,
+		Name:            name,
+		Private:         private,
+		Clients:         make(map[*Client]bool),
+		Join:            make(chan *Client, 1),
+		Leave:           make(chan *Client, 1),
+		Broadcast:       make(chan []byte, 32),
+		hubCloseRoom:    hubCloseChan,
+		clientLeftTimer: make(chan uint, 16),
+		pendingLeft:     make(map[uint]*deferredLeave),
 	}
 }
 
@@ -76,6 +100,13 @@ func (r *Room) Run() {
 			client.Rooms[r.ID] = r
 			client.Mu.Unlock()
 
+			// Una reincorporación (p.ej. toma de sesión) cancela la salida
+			// diferida pendiente del mismo usuario para evitar el parpadeo.
+			if dl, ok := r.pendingLeft[client.UserID]; ok {
+				dl.timer.Stop()
+				delete(r.pendingLeft, client.UserID)
+			}
+
 			joinMsg := map[string]any{
 				"type":    "system",
 				"content": client.Username + " se ha unido a la sala " + r.Name + ".",
@@ -94,24 +125,19 @@ func (r *Room) Run() {
 				delete(client.Rooms, r.ID)
 				client.Mu.Unlock()
 
-				leaveMsg := map[string]any{
-					"type":    "system",
-					"content": client.Username + " abandonó la sala.",
-				}
-				msg, err := json.Marshal(leaveMsg)
-				if err != nil {
-					log.Printf("Error marshaling leave message: %v", err)
-				} else {
-					// r.broadcast nunca debe llamarse con el lock cogido:
-					// dentro de él se hace closeSendChan y se toca client.Mu.
-					r.broadcast(msg)
-				}
-
-				// Si es una sala de juego y ya no queda ninguna conexión del
-				// mismo usuario, el motor debe marcar al jugador como
-				// desconectado para que el rival espere a que se reconecte.
 				if r.OnClientLeft != nil && !r.hasClientWithUser(client.UserID) {
-					r.OnClientLeft(r.ID, client.UserID)
+					// Sala de juego y el usuario ya no está: se difiere el aviso
+					// si aún queda otro cliente (rival) que pueda ver un parpadeo,
+					// para dar tiempo a una toma de sesión / reconexión a entrar.
+					if len(r.Clients) > 0 {
+						r.deferClientLeft(client)
+					} else {
+						// La sala queda vacía: avisar y autodestruir como antes.
+						r.broadcastLeave(client)
+						r.OnClientLeft(r.ID, client.UserID)
+					}
+				} else {
+					r.broadcastLeave(client)
 				}
 			}
 
@@ -121,8 +147,56 @@ func (r *Room) Run() {
 				return
 			}
 
+		case userID := <-r.clientLeftTimer:
+			dl, ok := r.pendingLeft[userID]
+			if !ok {
+				continue
+			}
+			delete(r.pendingLeft, userID)
+
+			// Si el usuario se reincorporó dentro de la gracia, no se avisa.
+			if r.OnClientLeft != nil && !r.hasClientWithUser(userID) {
+				r.broadcastLeave(dl.client)
+				r.OnClientLeft(r.ID, userID)
+			}
+
 		case message := <-r.Broadcast:
 			r.broadcast(message)
 		}
+	}
+}
+
+// broadcastLeave emite el mensaje de sistema "X abandonó la sala". Se llama
+// desde room.Run, por lo que no necesita lock sobre r.Clients.
+func (r *Room) broadcastLeave(client *Client) {
+	leaveMsg := map[string]any{
+		"type":    "system",
+		"content": client.Username + " abandonó la sala.",
+	}
+	msg, err := json.Marshal(leaveMsg)
+	if err != nil {
+		log.Printf("Error marshaling leave message: %v", err)
+		return
+	}
+	// r.broadcast nunca debe llamarse con el lock cogido:
+	// dentro de él se hace closeSendChan y se toca client.Mu.
+	r.broadcast(msg)
+}
+
+// deferClientLeft programa la salida diferida de un usuario. Si otra conexión
+// del mismo usuario se une antes de expirar la gracia, se cancela (ver Join).
+func (r *Room) deferClientLeft(client *Client) {
+	if dl, ok := r.pendingLeft[client.UserID]; ok {
+		dl.timer.Stop()
+	}
+	r.pendingLeft[client.UserID] = &deferredLeave{
+		client: client,
+		timer: time.AfterFunc(clientLeftGrace, func() {
+			// El callback solo envía al canal; no toca r.pendingLeft.
+			select {
+			case r.clientLeftTimer <- client.UserID:
+			default:
+			}
+		}),
 	}
 }

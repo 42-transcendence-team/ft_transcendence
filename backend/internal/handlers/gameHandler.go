@@ -307,12 +307,9 @@ func (gh *GameHandler) handleGameClientLeft(roomID uint, userID uint) {
 		return
 	}
 
-	for _, player := range engine.GetPlayers() {
-		if player.ID == userID && player.Connected {
-			if err := engine.DisconnectPlayer(userID); err != nil {
-				log.Printf("Error al desconectar jugador %d del juego %d: %v", userID, roomID, err)
-			}
-			return
+	if engine.IsPlayerConnected(userID) {
+		if err := engine.DisconnectPlayer(userID); err != nil {
+			log.Printf("Error al desconectar jugador %d del juego %d: %v", userID, roomID, err)
 		}
 	}
 }
