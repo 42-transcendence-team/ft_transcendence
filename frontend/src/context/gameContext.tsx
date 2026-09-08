@@ -224,10 +224,6 @@ export function GameProvider({ children, user, gameId, gameType }: { children: R
         };
     }, [gameState.game_id, user, send]);
 
-	useEffect(() => {
-		console.log('Current gameState:', gameState);
-	}, [gameState]);
-
     const setGameStatus = useCallback((status: GameStatus) => {
         setGameState(prevState => ({
             ...prevState,

@@ -97,6 +97,7 @@ export function DeleteAccount({ user }: { user: any }) {
             >
                 <div className="modal__content">
                     <p>Esta acción es irreversible. Por favor, introduce tu contraseña para continuar:</p>
+                    <p>Este correo no podrá volver a ser utilizado para registrarse</p>
                     <input
                         type="password"
                         className="settings__input"
