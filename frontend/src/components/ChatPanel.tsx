@@ -1,7 +1,8 @@
 import "../styles/components/_chatPanel.scss"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LuPlus } from "react-icons/lu";
-import { useChat, type RoomMember } from "../context/chatContext";
+import { type RoomMember, useChat } from "../context/chatContext";
+import { useNotification } from "../context/notificationsContext";
 import { AddChatModal } from "./AddChatModal";
 import { UserAvatar } from "./users/UserAvatar";
 
@@ -20,6 +21,7 @@ function getOtherMember(currentUserId: number, members: RoomMember[] | undefined
 
 export function ChatPanel(props: ChatPanelProps) {
 	const { rooms, lastActivity, roomMembers, addChat, user: currentUser } = useChat();
+	const { notifications } = useNotification();
 	const { onChatClick, activeChatId } = props;
 
 	const [showAddChat, setShowAddChat] = useState(false);
@@ -27,6 +29,16 @@ export function ChatPanel(props: ChatPanelProps) {
 	const lastActivityRef = useRef(lastActivity);
 
 	const currentUserId = currentUser?.id ? parseInt(currentUser.id, 10) : 0;
+
+	const unreadByRoom = useMemo(() => {
+		const map: Record<number, number> = {};
+		for (const n of notifications) {
+			if (n.type === 'UNREAD_MESSAGES' && n.payload?.room_id) {
+				map[Number(n.payload.room_id)] = n.payload.unread_count || 0;
+			}
+		}
+		return map;
+	}, [notifications]);
 
 	const displayRooms = useMemo(() => {
 		return [...rooms].sort((a, b) => {
@@ -73,6 +85,11 @@ export function ChatPanel(props: ChatPanelProps) {
 					/>
 				) : (
 					<span className="chatPanel__bubbleId">{roomId}</span>
+				)}
+				{activeChatId !== roomId && unreadByRoom[roomId] > 0 && (
+					<span className="chatPanel__bubble__badge">
+						{Math.min(unreadByRoom[roomId], 99)}
+					</span>
 				)}
 			</button>
 		);
