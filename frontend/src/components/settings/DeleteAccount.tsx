@@ -77,6 +77,9 @@ export function DeleteAccount({ user }: { user: any }) {
                     <p className="settings__subtitle">
                         Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate.
                     </p>
+                    <p className="settings__subtitle">
+                        El correo no podrá volver a ser utilizado para crear una nueva cuenta hasta que a administracion lo libere.
+                    </p>
                 </div>
             </header>
 
@@ -97,6 +100,7 @@ export function DeleteAccount({ user }: { user: any }) {
             >
                 <div className="modal__content">
                     <p>Esta acción es irreversible. Por favor, introduce tu contraseña para continuar:</p>
+                    
                     <input
                         type="password"
                         className="settings__input"

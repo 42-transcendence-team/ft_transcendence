@@ -9,28 +9,18 @@ export const games = [
   {
     id: 'tictactoe',
     name: 'Tres en raya',
-    description: 'Este es el primer juego.',
     aspectRatio: 1,
     component: TicTacToe,
   },
-  // {
-  // 	id: "parchis",
-  // 	name: "Parchis",
-  // 	description: "This is the second game.",
-  // 	aspectRatio: 16 / 9,
-  // 	component: () => <div>Parchis Game Component</div>,
-  // },
   {
     id: 'goose',
     name: 'La oca',
-    description: 'Este es el tercer juego.',
     aspectRatio: 4 / 3,
     component: Goose,
   },
   {
     id: 'connectfour',
     name: 'Cuatro en raya',
-    description: 'Este es el cuarto juego.',
     aspectRatio: 4 / 3,
     component: ConnectFour,
   },
