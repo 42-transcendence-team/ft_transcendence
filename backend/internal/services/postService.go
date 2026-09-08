@@ -254,6 +254,7 @@ func (s *PostService) ListFeed(
 		total,
 		page,
 		limit,
+		currentUserID,
 	)
 }
 
@@ -298,16 +299,19 @@ func (s *PostService) ListPostsByUserID(
 		total,
 		page,
 		limit,
+		currentUserID,
 	)
 }
 
 // buildPostListResponse construye los DTO de tarjeta y obtiene
-// todos sus contadores mediante una única consulta agrupada.
+// todos sus contadores y las reacciones del usuario actual mediante
+// una única consulta agrupada.
 func (s *PostService) buildPostListResponse(
 	posts []models.Post,
 	total int64,
 	page int,
 	limit int,
+	currentUserID uint,
 ) (*dto.PostListResponse, error) {
 	postIDs := make([]uint, 0, len(posts))
 
@@ -324,6 +328,16 @@ func (s *PostService) buildPostListResponse(
 		return nil, appErr.NewInternal(err)
 	}
 
+	reactionByPostID, err :=
+		s.postLikeRepo.GetReactionByPostIDsAndUser(
+			postIDs,
+			currentUserID,
+		)
+
+	if err != nil {
+		return nil, appErr.NewInternal(err)
+	}
+
 	summaries := make(
 		[]dto.PostSummaryResponse,
 		0,
@@ -332,6 +346,8 @@ func (s *PostService) buildPostListResponse(
 
 	for _, post := range posts {
 		reactionCounts := countsByPostID[post.ID]
+		userReaction, hasReaction :=
+			reactionByPostID[post.ID]
 
 		summaries = append(
 			summaries,
@@ -339,6 +355,10 @@ func (s *PostService) buildPostListResponse(
 				post,
 				reactionCounts.LikeCount,
 				reactionCounts.DislikeCount,
+				hasReaction &&
+					userReaction == models.PostReactionLike,
+				hasReaction &&
+					userReaction == models.PostReactionDislike,
 			),
 		)
 	}
