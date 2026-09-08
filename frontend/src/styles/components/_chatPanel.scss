@@ -106,6 +106,26 @@
 		&:not(.is-active) .user-avatar {
 			border: 2px solid $light-gray-common-components;
 		}
+
+		&__badge {
+			position: absolute;
+			top: -3px;
+			right: -3px;
+			min-width: 18px;
+			height: 18px;
+			padding: 0 4px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 50%;
+			background-color: #e53935;
+			color: #ffffff;
+			font-size: 0.65rem;
+			font-weight: 700;
+			line-height: 1;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+			pointer-events: none;
+		}
 	}
 
 	&__bubble.is-active {
